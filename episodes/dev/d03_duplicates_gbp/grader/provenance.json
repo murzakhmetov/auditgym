@@ -1,35 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "2811470655390218809",
   "secret_used": false,
   "config": {
-    "size": "medium",
     "base_currency": "GBP",
-    "timezone": "Europe/London",
+    "distractors": {
+      "legit_repeat": 3
+    },
     "errors": {
       "duplicate_invoice": 2
     },
-    "distractors": {
-      "legit_repeat": 3
-    }
+    "size": "medium",
+    "timezone": "Europe/London"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "medium",
     "base_currency": "GBP",
     "foreign_currencies": [
-      "CHF",
-      "EUR",
       "USD"
     ],
     "timezone": "Europe/London",
-    "period": "2026-05",
+    "period": "2027-02",
     "rounding": "half_up",
     "id_style": "prefixed",
     "ts_repr": "local",
-    "row_order": "time",
+    "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 2,
       "unallocated_payment": 0,
@@ -65,31 +63,31 @@
       "underpayment": 2,
       "overpayment_refund": 1,
       "null_ref_receipt": 2,
-      "boundary_doc": 3,
-      "midnight_fx": 2,
-      "weekend_fx": 2
+      "midnight_fx": 3,
+      "weekend_fx": 2,
+      "boundary_doc": 4
     },
     "counts": {
-      "customers": 10,
-      "suppliers": 8,
-      "sales_invoices": 37,
-      "purchase_invoices": 15,
-      "prior_invoices": 7,
-      "target_rows": 1000
+      "customers": 12,
+      "suppliers": 10,
+      "sales_invoices": 42,
+      "purchase_invoices": 21,
+      "prior_invoices": 6,
+      "target_rows": 806
     },
     "twin": false
   },
-  "attempt": 0,
+  "attempt": 1,
   "history": {
-    "company": "Valaro Packaging Ltd",
-    "customers": 10,
-    "suppliers": 8,
-    "invoices": 87,
-    "payments": 49,
-    "misc_journals": 324,
+    "company": "Selion Systems Ltd",
+    "customers": 12,
+    "suppliers": 10,
+    "invoices": 97,
+    "payments": 65,
+    "misc_journals": 204,
     "holidays": [
-      "2026-05-08",
-      "2026-05-27"
+      "2027-02-16",
+      "2027-02-17"
     ]
   },
   "injections": [
@@ -99,8 +97,8 @@
       "variant": "same_day_copy",
       "scenario": "single",
       "targets": {
-        "original": "BILL-585752",
-        "copy": "BILL-908241"
+        "original": "BILL-495167",
+        "copy": "BILL-458483"
       },
       "change": {}
     },
@@ -110,8 +108,8 @@
       "variant": "same_day_copy",
       "scenario": "single",
       "targets": {
-        "original": "BILL-687930",
-        "copy": "BILL-515191"
+        "original": "BILL-366364",
+        "copy": "BILL-775839"
       },
       "change": {}
     }
@@ -120,136 +118,132 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-911706",
-        "BILL-377836"
+        "BILL-170593",
+        "BILL-786193"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-443336",
-        "BILL-608105"
+        "BILL-896529",
+        "BILL-133020",
+        "PAY-136152"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-851999",
-        "BILL-266013"
+        "BILL-839218",
+        "BILL-285583"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-623174",
-        "BILL-725516"
+        "BILL-521115",
+        "BILL-685447"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-450708",
-        "BILL-144378"
+        "BILL-839545",
+        "BILL-904079"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-103562",
-        "RCPT-864796",
-        "RCPT-253740"
+        "INV-483486",
+        "RCPT-790953",
+        "RCPT-290552"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-104785",
-        "RCPT-942873",
-        "RCPT-252485"
+        "INV-342589",
+        "RCPT-983696",
+        "RCPT-793452"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-311963",
-        "INV-515130",
-        "RCPT-778696"
+        "INV-602166",
+        "INV-255069",
+        "RCPT-315375"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-162116",
-        "RCPT-193400"
+        "INV-380161",
+        "RCPT-118339"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-346788",
-        "RCPT-265640"
+        "INV-827585",
+        "RCPT-458528"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-427302",
-        "RCPT-164891",
-        "RFND-145330"
+        "INV-858042",
+        "RCPT-756430",
+        "RFND-361026"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-642412"
+        "RCPT-425952"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-525146"
+        "RCPT-193889"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-873907"
+        "INV-165938"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-545902"
+        "BILL-605505",
+        "PAY-933630"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-769381"
+        "BILL-314572"
       ]
     },
     {
-      "kind": "midnight_fx",
+      "kind": "boundary_doc",
       "ids": [
-        "INV-358583"
-      ]
-    },
-    {
-      "kind": "midnight_fx",
-      "ids": [
-        "BILL-959018"
+        "BILL-517294"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-296831"
+        "INV-820330"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-329821"
+        "INV-519936"
       ]
     }
   ],
@@ -257,88 +251,88 @@
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-494441",
+      "id": "GL-155723",
       "record": {
-        "row_id": "GL-494441",
-        "timestamp": "2026-05-27T18:36:33+01:00",
+        "row_id": "GL-155723",
+        "timestamp": "2027-02-08T18:21:14+00:00",
         "account": "5000",
-        "debit_minor": 93175,
+        "debit_minor": 85690,
         "credit_minor": 0,
         "currency": "GBP",
-        "entity_id": "S-107548",
-        "invoice_id": "BILL-515191",
+        "entity_id": "S-804620",
+        "invoice_id": "BILL-458483",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-498044",
+      "id": "GL-198898",
       "record": {
-        "row_id": "GL-498044",
-        "timestamp": "2026-05-20T13:19:21+01:00",
+        "row_id": "GL-198898",
+        "timestamp": "2027-02-08T18:21:14+00:00",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 85690,
+        "currency": "GBP",
+        "entity_id": "S-804620",
+        "invoice_id": "BILL-458483",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "GL-227406",
+      "record": {
+        "row_id": "GL-227406",
+        "timestamp": "2027-02-19T14:47:57+00:00",
         "account": "5000",
-        "debit_minor": 89408,
+        "debit_minor": 112620,
         "credit_minor": 0,
         "currency": "GBP",
-        "entity_id": "S-807446",
-        "invoice_id": "BILL-908241",
+        "entity_id": "S-804620",
+        "invoice_id": "BILL-775839",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-532363",
+      "id": "GL-532577",
       "record": {
-        "row_id": "GL-532363",
-        "timestamp": "2026-05-20T13:19:21+01:00",
+        "row_id": "GL-532577",
+        "timestamp": "2027-02-19T14:47:57+00:00",
         "account": "2000",
         "debit_minor": 0,
-        "credit_minor": 89408,
+        "credit_minor": 112620,
         "currency": "GBP",
-        "entity_id": "S-807446",
-        "invoice_id": "BILL-908241",
-        "payment_id": null
-      }
-    },
-    {
-      "op": "add",
-      "table": "ledger",
-      "id": "GL-730589",
-      "record": {
-        "row_id": "GL-730589",
-        "timestamp": "2026-05-27T18:36:33+01:00",
-        "account": "2000",
-        "debit_minor": 0,
-        "credit_minor": 93175,
-        "currency": "GBP",
-        "entity_id": "S-107548",
-        "invoice_id": "BILL-515191",
+        "entity_id": "S-804620",
+        "invoice_id": "BILL-775839",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "DOC-599192",
+      "id": "DOC-463475",
       "record": {
-        "doc_id": "DOC-599192",
-        "invoice_id": "BILL-515191",
+        "doc_id": "DOC-463475",
+        "invoice_id": "BILL-775839",
         "kind": "purchase",
-        "entity_id": "S-107548",
-        "issued_at": "2026-05-27T18:36:33+01:00",
-        "due_at": "2026-06-26T23:59:59+01:00",
+        "entity_id": "S-804620",
+        "issued_at": "2027-02-19T14:47:57+00:00",
+        "due_at": "2027-03-21T23:59:59+00:00",
         "currency": "GBP",
-        "total_minor": 93175,
+        "total_minor": 112620,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Fuel card statement FC-77245",
+            "description": "Cloud hosting SUB-2027-02-1645",
             "quantity": 1,
-            "unit_price_minor": 93175,
-            "amount_minor": 93175,
-            "ref": "FC-77245"
+            "unit_price_minor": 112620,
+            "amount_minor": 112620,
+            "ref": "SUB-2027-02-1645"
           }
         ]
       }
@@ -346,31 +340,36 @@
     {
       "op": "add",
       "table": "invoices",
-      "id": "DOC-631654",
+      "id": "DOC-965154",
       "record": {
-        "doc_id": "DOC-631654",
-        "invoice_id": "BILL-908241",
+        "doc_id": "DOC-965154",
+        "invoice_id": "BILL-458483",
         "kind": "purchase",
-        "entity_id": "S-807446",
-        "issued_at": "2026-05-20T13:19:21+01:00",
-        "due_at": "2026-06-03T23:59:59+01:00",
-        "currency": "USD",
-        "total_minor": 113990,
+        "entity_id": "S-804620",
+        "issued_at": "2027-02-08T18:21:14+00:00",
+        "due_at": "2027-02-22T23:59:59+00:00",
+        "currency": "GBP",
+        "total_minor": 85690,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Maintenance call SR-31638",
+            "description": "Freight WB-89871",
             "quantity": 1,
-            "unit_price_minor": 113990,
-            "amount_minor": 113990,
-            "ref": "SR-31638"
+            "unit_price_minor": 85690,
+            "amount_minor": 85690,
+            "ref": "WB-89871"
           }
         ]
       }
     }
   ],
-  "clean_digest": "84b657f966340d09b1867e2d04f93518257bd17724c81938f17530b7978c03fd",
-  "clean_records_digest": "b3b19712281cd744306fae313cda4400ae936822e2758cad23656d27e2e3c215",
-  "final_digest": "faf6f961d5a4298612be1cbdbea09a810e1d82822fe2bced59be835e36bfa0c1",
-  "rejected_attempts": []
+  "clean_digest": "af9d9081b0343ba86e69185a0a6b96c6796c3e2bf6c6519fdcddfd6aeefd66aa",
+  "clean_records_digest": "8c2d4b46f165634876b3b01872bdc9acec7906aaeec3c2156e90222932963857",
+  "final_digest": "eecb13bb51d95c720f87f181fb4d28a6391b52ea71f01140c4237f94c6fbd123",
+  "rejected_attempts": [
+    {
+      "attempt": 0,
+      "reason": "no ordinary-looking purchase reaches the size floor"
+    }
+  ]
 }

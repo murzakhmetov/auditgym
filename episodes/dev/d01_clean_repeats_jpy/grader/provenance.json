@@ -1,40 +1,28 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "1263440917783250649",
   "secret_used": false,
   "config": {
-    "size": "small",
     "base_currency": "JPY",
-    "timezone": "Asia/Tokyo",
-    "distractors": {
-      "legit_repeat": 3,
-      "recurring": 3,
-      "split_payment": 3,
-      "multi_invoice_payment": 2,
-      "underpayment": 3,
-      "overpayment_refund": 2,
-      "null_ref_receipt": 2,
-      "boundary_doc": 4,
-      "midnight_fx": 3,
-      "weekend_fx": 3
-    }
+    "size": "small",
+    "timezone": "Asia/Tokyo"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "small",
     "base_currency": "JPY",
     "foreign_currencies": [
-      "EUR",
+      "KRW",
       "USD",
-      "KRW"
+      "EUR"
     ],
     "timezone": "Asia/Tokyo",
-    "period": "2026-04",
-    "rounding": "half_up",
-    "id_style": "hex",
-    "ts_repr": "utc",
+    "period": "2026-03",
+    "rounding": "half_even",
+    "id_style": "slashed",
+    "ts_repr": "local",
     "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
@@ -64,237 +52,161 @@
     },
     "interacting": [],
     "distractors": {
-      "legit_repeat": 3,
-      "recurring": 3,
-      "split_payment": 3,
-      "multi_invoice_payment": 2,
-      "underpayment": 3,
-      "overpayment_refund": 2,
-      "null_ref_receipt": 2,
-      "boundary_doc": 4,
-      "midnight_fx": 3,
-      "weekend_fx": 3
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 7
     },
     "counts": {
       "customers": 6,
-      "suppliers": 7,
-      "sales_invoices": 21,
-      "purchase_invoices": 11,
-      "prior_invoices": 5,
-      "target_rows": 328
+      "suppliers": 5,
+      "sales_invoices": 15,
+      "purchase_invoices": 10,
+      "prior_invoices": 3,
+      "target_rows": 300
     },
     "twin": false
   },
-  "attempt": 0,
+  "attempt": 1,
   "history": {
-    "company": "Kaiix Energy KK",
+    "company": "Eloana Foods KK",
     "customers": 7,
-    "suppliers": 9,
-    "invoices": 74,
-    "payments": 40,
-    "misc_journals": 39,
-    "holidays": [
-      "2026-04-09",
-      "2026-04-13"
-    ]
+    "suppliers": 7,
+    "invoices": 51,
+    "payments": 29,
+    "misc_journals": 56,
+    "holidays": []
   },
   "injections": [],
   "distractors": [
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_1fe0763e",
-        "pi_0d9f5ebe"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "pi_8ca809e9",
-        "pi_2d45b5a4"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "pi_8b4b13d2",
-        "pi_6a7b3d8d"
+        "PI/2026/184600",
+        "PI/2026/966235",
+        "BP/2026/244961"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_2931ede1",
-        "pi_2ea9d159"
-      ]
-    },
-    {
-      "kind": "recurring",
-      "ids": [
-        "pi_404db2b7",
-        "pi_e259611d"
-      ]
-    },
-    {
-      "kind": "recurring",
-      "ids": [
-        "pi_583254e7",
-        "pi_c5809908"
+        "PI/2026/796854",
+        "PI/2026/623867"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_68507d78",
-        "rc_ef9571da",
-        "rc_ebf68c3d"
-      ]
-    },
-    {
-      "kind": "split_payment",
-      "ids": [
-        "si_745c01db",
-        "rc_59c7f482",
-        "rc_69ceba2f"
-      ]
-    },
-    {
-      "kind": "split_payment",
-      "ids": [
-        "si_a71d3f2a",
-        "rc_4b4f4acd",
-        "rc_2354fbdf"
+        "SI/2026/851117",
+        "BR/2026/226715",
+        "BR/2026/298942"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_bba31601",
-        "si_e2c56564",
-        "rc_f61a613c"
-      ]
-    },
-    {
-      "kind": "multi_invoice_payment",
-      "ids": [
-        "si_bd50db5e",
-        "si_dd5ec49e",
-        "rc_bb8bea76"
+        "SI/2026/270501",
+        "SI/2026/774845",
+        "BR/2026/540625"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_4f2fa732",
-        "rc_9bb4ea7c"
-      ]
-    },
-    {
-      "kind": "underpayment",
-      "ids": [
-        "si_4bcf7fc9",
-        "rc_3e93fd46"
-      ]
-    },
-    {
-      "kind": "underpayment",
-      "ids": [
-        "si_c171a6f0",
-        "rc_ad195a25"
+        "SI/2026/663508",
+        "BR/2026/414598"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_b2061ed2",
-        "rc_a94c8c87",
-        "rf_1371d9a6"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "si_01b2abab",
-        "rc_6a47dc96",
-        "rf_97ce3994"
+        "SI/2026/900415",
+        "BR/2026/394870",
+        "RF/2026/272506"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_78fc941e"
-      ]
-    },
-    {
-      "kind": "null_ref_receipt",
-      "ids": [
-        "rc_e36996b9"
+        "BR/2026/826330"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_bbca9393"
+        "SI/2026/561793"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_c95fccbb"
+        "SI/2026/292219"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_eb0828b0"
+        "SI/2026/740119"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_9bb5a315"
+        "PI/2026/786603"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/505463"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/596210"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/422405"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_df702e82"
+        "PI/2026/574289"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_21783ac1"
-      ]
-    },
-    {
-      "kind": "midnight_fx",
-      "ids": [
-        "pi_3ac5e8bd"
+        "SI/2026/714397",
+        "BR/2026/333688"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_a000720b"
-      ]
-    },
-    {
-      "kind": "weekend_fx",
-      "ids": [
-        "si_b8cb5650"
-      ]
-    },
-    {
-      "kind": "weekend_fx",
-      "ids": [
-        "si_77076cf6"
+        "SI/2026/628120"
       ]
     }
   ],
   "ops": [],
-  "clean_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
-  "clean_records_digest": "9e7a1a3495b1506f80385f19112a3bba92374490d0d2be6485073138c0c9478a",
-  "final_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
-  "rejected_attempts": []
+  "clean_digest": "8b8be91cea199d5e9f18e77b84ba97567d32e132a976fa4fb3827f5f8f7eba8f",
+  "clean_records_digest": "23f91dd48f2186429531f82f7627fdaf1d5873e23a11d82dfaabdd5e9c752daa",
+  "final_digest": "8b8be91cea199d5e9f18e77b84ba97567d32e132a976fa4fb3827f5f8f7eba8f",
+  "rejected_attempts": [
+    {
+      "attempt": 0,
+      "reason": "no ordinary-looking purchase reaches the size floor"
+    }
+  ]
 }

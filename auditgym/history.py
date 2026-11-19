@@ -121,6 +121,20 @@ class SampleRetry(RuntimeError):
 CUTOFF_DAYS = 7
 LOOKBACK_DAYS = 40
 FX_MARGIN_DAYS = 7
+WEEKEND_SHARE = 0.10  # share of ordinary documents (and non-FX targets) dated on a weekend
+OFF_HOURS_DOC_SHARE = 0.05  # share of ordinary invoices issued outside 08:00-18:59 local time
+OFF_HOURS_PAY_SHARE = 0.14  # share of ordinary payments made outside 08:00-18:59 local time
+SIZE_TRIES = 400
+# Error targets are drawn among ordinary-looking documents that clear a size floor (so that an injected FX error
+# is material). To keep targets from being the largest documents, this share of ordinary invoices is drawn with
+# the same floors.
+LARGE_SHARE = 0.5
+LARGE_SALES_USD = 4000.0
+LARGE_PURCHASE_USD = 2000.0
+# boundary distractors draw their kind (invoices and payments, sales and purchase side alike) and the side of the
+# boundary at random, so neither the kind nor the number of documents in the error window gives a target away
+BOUNDARY_KINDS = ("sales", "purchase", "receipt", "disbursement")
+BOUNDARY_ERROR_SIDE_SHARE = 0.6
 
 
 class HistoryBuilder:
@@ -187,6 +201,60 @@ class HistoryBuilder:
         weekdays = [d for d in days if d.weekday() < 5]
         return self.rng.choice(weekdays or days)
 
+    def loose_date(self, start: date, end: date, weekend_share: float = WEEKEND_SHARE) -> date:
+        """Mostly a business day; a small share of ordinary documents fall on a weekend."""
+        if self.rng.random() < weekend_share:
+            days = [start + timedelta(days=i) for i in range((end - start).days + 1)]
+            weekend = [d for d in days if d.weekday() >= 5]
+            if weekend:
+                return self.rng.choice(weekend)
+        return self.business_date(start, end)
+
+    def doc_hours(self) -> tuple:
+        """Local hour range of an ordinary invoice: mostly business hours, sometimes late evening or early morning."""
+        r = self.rng.random()
+        return (8, 18) if r >= OFF_HOURS_DOC_SHARE else ((19, 23) if r < OFF_HOURS_DOC_SHARE / 2 else (0, 7))
+
+    def payment_hours(self) -> tuple:
+        r = self.rng.random()
+        return (8, 18) if r >= OFF_HOURS_PAY_SHARE else ((19, 23) if r < OFF_HOURS_PAY_SHARE / 2 else (0, 7))
+
+    def minute_time(self, d: date, m_lo: int, m_hi: int) -> datetime:
+        """Local time on d between minute m_lo and m_hi of the day (random seconds), free and unambiguous."""
+        for _ in range(80):
+            m = self.rng.randint(m_lo, m_hi)
+            inst = local_datetime(self.h.tz, d, m // 60, m % 60, self.rng.randint(0, 59))
+            if not in_ambiguous_hour(self.h.tz, inst) and inst not in self._used_times:
+                self._used_times.add(inst)
+                return inst
+        raise SampleRetry("no free near-midnight time")
+
+    def offset_on(self, d: date) -> int:
+        return offset_minutes(self.h.tz, local_datetime(self.h.tz, d, 12))
+
+    def near_midnight_time(self, d: date) -> datetime:
+        """Local time on d whose UTC calendar date differs from d (the utc_date error window)."""
+        off = self.offset_on(d)
+        if off > 0:
+            return self.minute_time(d, 5, off - 6)
+        if off < 0:
+            return self.minute_time(d, 1440 + off + 6, 1434)
+        raise SampleRetry("zero UTC offset on this date")
+
+    def boundary_time(self, error_side: bool) -> datetime:
+        """A time right at the period boundary. error_side=True uses exactly the window in which the
+        utc_wall_clock error documents and the boundary receipt are placed (just after local midnight after the
+        period for positive offsets, shortly before the period's last midnight for negative ones)."""
+        h = self.h
+        off = offset_minutes(h.tz, h.p1)
+        if off > 0:
+            return (self.minute_time(h.next_first_date, 5, off - 11) if error_side
+                    else self.minute_time(h.p_last_date, 1380, 1434))
+        if off < 0:
+            return (self.minute_time(h.p_last_date, 1440 + off + 11, 1434) if error_side
+                    else self.minute_time(h.next_first_date, 0, 59))
+        return self.local_time(h.p_last_date, (23, 23)) if error_side else self.local_time(h.next_first_date, (0, 0))
+
     def unit_price_minor(self, ccy: str, usd_lo: float, usd_hi: float) -> int:
         exp = CURRENCY_EXPONENTS[ccy]
         usd = Decimal(str(round(self.rng.uniform(usd_lo, usd_hi), 2)))
@@ -195,13 +263,14 @@ class HistoryBuilder:
         minor = int(value / grain) * grain
         return max(grain, minor)
 
-    def new_ref(self, pattern: str, issued: datetime) -> str:
+    def new_ref(self, pattern: str, issued: datetime, entity: str | None = None) -> str:
+        """Line reference, unique per episode. Every pattern has a random part, so uniqueness never needs a
+        sequence suffix that would reveal the creation order of documents."""
         ym = f"{self.h.local_date(issued).year:04d}-{self.h.local_date(issued).month:02d}"
         for _ in range(1000):
             ref = pattern.format(n4=self.rng.randint(1000, 9999), n5=self.rng.randint(10000, 99999), ym=ym)
-            if "{ym}" in pattern or ref not in self._used_refs:
-                if "{ym}" not in pattern:
-                    self._used_refs.add(ref)
+            if ref not in self._used_refs:
+                self._used_refs.add(ref)
                 return ref
         raise SampleRetry("ref space exhausted")
 
@@ -239,23 +308,38 @@ class HistoryBuilder:
 
     # ------------------------------------------------------------ documents
     def sales_lines(self, ccy: str, n_lines: int | None = None, min_usd_total: float = 0.0) -> list:
-        lines = []
-        for i in range(n_lines or self.rng.randint(1, 4)):
-            desc, (lo, hi), (qlo, qhi) = self.rng.choice(catalog.SALES_ITEMS)
-            qty = self.rng.randint(qlo, qhi)
-            unit = self.unit_price_minor(ccy, lo, hi)
-            lines.append(LineItem(desc, qty, unit, qty * unit, ""))
-        while min_usd_total and self._usd(sum(li.amount_minor for li in lines), ccy) < min_usd_total:
-            li = lines[0]
-            li.quantity += max(1, li.quantity)
-            li.amount_minor = li.quantity * li.unit_price_minor
+        """Ordinary sales lines. With min_usd_total the draw is repeated (rejection sampling) until the
+        invoice clears the floor, so every quantity and unit price stays inside the catalogue ranges."""
+        for _ in range(SIZE_TRIES):
+            lines = []
+            for _i in range(n_lines or self.rng.randint(1, 4)):
+                desc, (lo, hi), (qlo, qhi) = self.rng.choice(catalog.SALES_ITEMS)
+                qty = self.rng.randint(qlo, qhi)
+                unit = self.unit_price_minor(ccy, lo, hi)
+                lines.append(LineItem(desc, qty, unit, qty * unit, ""))
+            if not min_usd_total or self._usd(sum(li.amount_minor for li in lines), ccy) >= min_usd_total:
+                break
+        else:
+            raise SampleRetry("no ordinary-looking sales invoice reaches the size floor")
         for idx, li in enumerate(lines):
             li.ref = f"L{idx + 1}"
         return lines
 
-    def purchase_lines(self, ccy: str, issued: datetime, item=None, unit_override=None) -> list:
-        desc_t, (lo, hi), pattern = item or self.rng.choice(catalog.PURCHASE_ITEMS)
-        ref = self.new_ref(pattern, issued)
+    def purchase_lines(self, ccy: str, issued: datetime, item=None, unit_override=None, entity: str | None = None,
+                       min_usd: float = 0.0) -> list:
+        """One purchase line. With min_usd the item and price are redrawn inside the catalogue ranges until
+        the line clears the floor."""
+        if item is None:
+            for _ in range(SIZE_TRIES):
+                cand = self.rng.choice(catalog.PURCHASE_ITEMS)
+                price = self.unit_price_minor(ccy, cand[1][0], cand[1][1])
+                if not min_usd or self._usd(price, ccy) >= min_usd:
+                    item, unit_override = cand, price
+                    break
+            else:
+                raise SampleRetry("no ordinary-looking purchase reaches the size floor")
+        desc_t, (lo, hi), pattern = item
+        ref = self.new_ref(pattern, issued, entity)
         unit = unit_override if unit_override is not None else self.unit_price_minor(ccy, lo, hi)
         return [LineItem(desc_t.format(ref=ref), 1, unit, unit, ref)]
 
@@ -276,17 +360,21 @@ class HistoryBuilder:
         self.h.payments[k] = p
         return p
 
-    def random_sales_invoice(self, d: date | None = None, foreign: bool | None = None, tags=None, hours=(8, 18), min_usd=0.0) -> Invoice:
+    def random_sales_invoice(self, d: date | None = None, foreign: bool | None = None, tags=None, hours=None, min_usd=0.0) -> Invoice:
         cust = self.entity_with("customer", foreign=foreign)
-        d = d or self.business_date(self.h.p_first_date, self.h.p_last_date)
-        issued = self.local_time(d, hours)
+        d = d or self.loose_date(self.h.p_first_date, self.h.p_last_date)
+        issued = self.local_time(d, hours or self.doc_hours())
+        if not min_usd and self.rng.random() < LARGE_SHARE:
+            min_usd = LARGE_SALES_USD
         return self.add_invoice("sales", cust, issued, self.sales_lines(self.h.entities[cust].currency, min_usd_total=min_usd), tags)
 
-    def random_purchase_invoice(self, d: date | None = None, foreign: bool | None = None, tags=None, hours=(8, 18)) -> Invoice:
+    def random_purchase_invoice(self, d: date | None = None, foreign: bool | None = None, tags=None, hours=None, min_usd=0.0) -> Invoice:
         sup = self.entity_with("supplier", foreign=foreign)
-        d = d or self.business_date(self.h.p_first_date, self.h.p_last_date)
-        issued = self.local_time(d, hours)
-        return self.add_invoice("purchase", sup, issued, self.purchase_lines(self.h.entities[sup].currency, issued), tags)
+        d = d or self.loose_date(self.h.p_first_date, self.h.p_last_date)
+        issued = self.local_time(d, hours or self.doc_hours())
+        if not min_usd and self.rng.random() < LARGE_SHARE:
+            min_usd = LARGE_PURCHASE_USD
+        return self.add_invoice("purchase", sup, issued, self.purchase_lines(self.h.entities[sup].currency, issued, entity=sup, min_usd=min_usd), tags)
 
     def pay_time_after(self, after: datetime, min_days=1, max_days=20, latest: datetime | None = None, in_period=False) -> datetime | None:
         h = self.h
@@ -296,8 +384,8 @@ class HistoryBuilder:
         if end < start:
             return None
         for _ in range(20):
-            d = self.business_date(start, end)
-            t = self.local_time(d)
+            d = self.loose_date(start, end)
+            t = self.local_time(d, self.payment_hours())
             if after < t < latest:
                 return t
         return None
@@ -341,7 +429,7 @@ class HistoryBuilder:
         cust = self.entity_with("customer")
         ccy = h.entities[cust].currency
         d = self.business_date(h.p_first_date + timedelta(days=2), h.p_last_date - timedelta(days=2))
-        self.add_payment("receipt", cust, ccy, self.local_time(d), self.unit_price_minor(ccy, 150, 2500), None, ["null_ref"])
+        self.add_payment("receipt", cust, ccy, self.local_time(d, self.payment_hours()), self.unit_price_minor(ccy, 150, 2500), None, ["null_ref"])
         h.opening_bank = self.unit_price_minor(h.base, 40000, 250000) * 3
 
     # ------------------------------------------------------------ distractors
@@ -350,13 +438,19 @@ class HistoryBuilder:
         dcounts = self.cfg["distractors"]
         for _ in range(dcounts.get("legit_repeat", 0)):
             sup = self.entity_with("supplier")
-            d = self.business_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
-            issued = self.local_time(d)
+            d = self.loose_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
+            issued = self.local_time(d, self.doc_hours())
             item = rng.choice([it for it in catalog.PURCHASE_ITEMS if "{ym}" not in it[2]])
             unit = self.unit_price_minor(h.entities[sup].currency, item[1][0], item[1][1])
-            a = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit), ["legit_repeat"], 30)
-            b = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit), ["legit_repeat"], 30)
-            h.distractors.append({"kind": "legit_repeat", "keys": [a.key, b.key]})
+            terms = rng.choice([14, 30, 45])  # drawn exactly like the terms of a duplicate pair
+            a = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit, sup), ["legit_repeat"], terms)
+            b = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit, sup), ["legit_repeat"], terms)
+            keys = [a.key, b.key]
+            if rng.random() < 0.5:  # one copy is paid with the same probability as the original of a duplicate pair
+                t = self.pay_time_after(a.issued, 2, 15)
+                if t:
+                    keys.append(self.add_payment("disbursement", sup, a.currency, t, a.total, [a.key]).key)
+            h.distractors.append({"kind": "legit_repeat", "keys": keys})
         for _ in range(dcounts.get("recurring", 0)):
             sup = self.entity_with("supplier")
             item = rng.choice([it for it in catalog.PURCHASE_ITEMS if "{ym}" in it[2]] or catalog.PURCHASE_ITEMS)
@@ -365,8 +459,8 @@ class HistoryBuilder:
             prior_d = self.business_date(h.p_first_date - timedelta(days=28), h.p_first_date - timedelta(days=20))
             cur_d = self.business_date(h.p_first_date + timedelta(days=2), h.p_first_date + timedelta(days=9))
             for d, tags in ((prior_d, ["recurring", "prior"]), (cur_d, ["recurring"])):
-                issued = self.local_time(d)
-                keys.append(self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit), tags, 30).key)
+                issued = self.local_time(d, self.doc_hours())
+                keys.append(self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit, sup), tags, 30).key)
             h.distractors.append({"kind": "recurring", "keys": keys})
         for _ in range(dcounts.get("split_payment", 0)):
             inv = self.random_sales_invoice(self.business_date(h.p_first_date, h.p_first_date + timedelta(days=12)))
@@ -380,8 +474,8 @@ class HistoryBuilder:
         for _ in range(dcounts.get("multi_invoice_payment", 0)):
             cust = self.entity_with("customer")
             d1 = self.business_date(h.p_first_date, h.p_first_date + timedelta(days=10))
-            i1 = self.add_invoice("sales", cust, self.local_time(d1), self.sales_lines(h.entities[cust].currency))
-            i2 = self.add_invoice("sales", cust, self.local_time(d1 + timedelta(days=rng.randint(1, 4))), self.sales_lines(h.entities[cust].currency))
+            i1 = self.add_invoice("sales", cust, self.local_time(d1, self.doc_hours()), self.sales_lines(h.entities[cust].currency))
+            i2 = self.add_invoice("sales", cust, self.local_time(d1 + timedelta(days=rng.randint(1, 4)), self.doc_hours()), self.sales_lines(h.entities[cust].currency))
             t = self.pay_time_after(max(i1.issued, i2.issued), 2, 12)
             if t:
                 p = self.add_payment("receipt", cust, i1.currency, t, i1.total + i2.total, [i1.key, i2.key], ["multi"])
@@ -411,20 +505,18 @@ class HistoryBuilder:
             sample = [i for i in h.invoices.values() if i.kind == "sales" and i.currency == ccy]
             amount = rng.choice(sample).total if sample and rng.random() < 0.6 else self.unit_price_minor(ccy, 200, 3000)
             d = self.business_date(h.p_first_date, h.p_last_date)
-            p = self.add_payment("receipt", cust if rng.random() < 0.6 else None, ccy, self.local_time(d), amount, None, ["null_ref"])
+            p = self.add_payment("receipt", cust if rng.random() < 0.6 else None, ccy, self.local_time(d, self.payment_hours()), amount, None, ["null_ref"])
             h.distractors.append({"kind": "null_ref_receipt", "keys": [p.key]})
-        for i in range(dcounts.get("boundary_doc", 0)):
-            if i % 2 == 0:
-                inv = self.random_sales_invoice(h.p_last_date, hours=(23, 23))
-            else:
-                inv = (self.random_purchase_invoice if i % 4 == 1 else self.random_sales_invoice)(h.next_first_date, hours=(0, 0))
-            inv.tags.append("boundary")
-            h.distractors.append({"kind": "boundary_doc", "keys": [inv.key]})
+        for _ in range(dcounts.get("boundary_doc", 0)):
+            kind = rng.choice(BOUNDARY_KINDS)
+            error_side = rng.random() < BOUNDARY_ERROR_SIDE_SHARE
+            keys = self.boundary_document(kind, error_side)
+            h.distractors.append({"kind": "boundary_doc", "keys": keys})
         if h.foreign:
-            for _ in range(dcounts.get("midnight_fx", 0)):
-                inv = self.near_midnight_invoice(foreign=True)
-                if inv:
-                    h.distractors.append({"kind": "midnight_fx", "keys": [inv.key]})
+            for j in range(dcounts.get("midnight_fx", 0)):
+                keys = self.near_midnight_documents(payment=(j % 2 == 1))
+                if keys:
+                    h.distractors.append({"kind": "midnight_fx", "keys": keys})
             for _ in range(dcounts.get("weekend_fx", 0)):
                 weekend = [d for d in self.period_dates() if d.weekday() >= 5]
                 if not weekend:
@@ -432,39 +524,78 @@ class HistoryBuilder:
                 inv = self.random_sales_invoice(rng.choice(weekend), foreign=True, tags=["weekend"])
                 h.distractors.append({"kind": "weekend_fx", "keys": [inv.key]})
 
-    def near_midnight_invoice(self, foreign: bool, kind: str | None = None, tags=None) -> Invoice | None:
-        """Invoice whose local date differs from its UTC date (needs a non-zero offset)."""
+    def floor_usd(self, kind: str, minimum: float = 0.0) -> float:
+        """Size floor of an ordinary invoice: half of them clear the same floor as the error targets."""
+        if self.rng.random() < LARGE_SHARE:
+            return LARGE_SALES_USD if kind == "sales" else LARGE_PURCHASE_USD
+        return minimum
+
+    def boundary_document(self, kind: str, error_side: bool) -> list:
+        """A correctly booked document or payment right at the period boundary, placed in the same time window
+        as the injected boundary errors (utc_wall_clock invoices and the boundary_fx_payment receipt). On the
+        error side a payment is drawn like the boundary receipt: foreign, partial, on a large invoice."""
+        h = self.h
+        if kind in ("sales", "purchase"):
+            ts = self.boundary_time(error_side)
+            ent = self.entity_with("customer" if kind == "sales" else "supplier")
+            ccy = h.entities[ent].currency
+            floor = self.floor_usd(kind, 600.0)
+            lines = (self.sales_lines(ccy, min_usd_total=floor) if kind == "sales"
+                     else self.purchase_lines(ccy, ts, entity=ent, min_usd=floor))
+            inv = self.add_invoice(kind, ent, ts, lines, ["boundary"])
+            return [inv.key]
+        d_inv = self.business_date(h.p_first_date + (timedelta(days=2) if error_side else timedelta(0)),
+                                   h.p_last_date - timedelta(days=6 if error_side else 3))
+        make = self.random_sales_invoice if kind == "receipt" else self.random_purchase_invoice
+        if error_side and h.foreign:
+            inv = make(d_inv, foreign=True, min_usd=5000.0)
+            amount = int(inv.total * self.rng.uniform(0.4, 0.9))
+        else:
+            inv = make(d_inv, foreign=bool(h.foreign) and self.rng.random() < 0.6)
+            amount = inv.total if self.rng.random() < 0.5 else int(inv.total * self.rng.uniform(0.4, 0.9))
+        ts = self.boundary_time(error_side)
+        p = self.add_payment(kind, inv.entity, inv.currency, ts, max(1, amount), [inv.key], ["boundary"])
+        return [inv.key, p.key]
+
+    def near_midnight_documents(self, payment: bool) -> list | None:
+        """A foreign invoice, or a payment on an ordinary invoice, whose local date differs from its UTC date
+        (needs a non-zero offset), placed in the same time window as the utc_date FX error documents."""
         h = self.h
         if offset_minutes(h.tz, h.p0) == 0 and offset_minutes(h.tz, h.p1) == 0:
             return None
         for _ in range(60):
-            d = self.business_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=1))
-            inst0 = local_datetime(h.tz, d, 12)
-            off = offset_minutes(h.tz, inst0)
-            if off > 0:
-                hours = (0, max(0, off // 60 - 1))
-            else:
-                hours = (min(23, 24 + off // 60 + 1), 23)
+            d = self.business_date(h.p_first_date + timedelta(days=3 if payment else 1), h.p_last_date - timedelta(days=1))
             try:
-                issued = self.local_time(d, hours)
+                ts = self.near_midnight_time(d)
             except SampleRetry:
                 continue
-            if issued.date() != d:
-                kind = kind or ("sales" if self.rng.random() < 0.6 else "purchase")
-                ent = self.entity_with("customer" if kind == "sales" else "supplier", foreign=foreign)
-                ccy = h.entities[ent].currency
-                lines = self.sales_lines(ccy, min_usd_total=400) if kind == "sales" else self.purchase_lines(ccy, issued)
-                return self.add_invoice(kind, ent, issued, lines, list(tags or ["midnight"]))
+            kind = "sales" if self.rng.random() < 0.6 else "purchase"
+            if payment:
+                inv = (self.random_sales_invoice if kind == "sales" else self.random_purchase_invoice)(
+                    self.business_date(h.p_first_date, d - timedelta(days=2)), foreign=True)
+                amount = inv.total if self.rng.random() < 0.5 else max(1, int(inv.total * self.rng.uniform(0.4, 0.9)))
+                p = self.add_payment("receipt" if kind == "sales" else "disbursement", inv.entity, inv.currency, ts, amount, [inv.key], ["midnight"])
+                return [inv.key, p.key]
+            ent = self.entity_with("customer" if kind == "sales" else "supplier", foreign=True)
+            ccy = h.entities[ent].currency
+            floor = self.floor_usd(kind)
+            lines = (self.sales_lines(ccy, min_usd_total=floor) if kind == "sales"
+                     else self.purchase_lines(ccy, ts, entity=ent, min_usd=floor))
+            return [self.add_invoice(kind, ent, ts, lines, ["midnight"]).key]
         return None
 
     # ------------------------------------------------------------ FX
+    def choose_holidays(self) -> None:
+        """Days without a published rate. Drawn before the errors are planned, so an error target can fall on
+        a holiday like any ordinary document; the period boundary days stay business days."""
+        h, rng = self.h, self.rng
+        candidates = [d for d in self.period_dates(weekday_only=True) if d not in (h.p_first_date, h.p_last_date)]
+        h.holidays = sorted(rng.sample(candidates, k=min(rng.randint(0, 2), len(candidates))))
+
     def build_fx(self) -> None:
         h, rng = self.h, self.rng
         start = h.local_date(h.lookback_start) - timedelta(days=FX_MARGIN_DAYS)
         end = h.local_date(h.cutoff_end) + timedelta(days=1)
-        candidates = [d for d in self.period_dates(weekday_only=True) if d not in self.protected_dates and d.day not in (1,)]
-        n_hol = rng.randint(0, 2)
-        h.holidays = sorted(rng.sample(candidates, k=min(n_hol, len(candidates))))
         days = []
         d = start
         while d <= end:
@@ -506,6 +637,23 @@ class HistoryBuilder:
             if r is not None:
                 return r, day
         return None
+
+    def lift_opening_bank(self, lines: list) -> bool:
+        """Raise the opening bank balance (deterministically, no RNG draw) so that the running bank balance of
+        the clean books never goes negative; a margin of 2 % of all bank outflows also covers the small
+        differences the injected errors make. Returns True when the balance changed."""
+        bal, low, outflow = 0, None, 0
+        for ln in lines:  # lines are in posting order
+            if ln.account == "1000":
+                bal += ln.debit - ln.credit
+                outflow += ln.credit
+                low = bal if low is None else min(low, bal)
+        floor_balance = outflow // 50
+        if low is None or low >= floor_balance:
+            return False
+        grain = 10 ** (self.h.exponents[self.h.base] + 3)
+        self.h.opening_bank += -(-(floor_balance - low) // grain) * grain
+        return True
 
     # ------------------------------------------------------------ misc journals
     def fill_misc(self, rows_needed: int) -> None:

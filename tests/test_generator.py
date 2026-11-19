@@ -133,6 +133,69 @@ class VerificationTests(unittest.TestCase):
         self.assertNotEqual(a.episode_id, b.episode_id)
 
 
+class DataRealismTests(unittest.TestCase):
+    def test_twin_keeps_the_whole_history_for_every_seed(self):
+        # In 0.1.0 a twin of a duplicated monthly subscription ("Cloud hosting SUB-{ym}") reused the original's
+        # line ref, became a true duplicate and silently built a different history. Find such seeds (they move
+        # whenever generation changes) and check that the twin now keeps the whole history.
+        cfg = {"size": "small", "errors": {"duplicate_invoice": 1}}
+        cloud, other = [], []
+        for seed in range(80):
+            ep = generate_episode(seed, cfg, verify=False).episode
+            orig = {i["invoice_id"]: i for i in ep.invoices}[ep.provenance["injections"][0]["targets"]["original"]]
+            (cloud if orig["line_items"][0]["description"].startswith("Cloud hosting") else other).append(seed)
+            if len(cloud) >= 3 and len(other) >= 2:
+                break
+        self.assertGreaterEqual(len(cloud), 3, "no seed duplicates a subscription invoice")
+        for seed in cloud[:3] + other[:2]:
+            a = generate_episode(seed, cfg)
+            b = generate_episode(seed, {**cfg, "twin": True})
+            with self.subTest(seed=seed, subscription=seed in cloud):
+                self.assertEqual(b.rejected, [])
+                self.assertEqual(len(b.episode.truth["issues"]), 0)
+                rows = lambda g: sorted((r["timestamp"], r["account"], r["debit_minor"], r["credit_minor"]) for r in g.episode.ledger)
+                self.assertEqual(rows(a), rows(b))
+                self.assertEqual(len(a.episode.payments), len(b.episode.payments))
+                pair = next(d["ids"] for d in b.episode.provenance["distractors"] if d["kind"] == "twin_legit_repeat")
+                by_id = {i["invoice_id"]: i for i in b.episode.invoices}
+                self.assertNotEqual(by_id[pair[0]]["line_items"][0]["ref"], by_id[pair[1]]["line_items"][0]["ref"])
+
+    def test_fx_invoice_partial_allocation_is_always_partial(self):
+        for seed in range(6):
+            ep = generate_episode(seed, {"size": "small", "interacting": ["fx_invoice_partial_allocation"]}).episode
+            variants = [i["variant"] for i in ep.provenance["injections"] if i["type"] == "unallocated_payment"]
+            self.assertEqual(variants, ["partial"])
+        with self.assertRaises(ConfigError):
+            generate_episode(1, {"interacting": ["fx_invoice_partial_allocation"], "variants": {"unallocated_payment": ["missing"]}})
+
+    def test_clean_books_never_overdraw_the_bank(self):
+        from auditgym.timeutil import parse_ts
+
+        for seed in (11, 12, 13):
+            for size in ("small", "large"):
+                g = generate_episode(seed, {"size": size})
+                bal = 0
+                for r in sorted(g.episode.ledger, key=lambda r: parse_ts(r["timestamp"])):
+                    if r["account"] == "1000":
+                        bal += r["debit_minor"] - r["credit_minor"]
+                        self.assertGreaterEqual(bal, 0, (seed, size))
+
+    def test_provenance_config_is_canonical(self):
+        a = generate_episode(42, {"size": "small", "errors": {"wrong_fx_rate": 1}})
+        b = generate_episode(42, {"errors": {"wrong_fx_rate": 1}, "size": "small"})
+        self.assertEqual(a.episode.grader_texts(), b.episode.grader_texts())
+
+    def test_subscription_refs_are_unique_per_supplier_month(self):
+        for seed in range(8):
+            ep = generate_episode(seed, {"size": "medium"}).episode
+            seen = set()
+            for inv in ep.invoices:
+                if inv["kind"] == "purchase":
+                    key = (inv["entity_id"], inv["line_items"][0]["ref"])
+                    self.assertNotIn(key, seen)
+                    seen.add(key)
+
+
 class DeterminismTests(unittest.TestCase):
     def test_same_seed_same_bytes(self):
         a = generate_episode(77, {"size": "small", "errors": {"wrong_period": 1}}).episode

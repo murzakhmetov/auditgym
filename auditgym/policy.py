@@ -102,8 +102,9 @@ def build_policy(*, tz: str, schedule: list, period_start: str, period_end: str,
         "journal_grouping": "Ledger rows form one journal when they share payment_id; otherwise when they share invoice_id; otherwise when they share timestamp.",
         "duplicate_rule": (
             "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item "
-            "(description, quantity, unit_price_minor, amount_minor, ref) are identical. Invoices that differ in any "
-            "line ref are separate supplies, even with the same supplier, date and amount."
+            "(description, quantity, unit_price_minor, amount_minor, ref) are identical; issued_at is identical when "
+            "it denotes the same instant (compare as instants, whatever offset each timestamp is written with). "
+            "Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount."
         ),
         "accounts": dict(ACCOUNTS),
         "nulls": "Missing references are explicit nulls: an empty field in CSV, null in JSON. Links are never guessed.",

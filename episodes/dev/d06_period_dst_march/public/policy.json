@@ -30,25 +30,22 @@
     "date_rule": "Use the rate dated on the document's local calendar date (issued_at for invoices, timestamp for payments). If no rate is published on that date, use the latest earlier published date.",
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
-      "holidays_without_rates": [
-        "2026-03-03",
-        "2026-03-24"
-      ],
+      "holidays_without_rates": [],
       "first_date": "2026-01-13",
       "last_date": "2026-04-09"
     },
     "conversion": "base_minor = round(amount_minor * rate * 10^(exp_base - exp_document))",
-    "rounding": "half_even",
+    "rounding": "half_up",
     "other_pairs": "Rows for pairs other than document currency -> base currency are not used for postings."
   },
   "currency_exponents": {
     "EUR": 2,
-    "CHF": 2,
     "GBP": 2,
-    "JPY": 0
+    "CHF": 2,
+    "USD": 2
   },
   "rounding": {
-    "mode": "half_even",
+    "mode": "half_up",
     "modes": {
       "half_even": "round half to even",
       "half_up": "round half away from zero"
@@ -69,7 +66,7 @@
     "opening": "One opening journal per open invoice (keyed by invoice_id) and one bank opening journal without IDs, all dated at period start."
   },
   "journal_grouping": "Ledger rows form one journal when they share payment_id; otherwise when they share invoice_id; otherwise when they share timestamp.",
-  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical. Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount.",
+  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical; issued_at is identical when it denotes the same instant (compare as instants, whatever offset each timestamp is written with). Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount.",
   "accounts": {
     "1000": "Bank",
     "1100": "Accounts receivable",

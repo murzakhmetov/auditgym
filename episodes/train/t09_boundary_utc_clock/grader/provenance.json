@@ -1,16 +1,16 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "4482910736655019231",
   "secret_used": false,
   "config": {
-    "size": "small",
-    "timezone": "Asia/Almaty",
-    "ts_repr": "utc",
     "errors": {
       "wrong_period": 2
     },
+    "size": "small",
+    "timezone": "Asia/Almaty",
+    "ts_repr": "utc",
     "variants": {
       "wrong_period": [
         "utc_wall_clock"
@@ -20,16 +20,16 @@
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "GBP",
+    "base_currency": "USD",
     "foreign_currencies": [
-      "USD"
+      "GBP"
     ],
     "timezone": "Asia/Almaty",
-    "period": "2025-08",
+    "period": "2025-11",
     "rounding": "half_up",
     "id_style": "numeric",
     "ts_repr": "utc",
-    "row_order": "time",
+    "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 0,
@@ -63,31 +63,29 @@
       "underpayment": 1,
       "overpayment_refund": 1,
       "null_ref_receipt": 1,
-      "boundary_doc": 2,
-      "midnight_fx": 1,
-      "weekend_fx": 1
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 5
     },
     "counts": {
-      "customers": 7,
-      "suppliers": 7,
-      "sales_invoices": 16,
-      "purchase_invoices": 10,
-      "prior_invoices": 5,
-      "target_rows": 252
+      "customers": 8,
+      "suppliers": 6,
+      "sales_invoices": 14,
+      "purchase_invoices": 12,
+      "prior_invoices": 4,
+      "target_rows": 388
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Selix Machinery LLP",
-    "customers": 7,
-    "suppliers": 7,
-    "invoices": 50,
-    "payments": 26,
-    "misc_journals": 46,
-    "holidays": [
-      "2025-08-28"
-    ]
+    "company": "Valion Agro LLP",
+    "customers": 8,
+    "suppliers": 6,
+    "invoices": 51,
+    "payments": 31,
+    "misc_journals": 95,
+    "holidays": []
   },
   "injections": [
     {
@@ -96,10 +94,10 @@
       "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "invoice": "17850965"
+        "invoice": "18249470"
       },
       "change": {
-        "posting_ts": "2025-08-31T14:11:43+00:00"
+        "posting_ts": "2025-11-30T17:48:23+00:00"
       }
     },
     {
@@ -108,10 +106,10 @@
       "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "invoice": "13281210"
+        "invoice": "21602351"
       },
       "change": {
-        "posting_ts": "2025-08-31T15:22:49+00:00"
+        "posting_ts": "2025-11-30T18:45:42+00:00"
       }
     }
   ],
@@ -119,76 +117,102 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "29671770",
-        "26091198"
+        "25529607",
+        "26456892"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "21816489",
-        "26210863"
+        "28759630",
+        "21874456"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "11125157",
-        "39875342",
-        "34515970"
+        "15737731",
+        "37994628",
+        "34410608"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "17657601",
-        "18752936",
-        "32872357"
+        "11349569",
+        "15275458",
+        "38237928"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "15306114",
-        "35989797"
+        "19454324",
+        "32581818"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "17034415",
-        "32624051",
-        "58771457"
+        "18729590",
+        "39074583",
+        "53896080"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "31932125"
+        "31821144"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "13064664"
+        "13253959",
+        "31977055"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "27617162"
+        "28236616"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "28265328"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "15542538"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "27284239"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "27627782"
+        "16807071"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "26235523",
+        "48924098"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "15879279"
+        "16110045"
       ]
     }
   ],
@@ -196,38 +220,38 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "94109482",
+      "id": "96845674",
       "field": "timestamp",
-      "before": "2025-08-31T20:22:49Z",
-      "after": "2025-08-31T15:22:49Z"
+      "before": "2025-11-30T22:48:23Z",
+      "after": "2025-11-30T17:48:23Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "96038331",
+      "id": "97560191",
       "field": "timestamp",
-      "before": "2025-08-31T19:11:43Z",
-      "after": "2025-08-31T14:11:43Z"
+      "before": "2025-11-30T22:48:23Z",
+      "after": "2025-11-30T17:48:23Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "97580266",
+      "id": "97827574",
       "field": "timestamp",
-      "before": "2025-08-31T20:22:49Z",
-      "after": "2025-08-31T15:22:49Z"
+      "before": "2025-11-30T23:45:42Z",
+      "after": "2025-11-30T18:45:42Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "99829257",
+      "id": "99802292",
       "field": "timestamp",
-      "before": "2025-08-31T19:11:43Z",
-      "after": "2025-08-31T14:11:43Z"
+      "before": "2025-11-30T23:45:42Z",
+      "after": "2025-11-30T18:45:42Z"
     }
   ],
-  "clean_digest": "16994c6e0f4003181db652b3b72dbd81b02cf2623dbcdced7aa71659fb62a0ff",
-  "clean_records_digest": "1115590530b1c28a3aa7165fbcc3e0119d15ee168c20c9f564100c79527cd722",
-  "final_digest": "1c14248ffe9a4e388fa144345bb4c7e3999697a6a2475fef4aa6a71bbdec7b23",
+  "clean_digest": "3a3518936af90c6663f7b7b2f5dea816b07932e6836e16c431c199090cff0a7f",
+  "clean_records_digest": "a0266a6f96780eab8846ba9344fdc49133bbabdb649638dcaf7ecea76e28eabe",
+  "final_digest": "6799e058e19fcb806ab54b4c9917c365faf2adc77e904be3c747096c9b9d0d09",
   "rejected_attempts": []
 }

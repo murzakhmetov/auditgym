@@ -3,7 +3,7 @@
   "note": "Source company histories are split between train and dev first (distinct seeds); variants of one history (the t03/t10 twin pair) stay in the same split. Dev uses held-out regimes: other base currencies, time zones, offsets, densities and larger ledgers.",
   "train": [
     {"name": "t01_clean_small", "seed": 7310428851902345611, "config": {"size": "small"}},
-    {"name": "t02_clean_distractors", "seed": 1958233070461129947, "config": {"size": "small", "distractors": {"legit_repeat": 2, "recurring": 2, "split_payment": 2, "overpayment_refund": 2, "null_ref_receipt": 2, "boundary_doc": 3, "midnight_fx": 2, "weekend_fx": 2}}},
+    {"name": "t02_clean_distractors", "seed": 1958233070461129947, "config": {"size": "small"}},
     {"name": "t03_duplicate", "seed": 5520017338842210093, "config": {"size": "small", "errors": {"duplicate_invoice": 1}}},
     {"name": "t04_unallocated", "seed": 8840212650077123541, "config": {"size": "small", "errors": {"unallocated_payment": 1}}},
     {"name": "t05_fx_rate", "seed": 2297715560094823317, "config": {"size": "small", "errors": {"wrong_fx_rate": 1}}},
@@ -14,7 +14,7 @@
     {"name": "t10_duplicate_twin_legit", "seed": 5520017338842210093, "config": {"size": "small", "errors": {"duplicate_invoice": 1}, "twin": true}}
   ],
   "dev": [
-    {"name": "d01_clean_repeats_jpy", "seed": 1263440917783250649, "config": {"size": "small", "base_currency": "JPY", "timezone": "Asia/Tokyo", "distractors": {"legit_repeat": 3, "recurring": 3, "split_payment": 3, "multi_invoice_payment": 2, "underpayment": 3, "overpayment_refund": 2, "null_ref_receipt": 2, "boundary_doc": 4, "midnight_fx": 3, "weekend_fx": 3}}},
+    {"name": "d01_clean_repeats_jpy", "seed": 1263440917783250649, "config": {"size": "small", "base_currency": "JPY", "timezone": "Asia/Tokyo"}},
     {"name": "d02_clean_kwd_medium", "seed": 7730195562281004417, "config": {"size": "medium", "base_currency": "KWD", "timezone": "Asia/Kuwait"}},
     {"name": "d03_duplicates_gbp", "seed": 2811470655390218809, "config": {"size": "medium", "base_currency": "GBP", "timezone": "Europe/London", "errors": {"duplicate_invoice": 2}, "distractors": {"legit_repeat": 3}}},
     {"name": "d04_unallocated_missing_eur", "seed": 6156091238847763121, "config": {"size": "medium", "base_currency": "EUR", "timezone": "Europe/Berlin", "errors": {"unallocated_payment": 2}, "variants": {"unallocated_payment": ["missing"]}}},

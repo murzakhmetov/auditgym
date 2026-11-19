@@ -1,32 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_d2c358b7f2e945a5",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_d9f26d15631b2bc7",
   "company": {
-    "name": "Torara Foods GmbH",
+    "name": "Torana Machinery GmbH",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "USD": 2,
-    "CHF": 2,
-    "JPY": 0
+    "GBP": 2,
+    "JPY": 0,
+    "CHF": 2
   },
-  "period_start": "2026-01-01T00:00:00+01:00",
-  "period_end": "2026-02-01T00:00:00+01:00",
-  "ledger_extract_end": "2026-02-08T00:00:00+01:00",
+  "period_start": "2027-10-01T00:00:00+02:00",
+  "period_end": "2027-11-01T00:00:00+01:00",
+  "ledger_extract_end": "2027-11-08T00:00:00+01:00",
   "timezone": "Europe/Berlin",
   "record_counts": {
-    "ledger": 773,
-    "invoices": 86,
-    "payments": 59,
-    "fx": 210
+    "ledger": 945,
+    "invoices": 89,
+    "payments": 57,
+    "fx": 200
   },
   "document_counts": {
-    "invoices": 86,
-    "payments": 59,
-    "total": 145
+    "invoices": 89,
+    "payments": 57,
+    "total": 146
   },
   "rounding": {
     "mode": "half_even",

@@ -1,28 +1,27 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "9012646071356280087",
   "secret_used": false,
   "config": {
-    "size": "medium",
     "interacting": [
       "fx_invoice_partial_allocation"
-    ]
+    ],
+    "size": "medium"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "medium",
-    "base_currency": "KZT",
+    "base_currency": "EUR",
     "foreign_currencies": [
-      "AED",
-      "EUR"
+      "JPY"
     ],
     "timezone": "Europe/London",
-    "period": "2025-01",
+    "period": "2026-07",
     "rounding": "half_up",
-    "id_style": "hex",
-    "ts_repr": "mixed",
+    "id_style": "slashed",
+    "ts_repr": "utc",
     "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
@@ -61,42 +60,45 @@
       "underpayment": 2,
       "overpayment_refund": 1,
       "null_ref_receipt": 2,
-      "boundary_doc": 3,
-      "midnight_fx": 2,
-      "weekend_fx": 2
+      "midnight_fx": 3,
+      "weekend_fx": 2,
+      "boundary_doc": 8
     },
     "counts": {
       "customers": 13,
-      "suppliers": 8,
-      "sales_invoices": 40,
-      "purchase_invoices": 17,
+      "suppliers": 7,
+      "sales_invoices": 30,
+      "purchase_invoices": 19,
       "prior_invoices": 5,
-      "target_rows": 688
+      "target_rows": 636
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Zanen Retail Ltd",
+    "company": "Astaro Agro Ltd",
     "customers": 13,
-    "suppliers": 8,
+    "suppliers": 7,
     "invoices": 87,
-    "payments": 56,
-    "misc_journals": 180,
-    "holidays": []
+    "payments": 57,
+    "misc_journals": 151,
+    "holidays": [
+      "2026-07-08",
+      "2026-07-30"
+    ]
   },
   "injections": [
     {
       "issue_id": "iss_01",
       "type": "unallocated_payment",
-      "variant": "missing",
+      "variant": "partial",
       "scenario": "fx_invoice_partial_allocation",
       "targets": {
-        "payment": "rc_b5614eb2",
-        "invoice": "si_08296365"
+        "payment": "BR/2026/109520",
+        "invoice": "SI/2026/644431"
       },
       "change": {
-        "alloc": 0
+        "alloc": 577912
       }
     },
     {
@@ -105,14 +107,14 @@
       "variant": "posting_date",
       "scenario": "fx_invoice_partial_allocation",
       "targets": {
-        "invoice": "si_08296365"
+        "invoice": "SI/2026/644431"
       },
       "change": {
-        "posting_ts": "2025-01-28T08:40:42+00:00",
-        "correct_rate": "561.102",
-        "correct_rate_date": "2025-01-22",
-        "wrong_rate": "563.744",
-        "wrong_rate_date": "2025-01-28"
+        "posting_ts": "2026-07-07T17:52:55+00:00",
+        "correct_rate": "0.00609570",
+        "correct_rate_date": "2026-07-03",
+        "wrong_rate": "0.00608920",
+        "wrong_rate_date": "2026-07-07"
       }
     }
   ],
@@ -120,204 +122,242 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_4b0b4e7c",
-        "pi_d2307473"
+        "PI/2026/903912",
+        "PI/2026/468409"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_3b2cf3c1",
-        "pi_660f11b5"
+        "PI/2026/883892",
+        "PI/2026/239145",
+        "BP/2026/387324"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_2adf83bd",
-        "pi_4eacb771"
+        "PI/2026/117657",
+        "PI/2026/449219"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_594670e1",
-        "pi_11eba3dd"
+        "PI/2026/767954",
+        "PI/2026/825260"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_e98319a0",
-        "rc_236d172c",
-        "rc_9c5b86df"
+        "SI/2026/777041",
+        "BR/2026/208169",
+        "BR/2026/875200"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_f977f578",
-        "rc_d0d22822",
-        "rc_664274ed"
+        "SI/2026/675197",
+        "BR/2026/910586",
+        "BR/2026/926976"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_024e61bb",
-        "si_93777386",
-        "rc_a65f22c7"
+        "SI/2026/305591",
+        "SI/2026/828068",
+        "BR/2026/618384"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_ff7552a6",
-        "rc_c3ee77a6"
+        "SI/2026/976980",
+        "BR/2026/805828"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_6b8714b7",
-        "rc_eb653776"
+        "SI/2026/402223",
+        "BR/2026/457021"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_66a8ad7e",
-        "rc_60a1f186",
-        "rf_6b96f75b"
+        "SI/2026/500884",
+        "BR/2026/419252",
+        "RF/2026/692007"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_5f81a568"
+        "BR/2026/385497"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_c430e348"
+        "BR/2026/718087"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_395e28d1"
+        "SI/2026/311442",
+        "BR/2026/708224"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_f5ab0021"
+        "SI/2026/331314",
+        "BR/2026/499120"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_89d13078"
+        "PI/2026/763947"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/895874"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/253345",
+        "BP/2026/732503"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/352542"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/110476",
+        "BR/2026/896899"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/493048"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2026/859159"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2026/844797",
+        "BR/2026/112386"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "PI/2026/347864"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_a339c99e"
+        "SI/2026/758067"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_17feb069"
+        "SI/2026/184980"
       ]
     }
   ],
   "ops": [
     {
-      "op": "remove",
+      "op": "set",
       "table": "ledger",
-      "id": "gl_08f5b081",
-      "record": {
-        "row_id": "gl_08f5b081",
-        "timestamp": "2025-01-31T12:56:12+00:00",
-        "account": "1100",
-        "debit_minor": 0,
-        "credit_minor": 189460018,
-        "currency": "KZT",
-        "entity_id": "cus_09aa4bd3",
-        "invoice_id": "si_08296365",
-        "payment_id": "rc_b5614eb2"
-      }
-    },
-    {
-      "op": "remove",
-      "table": "ledger",
-      "id": "gl_9ca8919a",
-      "record": {
-        "row_id": "gl_9ca8919a",
-        "timestamp": "2025-01-31T22:56:12+10:00",
-        "account": "7900",
-        "debit_minor": 0,
-        "credit_minor": 1183825,
-        "currency": "KZT",
-        "entity_id": "cus_09aa4bd3",
-        "invoice_id": null,
-        "payment_id": "rc_b5614eb2"
-      }
+      "id": "J/2026/266051",
+      "field": "credit_minor",
+      "before": 479768,
+      "after": 351902
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_9f8e048e",
+      "id": "J/2026/492372",
       "field": "timestamp",
-      "before": "2025-01-22T09:21:15+00:00",
-      "after": "2025-01-28T08:40:42+00:00"
+      "before": "2026-07-03T11:15:09Z",
+      "after": "2026-07-07T17:52:55Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_9f8e048e",
+      "id": "J/2026/492372",
+      "field": "credit_minor",
+      "before": 479768,
+      "after": 479257
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/506129",
       "field": "debit_minor",
-      "before": 227195811,
-      "after": 228265583
+      "before": 1829,
+      "after": 967
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/849710",
+      "field": "timestamp",
+      "before": "2026-07-03T11:15:09Z",
+      "after": "2026-07-07T17:52:55Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/849710",
+      "field": "debit_minor",
+      "before": 479768,
+      "after": 479257
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "gl_c3170cf4",
+      "id": "J/2026/868823",
       "record": {
-        "row_id": "gl_c3170cf4",
-        "timestamp": "2025-01-31T12:56:12+00:00",
+        "row_id": "J/2026/868823",
+        "timestamp": "2026-07-12T15:56:16Z",
         "account": "2900",
         "debit_minor": 0,
-        "credit_minor": 190643843,
-        "currency": "KZT",
-        "entity_id": "cus_09aa4bd3",
+        "credit_minor": 127004,
+        "currency": "EUR",
+        "entity_id": "CU/770013",
         "invoice_id": null,
-        "payment_id": "rc_b5614eb2"
+        "payment_id": "BR/2026/109520"
       }
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "gl_e3e5004b",
-      "field": "timestamp",
-      "before": "2025-01-22T09:21:15Z",
-      "after": "2025-01-28T08:40:42Z"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "gl_e3e5004b",
-      "field": "credit_minor",
-      "before": 227195811,
-      "after": 228265583
     }
   ],
-  "clean_digest": "d30af4ee52f036ad1a6b78d34d09769cc219e4e1c2c66f1fb6c115b14a5d23aa",
-  "clean_records_digest": "9887210a9a8732ae563a89a3cebaf4b63877174d9a56b15ee41815c96dab3388",
-  "final_digest": "512d5e71f841d1203be04c99d8d975665c69b9be5e7a0f00243ef4ede9f5c9bd",
+  "clean_digest": "35dde7784cd7dd6779765c9e2188fd703d69cd30d38ae9a65e834018203478f0",
+  "clean_records_digest": "fcbad29f5e8d4db45200ed90e85487d06285449915814a43d62ecb2ac22a7a15",
+  "final_digest": "d79b39b1679110ef074ca02c6b0a2d03c1c02b76207198fabb6c1058ab363ed9",
   "rejected_attempts": []
 }

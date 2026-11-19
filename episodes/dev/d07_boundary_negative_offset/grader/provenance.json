@@ -1,33 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "4716629081574412983",
   "secret_used": false,
   "config": {
-    "size": "medium",
     "base_currency": "USD",
-    "timezone": "America/Sao_Paulo",
+    "errors": {
+      "duplicate_invoice": 1
+    },
     "interacting": [
       "boundary_fx_payment"
     ],
-    "errors": {
-      "duplicate_invoice": 1
-    }
+    "size": "medium",
+    "timezone": "America/Sao_Paulo"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "medium",
     "base_currency": "USD",
     "foreign_currencies": [
-      "KWD",
-      "EUR"
+      "JPY",
+      "KWD"
     ],
     "timezone": "America/Sao_Paulo",
-    "period": "2025-03",
-    "rounding": "half_up",
-    "id_style": "slashed",
-    "ts_repr": "mixed",
+    "period": "2026-08",
+    "rounding": "half_even",
+    "id_style": "numeric",
+    "ts_repr": "utc",
     "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 1,
@@ -66,30 +66,31 @@
       "underpayment": 2,
       "overpayment_refund": 1,
       "null_ref_receipt": 2,
-      "boundary_doc": 3,
-      "midnight_fx": 2,
-      "weekend_fx": 2
+      "midnight_fx": 3,
+      "weekend_fx": 2,
+      "boundary_doc": 8
     },
     "counts": {
       "customers": 12,
       "suppliers": 8,
-      "sales_invoices": 31,
-      "purchase_invoices": 20,
-      "prior_invoices": 8,
-      "target_rows": 741
+      "sales_invoices": 40,
+      "purchase_invoices": 16,
+      "prior_invoices": 6,
+      "target_rows": 895
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Rynella Systems Ltda",
-    "customers": 12,
-    "suppliers": 8,
-    "invoices": 87,
-    "payments": 48,
-    "misc_journals": 213,
+    "company": "Tavella Energy Ltda",
+    "customers": 14,
+    "suppliers": 9,
+    "invoices": 95,
+    "payments": 59,
+    "misc_journals": 263,
     "holidays": [
-      "2025-03-21"
+      "2026-08-07",
+      "2026-08-17"
     ]
   },
   "injections": [
@@ -99,8 +100,8 @@
       "variant": "same_day_copy",
       "scenario": "single",
       "targets": {
-        "original": "PI/2025/291275",
-        "copy": "PI/2025/832577"
+        "original": "27913647",
+        "copy": "24432427"
       },
       "change": {}
     },
@@ -110,13 +111,13 @@
       "variant": "utc_date",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "BR/2025/660266"
+        "payment": "34231722"
       },
       "change": {
-        "wrong_rate_date": "2025-04-01",
-        "correct_rate": "1.11563",
-        "correct_rate_date": "2025-03-31",
-        "wrong_rate": "1.11649"
+        "wrong_rate_date": "2026-09-01",
+        "correct_rate": "3.34019",
+        "correct_rate_date": "2026-08-31",
+        "wrong_rate": "3.32698"
       }
     },
     {
@@ -125,10 +126,10 @@
       "variant": "utc_wall_clock",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "BR/2025/660266"
+        "payment": "34231722"
       },
       "change": {
-        "posting_ts": "2025-04-01T05:08:59+00:00"
+        "posting_ts": "2026-09-01T04:06:09+00:00"
       }
     }
   ],
@@ -136,129 +137,172 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "PI/2025/416119",
-        "PI/2025/600770"
+        "28264134",
+        "25123283",
+        "43733629"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "PI/2025/275533",
-        "PI/2025/991600"
+        "23424627",
+        "26314272",
+        "47141390"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "PI/2025/338216",
-        "PI/2025/123596"
+        "24310808",
+        "21579736"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "PI/2025/494811",
-        "PI/2025/481741"
+        "27058942",
+        "26245264"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "SI/2025/884097",
-        "BR/2025/885775",
-        "BR/2025/488489"
+        "17160488",
+        "31595611",
+        "39700991"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "SI/2025/622981",
-        "BR/2025/667467",
-        "BR/2025/731558"
+        "18435149",
+        "36541350",
+        "31162574"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "SI/2025/780903",
-        "SI/2025/549554",
-        "BR/2025/467470"
+        "18273161",
+        "14165188",
+        "33019670"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "SI/2025/546335",
-        "BR/2025/179516"
+        "17884701",
+        "35253529"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "SI/2025/125935",
-        "BR/2025/350391"
+        "14409634",
+        "37169792"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "SI/2025/107883",
-        "BR/2025/191512",
-        "RF/2025/952376"
+        "18876161",
+        "38792635",
+        "59437705"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "BR/2025/289512"
+        "31030381"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "BR/2025/373954"
+        "37206533"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "SI/2025/156568"
+        "18890106"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "PI/2025/140157"
+        "17221836"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "SI/2025/876058"
+        "14873771"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "22610585",
+        "47320287"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "11435775",
+        "39796161"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "18393850",
+        "38558933"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "14823401"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "23603324",
+        "49853136"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "PI/2025/578187"
+        "21171796"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "SI/2025/752492"
+        "22516169",
+        "47990414"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "15481444"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "SI/2025/451240"
+        "11032566"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "SI/2025/516541"
+        "13162559"
       ]
     }
   ],
@@ -266,103 +310,103 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2025/298010",
+      "id": "91030598",
       "field": "timestamp",
-      "before": "2025-03-31T23:08:59-03:00",
-      "after": "2025-04-01T02:08:59-03:00"
+      "before": "2026-09-01T01:06:09Z",
+      "after": "2026-09-01T04:06:09Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2025/581006",
+      "id": "91626714",
       "field": "timestamp",
-      "before": "2025-04-01T05:08:59+03:00",
-      "after": "2025-04-01T08:08:59+03:00"
+      "before": "2026-09-01T01:06:09Z",
+      "after": "2026-09-01T04:06:09Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2025/581006",
+      "id": "91626714",
       "field": "credit_minor",
-      "before": 3915,
-      "after": 4285
+      "before": 8365,
+      "after": 6314
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2025/586591",
+      "id": "95944786",
       "field": "timestamp",
-      "before": "2025-04-01T02:08:59Z",
-      "after": "2025-04-01T05:08:59Z"
+      "before": "2026-09-01T01:06:09Z",
+      "after": "2026-09-01T04:06:09Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2025/586591",
+      "id": "95944786",
       "field": "debit_minor",
-      "before": 480030,
-      "after": 480400
+      "before": 518465,
+      "after": 516414
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "J/2025/694575",
+      "id": "96395109",
       "record": {
-        "row_id": "J/2025/694575",
-        "timestamp": "2025-03-03T13:16:01-03:00",
-        "account": "5000",
-        "debit_minor": 68675,
-        "credit_minor": 0,
+        "row_id": "96395109",
+        "timestamp": "2026-08-07T19:08:02Z",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 108440,
         "currency": "USD",
-        "entity_id": "SU/702360",
-        "invoice_id": "PI/2025/832577",
+        "entity_id": "79089331",
+        "invoice_id": "24432427",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "J/2025/970605",
+      "id": "99965460",
       "record": {
-        "row_id": "J/2025/970605",
-        "timestamp": "2025-03-03T13:16:01-03:00",
-        "account": "2000",
-        "debit_minor": 0,
-        "credit_minor": 68675,
+        "row_id": "99965460",
+        "timestamp": "2026-08-07T19:08:02Z",
+        "account": "5000",
+        "debit_minor": 108440,
+        "credit_minor": 0,
         "currency": "USD",
-        "entity_id": "SU/702360",
-        "invoice_id": "PI/2025/832577",
+        "entity_id": "79089331",
+        "invoice_id": "24432427",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "D/2025/211402",
+      "id": "87117388",
       "record": {
-        "doc_id": "D/2025/211402",
-        "invoice_id": "PI/2025/832577",
+        "doc_id": "87117388",
+        "invoice_id": "24432427",
         "kind": "purchase",
-        "entity_id": "SU/702360",
-        "issued_at": "2025-03-03T16:16:01Z",
-        "due_at": "2025-04-18T02:59:59Z",
+        "entity_id": "79089331",
+        "issued_at": "2026-08-07T19:08:02Z",
+        "due_at": "2026-08-22T02:59:59Z",
         "currency": "USD",
-        "total_minor": 68675,
+        "total_minor": 108440,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Warehouse cleaning WO-4004",
+            "description": "Freight WB-97363",
             "quantity": 1,
-            "unit_price_minor": 68675,
-            "amount_minor": 68675,
-            "ref": "WO-4004"
+            "unit_price_minor": 108440,
+            "amount_minor": 108440,
+            "ref": "WB-97363"
           }
         ]
       }
     }
   ],
-  "clean_digest": "706834be941a9cdf65ef18a2b32a450b92047fa116dc39c2452a8bd7a4ae2c53",
-  "clean_records_digest": "c39affbcaf96167503cee2ad476032b4587e0eaf338c64833da55e033ebc36ba",
-  "final_digest": "6b5abec6f5e4ecd1c298491ed2d8d56ad175593e76494765b370879d88a3aa29",
+  "clean_digest": "0ca8d4f300132215333edaf483fef78242243d40260c24e61e32dcf06df7a170",
+  "clean_records_digest": "6af84a8cd7ad0a4cd3fa2d24f3cd2c1c2330634729c47c89ad7ae4e88ef3f4c1",
+  "final_digest": "c9151a8afb7db6a9673bae1cc73bb05ae00100631bef7ad7ee62620c390c7e5f",
   "rejected_attempts": []
 }

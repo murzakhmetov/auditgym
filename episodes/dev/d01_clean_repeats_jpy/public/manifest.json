@@ -1,35 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_ee223b1157d7e933",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_768f96420aeb86dd",
   "company": {
-    "name": "Kaiix Energy KK",
+    "name": "Eloana Foods KK",
     "synthetic": true
   },
   "base_currency": "JPY",
   "currency_exponents": {
     "JPY": 0,
-    "EUR": 2,
+    "KRW": 0,
     "USD": 2,
-    "KRW": 0
+    "EUR": 2
   },
-  "period_start": "2026-04-01T00:00:00+09:00",
-  "period_end": "2026-05-01T00:00:00+09:00",
-  "ledger_extract_end": "2026-05-08T00:00:00+09:00",
+  "period_start": "2026-03-01T00:00:00+09:00",
+  "period_end": "2026-04-01T00:00:00+09:00",
+  "ledger_extract_end": "2026-04-08T00:00:00+09:00",
   "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 329,
-    "invoices": 74,
-    "payments": 40,
-    "fx": 207
+    "ledger": 300,
+    "invoices": 51,
+    "payments": 29,
+    "fx": 210
   },
   "document_counts": {
-    "invoices": 74,
-    "payments": 40,
-    "total": 114
+    "invoices": 51,
+    "payments": 29,
+    "total": 80
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

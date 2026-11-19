@@ -1,35 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_72c8dcdef9ebb88c",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_98c6d1692b101589",
   "company": {
-    "name": "Coraro Retail Inc",
+    "name": "Ostella Systems Inc",
     "synthetic": true
   },
   "base_currency": "USD",
   "currency_exponents": {
     "USD": 2,
-    "KWD": 3,
     "GBP": 2,
-    "EUR": 2
+    "EUR": 2,
+    "KWD": 3
   },
-  "period_start": "2025-03-01T00:00:00-05:00",
-  "period_end": "2025-04-01T00:00:00-04:00",
-  "ledger_extract_end": "2025-04-08T00:00:00-04:00",
+  "period_start": "2027-09-01T00:00:00-04:00",
+  "period_end": "2027-10-01T00:00:00-04:00",
+  "ledger_extract_end": "2027-10-08T00:00:00-04:00",
   "timezone": "America/New_York",
   "record_counts": {
-    "ledger": 717,
-    "invoices": 96,
-    "payments": 59,
+    "ledger": 959,
+    "invoices": 90,
+    "payments": 51,
     "fx": 204
   },
   "document_counts": {
-    "invoices": 96,
-    "payments": 59,
-    "total": 155
+    "invoices": 90,
+    "payments": 51,
+    "total": 141
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

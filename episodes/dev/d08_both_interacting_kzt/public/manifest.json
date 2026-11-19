@@ -1,30 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_3430c163bcca685e",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_5a9a09e389264d0c",
   "company": {
-    "name": "Kenella Logistics LLP",
+    "name": "Selix Machinery LLP",
     "synthetic": true
   },
   "base_currency": "KZT",
   "currency_exponents": {
     "KZT": 2,
-    "AED": 2
+    "EUR": 2
   },
-  "period_start": "2025-06-01T00:00:00+05:00",
-  "period_end": "2025-07-01T00:00:00+05:00",
-  "ledger_extract_end": "2025-07-08T00:00:00+05:00",
+  "period_start": "2026-06-01T00:00:00+05:00",
+  "period_end": "2026-07-01T00:00:00+05:00",
+  "ledger_extract_end": "2026-07-08T00:00:00+05:00",
   "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 682,
-    "invoices": 90,
-    "payments": 58,
-    "fx": 80
+    "ledger": 914,
+    "invoices": 99,
+    "payments": 57,
+    "fx": 90
   },
   "document_counts": {
-    "invoices": 90,
-    "payments": 58,
-    "total": 148
+    "invoices": 99,
+    "payments": 57,
+    "total": 156
   },
   "rounding": {
     "mode": "half_even",

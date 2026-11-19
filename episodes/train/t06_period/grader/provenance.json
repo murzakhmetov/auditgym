@@ -1,29 +1,28 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "6403388190752104479",
   "secret_used": false,
   "config": {
-    "size": "small",
     "errors": {
       "wrong_period": 1
-    }
+    },
+    "size": "small"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "small",
     "base_currency": "KWD",
     "foreign_currencies": [
-      "BHD",
       "USD"
     ],
     "timezone": "Asia/Kathmandu",
-    "period": "2025-06",
+    "period": "2027-03",
     "rounding": "half_even",
-    "id_style": "hex",
-    "ts_repr": "mixed",
-    "row_order": "shuffled",
+    "id_style": "slashed",
+    "ts_repr": "local",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 0,
@@ -59,41 +58,41 @@
       "underpayment": 1,
       "overpayment_refund": 1,
       "null_ref_receipt": 1,
-      "boundary_doc": 2,
-      "midnight_fx": 1,
-      "weekend_fx": 1
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 2
     },
     "counts": {
-      "customers": 6,
-      "suppliers": 7,
-      "sales_invoices": 22,
-      "purchase_invoices": 9,
-      "prior_invoices": 5,
-      "target_rows": 259
+      "customers": 7,
+      "suppliers": 5,
+      "sales_invoices": 19,
+      "purchase_invoices": 11,
+      "prior_invoices": 3,
+      "target_rows": 299
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Eloeta Analytics Pvt Ltd",
-    "customers": 6,
-    "suppliers": 8,
+    "company": "Tavella Foods Pvt Ltd",
+    "customers": 7,
+    "suppliers": 5,
     "invoices": 52,
-    "payments": 28,
-    "misc_journals": 41,
+    "payments": 29,
+    "misc_journals": 53,
     "holidays": []
   },
   "injections": [
     {
       "issue_id": "iss_01",
       "type": "wrong_period",
-      "variant": "booked_early",
+      "variant": "booked_late",
       "scenario": "single",
       "targets": {
-        "invoice": "pi_a34785ac"
+        "invoice": "PI/2027/272889"
       },
       "change": {
-        "posting_ts": "2025-06-30T03:25:11+00:00"
+        "posting_ts": "2027-04-02T05:57:36+00:00"
       }
     }
   ],
@@ -101,76 +100,83 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_ba086050",
-        "pi_bb0a81fb"
+        "PI/2027/859487",
+        "PI/2027/798016"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_0980590d",
-        "pi_3b0a3e24"
+        "PI/2027/593601",
+        "PI/2027/440749"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_314509c8",
-        "rc_d865c73a",
-        "rc_a502112d"
+        "SI/2027/983573",
+        "BR/2027/168345",
+        "BR/2027/256334"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_1b4fdf61",
-        "si_d49f86ca",
-        "rc_89c4ef1d"
+        "SI/2027/491446",
+        "SI/2027/749553",
+        "BR/2027/249042"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_07c589cb",
-        "rc_a63d3ab6"
+        "SI/2027/934281",
+        "BR/2027/933434"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_e0d3af72",
-        "rc_ff47e82e",
-        "rf_82caa6c5"
+        "SI/2027/484794",
+        "BR/2027/579785",
+        "RF/2027/294664"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_9b0a1b2b"
+        "BR/2027/149074"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_b3f3beda"
+        "PI/2027/417988"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_28cda4e4"
+        "PI/2027/428176"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_3e9352cb"
+        "SI/2027/849103"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2027/591043",
+        "BR/2027/116691"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_ed9d3d0b"
+        "SI/2027/261110"
       ]
     }
   ],
@@ -178,22 +184,22 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_95c413f3",
+      "id": "J/2027/380490",
       "field": "timestamp",
-      "before": "2025-07-01T07:19:46Z",
-      "after": "2025-06-30T03:25:11Z"
+      "before": "2027-03-29T15:19:57+05:45",
+      "after": "2027-04-02T11:42:36+05:45"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_bc13cb4e",
+      "id": "J/2027/658478",
       "field": "timestamp",
-      "before": "2025-07-01T07:19:46+00:00",
-      "after": "2025-06-30T03:25:11+00:00"
+      "before": "2027-03-29T15:19:57+05:45",
+      "after": "2027-04-02T11:42:36+05:45"
     }
   ],
-  "clean_digest": "e12397a2ae7458f7a13609ced6a2afa351fe5c352f52711d143d11d8b2f8e981",
-  "clean_records_digest": "f059dd5841236996e4de5823ebbeff624971fdb75533d5669b7df064a72c52be",
-  "final_digest": "6dedb5b0ef5a20554e92b9b77ff4b523938e7505f3a7f1c4d338b6b29efe2748",
+  "clean_digest": "a6c063ad787818dba12f9e82cfa8c0aac2ec7f78056f8d9a8850d33b708b74aa",
+  "clean_records_digest": "0787e035cc94039cba9c0cf62c027f783d09e8b9c83b535610322db7b2683eda",
+  "final_digest": "5c304c2e858b6b50d6345b695084c9c07f422406ef8b80c78fd5f69f23aba4da",
   "rejected_attempts": []
 }

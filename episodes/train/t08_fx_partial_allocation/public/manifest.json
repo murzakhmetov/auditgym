@@ -1,31 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_50d97f631e7792db",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_ab6dc9ecfa068559",
   "company": {
-    "name": "Zanen Retail Ltd",
+    "name": "Astaro Agro Ltd",
     "synthetic": true
   },
-  "base_currency": "KZT",
+  "base_currency": "EUR",
   "currency_exponents": {
-    "KZT": 2,
-    "AED": 2,
-    "EUR": 2
+    "EUR": 2,
+    "JPY": 0
   },
-  "period_start": "2025-01-01T00:00:00+00:00",
-  "period_end": "2025-02-01T00:00:00+00:00",
-  "ledger_extract_end": "2025-02-08T00:00:00+00:00",
+  "period_start": "2026-07-01T00:00:00+01:00",
+  "period_end": "2026-08-01T00:00:00+01:00",
+  "ledger_extract_end": "2026-08-08T00:00:00+01:00",
   "timezone": "Europe/London",
   "record_counts": {
-    "ledger": 687,
+    "ledger": 637,
     "invoices": 87,
-    "payments": 56,
-    "fx": 143
+    "payments": 57,
+    "fx": 79
   },
   "document_counts": {
     "invoices": 87,
-    "payments": 56,
-    "total": 143
+    "payments": 57,
+    "total": 144
   },
   "rounding": {
     "mode": "half_up",

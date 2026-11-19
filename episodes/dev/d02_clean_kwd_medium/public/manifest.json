@@ -1,34 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_5a13f5014447e4ae",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_0738d124a44d4e4d",
   "company": {
-    "name": "Torum Energy Ltd",
+    "name": "Rynara Systems Ltd",
     "synthetic": true
   },
   "base_currency": "KWD",
   "currency_exponents": {
     "KWD": 3,
-    "EUR": 2,
-    "BHD": 3
+    "BHD": 3,
+    "USD": 2,
+    "EUR": 2
   },
-  "period_start": "2027-10-01T00:00:00+03:00",
-  "period_end": "2027-11-01T00:00:00+03:00",
-  "ledger_extract_end": "2027-11-08T00:00:00+03:00",
+  "period_start": "2027-08-01T00:00:00+03:00",
+  "period_end": "2027-09-01T00:00:00+03:00",
+  "ledger_extract_end": "2027-09-08T00:00:00+03:00",
   "timezone": "Asia/Kuwait",
   "record_counts": {
-    "ledger": 787,
-    "invoices": 87,
-    "payments": 54,
-    "fx": 145
+    "ledger": 798,
+    "invoices": 90,
+    "payments": 56,
+    "fx": 204
   },
   "document_counts": {
-    "invoices": 87,
-    "payments": 54,
-    "total": 141
+    "invoices": 90,
+    "payments": 56,
+    "total": 146
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

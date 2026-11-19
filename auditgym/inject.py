@@ -19,9 +19,9 @@ from datetime import date, datetime, timedelta
 from . import catalog
 from .books import Books, Overrides, policy_rate
 from .config import ConfigError, utc_date_days
-from .history import HistoryBuilder, Invoice, SampleRetry
+from .history import LARGE_PURCHASE_USD, LARGE_SALES_USD, HistoryBuilder, Invoice, SampleRetry
 from .money import convert_minor
-from .timeutil import in_ambiguous_hour, local_datetime, offset_minutes
+from .timeutil import offset_minutes
 
 MATERIALITY_MIN = 100
 TOLERANCE_MINOR = 2
@@ -51,40 +51,35 @@ class Plan:
 
 # ---------------------------------------------------------------- helpers
 def _minute_time(b: HistoryBuilder, d: date, m_lo: int, m_hi: int) -> datetime:
-    for _ in range(80):
-        m = b.rng.randint(m_lo, m_hi)
-        inst = local_datetime(b.h.tz, d, m // 60, m % 60, b.rng.randint(0, 59))
-        if not in_ambiguous_hour(b.h.tz, inst) and inst not in b._used_times:
-            b._used_times.add(inst)
-            return inst
-    raise RetryAttempt("no free near-midnight time")
+    try:
+        return b.minute_time(d, m_lo, m_hi)
+    except SampleRetry as exc:
+        raise RetryAttempt(str(exc)) from None
 
 
 def _offset_on(b: HistoryBuilder, d: date) -> int:
-    return offset_minutes(b.h.tz, local_datetime(b.h.tz, d, 12))
+    return b.offset_on(d)
 
 
 def _new_invoice(b: HistoryBuilder, kind: str, issued: datetime, foreign: bool | None, min_usd: float, tags=None) -> Invoice:
+    """A target document drawn like an ordinary one: lines are resampled inside the catalogue quantity and
+    price ranges until the invoice clears the materiality floor (never scaled up beyond the ranges)."""
     role = "customer" if kind == "sales" else "supplier"
     ent = b.entity_with(role, foreign=foreign)
     ccy = b.h.entities[ent].currency
     if kind == "sales":
         lines = b.sales_lines(ccy, min_usd_total=min_usd)
     else:
-        item = b.rng.choice(catalog.PURCHASE_ITEMS)
-        unit = b.unit_price_minor(ccy, max(min_usd, item[1][0]), max(min_usd * 3, item[1][1]))
-        lines = b.purchase_lines(ccy, issued, item, unit)
+        lines = b.purchase_lines(ccy, issued, entity=ent, min_usd=min_usd)
     return b.add_invoice(kind, ent, issued, lines, tags)
 
 
 def _near_midnight(b: HistoryBuilder, d: date) -> datetime:
     """Local time on d whose UTC calendar date differs from d."""
-    off = _offset_on(b, d)
-    if off > 0:
-        return _minute_time(b, d, 5, off - 6)
-    if off < 0:
-        return _minute_time(b, d, 1440 + off + 6, 1434)
-    raise RetryAttempt("zero UTC offset on this date")
+    try:
+        return b.near_midnight_time(d)
+    except SampleRetry:
+        raise RetryAttempt("zero UTC offset on this date") from None
 
 
 def transpose_rate(rate: str, b: HistoryBuilder) -> str:
@@ -109,7 +104,16 @@ def transpose_rate(rate: str, b: HistoryBuilder) -> str:
 
 
 def utc_date_candidates(b: HistoryBuilder, late_limit: int) -> list:
-    return utc_date_days(b.h.tz, b.h.year, b.h.month, late_limit)
+    """utc_date days with a published rate on both sides (no FX holiday on the day or, for negative offsets, after)."""
+    h = b.h
+    return [d for d in utc_date_days(h.tz, h.year, h.month, late_limit)
+            if d not in h.holidays and (b.offset_on(d) >= 0 or d + timedelta(days=1) not in h.holidays)]
+
+
+def _fx_target_date(b: HistoryBuilder, lo: date, hi: date) -> date:
+    """Date of a wrong-rate document: a business day, a weekend day or an FX holiday at the share of ordinary documents
+    (the policy rate is then the latest earlier published rate)."""
+    return b.loose_date(lo, hi)
 
 
 def feasible_variants(b: HistoryBuilder, etype: str, allowed: list, late_limit: int = 2) -> list:
@@ -130,8 +134,8 @@ def feasible_variants(b: HistoryBuilder, etype: str, allowed: list, late_limit: 
 # ---------------------------------------------------------------- creators
 def create_duplicate(b: HistoryBuilder, plan: Plan) -> None:
     h = b.h
-    d = b.business_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
-    inv = _new_invoice(b, "purchase", b.local_time(d), None, 300)
+    d = b.loose_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
+    inv = _new_invoice(b, "purchase", b.local_time(d, b.doc_hours()), None, 300)
     if b.rng.random() < 0.5:
         t = b.pay_time_after(inv.issued, 2, 15)
         if t:
@@ -139,7 +143,8 @@ def create_duplicate(b: HistoryBuilder, plan: Plan) -> None:
     copy = Invoice(b.key("I"), inv.kind, inv.entity, inv.currency, inv.issued, inv.due,
                    [replace(li) for li in inv.lines], [], duplicate_of=inv.key)
     item = next(it for it in catalog.PURCHASE_ITEMS if inv.lines[0].description.startswith(it[0].split("{")[0]))
-    twin_ref = b.new_ref(item[2], inv.issued)  # drawn in both modes so the rest of the history is identical
+    twin_ref = b.new_ref(item[2], inv.issued, inv.entity)  # drawn in both modes so the rest of the history is identical
+    assert twin_ref != inv.lines[0].ref  # refs are unique per episode, so the twin is never a true duplicate
     if b.cfg.get("twin"):
         # paired twin with the opposite answer: the second invoice is a separate supply (different line ref)
         li = copy.lines[0]
@@ -158,11 +163,11 @@ def create_unallocated(b: HistoryBuilder, plan: Plan, variant: str, scenario: st
     h, rng = b.h, b.rng
     if invoice is None:
         if rng.random() < 0.35:
-            d = b.business_date(h.p_first_date - timedelta(days=30), h.p_first_date - timedelta(days=3))
-            invoice = _new_invoice(b, "sales", b.local_time(d), None, 900, ["prior"])
+            d = b.loose_date(h.p_first_date - timedelta(days=30), h.p_first_date - timedelta(days=3))
+            invoice = _new_invoice(b, "sales", b.local_time(d, b.doc_hours()), None, 900, ["prior"])
         else:
-            d = b.business_date(h.p_first_date, h.p_last_date - timedelta(days=8))
-            invoice = _new_invoice(b, "sales", b.local_time(d), None, 900)
+            d = b.loose_date(h.p_first_date, h.p_last_date - timedelta(days=8))
+            invoice = _new_invoice(b, "sales", b.local_time(d, b.doc_hours()), None, 900)
     start = max(after or invoice.issued, invoice.issued, h.p0)
     t = b.pay_time_after(start, 1, 14, in_period=True)
     if t is None:
@@ -184,23 +189,22 @@ def create_wrong_fx(b: HistoryBuilder, plan: Plan, variant: str, scenario: str =
             raise RetryAttempt("no date for a UTC-date FX error")
         d = rng.choice(cands)
         issued = _near_midnight(b, d)
-        if _offset_on(b, d) < 0:
-            plan.protected_dates.add(d + timedelta(days=1))
     else:
         lo = h.p_first_date + timedelta(days=5 if variant == "stale_rate" else 1)
         hi = h.p_last_date - timedelta(days=9 if variant == "posting_date" else late_limit)
         if hi < lo:
             hi = lo
-        d = b.business_date(lo, hi)
-        issued = b.local_time(d)
+        d = _fx_target_date(b, lo, hi)
+        issued = b.local_time(d, b.doc_hours())
     if variant == "posting_date":
-        steps = [k for k in range(1, 7) if (d + timedelta(days=k)).weekday() < 5 and d + timedelta(days=k) <= h.p_last_date]
+        steps = [k for k in range(1, 7) if (d + timedelta(days=k)).weekday() < 5 and d + timedelta(days=k) <= h.p_last_date
+                 and d + timedelta(days=k) not in h.holidays]
         if not steps:
             raise RetryAttempt("no business day to post on")
         post_d = d + timedelta(days=rng.choice(steps))
         data["posting_ts"] = b.local_time(post_d)
         plan.protected_dates.add(post_d)
-    inv = _new_invoice(b, kind, issued, True, 4000)
+    inv = _new_invoice(b, kind, issued, True, LARGE_SALES_USD if kind == "sales" else LARGE_PURCHASE_USD)
     plan.protected_dates.add(d)
     plan.items.append(Item("wrong_fx_rate", variant, scenario, {"invoice": inv.key}, data))
     return inv
@@ -211,12 +215,12 @@ def create_wrong_period(b: HistoryBuilder, plan: Plan, variant: str, scenario: s
     kind = rng.choice(["sales", "purchase"])
     foreign = (rng.random() < 0.4) if h.foreign else False
     if variant == "booked_early":
-        d = b.business_date(h.next_first_date, h.next_first_date + timedelta(days=2))
-        issued = b.local_time(d)
+        d = b.loose_date(h.next_first_date, h.next_first_date + timedelta(days=2))
+        issued = b.local_time(d, b.doc_hours())
         posting = b.local_time(b.business_date(h.p_last_date - timedelta(days=1), h.p_last_date))
     elif variant == "booked_late":
-        d = b.business_date(h.p_last_date - timedelta(days=2), h.p_last_date)
-        issued = b.local_time(d)
+        d = b.loose_date(h.p_last_date - timedelta(days=2), h.p_last_date)
+        issued = b.local_time(d, b.doc_hours())
         posting = b.local_time(b.business_date(h.next_first_date, h.next_first_date + timedelta(days=3)))
     else:
         off = offset_minutes(h.tz, h.p1)
@@ -254,12 +258,16 @@ def create_boundary_fx_payment(b: HistoryBuilder, plan: Plan) -> None:
 
 
 def create_fx_invoice_partial_allocation(b: HistoryBuilder, plan: Plan, fx_variants: list, alloc_variants: list) -> None:
+    # the scenario is only real when the receipt is booked partly to 1100 and partly to 2900, so that the wrong
+    # carrying amount of the invoice feeds the relief and FX difference of the receipt: always 'partial'
+    if "partial" not in alloc_variants:
+        raise ConfigError("fx_invoice_partial_allocation needs the 'partial' variant of unallocated_payment")
     variants = feasible_variants(b, "wrong_fx_rate", fx_variants, late_limit=9) or ["posting_date"]
     variant = b.rng.choice(variants)
     scen = "fx_invoice_partial_allocation"
     inv = create_wrong_fx(b, plan, variant, scen, kind="sales")
     after = plan.items[-1].data.get("posting_ts", inv.issued)
-    create_unallocated(b, plan, b.rng.choice(alloc_variants), scen, invoice=inv, after=after)
+    create_unallocated(b, plan, "partial", scen, invoice=inv, after=after)
 
 
 def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
@@ -303,7 +311,7 @@ def make_overrides(b: HistoryBuilder, plan: Plan) -> Overrides:
                 doc = h.payments[it.targets["payment"]]
                 d = h.local_date(doc.ts)
             correct, cdate = policy_rate(h, doc.currency, d)
-            if cdate != d:
+            if cdate != d and it.variant == "utc_date":
                 raise RetryAttempt("target document date has no published rate")
             if it.variant == "utc_date":
                 inst = doc.issued if "invoice" in it.targets else doc.ts
@@ -318,7 +326,7 @@ def make_overrides(b: HistoryBuilder, plan: Plan) -> Overrides:
                 wrong, wdate = transpose_rate(correct, b), None
             if wrong == correct:
                 raise RetryAttempt("wrong rate equals the correct rate")
-            it.data.update({"correct_rate": correct, "correct_rate_date": d, "wrong_rate": wrong, "wrong_rate_date": wdate})
+            it.data.update({"correct_rate": correct, "correct_rate_date": cdate, "wrong_rate": wrong, "wrong_rate_date": wdate})
             if "invoice" in it.targets:
                 ov.inv_rate[doc.key] = wrong
             else:
@@ -414,7 +422,8 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
             issues.append({
                 "item": it, "affected": affected, "amount": delta, "evidence": evidence, "sort": sort,
                 "explanation": f"Converted at {it.data['wrong_rate']} instead of the policy rate "
-                               f"{it.data['correct_rate']} for the document's local date {it.data['correct_rate_date']}.",
+                               f"{it.data['correct_rate']}: the rate of {it.data['correct_rate_date']}, the latest rate published on or "
+                               f"before the document's local date.",
             })
         elif it.type == "wrong_period":
             if "invoice" in t:

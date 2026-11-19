@@ -51,11 +51,18 @@ SIZES = {
 }
 DEFAULT_DISTRACTORS = {
     "small": {"legit_repeat": 1, "recurring": 1, "split_payment": 1, "multi_invoice_payment": 1, "underpayment": 1,
-              "overpayment_refund": 1, "null_ref_receipt": 1, "boundary_doc": 2, "midnight_fx": 1, "weekend_fx": 1},
+              "overpayment_refund": 1, "null_ref_receipt": 1, "midnight_fx": 2, "weekend_fx": 1},
     "medium": {"legit_repeat": 2, "recurring": 2, "split_payment": 2, "multi_invoice_payment": 1, "underpayment": 2,
-               "overpayment_refund": 1, "null_ref_receipt": 2, "boundary_doc": 3, "midnight_fx": 2, "weekend_fx": 2},
+               "overpayment_refund": 1, "null_ref_receipt": 2, "midnight_fx": 3, "weekend_fx": 2},
     "large": {"legit_repeat": 3, "recurring": 3, "split_payment": 3, "multi_invoice_payment": 2, "underpayment": 3,
-              "overpayment_refund": 2, "null_ref_receipt": 2, "boundary_doc": 4, "midnight_fx": 3, "weekend_fx": 3},
+              "overpayment_refund": 2, "null_ref_receipt": 2, "midnight_fx": 4, "weekend_fx": 3},
+}
+# default counts drawn from a range (an explicit count in the config stays exact); a fixed default would let the
+# number of boundary documents separate episodes with boundary errors from clean ones
+DEFAULT_DISTRACTOR_RANGES = {
+    "small": {"boundary_doc": (2, 7)},
+    "medium": {"boundary_doc": (3, 8)},
+    "large": {"boundary_doc": (4, 8)},
 }
 TOP_KEYS = {
     "config_version", "size", "base_currency", "foreign_currencies", "timezone", "period", "rounding", "id_style",
@@ -124,6 +131,8 @@ def validate(config: dict) -> dict:
     inter = config.get("interacting", []) or []
     if not isinstance(inter, list) or any(x not in INTERACTING for x in inter):
         raise ConfigError(f"interacting must be a list from {', '.join(INTERACTING)}")
+    if "fx_invoice_partial_allocation" in inter and "partial" not in (variants.get("unallocated_payment") or ["partial"]):
+        raise ConfigError("fx_invoice_partial_allocation needs the 'partial' variant of unallocated_payment")
     total = sum(errors.values()) + 2 * len(inter)
     if total > MAX_ERRORS:
         raise ConfigError(f"at most {MAX_ERRORS} errors per episode (requested {total})")
@@ -199,6 +208,8 @@ def resolve(config: dict, rng: Rng) -> dict:
     for k, (lo, hi) in SIZES[size].items():
         counts[k] = (config.get("counts") or {}).get(k, rng.randint(lo, hi))
     distractors = dict(DEFAULT_DISTRACTORS[size])
+    for k, (lo, hi) in DEFAULT_DISTRACTOR_RANGES[size].items():
+        distractors[k] = rng.randint(lo, hi)
     distractors.update(config.get("distractors") or {})
     errors = {t: int((config.get("errors") or {}).get(t, 0)) for t in FINDING_TYPES}
     return {

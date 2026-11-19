@@ -1,6 +1,6 @@
 # auditgym check report
 
-Result: **PASS** in 73 s, version 0.1.0.
+Result: **PASS** in 93 s, version 0.2.0.
 
 Episodes: public master string auditgym-check-v1.
 
@@ -8,17 +8,17 @@ Episodes: public master string auditgym-check-v1.
 
 ### 1. Contract and isolation (25)
 
-Run time: E_leaks 0.3 s
+Run time: E_leaks 0.4 s
 
 #### E_leaks (3/3)
 
-- PASS: 1996 observations contain only the allowed fields
+- PASS: 2179 observations contain only the allowed fields
 - PASS: no answer-key markers in any observation
 - PASS: oracle trajectories are never published
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 3.0 s, C_data 4.0 s
+Run time: B_committed_episodes 3.5 s, C_data 4.5 s
 
 #### B_committed_episodes (40/40)
 
@@ -70,7 +70,7 @@ Run time: B_committed_episodes 3.0 s, C_data 4.0 s
 - PASS: h03_clean verifies (0 issues, 1 attempt(s))
 - PASS: h04_clean verifies (0 issues, 1 attempt(s))
 - PASS: h05_clean verifies (0 issues, 1 attempt(s))
-- PASS: h06_interacting verifies (2 issues, 1 attempt(s))
+- PASS: h06_interacting verifies (2 issues, 2 attempt(s))
 - PASS: h07_interacting verifies (2 issues, 1 attempt(s))
 - PASS: h08_interacting verifies (4 issues, 1 attempt(s))
 - PASS: h09_interacting verifies (4 issues, 1 attempt(s))
@@ -83,13 +83,13 @@ Run time: B_committed_episodes 3.0 s, C_data 4.0 s
 - PASS: h16_mixed verifies (5 issues, 1 attempt(s))
 - PASS: h17_mixed verifies (2 issues, 1 attempt(s))
 - PASS: h18_mixed verifies (3 issues, 1 attempt(s))
-- PASS: h19_mixed verifies (4 issues, 1 attempt(s))
+- PASS: h19_mixed verifies (4 issues, 2 attempt(s))
 - PASS: h20_mixed verifies (5 issues, 1 attempt(s))
-- PASS: resampled attempts stay rare (0 over 20 episodes)
+- PASS: resampled attempts stay rare (2 over 20 episodes)
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 23.4 s
+Run time: C_reward 24.1 s
 
 #### C_reward (248/248)
 
@@ -101,250 +101,250 @@ Run time: C_reward 23.4 s
 - PASS: random explorer stays far below the auditor
 - PASS: every run finishes inside 100 steps and 60 s
 - PASS: no agent process failed
-- PASS: ep_a82d2576fa61f5f8: silence beats a false accusation on a clean ledger
-- PASS: ep_a82d2576fa61f5f8: a duplicate_invoice accusation citing a real document scores -1, below silence
-- PASS: ep_a82d2576fa61f5f8: a unallocated_payment accusation citing a real document scores -1, below silence
-- PASS: ep_a82d2576fa61f5f8: a wrong_fx_rate accusation citing a real document scores -1, below silence
-- PASS: ep_a82d2576fa61f5f8: a wrong_period accusation citing a real document scores -1, below silence
-- PASS: ep_a82d2576fa61f5f8: saving steps separates equal answers only slightly
-- PASS: ep_a00ab5ca4acb3193: silence beats a false accusation on a clean ledger
-- PASS: ep_a00ab5ca4acb3193: a duplicate_invoice accusation citing a real document scores -1, below silence
-- PASS: ep_a00ab5ca4acb3193: a unallocated_payment accusation citing a real document scores -1, below silence
-- PASS: ep_a00ab5ca4acb3193: a wrong_fx_rate accusation citing a real document scores -1, below silence
-- PASS: ep_a00ab5ca4acb3193: a wrong_period accusation citing a real document scores -1, below silence
-- PASS: ep_a00ab5ca4acb3193: saving steps separates equal answers only slightly
-- PASS: ep_30bc013036ba23ec: silence beats a false accusation on a clean ledger
-- PASS: ep_30bc013036ba23ec: a duplicate_invoice accusation citing a real document scores -1, below silence
-- PASS: ep_30bc013036ba23ec: a unallocated_payment accusation citing a real document scores -1, below silence
-- PASS: ep_30bc013036ba23ec: a wrong_fx_rate accusation citing a real document scores -1, below silence
-- PASS: ep_30bc013036ba23ec: a wrong_period accusation citing a real document scores -1, below silence
-- PASS: ep_30bc013036ba23ec: saving steps separates equal answers only slightly
-- PASS: ep_80fb3a5fb4e900a3: silence beats a false accusation on a clean ledger
-- PASS: ep_80fb3a5fb4e900a3: a duplicate_invoice accusation citing a real document scores -1, below silence
-- PASS: ep_80fb3a5fb4e900a3: a unallocated_payment accusation citing a real document scores -1, below silence
-- PASS: ep_80fb3a5fb4e900a3: a wrong_fx_rate accusation citing a real document scores -1, below silence
-- PASS: ep_80fb3a5fb4e900a3: a wrong_period accusation citing a real document scores -1, below silence
-- PASS: ep_80fb3a5fb4e900a3: saving steps separates equal answers only slightly
-- PASS: ep_a6d58011c890d230: silence beats a false accusation on a clean ledger
-- PASS: ep_a6d58011c890d230: a duplicate_invoice accusation citing a real document scores -1, below silence
-- PASS: ep_a6d58011c890d230: a unallocated_payment accusation citing a real document scores -1, below silence
-- PASS: ep_a6d58011c890d230: a wrong_fx_rate accusation citing a real document scores -1, below silence
-- PASS: ep_a6d58011c890d230: a wrong_period accusation citing a real document scores -1, below silence
-- PASS: ep_a6d58011c890d230: saving steps separates equal answers only slightly
-- PASS: ep_4cb4198a3243a5b3: correct answer with evidence beats silence
-- PASS: ep_4cb4198a3243a5b3: repeating findings gains nothing
-- PASS: ep_4cb4198a3243a5b3: guessed ids is not a true positive
-- PASS: ep_4cb4198a3243a5b3: unsupported evidence is not a true positive
-- PASS: ep_4cb4198a3243a5b3: wrong currency is not a true positive
-- PASS: ep_4cb4198a3243a5b3: amount off by 3 tolerances is not a true positive
-- PASS: ep_4cb4198a3243a5b3: wrong type is not a true positive
-- PASS: ep_4cb4198a3243a5b3: citing documents by alias keeps full credit
-- PASS: ep_4cb4198a3243a5b3: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_4cb4198a3243a5b3: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_4cb4198a3243a5b3: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_4cb4198a3243a5b3: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_4cb4198a3243a5b3: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_4cb4198a3243a5b3: saving steps separates equal answers only slightly
-- PASS: ep_9f67c47403029e75: correct answer with evidence beats silence
-- PASS: ep_9f67c47403029e75: repeating findings gains nothing
-- PASS: ep_9f67c47403029e75: guessed ids is not a true positive
-- PASS: ep_9f67c47403029e75: unsupported evidence is not a true positive
-- PASS: ep_9f67c47403029e75: wrong currency is not a true positive
-- PASS: ep_9f67c47403029e75: amount off by 3 tolerances is not a true positive
-- PASS: ep_9f67c47403029e75: wrong type is not a true positive
-- PASS: ep_9f67c47403029e75: citing documents by alias keeps full credit
-- PASS: ep_9f67c47403029e75: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_9f67c47403029e75: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_9f67c47403029e75: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_9f67c47403029e75: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_9f67c47403029e75: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_9f67c47403029e75: saving steps separates equal answers only slightly
-- PASS: ep_da108ee499ec5995: correct answer with evidence beats silence
-- PASS: ep_da108ee499ec5995: repeating findings gains nothing
-- PASS: ep_da108ee499ec5995: guessed ids is not a true positive
-- PASS: ep_da108ee499ec5995: unsupported evidence is not a true positive
-- PASS: ep_da108ee499ec5995: wrong currency is not a true positive
-- PASS: ep_da108ee499ec5995: amount off by 3 tolerances is not a true positive
-- PASS: ep_da108ee499ec5995: wrong type is not a true positive
-- PASS: ep_da108ee499ec5995: citing documents by alias keeps full credit
-- PASS: ep_da108ee499ec5995: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_da108ee499ec5995: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_da108ee499ec5995: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_da108ee499ec5995: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_da108ee499ec5995: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_da108ee499ec5995: saving steps separates equal answers only slightly
-- PASS: ep_365723c029c0d7a4: correct answer with evidence beats silence
-- PASS: ep_365723c029c0d7a4: repeating findings gains nothing
-- PASS: ep_365723c029c0d7a4: guessed ids is not a true positive
-- PASS: ep_365723c029c0d7a4: unsupported evidence is not a true positive
-- PASS: ep_365723c029c0d7a4: wrong currency is not a true positive
-- PASS: ep_365723c029c0d7a4: amount off by 3 tolerances is not a true positive
-- PASS: ep_365723c029c0d7a4: wrong type is not a true positive
-- PASS: ep_365723c029c0d7a4: citing documents by alias keeps full credit
-- PASS: ep_365723c029c0d7a4: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_365723c029c0d7a4: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_365723c029c0d7a4: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_365723c029c0d7a4: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_365723c029c0d7a4: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_365723c029c0d7a4: saving steps separates equal answers only slightly
-- PASS: ep_802da4715873f0c2: correct answer with evidence beats silence
-- PASS: ep_802da4715873f0c2: repeating findings gains nothing
-- PASS: ep_802da4715873f0c2: guessed ids is not a true positive
-- PASS: ep_802da4715873f0c2: unsupported evidence is not a true positive
-- PASS: ep_802da4715873f0c2: wrong currency is not a true positive
-- PASS: ep_802da4715873f0c2: amount off by 3 tolerances is not a true positive
-- PASS: ep_802da4715873f0c2: wrong type is not a true positive
-- PASS: ep_802da4715873f0c2: citing documents by alias keeps full credit
-- PASS: ep_802da4715873f0c2: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_802da4715873f0c2: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_802da4715873f0c2: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_802da4715873f0c2: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_802da4715873f0c2: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_802da4715873f0c2: saving steps separates equal answers only slightly
-- PASS: ep_7ed3c2e72317ce46: correct answer with evidence beats silence
-- PASS: ep_7ed3c2e72317ce46: repeating findings gains nothing
-- PASS: ep_7ed3c2e72317ce46: guessed ids is not a true positive
-- PASS: ep_7ed3c2e72317ce46: unsupported evidence is not a true positive
-- PASS: ep_7ed3c2e72317ce46: wrong currency is not a true positive
-- PASS: ep_7ed3c2e72317ce46: amount off by 3 tolerances is not a true positive
-- PASS: ep_7ed3c2e72317ce46: wrong type is not a true positive
-- PASS: ep_7ed3c2e72317ce46: citing documents by alias keeps full credit
-- PASS: ep_7ed3c2e72317ce46: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_7ed3c2e72317ce46: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_7ed3c2e72317ce46: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_7ed3c2e72317ce46: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_7ed3c2e72317ce46: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_7ed3c2e72317ce46: saving steps separates equal answers only slightly
-- PASS: ep_5e200627665c3570: correct answer with evidence beats silence
-- PASS: ep_5e200627665c3570: repeating findings gains nothing
-- PASS: ep_5e200627665c3570: guessed ids is not a true positive
-- PASS: ep_5e200627665c3570: unsupported evidence is not a true positive
-- PASS: ep_5e200627665c3570: wrong currency is not a true positive
-- PASS: ep_5e200627665c3570: amount off by 3 tolerances is not a true positive
-- PASS: ep_5e200627665c3570: wrong type is not a true positive
-- PASS: ep_5e200627665c3570: citing documents by alias keeps full credit
-- PASS: ep_5e200627665c3570: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_5e200627665c3570: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_5e200627665c3570: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_5e200627665c3570: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_5e200627665c3570: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_5e200627665c3570: saving steps separates equal answers only slightly
-- PASS: ep_fb48b042a353c95c: correct answer with evidence beats silence
-- PASS: ep_fb48b042a353c95c: repeating findings gains nothing
-- PASS: ep_fb48b042a353c95c: guessed ids is not a true positive
-- PASS: ep_fb48b042a353c95c: unsupported evidence is not a true positive
-- PASS: ep_fb48b042a353c95c: wrong currency is not a true positive
-- PASS: ep_fb48b042a353c95c: amount off by 3 tolerances is not a true positive
-- PASS: ep_fb48b042a353c95c: wrong type is not a true positive
-- PASS: ep_fb48b042a353c95c: citing documents by alias keeps full credit
-- PASS: ep_fb48b042a353c95c: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_fb48b042a353c95c: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_fb48b042a353c95c: 24 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_fb48b042a353c95c: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_fb48b042a353c95c: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_fb48b042a353c95c: saving steps separates equal answers only slightly
-- PASS: ep_6e289b163376cf3f: correct answer with evidence beats silence
-- PASS: ep_6e289b163376cf3f: repeating findings gains nothing
-- PASS: ep_6e289b163376cf3f: guessed ids is not a true positive
-- PASS: ep_6e289b163376cf3f: unsupported evidence is not a true positive
-- PASS: ep_6e289b163376cf3f: wrong currency is not a true positive
-- PASS: ep_6e289b163376cf3f: amount off by 3 tolerances is not a true positive
-- PASS: ep_6e289b163376cf3f: wrong type is not a true positive
-- PASS: ep_6e289b163376cf3f: citing documents by alias keeps full credit
-- PASS: ep_6e289b163376cf3f: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_6e289b163376cf3f: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_6e289b163376cf3f: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_6e289b163376cf3f: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_6e289b163376cf3f: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_6e289b163376cf3f: saving steps separates equal answers only slightly
-- PASS: ep_21bc70af0f5b0d89: correct answer with evidence beats silence
-- PASS: ep_21bc70af0f5b0d89: repeating findings gains nothing
-- PASS: ep_21bc70af0f5b0d89: guessed ids is not a true positive
-- PASS: ep_21bc70af0f5b0d89: unsupported evidence is not a true positive
-- PASS: ep_21bc70af0f5b0d89: wrong currency is not a true positive
-- PASS: ep_21bc70af0f5b0d89: amount off by 3 tolerances is not a true positive
-- PASS: ep_21bc70af0f5b0d89: wrong type is not a true positive
-- PASS: ep_21bc70af0f5b0d89: citing documents by alias keeps full credit
-- PASS: ep_21bc70af0f5b0d89: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_21bc70af0f5b0d89: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_21bc70af0f5b0d89: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_21bc70af0f5b0d89: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_21bc70af0f5b0d89: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_21bc70af0f5b0d89: saving steps separates equal answers only slightly
-- PASS: ep_4df2829e5b915f1b: correct answer with evidence beats silence
-- PASS: ep_4df2829e5b915f1b: repeating findings gains nothing
-- PASS: ep_4df2829e5b915f1b: guessed ids is not a true positive
-- PASS: ep_4df2829e5b915f1b: unsupported evidence is not a true positive
-- PASS: ep_4df2829e5b915f1b: wrong currency is not a true positive
-- PASS: ep_4df2829e5b915f1b: amount off by 3 tolerances is not a true positive
-- PASS: ep_4df2829e5b915f1b: wrong type is not a true positive
-- PASS: ep_4df2829e5b915f1b: citing documents by alias keeps full credit
-- PASS: ep_4df2829e5b915f1b: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_4df2829e5b915f1b: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_4df2829e5b915f1b: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_4df2829e5b915f1b: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_4df2829e5b915f1b: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_4df2829e5b915f1b: saving steps separates equal answers only slightly
-- PASS: ep_e357b07040e21024: correct answer with evidence beats silence
-- PASS: ep_e357b07040e21024: repeating findings gains nothing
-- PASS: ep_e357b07040e21024: guessed ids is not a true positive
-- PASS: ep_e357b07040e21024: unsupported evidence is not a true positive
-- PASS: ep_e357b07040e21024: wrong currency is not a true positive
-- PASS: ep_e357b07040e21024: amount off by 3 tolerances is not a true positive
-- PASS: ep_e357b07040e21024: wrong type is not a true positive
-- PASS: ep_e357b07040e21024: citing documents by alias keeps full credit
-- PASS: ep_e357b07040e21024: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_e357b07040e21024: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_e357b07040e21024: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_e357b07040e21024: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_e357b07040e21024: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_e357b07040e21024: saving steps separates equal answers only slightly
-- PASS: ep_62423f8ee9c1e3d8: correct answer with evidence beats silence
-- PASS: ep_62423f8ee9c1e3d8: repeating findings gains nothing
-- PASS: ep_62423f8ee9c1e3d8: guessed ids is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: unsupported evidence is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: wrong currency is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: amount off by 3 tolerances is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: wrong type is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: citing documents by alias keeps full credit
-- PASS: ep_62423f8ee9c1e3d8: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_62423f8ee9c1e3d8: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_62423f8ee9c1e3d8: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_62423f8ee9c1e3d8: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_62423f8ee9c1e3d8: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_62423f8ee9c1e3d8: saving steps separates equal answers only slightly
-- PASS: ep_bf86a42c4ded774d: correct answer with evidence beats silence
-- PASS: ep_bf86a42c4ded774d: repeating findings gains nothing
-- PASS: ep_bf86a42c4ded774d: guessed ids is not a true positive
-- PASS: ep_bf86a42c4ded774d: unsupported evidence is not a true positive
-- PASS: ep_bf86a42c4ded774d: wrong currency is not a true positive
-- PASS: ep_bf86a42c4ded774d: amount off by 3 tolerances is not a true positive
-- PASS: ep_bf86a42c4ded774d: wrong type is not a true positive
-- PASS: ep_bf86a42c4ded774d: citing documents by alias keeps full credit
-- PASS: ep_bf86a42c4ded774d: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_bf86a42c4ded774d: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_bf86a42c4ded774d: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_bf86a42c4ded774d: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_bf86a42c4ded774d: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_bf86a42c4ded774d: saving steps separates equal answers only slightly
-- PASS: ep_8f0b5dc6a809358d: correct answer with evidence beats silence
-- PASS: ep_8f0b5dc6a809358d: repeating findings gains nothing
-- PASS: ep_8f0b5dc6a809358d: guessed ids is not a true positive
-- PASS: ep_8f0b5dc6a809358d: unsupported evidence is not a true positive
-- PASS: ep_8f0b5dc6a809358d: wrong currency is not a true positive
-- PASS: ep_8f0b5dc6a809358d: amount off by 3 tolerances is not a true positive
-- PASS: ep_8f0b5dc6a809358d: wrong type is not a true positive
-- PASS: ep_8f0b5dc6a809358d: citing documents by alias keeps full credit
-- PASS: ep_8f0b5dc6a809358d: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_8f0b5dc6a809358d: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_8f0b5dc6a809358d: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_8f0b5dc6a809358d: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_8f0b5dc6a809358d: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_8f0b5dc6a809358d: saving steps separates equal answers only slightly
+- PASS: ep_d93b7e211400d9fa: silence beats a false accusation on a clean ledger
+- PASS: ep_d93b7e211400d9fa: a duplicate_invoice accusation citing a real document scores -1, below silence
+- PASS: ep_d93b7e211400d9fa: a unallocated_payment accusation citing a real document scores -1, below silence
+- PASS: ep_d93b7e211400d9fa: a wrong_fx_rate accusation citing a real document scores -1, below silence
+- PASS: ep_d93b7e211400d9fa: a wrong_period accusation citing a real document scores -1, below silence
+- PASS: ep_d93b7e211400d9fa: saving steps separates equal answers only slightly
+- PASS: ep_8a932841ed8e0473: silence beats a false accusation on a clean ledger
+- PASS: ep_8a932841ed8e0473: a duplicate_invoice accusation citing a real document scores -1, below silence
+- PASS: ep_8a932841ed8e0473: a unallocated_payment accusation citing a real document scores -1, below silence
+- PASS: ep_8a932841ed8e0473: a wrong_fx_rate accusation citing a real document scores -1, below silence
+- PASS: ep_8a932841ed8e0473: a wrong_period accusation citing a real document scores -1, below silence
+- PASS: ep_8a932841ed8e0473: saving steps separates equal answers only slightly
+- PASS: ep_9c4a74074719b6c2: silence beats a false accusation on a clean ledger
+- PASS: ep_9c4a74074719b6c2: a duplicate_invoice accusation citing a real document scores -1, below silence
+- PASS: ep_9c4a74074719b6c2: a unallocated_payment accusation citing a real document scores -1, below silence
+- PASS: ep_9c4a74074719b6c2: a wrong_fx_rate accusation citing a real document scores -1, below silence
+- PASS: ep_9c4a74074719b6c2: a wrong_period accusation citing a real document scores -1, below silence
+- PASS: ep_9c4a74074719b6c2: saving steps separates equal answers only slightly
+- PASS: ep_d7fb0d8b2dcfc8aa: silence beats a false accusation on a clean ledger
+- PASS: ep_d7fb0d8b2dcfc8aa: a duplicate_invoice accusation citing a real document scores -1, below silence
+- PASS: ep_d7fb0d8b2dcfc8aa: a unallocated_payment accusation citing a real document scores -1, below silence
+- PASS: ep_d7fb0d8b2dcfc8aa: a wrong_fx_rate accusation citing a real document scores -1, below silence
+- PASS: ep_d7fb0d8b2dcfc8aa: a wrong_period accusation citing a real document scores -1, below silence
+- PASS: ep_d7fb0d8b2dcfc8aa: saving steps separates equal answers only slightly
+- PASS: ep_df671bb159d0fae6: silence beats a false accusation on a clean ledger
+- PASS: ep_df671bb159d0fae6: a duplicate_invoice accusation citing a real document scores -1, below silence
+- PASS: ep_df671bb159d0fae6: a unallocated_payment accusation citing a real document scores -1, below silence
+- PASS: ep_df671bb159d0fae6: a wrong_fx_rate accusation citing a real document scores -1, below silence
+- PASS: ep_df671bb159d0fae6: a wrong_period accusation citing a real document scores -1, below silence
+- PASS: ep_df671bb159d0fae6: saving steps separates equal answers only slightly
+- PASS: ep_99b4722e2dd40466: correct answer with evidence beats silence
+- PASS: ep_99b4722e2dd40466: repeating findings gains nothing
+- PASS: ep_99b4722e2dd40466: guessed ids is not a true positive
+- PASS: ep_99b4722e2dd40466: unsupported evidence is not a true positive
+- PASS: ep_99b4722e2dd40466: wrong currency is not a true positive
+- PASS: ep_99b4722e2dd40466: amount off by 3 tolerances is not a true positive
+- PASS: ep_99b4722e2dd40466: wrong type is not a true positive
+- PASS: ep_99b4722e2dd40466: citing documents by alias keeps full credit
+- PASS: ep_99b4722e2dd40466: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_99b4722e2dd40466: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_99b4722e2dd40466: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_99b4722e2dd40466: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_99b4722e2dd40466: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_99b4722e2dd40466: saving steps separates equal answers only slightly
+- PASS: ep_20f51b55f605db28: correct answer with evidence beats silence
+- PASS: ep_20f51b55f605db28: repeating findings gains nothing
+- PASS: ep_20f51b55f605db28: guessed ids is not a true positive
+- PASS: ep_20f51b55f605db28: unsupported evidence is not a true positive
+- PASS: ep_20f51b55f605db28: wrong currency is not a true positive
+- PASS: ep_20f51b55f605db28: amount off by 3 tolerances is not a true positive
+- PASS: ep_20f51b55f605db28: wrong type is not a true positive
+- PASS: ep_20f51b55f605db28: citing documents by alias keeps full credit
+- PASS: ep_20f51b55f605db28: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_20f51b55f605db28: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_20f51b55f605db28: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_20f51b55f605db28: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_20f51b55f605db28: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_20f51b55f605db28: saving steps separates equal answers only slightly
+- PASS: ep_2283fdaf7538b5aa: correct answer with evidence beats silence
+- PASS: ep_2283fdaf7538b5aa: repeating findings gains nothing
+- PASS: ep_2283fdaf7538b5aa: guessed ids is not a true positive
+- PASS: ep_2283fdaf7538b5aa: unsupported evidence is not a true positive
+- PASS: ep_2283fdaf7538b5aa: wrong currency is not a true positive
+- PASS: ep_2283fdaf7538b5aa: amount off by 3 tolerances is not a true positive
+- PASS: ep_2283fdaf7538b5aa: wrong type is not a true positive
+- PASS: ep_2283fdaf7538b5aa: citing documents by alias keeps full credit
+- PASS: ep_2283fdaf7538b5aa: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_2283fdaf7538b5aa: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_2283fdaf7538b5aa: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_2283fdaf7538b5aa: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_2283fdaf7538b5aa: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_2283fdaf7538b5aa: saving steps separates equal answers only slightly
+- PASS: ep_9a062e8ef70c2867: correct answer with evidence beats silence
+- PASS: ep_9a062e8ef70c2867: repeating findings gains nothing
+- PASS: ep_9a062e8ef70c2867: guessed ids is not a true positive
+- PASS: ep_9a062e8ef70c2867: unsupported evidence is not a true positive
+- PASS: ep_9a062e8ef70c2867: wrong currency is not a true positive
+- PASS: ep_9a062e8ef70c2867: amount off by 3 tolerances is not a true positive
+- PASS: ep_9a062e8ef70c2867: wrong type is not a true positive
+- PASS: ep_9a062e8ef70c2867: citing documents by alias keeps full credit
+- PASS: ep_9a062e8ef70c2867: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_9a062e8ef70c2867: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_9a062e8ef70c2867: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_9a062e8ef70c2867: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_9a062e8ef70c2867: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_9a062e8ef70c2867: saving steps separates equal answers only slightly
+- PASS: ep_2c65039c6d33d0d2: correct answer with evidence beats silence
+- PASS: ep_2c65039c6d33d0d2: repeating findings gains nothing
+- PASS: ep_2c65039c6d33d0d2: guessed ids is not a true positive
+- PASS: ep_2c65039c6d33d0d2: unsupported evidence is not a true positive
+- PASS: ep_2c65039c6d33d0d2: wrong currency is not a true positive
+- PASS: ep_2c65039c6d33d0d2: amount off by 3 tolerances is not a true positive
+- PASS: ep_2c65039c6d33d0d2: wrong type is not a true positive
+- PASS: ep_2c65039c6d33d0d2: citing documents by alias keeps full credit
+- PASS: ep_2c65039c6d33d0d2: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_2c65039c6d33d0d2: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_2c65039c6d33d0d2: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_2c65039c6d33d0d2: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_2c65039c6d33d0d2: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_2c65039c6d33d0d2: saving steps separates equal answers only slightly
+- PASS: ep_8bd01b41a1157577: correct answer with evidence beats silence
+- PASS: ep_8bd01b41a1157577: repeating findings gains nothing
+- PASS: ep_8bd01b41a1157577: guessed ids is not a true positive
+- PASS: ep_8bd01b41a1157577: unsupported evidence is not a true positive
+- PASS: ep_8bd01b41a1157577: wrong currency is not a true positive
+- PASS: ep_8bd01b41a1157577: amount off by 3 tolerances is not a true positive
+- PASS: ep_8bd01b41a1157577: wrong type is not a true positive
+- PASS: ep_8bd01b41a1157577: citing documents by alias keeps full credit
+- PASS: ep_8bd01b41a1157577: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_8bd01b41a1157577: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_8bd01b41a1157577: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_8bd01b41a1157577: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_8bd01b41a1157577: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_8bd01b41a1157577: saving steps separates equal answers only slightly
+- PASS: ep_f7db93a8c32a772c: correct answer with evidence beats silence
+- PASS: ep_f7db93a8c32a772c: repeating findings gains nothing
+- PASS: ep_f7db93a8c32a772c: guessed ids is not a true positive
+- PASS: ep_f7db93a8c32a772c: unsupported evidence is not a true positive
+- PASS: ep_f7db93a8c32a772c: wrong currency is not a true positive
+- PASS: ep_f7db93a8c32a772c: amount off by 3 tolerances is not a true positive
+- PASS: ep_f7db93a8c32a772c: wrong type is not a true positive
+- PASS: ep_f7db93a8c32a772c: citing documents by alias keeps full credit
+- PASS: ep_f7db93a8c32a772c: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_f7db93a8c32a772c: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_f7db93a8c32a772c: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_f7db93a8c32a772c: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_f7db93a8c32a772c: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_f7db93a8c32a772c: saving steps separates equal answers only slightly
+- PASS: ep_b1e37228bd7ef0a1: correct answer with evidence beats silence
+- PASS: ep_b1e37228bd7ef0a1: repeating findings gains nothing
+- PASS: ep_b1e37228bd7ef0a1: guessed ids is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: unsupported evidence is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: wrong currency is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: amount off by 3 tolerances is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: wrong type is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: citing documents by alias keeps full credit
+- PASS: ep_b1e37228bd7ef0a1: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_b1e37228bd7ef0a1: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_b1e37228bd7ef0a1: 24 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_b1e37228bd7ef0a1: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_b1e37228bd7ef0a1: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_b1e37228bd7ef0a1: saving steps separates equal answers only slightly
+- PASS: ep_ee09d07dfa0f5602: correct answer with evidence beats silence
+- PASS: ep_ee09d07dfa0f5602: repeating findings gains nothing
+- PASS: ep_ee09d07dfa0f5602: guessed ids is not a true positive
+- PASS: ep_ee09d07dfa0f5602: unsupported evidence is not a true positive
+- PASS: ep_ee09d07dfa0f5602: wrong currency is not a true positive
+- PASS: ep_ee09d07dfa0f5602: amount off by 3 tolerances is not a true positive
+- PASS: ep_ee09d07dfa0f5602: wrong type is not a true positive
+- PASS: ep_ee09d07dfa0f5602: citing documents by alias keeps full credit
+- PASS: ep_ee09d07dfa0f5602: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_ee09d07dfa0f5602: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_ee09d07dfa0f5602: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_ee09d07dfa0f5602: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_ee09d07dfa0f5602: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_ee09d07dfa0f5602: saving steps separates equal answers only slightly
+- PASS: ep_fa7ed03738cd200a: correct answer with evidence beats silence
+- PASS: ep_fa7ed03738cd200a: repeating findings gains nothing
+- PASS: ep_fa7ed03738cd200a: guessed ids is not a true positive
+- PASS: ep_fa7ed03738cd200a: unsupported evidence is not a true positive
+- PASS: ep_fa7ed03738cd200a: wrong currency is not a true positive
+- PASS: ep_fa7ed03738cd200a: amount off by 3 tolerances is not a true positive
+- PASS: ep_fa7ed03738cd200a: wrong type is not a true positive
+- PASS: ep_fa7ed03738cd200a: citing documents by alias keeps full credit
+- PASS: ep_fa7ed03738cd200a: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_fa7ed03738cd200a: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_fa7ed03738cd200a: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_fa7ed03738cd200a: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_fa7ed03738cd200a: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_fa7ed03738cd200a: saving steps separates equal answers only slightly
+- PASS: ep_7c5ece92fbe0fa8b: correct answer with evidence beats silence
+- PASS: ep_7c5ece92fbe0fa8b: repeating findings gains nothing
+- PASS: ep_7c5ece92fbe0fa8b: guessed ids is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: unsupported evidence is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: wrong currency is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: amount off by 3 tolerances is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: wrong type is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: citing documents by alias keeps full credit
+- PASS: ep_7c5ece92fbe0fa8b: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_7c5ece92fbe0fa8b: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_7c5ece92fbe0fa8b: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_7c5ece92fbe0fa8b: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_7c5ece92fbe0fa8b: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_7c5ece92fbe0fa8b: saving steps separates equal answers only slightly
+- PASS: ep_b670bf113ecbdef0: correct answer with evidence beats silence
+- PASS: ep_b670bf113ecbdef0: repeating findings gains nothing
+- PASS: ep_b670bf113ecbdef0: guessed ids is not a true positive
+- PASS: ep_b670bf113ecbdef0: unsupported evidence is not a true positive
+- PASS: ep_b670bf113ecbdef0: wrong currency is not a true positive
+- PASS: ep_b670bf113ecbdef0: amount off by 3 tolerances is not a true positive
+- PASS: ep_b670bf113ecbdef0: wrong type is not a true positive
+- PASS: ep_b670bf113ecbdef0: citing documents by alias keeps full credit
+- PASS: ep_b670bf113ecbdef0: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_b670bf113ecbdef0: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_b670bf113ecbdef0: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_b670bf113ecbdef0: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_b670bf113ecbdef0: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_b670bf113ecbdef0: saving steps separates equal answers only slightly
+- PASS: ep_d9f41ef85b1239f6: correct answer with evidence beats silence
+- PASS: ep_d9f41ef85b1239f6: repeating findings gains nothing
+- PASS: ep_d9f41ef85b1239f6: guessed ids is not a true positive
+- PASS: ep_d9f41ef85b1239f6: unsupported evidence is not a true positive
+- PASS: ep_d9f41ef85b1239f6: wrong currency is not a true positive
+- PASS: ep_d9f41ef85b1239f6: amount off by 3 tolerances is not a true positive
+- PASS: ep_d9f41ef85b1239f6: wrong type is not a true positive
+- PASS: ep_d9f41ef85b1239f6: citing documents by alias keeps full credit
+- PASS: ep_d9f41ef85b1239f6: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_d9f41ef85b1239f6: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_d9f41ef85b1239f6: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_d9f41ef85b1239f6: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_d9f41ef85b1239f6: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_d9f41ef85b1239f6: saving steps separates equal answers only slightly
+- PASS: ep_9f209e44c05ddb1a: correct answer with evidence beats silence
+- PASS: ep_9f209e44c05ddb1a: repeating findings gains nothing
+- PASS: ep_9f209e44c05ddb1a: guessed ids is not a true positive
+- PASS: ep_9f209e44c05ddb1a: unsupported evidence is not a true positive
+- PASS: ep_9f209e44c05ddb1a: wrong currency is not a true positive
+- PASS: ep_9f209e44c05ddb1a: amount off by 3 tolerances is not a true positive
+- PASS: ep_9f209e44c05ddb1a: wrong type is not a true positive
+- PASS: ep_9f209e44c05ddb1a: citing documents by alias keeps full credit
+- PASS: ep_9f209e44c05ddb1a: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_9f209e44c05ddb1a: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_9f209e44c05ddb1a: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_9f209e44c05ddb1a: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_9f209e44c05ddb1a: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_9f209e44c05ddb1a: saving steps separates equal answers only slightly
+- PASS: ep_3c13484c7cf31a46: correct answer with evidence beats silence
+- PASS: ep_3c13484c7cf31a46: repeating findings gains nothing
+- PASS: ep_3c13484c7cf31a46: guessed ids is not a true positive
+- PASS: ep_3c13484c7cf31a46: unsupported evidence is not a true positive
+- PASS: ep_3c13484c7cf31a46: wrong currency is not a true positive
+- PASS: ep_3c13484c7cf31a46: amount off by 3 tolerances is not a true positive
+- PASS: ep_3c13484c7cf31a46: wrong type is not a true positive
+- PASS: ep_3c13484c7cf31a46: citing documents by alias keeps full credit
+- PASS: ep_3c13484c7cf31a46: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_3c13484c7cf31a46: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_3c13484c7cf31a46: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_3c13484c7cf31a46: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_3c13484c7cf31a46: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_3c13484c7cf31a46: saving steps separates equal answers only slightly
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.2 s, D_paired 16.8 s
+Run time: B_replay 1.2 s, D_paired 17.8 s
 
 #### B_replay (8/8)
 
@@ -453,21 +453,21 @@ Run time: B_replay 1.2 s, D_paired 16.8 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 24.6 s
+Run time: A_unit_tests 41.3 s
 
 #### A_unit_tests (1/1)
 
-- PASS: unittest: 168 tests
+- PASS: unittest: 181 tests
 
 ## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9348 | 0.9348 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.6 | 0.0164 | 1.0 | 0.9548 | 0.9281 | 0 | 0.0 |
-| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0008 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
+| hidden_like | auditor | 20 | 0.936 | 0.936 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.0 | 0.0102 | 1.0 | 0.9532 | 0.9303 | 0 | 0.0 |
+| hidden_like | flag_all | 20 | -1.0 | -0.9946 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.003 | 3.0 | 0.004 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.8055 | -0.8055 | 0.0 | 0.0 | 0.0 | 0.0 | 0.1 | 0.1 | 23.6 | 0.0032 | 0.1 | -0.222 | -1.0 | 5 | 0.0 |
-| hidden_like | recon | 20 | -0.49 | -0.49 | 0.1954 | 0.5533 | 0.2126 | 0.7857 | 0.2786 | 0.2786 | 32.6 | 0.0118 | 0.0 | -1.0 | -0.32 | 24 | 0.0 |
+| hidden_like | random | 20 | -0.6132 | -0.6132 | 0.0 | 0.0 | 0.0 | 0.0 | 0.2 | 0.2 | 33.95 | 0.007 | 0.2 | 0.5472 | -1.0 | 2 | 0.0 |
+| hidden_like | recon | 20 | -0.5887 | -0.5887 | 0.1501 | 0.5425 | 0.1634 | 0.75 | 0.2307 | 0.2307 | 32.0 | 0.0109 | 0.0 | -1.0 | -0.4516 | 40 | 0.0 |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
 
@@ -476,28 +476,28 @@ P and R are macro means over episodes. A clean episode has no TP, so even a corr
 | split | policy | recall by type | miss reasons |
 |---|---|---|---|
 | hidden_like | auditor | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=1.0, wrong_period=1.0 | - |
-| hidden_like | flag_all | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | amount=1, search=55 |
+| hidden_like | flag_all | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | amount=2, search=54 |
 | hidden_like | oracle | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=1.0, wrong_period=1.0 | - |
-| hidden_like | random | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
-| hidden_like | recon | duplicate_invoice=0.7778, unallocated_payment=1.0, wrong_fx_rate=0.7, wrong_period=0.75 | not_flagged=12 |
+| hidden_like | random | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | not_flagged=1, search=55 |
+| hidden_like | recon | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=0.6, wrong_period=0.625 | not_flagged=14 |
 
 **Common vs experimental reward**
 
 | split | policy | common return | experimental (soft) return | difference | F1 | soft F1 |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0.9348 | 0.9348 | 0.0 | 1.0 | 1.0 |
-| hidden_like | flag_all | -1.0 | -0.9974 | 0.0026 | 0.0 | 0.0015 |
+| hidden_like | auditor | 0.936 | 0.936 | 0.0 | 1.0 | 1.0 |
+| hidden_like | flag_all | -1.0 | -0.9946 | 0.0054 | 0.0 | 0.003 |
 | hidden_like | oracle | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
-| hidden_like | random | -0.8055 | -0.8055 | 0.0 | 0.1 | 0.1 |
-| hidden_like | recon | -0.49 | -0.49 | 0.0 | 0.2786 | 0.2786 |
+| hidden_like | random | -0.6132 | -0.6132 | 0.0 | 0.2 | 0.2 |
+| hidden_like | recon | -0.5887 | -0.5887 | 0.0 | 0.2307 | 0.2307 |
 
 **False positives, evidence timing, unobserved citations**
 
 | split | policy | FP | FP causes | mean first full evidence step | issues seen, not flagged | unobserved citations (n / cited) |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0 | - | 23.7143 | 0 / 56 (0.0) | 0 / 222 |
-| hidden_like | flag_all | 600 | boundary_doc=10, legit_repeat=17, midnight_fx=5, multi_invoice_payment=14, near_issue=5, overpayment_refund=27, recurring=92, split_payment=14, underpayment=4, unrelated=407, weekend_fx=5 | - | 0 / 56 (0.0) | 0 / 380 |
+| hidden_like | auditor | 0 | - | 21.0536 | 0 / 56 (0.0) | 0 / 222 |
+| hidden_like | flag_all | 600 | boundary_doc=25, legit_repeat=11, multi_invoice_payment=14, near_issue=17, overpayment_refund=5, recurring=113, split_payment=5, underpayment=23, unrelated=378, weekend_fx=9 | - | 0 / 56 (0.0) | 0 / 380 |
 | hidden_like | oracle | 0 | - | - | - | 222 / 222 |
-| hidden_like | random | 24 | boundary_doc=2, legit_repeat=1, near_issue=1, underpayment=1, unrelated=19 | - | 0 / 56 (0.0) | 0 / 74 |
-| hidden_like | recon | 163 | boundary_doc=7, legit_repeat=44, midnight_fx=22, multi_invoice_payment=1, near_issue=1, overpayment_refund=33, recurring=2, split_payment=3, underpayment=3, unrelated=47 | 23.7143 | 12 / 56 (0.2143) | 0 / 903 |
+| hidden_like | random | 25 | boundary_doc=2, legit_repeat=1, multi_invoice_payment=1, null_ref_receipt=1, overpayment_refund=3, split_payment=1, unrelated=16 | 48.0 | 1 / 56 (0.0179) | 0 / 97 |
+| hidden_like | recon | 215 | boundary_doc=34, legit_repeat=45, midnight_fx=25, multi_invoice_payment=2, near_issue=1, overpayment_refund=30, recurring=6, split_payment=2, underpayment=6, unrelated=64 | 21.0536 | 14 / 56 (0.25) | 0 / 1091 |
 

@@ -4,24 +4,20 @@
   "timezone": "America/New_York",
   "utc_offset_schedule": [
     {
-      "from_utc": "2025-01-12T00:00:00Z",
-      "offset": "-05:00"
-    },
-    {
-      "from_utc": "2025-03-09T07:00:00Z",
+      "from_utc": "2027-07-15T00:00:00Z",
       "offset": "-04:00"
     }
   ],
   "local_time_rule": "Company-local time of an instant = the instant plus the UTC offset in force at that instant, taken from utc_offset_schedule (each entry applies from its from_utc instant until the next entry). Local calendar dates are always taken in company time, whatever offset a timestamp happens to be written with.",
   "reporting_period": {
-    "start": "2025-03-01T00:00:00-05:00",
-    "end": "2025-04-01T00:00:00-04:00",
+    "start": "2027-09-01T00:00:00-04:00",
+    "end": "2027-10-01T00:00:00-04:00",
     "end_is_exclusive": true,
     "rule": "A document belongs to the reporting period when start <= its own timestamp < end, compared as instants (issued_at for invoices, timestamp for payments). A posting belongs to the period of its ledger timestamp. A posting must fall in the same period as its document."
   },
   "ledger_extract": {
-    "start": "2025-03-01T00:00:00-05:00",
-    "end": "2025-04-08T00:00:00-04:00",
+    "start": "2027-09-01T00:00:00-04:00",
+    "end": "2027-10-08T00:00:00-04:00",
     "rule": "ledger.csv covers the reporting period plus a 7-day cut-off window after it. Items open at period start are carried in by opening journals dated at period start against account 3900."
   },
   "fx": {
@@ -30,25 +26,22 @@
     "date_rule": "Use the rate dated on the document's local calendar date (issued_at for invoices, timestamp for payments). If no rate is published on that date, use the latest earlier published date.",
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
-      "holidays_without_rates": [
-        "2025-03-03",
-        "2025-03-04"
-      ],
-      "first_date": "2025-01-13",
-      "last_date": "2025-04-09"
+      "holidays_without_rates": [],
+      "first_date": "2027-07-16",
+      "last_date": "2027-10-08"
     },
     "conversion": "base_minor = round(amount_minor * rate * 10^(exp_base - exp_document))",
-    "rounding": "half_up",
+    "rounding": "half_even",
     "other_pairs": "Rows for pairs other than document currency -> base currency are not used for postings."
   },
   "currency_exponents": {
     "USD": 2,
-    "KWD": 3,
     "GBP": 2,
-    "EUR": 2
+    "EUR": 2,
+    "KWD": 3
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "modes": {
       "half_even": "round half to even",
       "half_up": "round half away from zero"
@@ -69,7 +62,7 @@
     "opening": "One opening journal per open invoice (keyed by invoice_id) and one bank opening journal without IDs, all dated at period start."
   },
   "journal_grouping": "Ledger rows form one journal when they share payment_id; otherwise when they share invoice_id; otherwise when they share timestamp.",
-  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical. Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount.",
+  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical; issued_at is identical when it denotes the same instant (compare as instants, whatever offset each timestamp is written with). Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount.",
   "accounts": {
     "1000": "Bank",
     "1100": "Accounts receivable",

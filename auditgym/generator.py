@@ -12,6 +12,7 @@ in provenance.json and counted by `check`.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass, field
 
 from . import CONFIG_VERSION, SCHEMA_VERSION, __version__
@@ -58,6 +59,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
     b.build_entities()
     b.build_regular()
     b.build_distractors()
+    b.choose_holidays()
     plan = plan_errors(b, cfg)
     b.protected_dates |= plan.protected_dates
     b.protected_dates |= {b.h.p_last_date, b.h.next_first_date}
@@ -66,6 +68,8 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
     target_rows = cfg["counts"]["target_rows"]
     b.fill_misc(max(0, target_rows - len(clean_books.lines) - 2 * len(plan.extra_invoices)))
     clean_books = post(b.h)
+    if b.lift_opening_bank(clean_books.lines):  # clean ledgers never overdraw the bank
+        clean_books = post(b.h)
     overrides = make_overrides(b, plan)
     books = post(b.h, overrides)
     issues = derive_issues(b, plan, books)
@@ -121,7 +125,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
         "config_version": CONFIG_VERSION,
         "seed": str(seed),
         "secret_used": bool(secret),
-        "config": config,
+        "config": json.loads(canonical_json(config)),
         "resolved_config": cfg,
         "attempt": attempt,
         "history": {

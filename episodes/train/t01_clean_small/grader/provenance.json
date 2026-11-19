@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "7310428851902345611",
   "secret_used": false,
@@ -12,15 +12,14 @@
     "size": "small",
     "base_currency": "KWD",
     "foreign_currencies": [
-      "USD",
       "BHD"
     ],
-    "timezone": "Asia/Kolkata",
-    "period": "2025-11",
-    "rounding": "half_up",
-    "id_style": "hex",
-    "ts_repr": "utc",
-    "row_order": "shuffled",
+    "timezone": "America/New_York",
+    "period": "2026-05",
+    "rounding": "half_even",
+    "id_style": "prefixed",
+    "ts_repr": "mixed",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 0,
@@ -56,30 +55,30 @@
       "underpayment": 1,
       "overpayment_refund": 1,
       "null_ref_receipt": 1,
-      "boundary_doc": 2,
-      "midnight_fx": 1,
-      "weekend_fx": 1
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 4
     },
     "counts": {
       "customers": 9,
       "suppliers": 5,
-      "sales_invoices": 21,
+      "sales_invoices": 16,
       "purchase_invoices": 12,
-      "prior_invoices": 5,
-      "target_rows": 300
+      "prior_invoices": 3,
+      "target_rows": 366
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Palara Analytics Pvt Ltd",
+    "company": "Coreta Foods Inc",
     "customers": 9,
-    "suppliers": 5,
-    "invoices": 53,
-    "payments": 30,
-    "misc_journals": 56,
+    "suppliers": 6,
+    "invoices": 51,
+    "payments": 33,
+    "misc_journals": 85,
     "holidays": [
-      "2025-11-14"
+      "2026-05-14"
     ]
   },
   "injections": [],
@@ -87,82 +86,103 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_487531dc",
-        "pi_3c44b5a7"
+        "BILL-818335",
+        "BILL-763358"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_cef6ac1c",
-        "pi_72505a84"
+        "BILL-686909",
+        "BILL-116179"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_8ecd3466",
-        "rc_813fd51e",
-        "rc_a103ded9"
+        "INV-834396",
+        "RCPT-838374",
+        "RCPT-831725"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_5bcc217d",
-        "si_d7d99f48",
-        "rc_03a6068b"
+        "INV-861725",
+        "INV-992610",
+        "RCPT-243521"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_91120533",
-        "rc_cff5b5b5"
+        "INV-422696",
+        "RCPT-285284"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_a7280589",
-        "rc_7dc7acef",
-        "rf_0fbfccfe"
+        "INV-530583",
+        "RCPT-226427",
+        "RFND-441649"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_eb0f0f88"
+        "RCPT-474375"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_cc1fa82a"
+        "INV-695628"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_1e527f52"
+        "BILL-252060",
+        "PAY-103857"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-223775"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-261188",
+        "RCPT-385894"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_004c5965"
+        "BILL-876850"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "INV-733509",
+        "RCPT-921671"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_b6ba80d6"
+        "INV-514196"
       ]
     }
   ],
   "ops": [],
-  "clean_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
-  "clean_records_digest": "6e2451904c88c55bb7da1b0cfc9824e47e25afe5180a6a77b89958fbe57b00ac",
-  "final_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
+  "clean_digest": "11c9fdf0cf60b897f4185a0fcc05c6c5eb1aaaed650c03b78c595da4d9ff901b",
+  "clean_records_digest": "4110b48e6c52a79266b9218105f0f5392bc1bdfca4b2913f33a1bb1dd4482241",
+  "final_digest": "11c9fdf0cf60b897f4185a0fcc05c6c5eb1aaaed650c03b78c595da4d9ff901b",
   "rejected_attempts": []
 }

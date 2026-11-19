@@ -1,9 +1,9 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_be6dcfc15e5130fe",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_4c8053844593e39b",
   "company": {
-    "name": "Eloen Textiles GmbH",
+    "name": "Ostora Textiles Ltd",
     "synthetic": true
   },
   "base_currency": "GBP",
@@ -11,20 +11,20 @@
     "GBP": 2,
     "EUR": 2
   },
-  "period_start": "2026-10-01T00:00:00+02:00",
-  "period_end": "2026-11-01T00:00:00+01:00",
-  "ledger_extract_end": "2026-11-08T00:00:00+01:00",
-  "timezone": "Europe/Berlin",
+  "period_start": "2026-06-01T00:00:00+01:00",
+  "period_end": "2026-07-01T00:00:00+01:00",
+  "ledger_extract_end": "2026-07-08T00:00:00+01:00",
+  "timezone": "Europe/London",
   "record_counts": {
-    "ledger": 254,
-    "invoices": 42,
-    "payments": 24,
-    "fx": 89
+    "ledger": 251,
+    "invoices": 58,
+    "payments": 33,
+    "fx": 93
   },
   "document_counts": {
-    "invoices": 42,
-    "payments": 24,
-    "total": 66
+    "invoices": 58,
+    "payments": 33,
+    "total": 91
   },
   "rounding": {
     "mode": "half_up",

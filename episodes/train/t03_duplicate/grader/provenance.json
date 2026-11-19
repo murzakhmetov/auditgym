@@ -1,29 +1,27 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "5520017338842210093",
   "secret_used": false,
   "config": {
-    "size": "small",
     "errors": {
       "duplicate_invoice": 1
-    }
+    },
+    "size": "small"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "EUR",
+    "base_currency": "KWD",
     "foreign_currencies": [
-      "USD",
-      "JPY",
-      "GBP"
+      "EUR"
     ],
-    "timezone": "Europe/Berlin",
-    "period": "2025-01",
+    "timezone": "Asia/Kathmandu",
+    "period": "2025-06",
     "rounding": "half_up",
-    "id_style": "hex",
-    "ts_repr": "local",
+    "id_style": "prefixed",
+    "ts_repr": "mixed",
     "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 1,
@@ -60,30 +58,30 @@
       "underpayment": 1,
       "overpayment_refund": 1,
       "null_ref_receipt": 1,
-      "boundary_doc": 2,
-      "midnight_fx": 1,
-      "weekend_fx": 1
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 7
     },
     "counts": {
-      "customers": 6,
+      "customers": 7,
       "suppliers": 5,
-      "sales_invoices": 19,
-      "purchase_invoices": 12,
-      "prior_invoices": 3,
-      "target_rows": 284
+      "sales_invoices": 21,
+      "purchase_invoices": 8,
+      "prior_invoices": 5,
+      "target_rows": 348
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Astana Logistics GmbH",
-    "customers": 8,
-    "suppliers": 7,
-    "invoices": 52,
-    "payments": 29,
-    "misc_journals": 51,
+    "company": "Valova Systems Pvt Ltd",
+    "customers": 7,
+    "suppliers": 5,
+    "invoices": 56,
+    "payments": 35,
+    "misc_journals": 68,
     "holidays": [
-      "2025-01-10"
+      "2025-06-27"
     ]
   },
   "injections": [
@@ -93,8 +91,8 @@
       "variant": "same_day_copy",
       "scenario": "single",
       "targets": {
-        "original": "pi_33b50739",
-        "copy": "pi_9ff22772"
+        "original": "BILL-185583",
+        "copy": "BILL-128817"
       },
       "change": {}
     }
@@ -103,76 +101,117 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_743b7847",
-        "pi_e3976346"
+        "BILL-757852",
+        "BILL-699945"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_085d7d60",
-        "pi_9243b37b"
+        "BILL-656392",
+        "BILL-958279"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_2756513a",
-        "rc_c74ffa39",
-        "rc_560eb744"
+        "INV-229759",
+        "RCPT-487086",
+        "RCPT-582727"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_d9084f94",
-        "si_da8a3272",
-        "rc_0345c0e4"
+        "INV-811983",
+        "INV-287531",
+        "RCPT-622014"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_b4c31ea6",
-        "rc_b81ee350"
+        "INV-580669",
+        "RCPT-182512"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_666e9568",
-        "rc_06a6ef0e",
-        "rf_ce24c551"
+        "INV-992529",
+        "RCPT-204989",
+        "RFND-105970"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_98de41a7"
+        "RCPT-682304"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_1e731d8a"
+        "INV-628318",
+        "RCPT-941593"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_18930d53"
+        "BILL-418413"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-976952",
+        "RCPT-703476"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-720652",
+        "RCPT-911084"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-851988",
+        "PAY-594200"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-994236"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-451209"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_037ab369"
+        "BILL-372823"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "INV-860439",
+        "RCPT-898233"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_d815d433"
+        "INV-977268"
       ]
     }
   ],
@@ -180,63 +219,63 @@
     {
       "op": "add",
       "table": "ledger",
-      "id": "gl_20cf198a",
+      "id": "GL-342200",
       "record": {
-        "row_id": "gl_20cf198a",
-        "timestamp": "2025-01-03T18:48:27+01:00",
-        "account": "5000",
-        "debit_minor": 106965,
-        "credit_minor": 0,
-        "currency": "EUR",
-        "entity_id": "sup_7e9643bb",
-        "invoice_id": "pi_9ff22772",
+        "row_id": "GL-342200",
+        "timestamp": "2025-06-22T16:03:23+05:45",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 410006,
+        "currency": "KWD",
+        "entity_id": "S-169413",
+        "invoice_id": "BILL-128817",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "gl_50e97e5c",
+      "id": "GL-827421",
       "record": {
-        "row_id": "gl_50e97e5c",
-        "timestamp": "2025-01-03T18:48:27+01:00",
-        "account": "2000",
-        "debit_minor": 0,
-        "credit_minor": 106965,
-        "currency": "EUR",
-        "entity_id": "sup_7e9643bb",
-        "invoice_id": "pi_9ff22772",
+        "row_id": "GL-827421",
+        "timestamp": "2025-06-22T16:03:23+05:45",
+        "account": "5000",
+        "debit_minor": 410006,
+        "credit_minor": 0,
+        "currency": "KWD",
+        "entity_id": "S-169413",
+        "invoice_id": "BILL-128817",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "doc_43fd4ce7",
+      "id": "DOC-878143",
       "record": {
-        "doc_id": "doc_43fd4ce7",
-        "invoice_id": "pi_9ff22772",
+        "doc_id": "DOC-878143",
+        "invoice_id": "BILL-128817",
         "kind": "purchase",
-        "entity_id": "sup_7e9643bb",
-        "issued_at": "2025-01-03T18:48:27+01:00",
-        "due_at": "2025-02-17T23:59:59+01:00",
+        "entity_id": "S-169413",
+        "issued_at": "2025-06-22T10:18:23Z",
+        "due_at": "2025-07-06T18:14:59Z",
         "currency": "EUR",
-        "total_minor": 106965,
+        "total_minor": 125670,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Maintenance call SR-83444",
+            "description": "Maintenance call SR-59018",
             "quantity": 1,
-            "unit_price_minor": 106965,
-            "amount_minor": 106965,
-            "ref": "SR-83444"
+            "unit_price_minor": 125670,
+            "amount_minor": 125670,
+            "ref": "SR-59018"
           }
         ]
       }
     }
   ],
-  "clean_digest": "aad6b83320ef594af40596f516443abf8df11f3f40046b89d260d595aaecbfe4",
-  "clean_records_digest": "a7c7be152283aa1a7202c7c497d0202e354be7642e3dff6cd16dc6bd533437db",
-  "final_digest": "0ec501815b81b315b9ccd7c3b5eea0faf352d971f2aa6434ad5b25d64162e623",
+  "clean_digest": "9a12fee6c0f51104062ceafa0c3a3a7b8bd3be867dc5dbd9f7bb35cabae2664a",
+  "clean_records_digest": "78888b8bf30c044a49031748a4f46fc6c82b1c738e9071766c6700992bcc2b0c",
+  "final_digest": "893d08fcdb08b49ad0217c2b75174ee75e55e5166eaa69a3910d10c1a8271010",
   "rejected_attempts": []
 }

@@ -1,12 +1,12 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "7730195562281004417",
   "secret_used": false,
   "config": {
-    "size": "medium",
     "base_currency": "KWD",
+    "size": "medium",
     "timezone": "Asia/Kuwait"
   },
   "resolved_config": {
@@ -14,14 +14,15 @@
     "size": "medium",
     "base_currency": "KWD",
     "foreign_currencies": [
-      "EUR",
-      "BHD"
+      "BHD",
+      "USD",
+      "EUR"
     ],
     "timezone": "Asia/Kuwait",
-    "period": "2027-10",
-    "rounding": "half_up",
-    "id_style": "numeric",
-    "ts_repr": "mixed",
+    "period": "2027-08",
+    "rounding": "half_even",
+    "id_style": "prefixed",
+    "ts_repr": "local",
     "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
@@ -58,164 +59,210 @@
       "underpayment": 2,
       "overpayment_refund": 1,
       "null_ref_receipt": 2,
-      "boundary_doc": 3,
-      "midnight_fx": 2,
-      "weekend_fx": 2
+      "midnight_fx": 3,
+      "weekend_fx": 2,
+      "boundary_doc": 8
     },
     "counts": {
-      "customers": 10,
-      "suppliers": 8,
-      "sales_invoices": 37,
-      "purchase_invoices": 18,
-      "prior_invoices": 7,
-      "target_rows": 786
+      "customers": 14,
+      "suppliers": 10,
+      "sales_invoices": 39,
+      "purchase_invoices": 15,
+      "prior_invoices": 5,
+      "target_rows": 798
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Torum Energy Ltd",
-    "customers": 11,
-    "suppliers": 8,
-    "invoices": 87,
-    "payments": 54,
-    "misc_journals": 229,
-    "holidays": []
+    "company": "Rynara Systems Ltd",
+    "customers": 14,
+    "suppliers": 12,
+    "invoices": 90,
+    "payments": 56,
+    "misc_journals": 220,
+    "holidays": [
+      "2027-08-13",
+      "2027-08-16"
+    ]
   },
   "injections": [],
   "distractors": [
     {
       "kind": "legit_repeat",
       "ids": [
-        "23271199",
-        "26834617"
+        "BILL-602649",
+        "BILL-276104",
+        "PAY-784111"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "24282970",
-        "28260987"
+        "BILL-854619",
+        "BILL-635837",
+        "PAY-508580"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "29887965",
-        "28438259"
+        "BILL-332535",
+        "BILL-319476"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "21732140",
-        "25808856"
+        "BILL-133779",
+        "BILL-433440"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "11645154",
-        "37507801",
-        "33081785"
+        "INV-256302",
+        "RCPT-910856",
+        "RCPT-300225"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "13509312",
-        "34546090",
-        "36053397"
+        "INV-139059",
+        "RCPT-220891",
+        "RCPT-331963"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "18567690",
-        "19791464",
-        "39174721"
+        "INV-475685",
+        "INV-593995",
+        "RCPT-776123"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "17004363",
-        "38103762"
+        "INV-536851",
+        "RCPT-155425"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "17302364",
-        "34945723"
+        "INV-761169",
+        "RCPT-236003"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "11248534",
-        "33893273",
-        "56191325"
+        "INV-374385",
+        "RCPT-884540",
+        "RFND-724460"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "34989619"
+        "RCPT-828172"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "35872918"
+        "RCPT-212225"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "11365716"
+        "INV-873922",
+        "RCPT-801368"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "28704899"
+        "BILL-914218"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "16731133"
+        "INV-447701"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-987657"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-535184"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-734033",
+        "PAY-791178"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-944658",
+        "PAY-966644"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-467693",
+        "PAY-173464"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "27731487"
+        "INV-226001"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "28451852"
+        "INV-817054",
+        "RCPT-473712"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "BILL-851939"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "11945720"
+        "INV-164343"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "17793120"
+        "INV-215728"
       ]
     }
   ],
   "ops": [],
-  "clean_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
-  "clean_records_digest": "e6f7da145ac1f23697d9667b814ff8c3013d78ba83fa78acad59b66604d23fd6",
-  "final_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
+  "clean_digest": "dabea7dfda8e6823ff85f61a9baf845d27aba0eb8a2d121c19d50ab5fbadd4dc",
+  "clean_records_digest": "502a60220ed169d95a4392718e0339275c7a52f92f48c194dca4099f8c18f965",
+  "final_digest": "dabea7dfda8e6823ff85f61a9baf845d27aba0eb8a2d121c19d50ab5fbadd4dc",
   "rejected_attempts": []
 }

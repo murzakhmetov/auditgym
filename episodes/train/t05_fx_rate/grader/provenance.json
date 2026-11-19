@@ -1,14 +1,14 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "2297715560094823317",
   "secret_used": false,
   "config": {
-    "size": "small",
     "errors": {
       "wrong_fx_rate": 1
-    }
+    },
+    "size": "small"
   },
   "resolved_config": {
     "config_version": "1",
@@ -17,8 +17,8 @@
     "foreign_currencies": [
       "EUR"
     ],
-    "timezone": "Europe/Berlin",
-    "period": "2026-10",
+    "timezone": "Europe/London",
+    "period": "2026-06",
     "rounding": "half_up",
     "id_style": "slashed",
     "ts_repr": "mixed",
@@ -58,32 +58,29 @@
       "underpayment": 1,
       "overpayment_refund": 1,
       "null_ref_receipt": 1,
-      "boundary_doc": 2,
-      "midnight_fx": 1,
-      "weekend_fx": 1
+      "midnight_fx": 2,
+      "weekend_fx": 1,
+      "boundary_doc": 5
     },
     "counts": {
-      "customers": 9,
-      "suppliers": 6,
-      "sales_invoices": 14,
-      "purchase_invoices": 8,
-      "prior_invoices": 3,
-      "target_rows": 253
+      "customers": 7,
+      "suppliers": 5,
+      "sales_invoices": 20,
+      "purchase_invoices": 11,
+      "prior_invoices": 5,
+      "target_rows": 250
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Eloen Textiles GmbH",
-    "customers": 9,
-    "suppliers": 6,
-    "invoices": 42,
-    "payments": 24,
-    "misc_journals": 53,
-    "holidays": [
-      "2026-10-02",
-      "2026-10-07"
-    ]
+    "company": "Ostora Textiles Ltd",
+    "customers": 7,
+    "suppliers": 5,
+    "invoices": 58,
+    "payments": 33,
+    "misc_journals": 25,
+    "holidays": []
   },
   "injections": [
     {
@@ -92,12 +89,12 @@
       "variant": "transposed",
       "scenario": "single",
       "targets": {
-        "invoice": "SI/2026/797777"
+        "invoice": "SI/2026/957126"
       },
       "change": {
-        "correct_rate": "0.842913",
-        "correct_rate_date": "2026-10-08",
-        "wrong_rate": "0.482913",
+        "correct_rate": "0.874327",
+        "correct_rate_date": "2026-06-05",
+        "wrong_rate": "0.784327",
         "wrong_rate_date": null
       }
     }
@@ -106,76 +103,106 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "PI/2026/367098",
-        "PI/2026/438381"
+        "PI/2026/145270",
+        "PI/2026/471118",
+        "BP/2026/784033"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "PI/2026/253675",
-        "PI/2026/918144"
+        "PI/2026/236005",
+        "PI/2026/458201"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "SI/2026/715966",
-        "BR/2026/907301",
-        "BR/2026/656660"
+        "SI/2026/716575",
+        "BR/2026/141420",
+        "BR/2026/556481"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "SI/2026/875962",
-        "SI/2026/958304",
-        "BR/2026/472662"
+        "SI/2026/245865",
+        "SI/2026/348536",
+        "BR/2026/576111"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "SI/2026/324714",
-        "BR/2026/979825"
+        "SI/2026/596112",
+        "BR/2026/958554"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "SI/2026/407637",
-        "BR/2026/142063",
-        "RF/2026/454016"
+        "SI/2026/715725",
+        "BR/2026/790126",
+        "RF/2026/549157"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "BR/2026/933597"
+        "BR/2026/151435"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "SI/2026/867051"
+        "SI/2026/548069",
+        "BR/2026/452210"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "PI/2026/460751"
+        "SI/2026/518567"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/502533",
+        "BP/2026/226430"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/433649",
+        "BP/2026/209444"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/362565",
+        "BP/2026/337448"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "PI/2026/125298"
+        "PI/2026/370267"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2026/211052",
+        "BR/2026/454572"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "SI/2026/117848"
+        "SI/2026/631612"
       ]
     }
   ],
@@ -183,22 +210,22 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2026/262865",
+      "id": "J/2026/140925",
       "field": "debit_minor",
-      "before": 602118,
-      "after": 344959
+      "before": 511844,
+      "after": 459157
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "J/2026/962889",
+      "id": "J/2026/995205",
       "field": "credit_minor",
-      "before": 602118,
-      "after": 344959
+      "before": 511844,
+      "after": 459157
     }
   ],
-  "clean_digest": "3ba86d384b748fe8c4d85de17317b2e91c58a831f56311d7e779056ca5e2f508",
-  "clean_records_digest": "3d066f9024bbd4e27acc415673f52e27fe55af140c342468158e2588c5eae1d2",
-  "final_digest": "ff622fb1047fdecc67065a1160ddf4d52967445b3c9ae02e6a2883b4de1dc7a1",
+  "clean_digest": "2873be9b567cd08cbed6d70d72a17f1c7f53dc8b6928a3f45f16b193b9728b77",
+  "clean_records_digest": "8d0b0dfab2a063c5d7bbf70c23e14eecc50280586f2f817bb42f4d3ba8e4c412",
+  "final_digest": "27e173b3d4d8b926cb79a412ba567ca630db7634a1ca3e6d396e15bce291874f",
   "rejected_attempts": []
 }

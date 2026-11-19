@@ -1,35 +1,24 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "config_version": "1",
   "seed": "1958233070461129947",
   "secret_used": false,
   "config": {
-    "size": "small",
-    "distractors": {
-      "legit_repeat": 2,
-      "recurring": 2,
-      "split_payment": 2,
-      "overpayment_refund": 2,
-      "null_ref_receipt": 2,
-      "boundary_doc": 3,
-      "midnight_fx": 2,
-      "weekend_fx": 2
-    }
+    "size": "small"
   },
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "KWD",
+    "base_currency": "JPY",
     "foreign_currencies": [
-      "EUR",
-      "BHD"
+      "KRW"
     ],
-    "timezone": "Asia/Kuwait",
-    "period": "2027-04",
-    "rounding": "half_even",
-    "id_style": "prefixed",
-    "ts_repr": "utc",
+    "timezone": "Asia/Kolkata",
+    "period": "2025-12",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "mixed",
     "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
@@ -59,172 +48,149 @@
     },
     "interacting": [],
     "distractors": {
-      "legit_repeat": 2,
-      "recurring": 2,
-      "split_payment": 2,
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
       "multi_invoice_payment": 1,
       "underpayment": 1,
-      "overpayment_refund": 2,
-      "null_ref_receipt": 2,
-      "boundary_doc": 3,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
       "midnight_fx": 2,
-      "weekend_fx": 2
+      "weekend_fx": 1,
+      "boundary_doc": 5
     },
     "counts": {
-      "customers": 8,
-      "suppliers": 5,
-      "sales_invoices": 18,
-      "purchase_invoices": 12,
-      "prior_invoices": 5,
-      "target_rows": 415
+      "customers": 7,
+      "suppliers": 7,
+      "sales_invoices": 20,
+      "purchase_invoices": 11,
+      "prior_invoices": 4,
+      "target_rows": 399
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Kaien Agro Ltd",
-    "customers": 8,
-    "suppliers": 5,
-    "invoices": 61,
-    "payments": 41,
-    "misc_journals": 87,
-    "holidays": []
+    "company": "Verion Packaging Pvt Ltd",
+    "customers": 7,
+    "suppliers": 7,
+    "invoices": 55,
+    "payments": 38,
+    "misc_journals": 89,
+    "holidays": [
+      "2025-12-08",
+      "2025-12-30"
+    ]
   },
   "injections": [],
   "distractors": [
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-867781",
-        "BILL-575568"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "BILL-861310",
-        "BILL-161933"
+        "pi_e299b0eb",
+        "pi_b4067fa3",
+        "dp_a99cc7f2"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-774611",
-        "BILL-504843"
-      ]
-    },
-    {
-      "kind": "recurring",
-      "ids": [
-        "BILL-326095",
-        "BILL-378191"
+        "pi_9a92e146",
+        "pi_ddd56f18"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-111141",
-        "RCPT-839890",
-        "RCPT-988482"
-      ]
-    },
-    {
-      "kind": "split_payment",
-      "ids": [
-        "INV-490126",
-        "RCPT-316896",
-        "RCPT-734979"
+        "si_ba772721",
+        "rc_e0fd8f72",
+        "rc_605f775e"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-626932",
-        "INV-520255",
-        "RCPT-556717"
+        "si_7d05eab0",
+        "si_e35e3573",
+        "rc_0d2a04aa"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-783106",
-        "RCPT-209630"
+        "si_4217a113",
+        "rc_9e9d178b"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-203499",
-        "RCPT-445703",
-        "RFND-709687"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "INV-673458",
-        "RCPT-337130",
-        "RFND-332421"
+        "si_c9295327",
+        "rc_16a17876",
+        "rf_6cc1fb63"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-390673"
-      ]
-    },
-    {
-      "kind": "null_ref_receipt",
-      "ids": [
-        "RCPT-786842"
+        "rc_7c9cc8e0"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-100946"
+        "si_f30e569b",
+        "rc_6bb844fb"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-416641"
+        "pi_0c343e2b"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-846363"
+        "pi_6db0ac2e"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_09fbc431"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_d9f903af",
+        "dp_32a21a90"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "BILL-512865"
+        "pi_fb593be1"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-606784"
+        "pi_da20879d",
+        "dp_e57f5014"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-287855"
-      ]
-    },
-    {
-      "kind": "weekend_fx",
-      "ids": [
-        "INV-323183"
+        "si_597cab34"
       ]
     }
   ],
   "ops": [],
-  "clean_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
-  "clean_records_digest": "21358bea0aef2af4385fdfbb5d7872f384fcc828ced6ac78e7c168abe897462f",
-  "final_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
+  "clean_digest": "11e2d38f30f01ecce6216c75ebf3c8807de4a96b3e292b51a400b18e0734264b",
+  "clean_records_digest": "551c1e359efebd11711aebf9d98cbe705469b6c205d3f998e400f21180884482",
+  "final_digest": "11e2d38f30f01ecce6216c75ebf3c8807de4a96b3e292b51a400b18e0734264b",
   "rejected_attempts": []
 }

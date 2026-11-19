@@ -1,34 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.1.0",
-  "episode_id": "ep_22fbf4823e039c90",
+  "generator_version": "0.2.0",
+  "episode_id": "ep_0edbca064bb4ab42",
   "company": {
-    "name": "Palara Analytics Pvt Ltd",
+    "name": "Coreta Foods Inc",
     "synthetic": true
   },
   "base_currency": "KWD",
   "currency_exponents": {
     "KWD": 3,
-    "USD": 2,
     "BHD": 3
   },
-  "period_start": "2025-11-01T00:00:00+05:30",
-  "period_end": "2025-12-01T00:00:00+05:30",
-  "ledger_extract_end": "2025-12-08T00:00:00+05:30",
-  "timezone": "Asia/Kolkata",
+  "period_start": "2026-05-01T00:00:00-04:00",
+  "period_end": "2026-06-01T00:00:00-04:00",
+  "ledger_extract_end": "2026-06-08T00:00:00-04:00",
+  "timezone": "America/New_York",
   "record_counts": {
-    "ledger": 301,
-    "invoices": 53,
-    "payments": 30,
-    "fx": 153
+    "ledger": 366,
+    "invoices": 51,
+    "payments": 33,
+    "fx": 82
   },
   "document_counts": {
-    "invoices": 53,
-    "payments": 30,
-    "total": 83
+    "invoices": 51,
+    "payments": 33,
+    "total": 84
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [
