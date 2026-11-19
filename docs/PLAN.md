@@ -1,5 +1,7 @@
 # auditgym — implementation plan
 
+> **Historical day-1 plan; DESIGN.md and the code are authoritative.** Current status is in [TASKS.md](TASKS.md).
+
 Case: `docs/CASE.md`. Deadline 2026-11-22 23:59 UTC+05:00 (≈77 h left at planning time).
 Scoring is about environment and grader correctness (contract, data, reward, reproducibility). The UI earns
 zero points: it is a read-only demo viewer built last.

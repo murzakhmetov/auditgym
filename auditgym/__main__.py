@@ -258,6 +258,9 @@ def cmd_grade(args) -> int:
         rep = Grader(ep.truth, ep.episode_id).grade(None, args.steps, "invalid_submission", invalid_errors=errors)
         print(json.dumps(rep, indent=2))
         return 0
+    from .schemas import coerce_submission
+
+    sub = coerce_submission(sub)  # same integral-float coercion as env.step, so both paths grade alike
     errors = validate_submission(sub, ep.episode_id)
     g = Grader(ep.truth, ep.episode_id)
     if errors:
