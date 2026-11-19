@@ -105,6 +105,42 @@ TRAJECTORY_RECORD = {
                    "truncated": {"type": "boolean"}},
 }
 
+POLICY = {
+    "$id": "auditgym/policy.schema.json", "type": "object",
+    "required": ["schema_version", "base_currency", "timezone", "utc_offset_schedule", "local_time_rule", "reporting_period",
+                 "ledger_extract", "fx", "currency_exponents", "rounding", "posting_rules", "journal_grouping",
+                 "duplicate_rule", "accounts", "nulls"],
+    "properties": {
+        "schema_version": {"type": "string"}, "base_currency": CCY, "timezone": {"type": "string", "minLength": 1},
+        "utc_offset_schedule": {"type": "array", "minItems": 1, "items": {
+            "type": "object", "required": ["from_utc", "offset"],
+            "properties": {"from_utc": TS, "offset": {"type": "string", "pattern": r"^[+-]\d{2}:\d{2}$"}}}},
+        "reporting_period": {"type": "object", "required": ["start", "end", "end_is_exclusive", "rule"],
+                             "properties": {"start": TS, "end": TS, "end_is_exclusive": {"type": "boolean"}, "rule": {"type": "string"}}},
+        "ledger_extract": {"type": "object", "required": ["start", "end", "rule"],
+                           "properties": {"start": TS, "end": TS, "rule": {"type": "string"}}},
+        "fx": {"type": "object", "required": ["quote", "pair_used", "date_rule", "publication_calendar", "conversion", "rounding"]},
+        "currency_exponents": {"type": "object"},
+        "rounding": {"type": "object", "required": ["mode"], "properties": {"mode": {"enum": ["half_up", "half_even"]}}},
+        "posting_rules": {"type": "object"},
+        "accounts": {"type": "object"},
+    },
+}
+# Extra keys are allowed on purpose: provenance is grader-side metadata that later versions may extend.
+PROVENANCE = {
+    "$id": "auditgym/provenance.schema.json", "type": "object",
+    "required": ["schema_version", "generator_version", "seed", "secret_used", "config", "resolved_config", "attempt",
+                 "clean_digest", "final_digest", "injections", "ops"],
+    "properties": {
+        "schema_version": {"type": "string"}, "generator_version": {"type": "string"}, "seed": {"type": "string"},
+        "secret_used": {"type": "boolean"}, "config": {"type": "object"}, "resolved_config": {"type": "object"},
+        "attempt": {"type": "integer", "minimum": 0},
+        "clean_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "final_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "injections": {"type": "array", "items": {"type": "object", "required": ["issue_id", "type"]}},
+        "ops": {"type": "array", "items": {"type": "object", "required": ["op"]}},
+    },
+}
+
 ALL = {
     "ledger_row.schema.json": LEDGER_ROW,
     "invoice.schema.json": INVOICE,
@@ -116,6 +152,8 @@ ALL = {
     "action.schema.json": ACTION_JSON_SCHEMA,
     "observation.schema.json": OBSERVATION,
     "trajectory_record.schema.json": TRAJECTORY_RECORD,
+    "policy.schema.json": POLICY,
+    "provenance.schema.json": PROVENANCE,
 }
 
 
@@ -132,8 +170,8 @@ _TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null":
 
 
 def _type_ok(value, t) -> bool:
-    if t == "integer":
-        return isinstance(value, int) and not isinstance(value, bool)
+    if t == "integer":  # JSON Schema: 5.0 is an integer too
+        return (isinstance(value, int) and not isinstance(value, bool)) or (isinstance(value, float) and value.is_integer())
     if t == "number":
         return isinstance(value, (int, float)) and not isinstance(value, bool)
     return isinstance(value, _TYPES[t])

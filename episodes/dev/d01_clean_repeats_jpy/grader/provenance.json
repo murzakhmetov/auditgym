@@ -294,6 +294,7 @@
   ],
   "ops": [],
   "clean_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
+  "clean_records_digest": "9e7a1a3495b1506f80385f19112a3bba92374490d0d2be6485073138c0c9478a",
   "final_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
   "rejected_attempts": []
 }

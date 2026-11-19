@@ -162,6 +162,7 @@
   ],
   "ops": [],
   "clean_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
+  "clean_records_digest": "6e2451904c88c55bb7da1b0cfc9824e47e25afe5180a6a77b89958fbe57b00ac",
   "final_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
   "rejected_attempts": []
 }

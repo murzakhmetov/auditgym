@@ -8,13 +8,13 @@ silently injects fewer errors than requested.
 
 from __future__ import annotations
 
-import random
 from datetime import timedelta
 
 from . import CONFIG_VERSION, FINDING_TYPES
 from .catalog import BASE_CURRENCIES, FOREIGN_POOL, TZ_FOR_BASE
 from .ids import STYLES
 from .money import CURRENCY_EXPONENTS
+from .rng import Rng
 from .timeutil import TZ_RULES, local_date, local_datetime, month_bounds, offset_minutes
 
 
@@ -144,7 +144,7 @@ def validate(config: dict) -> dict:
     return config
 
 
-def resolve(config: dict, rng: random.Random) -> dict:
+def resolve(config: dict, rng: Rng) -> dict:
     """Return a fully specified config. Raises ConfigError when infeasible."""
     validate(config)
     size = config.get("size", "small")
@@ -175,7 +175,9 @@ def resolve(config: dict, rng: random.Random) -> dict:
         y, m = (int(p) for p in str(period).split("-"))
         period = f"{y:04d}-{m:02d}"
         if needs["boundary_weekdays"] and not _boundary_ok(period):
-            raise ConfigError("boundary_fx_payment needs the last day of the period and the first day after it to be weekdays")
+            near = _nearest_boundary_periods(period)
+            raise ConfigError("boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; "
+                              f"period {period} fails that. Nearest feasible periods: {', '.join(near)}")
     # Unspecified time zone or period are redrawn (on a side stream, so feasible draws stay unchanged)
     # until the requested errors can be placed; only a fully fixed infeasible request is an error.
     problems = feasibility_problems(tz, period, needs)
@@ -273,7 +275,25 @@ def _boundary_ok(period: str) -> bool:
     return first_next.weekday() < 5 and last.weekday() < 5
 
 
-def _pick_period(rng: random.Random, inter: list) -> str:
+def _nearest_boundary_periods(period: str, count: int = 2) -> list[str]:
+    """The feasible months closest to `period` within 2000-2100, nearest first (earlier before later on a tie)."""
+    y, m = (int(p) for p in period.split("-"))
+    idx = y * 12 + m - 1
+    found = []
+    for step in range(1, 25):
+        for cand in (idx - step, idx + step):
+            cy, cm = divmod(cand, 12)
+            if not 2000 <= cy <= 2100:
+                continue
+            label = f"{cy:04d}-{cm + 1:02d}"
+            if _boundary_ok(label):
+                found.append(label)
+        if len(found) >= count:
+            break
+    return found[:count] or ["none within 24 months"]
+
+
+def _pick_period(rng: Rng, inter: list) -> str:
     for _ in range(200):
         y = rng.choice([2025, 2026, 2027])
         m = rng.randint(1, 12)

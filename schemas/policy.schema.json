@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/policy.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "base_currency",
+    "timezone",
+    "utc_offset_schedule",
+    "local_time_rule",
+    "reporting_period",
+    "ledger_extract",
+    "fx",
+    "currency_exponents",
+    "rounding",
+    "posting_rules",
+    "journal_grouping",
+    "duplicate_rule",
+    "accounts",
+    "nulls"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "base_currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "utc_offset_schedule": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "from_utc",
+          "offset"
+        ],
+        "properties": {
+          "from_utc": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+          },
+          "offset": {
+            "type": "string",
+            "pattern": "^[+-]\\d{2}:\\d{2}$"
+          }
+        }
+      }
+    },
+    "reporting_period": {
+      "type": "object",
+      "required": [
+        "start",
+        "end",
+        "end_is_exclusive",
+        "rule"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "end_is_exclusive": {
+          "type": "boolean"
+        },
+        "rule": {
+          "type": "string"
+        }
+      }
+    },
+    "ledger_extract": {
+      "type": "object",
+      "required": [
+        "start",
+        "end",
+        "rule"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "rule": {
+          "type": "string"
+        }
+      }
+    },
+    "fx": {
+      "type": "object",
+      "required": [
+        "quote",
+        "pair_used",
+        "date_rule",
+        "publication_calendar",
+        "conversion",
+        "rounding"
+      ]
+    },
+    "currency_exponents": {
+      "type": "object"
+    },
+    "rounding": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "half_up",
+            "half_even"
+          ]
+        }
+      }
+    },
+    "posting_rules": {
+      "type": "object"
+    },
+    "accounts": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/provenance.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generator_version",
+    "seed",
+    "secret_used",
+    "config",
+    "resolved_config",
+    "attempt",
+    "clean_digest",
+    "final_digest",
+    "injections",
+    "ops"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "string"
+    },
+    "secret_used": {
+      "type": "boolean"
+    },
+    "config": {
+      "type": "object"
+    },
+    "resolved_config": {
+      "type": "object"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "clean_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "final_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "injections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "issue_id",
+          "type"
+        ]
+      }
+    },
+    "ops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "op"
+        ]
+      }
+    }
+  }
+}

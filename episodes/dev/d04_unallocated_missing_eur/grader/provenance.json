@@ -333,6 +333,7 @@
     }
   ],
   "clean_digest": "9d2e643e572d41114a0beeb3adca8873f57ad35f46976920b7dd549616015144",
+  "clean_records_digest": "46bd064a9f91c74a0c93fb5b5bfe49f53ab25d461cb449d1319a5808334b060d",
   "final_digest": "f15ed8228e10a1dc401fea3db45eecd53a28120bfc27c9859e475187a1d1db55",
   "rejected_attempts": []
 }

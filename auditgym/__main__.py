@@ -10,32 +10,139 @@
   demo                       scripted demo: the auditor and the recon baseline on one dev episode
   viewer                     build the offline HTML viewer (viewer/index.html)
   schemas                    write the published JSON schemas to schemas/
+  stress                     generator stress run: random configs plus extreme ones (runs/stress/report.md)
+  budget                     auditor and recon on dev at 20, 50 and 100 steps (runs/budget/summary.md)
+
+Exit codes: 0 ok, 1 a check or verification failed, 2 bad input (one `error:` line on stderr; command-line
+syntax errors print the argparse usage first), 3 a run finished but an agent failed. Only the input stage of a
+command (config, seeds file, episode directories, secret variable, numbers) is turned into exit 2; a crash inside
+a check, an agent policy or the stress loop keeps its traceback and exits 1.
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
+import platform
 import sys
 from pathlib import Path
 
+from . import CONFIG_VERSION, SCHEMA_VERSION, __version__
 from . import io as aio
+
+MIN_SEED_BITS = 40  # seeds below 2**40 (bit length <= 40) are guessable from public records; see README limitations
+
+
+class InputError(ValueError):
+    """Bad user input: reported as one `error:` line on stderr, exit code 2."""
+
+
+@contextlib.contextmanager
+def _input(broad: bool = False):
+    """Turn input-stage failures into InputError. ConfigError and GenerationError always; with broad=True also
+    OSError and ValueError (reading and parsing user files). Never wrap a run, a check or the stress loop."""
+    from .config import ConfigError
+    from .generator import GenerationError
+
+    kinds = (ConfigError, GenerationError) + ((OSError, ValueError) if broad else ())
+    try:
+        yield
+    except InputError:
+        raise
+    except kinds as exc:
+        raise InputError(" ".join(str(exc).split()) or type(exc).__name__) from exc
+
+
+def _secret_from_env(name: str | None) -> str | None:
+    if not name:
+        return None
+    value = os.environ.get(name)
+    if not value:
+        raise InputError(f"--secret-env {name}: the environment variable is not set or empty")
+    return value
+
+
+def _seed_bits(seed: int) -> int:
+    return abs(seed).bit_length()
+
+
+def _small_seed_warning(min_bits: int | None, secret: str | None) -> str | None:
+    if secret is None and min_bits is not None and min_bits <= MIN_SEED_BITS:
+        return (f"WARNING: no host secret and a seed of at most {MIN_SEED_BITS} bits ({min_bits}): small seeds can be "
+                f"recovered from public records; use 63-bit seeds and --secret-env for closed runs")
+    return None
+
+
+def _load_seeds_file(path: Path) -> tuple:
+    """The seeds-file rules live in check.load_seeds_file (integer seeds, object configs, unique names, non-empty)."""
+    from .check import load_seeds_file
+
+    try:
+        return load_seeds_file(Path(path))
+    except ValueError as exc:
+        raise InputError(str(exc)) from exc
+
+
+def _run_meta(args, secret: str | None, min_bits: int | None, n_episodes: int) -> dict:
+    from .generator import GENERATOR_VERSION
+    from .grader import GRADE_VERSION
+
+    cmd = ["python", "-m", "auditgym", *(args.argv or [])]
+    if secret:  # the secret is passed by variable name; scrub it anyway if it ever shows up in the command line
+        cmd = [c.replace(secret, "***") for c in cmd]
+    return {
+        "auditgym_version": __version__,
+        "generator_version": GENERATOR_VERSION,
+        "config_version": CONFIG_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "grade_version": GRADE_VERSION,
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "mode": args.mode,
+        "isolated": not args.in_process,
+        "policies": [p.strip() for p in args.policies.split(",") if p.strip()],
+        "policy_seed": args.policy_seed,
+        "max_steps": args.max_steps,
+        "episodes": n_episodes,
+        "secret_used": bool(secret),
+        "min_seed_bits": min_bits,
+        "command": cmd,
+    }
 
 
 def _load_config(arg: str | None) -> dict:
+    """A JSON file path or inline JSON (an argument starting with `{`). Always an object."""
     if not arg:
         return {}
-    p = Path(arg)
-    if p.exists():
-        return aio.read_json(p)
-    return json.loads(arg)
+    if arg.lstrip().startswith("{"):
+        try:
+            cfg = json.loads(arg)
+        except ValueError as exc:
+            raise InputError(f"--config is not valid JSON: {exc}") from exc
+    else:
+        try:
+            cfg = aio.read_json(Path(arg))
+        except FileNotFoundError as exc:
+            raise InputError(f"config file not found: {arg} (inline JSON must start with an opening brace)") from exc
+        except (OSError, ValueError) as exc:
+            raise InputError(f"cannot read config file {arg}: {exc}") from exc
+    if not isinstance(cfg, dict):
+        raise InputError("config must be a JSON object")
+    return cfg
 
 
 def cmd_check(args) -> int:
     from .check import main
 
-    return main()
+    argv = []
+    for flag, value in (("--seeds-file", args.seeds_file), ("--secret-env", args.secret_env), ("--out", args.out)):
+        if value is not None:
+            argv += [flag, value]
+    if args.keep_runs:
+        argv.append("--keep-runs")
+    return main(argv)
 
 
 def cmd_build_splits(args) -> int:
@@ -50,8 +157,10 @@ def cmd_build_splits(args) -> int:
 def cmd_generate(args) -> int:
     from .generator import generate_episode
 
-    secret = os.environ.get(args.secret_env) if args.secret_env else None
-    gen = generate_episode(args.seed, _load_config(args.config), secret=secret)
+    secret = _secret_from_env(args.secret_env)
+    cfg = _load_config(args.config)
+    with _input():
+        gen = generate_episode(args.seed, cfg, secret=secret)
     gen.episode.write(Path(args.out))
     print(json.dumps({"episode_id": gen.episode.episode_id, "issues": len(gen.episode.truth["issues"]),
                       "attempts": gen.attempts, "out": str(args.out)}))
@@ -62,7 +171,8 @@ def cmd_verify(args) -> int:
     from .episode import load_episode
     from .verify import verify_generated
 
-    ep = load_episode(Path(args.dir))
+    with _input(broad=True):
+        ep = load_episode(Path(args.dir))
     rep = verify_generated(ep)
     if args.json:
         print(json.dumps(rep, indent=2))
@@ -81,20 +191,29 @@ def cmd_run(args) -> int:
     from .report import markdown_table, miss_table, summarize
     from .runner import run_many
 
+    if args.secret_env and not args.seeds_file:
+        raise InputError("--secret-env only applies with --seeds-file (the secret is used to generate the episodes)")
     episodes = []
-    for d in args.episodes or []:
-        d = Path(d)
-        if (d / "public").exists():
-            episodes.append(("adhoc", d.name, load_episode(d)))
-        else:
-            for sub in sorted(p for p in d.iterdir() if (p / "public").exists()):
-                episodes.append((d.name, sub.name, load_episode(sub)))
+    with _input(broad=True):
+        for d in args.episodes or []:
+            d = Path(d)
+            if (d / "public").exists():
+                episodes.append(("adhoc", d.name, load_episode(d)))
+            else:
+                for sub in sorted(p for p in d.iterdir() if (p / "public").exists()):
+                    episodes.append((d.name, sub.name, load_episode(sub)))
+    secret = _secret_from_env(args.secret_env)
+    min_bits = None
     if args.seeds_file:
-        spec = aio.read_json(Path(args.seeds_file))
-        secret = os.environ.get(args.secret_env) if args.secret_env else None
-        for e in spec["episodes"]:
-            gen = generate_episode(e["seed"], e.get("config", {}), secret=secret)
-            episodes.append((spec.get("split", "closed"), e.get("name", gen.episode.episode_id), gen.episode))
+        label, entries = _load_seeds_file(Path(args.seeds_file))
+        min_bits = min(_seed_bits(e["seed"]) for e in entries)
+        warning = _small_seed_warning(min_bits, secret)
+        if warning:
+            print(warning, file=sys.stderr)
+        for e in entries:
+            with _input():
+                gen = generate_episode(e["seed"], e["config"], secret=secret)
+            episodes.append((label, e["name"], gen.episode))
     from .policies import PolicyError, validate_policy_name
 
     policies = [p.strip() for p in args.policies.split(",") if p.strip()]
@@ -102,16 +221,15 @@ def cmd_run(args) -> int:
         for p in policies:
             validate_policy_name(p, args.policy_path)
     except PolicyError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
+        raise InputError(str(exc)) from exc
     if not episodes:
-        print("error: no episodes given (use --episodes or --seeds-file)", file=sys.stderr)
-        return 2
+        raise InputError("no episodes given (use --episodes or --seeds-file)")
     traj, grades = run_many(episodes, policies, mode=args.mode, isolated=not args.in_process,
                             max_steps=args.max_steps, policy_seed=args.policy_seed, policy_path=args.policy_path)
     out = Path(args.out)
     aio.write_jsonl(out / "trajectories.jsonl", traj, ascii_only=True)
     aio.write_jsonl(out / "grades.jsonl", grades, ascii_only=True)
+    aio.write_json(out / "meta.json", _run_meta(args, secret if args.seeds_file else None, min_bits, len(episodes)))
     summary = summarize(grades)
     aio.write_json(out / "summary.json", summary)
     aio.write_text(out / "summary.md", markdown_table(summary) + "\n" + miss_table(summary))
@@ -127,8 +245,9 @@ def cmd_grade(args) -> int:
     from .grader import Grader
     from .schemas import validate_submission
 
-    ep = load_episode(Path(args.episode))
-    sub = aio.read_json(Path(args.findings))
+    with _input(broad=True):
+        ep = load_episode(Path(args.episode))
+        sub = aio.read_json(Path(args.findings))
     errors = validate_submission(sub, ep.episode_id)
     g = Grader(ep.truth, ep.episode_id)
     if errors:
@@ -143,7 +262,8 @@ def cmd_transform(args) -> int:
     from .episode import load_episode
     from .transform import transform_episode
 
-    ep = load_episode(Path(args.inp))
+    with _input(broad=True):
+        ep = load_episode(Path(args.inp))
     t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr)
     t.write(Path(args.out))
     print(json.dumps({"from": ep.episode_id, "to": t.episode_id, "out": str(args.out)}))
@@ -156,7 +276,8 @@ def cmd_demo(args) -> int:
     from .splits import EPISODES_DIR
 
     d = Path(args.episode) if args.episode else EPISODES_DIR / "dev" / "d08_both_interacting_kzt"
-    ep = load_episode(d)
+    with _input(broad=True):
+        ep = load_episode(d)
     print(f"episode {ep.episode_id}: {ep.manifest['company']['name']}, base {ep.manifest['base_currency']}, "
           f"{ep.manifest['timezone']}, period {ep.manifest['period_start']} .. {ep.manifest['period_end']}")
     print(f"records: {ep.manifest['record_counts']}")
@@ -200,10 +321,35 @@ def cmd_schemas(args) -> int:
     return 0
 
 
+def cmd_stress(args) -> int:
+    from .stress import run_stress
+
+    if args.n < 0:
+        raise InputError("--n must be >= 0")
+    return run_stress(args.n, Path(args.out))
+
+
+def cmd_budget(args) -> int:
+    from .stress import run_budget
+
+    try:
+        budgets = [int(b) for b in args.budgets.split(",")]
+    except ValueError as exc:
+        raise InputError("--budgets must be comma-separated integers, e.g. 20,50,100") from exc
+    if any(b < 1 for b in budgets):
+        raise InputError("--budgets must be positive integers")
+    return run_budget(budgets, Path(args.out))
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m auditgym", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("check").set_defaults(func=cmd_check)
+    ck = sub.add_parser("check", help="the single offline check; --seeds-file runs it on organizer episodes")
+    ck.add_argument("--seeds-file", help='JSON {"split": "...", "episodes": [{"name", "seed", "config"}]}; sections C, D, E run on these episodes')
+    ck.add_argument("--secret-env", help="name of an environment variable holding the host secret (with --seeds-file)")
+    ck.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
+    ck.add_argument("--keep-runs", action="store_true", help="with --seeds-file: also write trajectories and grades (they contain the closed answer key)")
+    ck.set_defaults(func=cmd_check)
     sub.add_parser("build-splits").set_defaults(func=cmd_build_splits)
     g = sub.add_parser("generate")
     g.add_argument("--seed", required=True)
@@ -248,8 +394,21 @@ def main(argv=None) -> int:
     sc = sub.add_parser("schemas")
     sc.add_argument("--out", default="schemas")
     sc.set_defaults(func=cmd_schemas)
+    st = sub.add_parser("stress", help="generator stress run (not part of check)")
+    st.add_argument("--n", type=int, default=300, help="number of random configurations")
+    st.add_argument("--out", default="runs/stress")
+    st.set_defaults(func=cmd_stress)
+    bu = sub.add_parser("budget", help="auditor and recon on dev at several step budgets")
+    bu.add_argument("--out", default="runs/budget")
+    bu.add_argument("--budgets", default="20,50,100")
+    bu.set_defaults(func=cmd_budget)
     args = ap.parse_args(argv)
-    return args.func(args)
+    args.argv = list(sys.argv[1:] if argv is None else argv)
+    try:
+        return args.func(args)
+    except InputError as exc:
+        print(f"error: {str(exc)[:500]}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

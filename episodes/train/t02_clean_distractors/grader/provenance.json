@@ -224,6 +224,7 @@
   ],
   "ops": [],
   "clean_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
+  "clean_records_digest": "21358bea0aef2af4385fdfbb5d7872f384fcc828ced6ac78e7c168abe897462f",
   "final_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
   "rejected_attempts": []
 }

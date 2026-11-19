@@ -198,6 +198,7 @@
     }
   ],
   "clean_digest": "3ba86d384b748fe8c4d85de17317b2e91c58a831f56311d7e779056ca5e2f508",
+  "clean_records_digest": "3d066f9024bbd4e27acc415673f52e27fe55af140c342468158e2588c5eae1d2",
   "final_digest": "ff622fb1047fdecc67065a1160ddf4d52967445b3c9ae02e6a2883b4de1dc7a1",
   "rejected_attempts": []
 }

@@ -6,12 +6,15 @@ Named checks, each independent of the generator's internal state:
   ids_unique             IDs are unique across tables and never contain ':'
   clean_equalities       clean books (reconstructed from provenance): every journal and the trial balance
                          balance, and the independent auditor finds no discrepancy and no anomaly
-  provenance_roundtrip   applying provenance ops to the clean books gives the published books, and reverting
-                         them gives the clean books back
+  provenance_roundtrip   with a clean twin (generation): reverting the ops gives the clean books and applying
+                         them gives the published books. Directory mode (verify DIR, no twin): revert then
+                         re-apply reproduces the published tables, the digest of the reverted tables equals
+                         provenance.clean_records_digest (missing = FAIL), public_digest() equals final_digest,
+                         and every declared issue has an op touching its affected records
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
                          evidence sets) and reports no anomaly
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
-                         IDs and amount, using a third implementation of the rules
+                         IDs and amount, using evidence_check.py (independent of auditor.py and money.py)
   budget_feasible        reading every page of every table plus submit fits in 100 steps
   no_surface_tells       every injected or modified ledger row has an untouched twin with the same account and
                          null pattern
@@ -22,11 +25,12 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import date, timedelta
+from datetime import date
 
-from .auditor import OffsetSchedule, audit, doc_signature
+from .auditor import audit
 from .episode import Episode
-from .money import convert_minor
+from .evidence_check import derive_from_evidence  # noqa: F401  (re-exported: check.py and tests import it from here)
+from .io import canonical_json, sha256_text
 from .render import apply_ops
 from .timeutil import parse_ts
 
@@ -124,90 +128,7 @@ def compare_with_truth(found: dict, truth: dict) -> list[str]:
     return errs
 
 
-# ------------------------------------------------------------------ evidence-only checker
-def derive_from_evidence(issue_type: str, evidence: list, ep: Episode) -> tuple | None:
-    """Third implementation: derive (type, affected id set, amount) from the cited records only."""
-    pol = ep.policy
-    base = pol["base_currency"]
-    exps = pol["currency_exponents"]
-    rounding = pol["rounding"]["mode"]
-    p0, p1 = parse_ts(pol["reporting_period"]["start"]), parse_ts(pol["reporting_period"]["end"])
-    sched = OffsetSchedule(pol["utc_offset_schedule"])
-    holidays = set(pol["fx"]["publication_calendar"]["holidays_without_rates"])
-    rows = {r["row_id"]: r for r in ep.ledger}
-    docs = {d["doc_id"]: d for d in ep.invoices + ep.payments}
-    fxs = {f"{r['date']}:{r['source_currency']}:{r['target_currency']}": r for r in ep.fx}
-    cited_rows = [rows[e] for e in evidence if e in rows]
-    cited_docs = [docs[e] for e in evidence if e in docs]
-    cited_fx = [fxs[e] for e in evidence if e in fxs]
-    if len(cited_rows) + len(cited_docs) + len(cited_fx) != len(evidence):
-        return None
-
-    def key_of(doc):
-        return doc.get("invoice_id") if "invoice_id" in doc else doc.get("payment_id")
-
-    def refers(row, doc):
-        return row["invoice_id"] == doc.get("invoice_id") if "invoice_id" in doc else row["payment_id"] == doc.get("payment_id")
-
-    def published(d: date) -> bool:
-        return d.weekday() < 5 and d.isoformat() not in holidays
-
-    if issue_type == "duplicate_invoice":
-        if len(cited_docs) != 2 or len(cited_rows) != 2 or cited_fx:
-            return None
-        a, b = cited_docs
-        if "invoice_id" not in a or "invoice_id" not in b or doc_signature(a) != doc_signature(b):
-            return None
-        ra = [r for r in cited_rows if r["invoice_id"] == a["invoice_id"]]
-        rb = [r for r in cited_rows if r["invoice_id"] == b["invoice_id"]]
-        if len(ra) != 1 or len(rb) != 1 or ra[0]["account"] != rb[0]["account"]:
-            return None
-        amt = ra[0]["debit_minor"] or ra[0]["credit_minor"]
-        if amt != (rb[0]["debit_minor"] or rb[0]["credit_minor"]):
-            return None
-        return issue_type, frozenset({a["invoice_id"], b["invoice_id"]}), amt
-    if issue_type == "unallocated_payment":
-        pays = [d for d in cited_docs if "payment_id" in d]
-        invs = [d for d in cited_docs if "invoice_id" in d]
-        if len(pays) != 1 or len(invs) != 1 or len(cited_rows) != 1 or cited_fx:
-            return None
-        p, i, r = pays[0], invs[0], cited_rows[0]
-        ok = (p["kind"] == "receipt" and p["invoice_refs"] and i["invoice_id"] in p["invoice_refs"]
-              and i["kind"] == "sales" and i["currency"] == p["currency"] and i["total_minor"] >= p["amount_minor"]
-              and r["account"] == "2900" and r["credit_minor"] > 0 and r["payment_id"] == p["payment_id"])
-        return (issue_type, frozenset({p["payment_id"], i["invoice_id"]}), r["credit_minor"]) if ok else None
-    if issue_type == "wrong_fx_rate":
-        if len(cited_docs) != 1 or len(cited_rows) != 1 or len(cited_fx) != 1:
-            return None
-        doc, row, fx = cited_docs[0], cited_rows[0], cited_fx[0]
-        if doc["currency"] == base or not refers(row, doc) or fx["source_currency"] != doc["currency"] or fx["target_currency"] != base:
-            return None
-        inst = parse_ts(doc["issued_at"] if "invoice_id" in doc else doc["timestamp"])
-        local_d = sched.local_date(inst)
-        fx_d = date.fromisoformat(fx["date"])
-        if fx_d > local_d or any(published(fx_d + timedelta(days=k)) for k in range(1, (local_d - fx_d).days + 1)):
-            return None
-        amount = doc["total_minor"] if "invoice_id" in doc else doc["amount_minor"]
-        expected = convert_minor(amount, fx["rate"], exps[doc["currency"]], exps[base], rounding)
-        posted = row["debit_minor"] or row["credit_minor"]
-        if "invoice_id" not in doc and row["account"] != "1000":
-            return None
-        delta = abs(posted - expected)
-        return (issue_type, frozenset({key_of(doc)}), delta) if delta > 2 else None
-    if issue_type == "wrong_period":
-        if len(cited_docs) != 1 or len(cited_rows) != 1 or cited_fx:
-            return None
-        doc, row = cited_docs[0], cited_rows[0]
-        if not refers(row, doc):
-            return None
-        inst = parse_ts(doc["issued_at"] if "invoice_id" in doc else doc["timestamp"])
-        post = parse_ts(row["timestamp"])
-        if (p0 <= inst < p1) == (p0 <= post < p1):
-            return None
-        if "invoice_id" not in doc and row["account"] != "1000":
-            return None
-        return issue_type, frozenset({key_of(doc)}), row["debit_minor"] or row["credit_minor"]
-    return None
+# derive_from_evidence lives in evidence_check.py (independent implementation) and is re-exported here.
 
 
 def check_evidence(ep: Episode) -> list[str]:
@@ -227,9 +148,12 @@ def check_budget(ep: Episode, max_steps: int = 100) -> list[str]:
     return [] if pages + 1 <= max_steps else [f"full read needs {pages} pages + submit > {max_steps}"]
 
 
-def check_surface(ep: Episode) -> list[str]:
+def check_surface(ep: Episode, strict: bool = False) -> list[str]:
+    """strict (directory mode): an episode with declared issues must carry ledger ops; none at all is a failure."""
     touched = {op["id"] for op in ep.provenance.get("ops", []) if op["table"] == "ledger" and op["op"] in ("add", "set")}
     if not touched:
+        if strict and ep.truth.get("issues"):
+            return ["episode declares issues but provenance has no ledger ops, so the surface cannot be checked"]
         return []
     patterns = {}
     for r in ep.ledger:
@@ -269,18 +193,69 @@ def reconstruct_clean(ep: Episode) -> dict:
     return apply_ops(_tables(ep), ep.provenance.get("ops", []), reverse=True)
 
 
+def records_digest(ledger: list, invoices: list, payments: list) -> str:
+    """Order-independent sha256 of a set of records (ledger rows, invoices, payments), keyed by their row/doc ID."""
+    parts = []
+    for name, key, rows in (("ledger", "row_id", ledger), ("invoices", "doc_id", invoices), ("payments", "doc_id", payments)):
+        parts.append([name, [canonical_json(r) for r in sorted(rows, key=lambda r: r[key])]])
+    return sha256_text(canonical_json(parts))
+
+
+def _tables_by_id(ep: Episode) -> dict:
+    keys = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
+    return {t: {r[k]: r for r in ep.table(t)} for t, k in keys.items()}
+
+
+def _tables_digest(tables: dict) -> str:
+    return records_digest(list(tables["ledger"].values()), list(tables["invoices"].values()), list(tables["payments"].values()))
+
+
+def _op_touches(ops: list, published: dict, reverted: dict) -> set:
+    """Public identifiers that the ops reach: row/doc IDs plus the invoice and payment IDs those records carry."""
+    ids = set()
+    for op in ops:
+        ids.add(op["id"])
+        rec = op.get("record") or published[op["table"]].get(op["id"]) or reverted[op["table"]].get(op["id"]) or {}
+        ids.update(rec[k] for k in ("invoice_id", "payment_id") if rec.get(k))
+        if op.get("field") in ("invoice_id", "payment_id"):
+            ids.update(v for v in (op.get("before"), op.get("after")) if v)
+    return ids
+
+
 def check_roundtrip(ep: Episode, clean: Episode | None) -> list[str]:
     errs = []
     keys = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
+    ops = ep.provenance.get("ops", [])
     rec = reconstruct_clean(ep)
     if clean is not None:
         for t, k in keys.items():
             if rec[t] != {r[k]: r for r in clean.table(t)}:
                 errs.append(f"reverting provenance does not reproduce clean {t}")
-        fwd = apply_ops(_tables(clean), ep.provenance.get("ops", []))
+        fwd = apply_ops(_tables(clean), ops)
         for t, k in keys.items():
             if fwd[t] != {r[k]: r for r in ep.table(t)}:
                 errs.append(f"applying provenance does not reproduce published {t}")
+        return errs
+    # Directory mode: nothing but the episode itself is available, so check it against the digests stored at generation.
+    fwd = apply_ops({t: list(rec[t].values()) for t in keys}, ops)
+    for t, k in keys.items():
+        if fwd[t] != {r[k]: r for r in ep.table(t)}:
+            errs.append(f"reverting then re-applying provenance does not reproduce published {t}")
+    want = ep.provenance.get("clean_records_digest")
+    if not isinstance(want, str) or not want:
+        errs.append("provenance has no clean_records_digest")
+    elif _tables_digest(rec) != want:
+        errs.append("digest of the reverted tables differs from provenance.clean_records_digest")
+    if not ep.provenance.get("final_digest"):
+        errs.append("provenance has no final_digest")
+    elif ep.public_digest() != ep.provenance["final_digest"]:
+        errs.append("public_digest() differs from provenance.final_digest")
+    if not ops and ep.provenance.get("clean_digest") != ep.public_digest():
+        errs.append("no ops, so provenance.clean_digest must equal public_digest()")
+    touched = _op_touches(ops, _tables_by_id(ep), rec)
+    for t in ep.truth.get("issues", []):
+        if not (set(t["affected_ids"]) & touched):
+            errs.append(f"{t['issue_id']}: no provenance op touches its affected records {t['affected_ids']}")
     return errs
 
 
@@ -310,7 +285,7 @@ def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks["declared_discrepancies"] = compare_with_truth(found, ep.truth)
     checks["evidence_sufficient"] = check_evidence(ep)
     checks["budget_feasible"] = check_budget(ep)
-    checks["no_surface_tells"] = check_surface(ep)
+    checks["no_surface_tells"] = check_surface(ep, strict=clean is None)
     checks["no_leaks"] = check_leaks(ep)
     failures = [f"{name}: {msg}" for name, msgs in checks.items() for msg in msgs]
     return {

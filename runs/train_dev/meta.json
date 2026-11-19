@@ -1,0 +1,36 @@
+{
+  "auditgym_version": "0.1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "schema_version": "auditgym/1.0",
+  "grade_version": "1",
+  "python": "3.11.4",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "mode": "eval",
+  "isolated": true,
+  "policies": [
+    "random",
+    "recon",
+    "flag_all",
+    "oracle",
+    "auditor"
+  ],
+  "policy_seed": 0,
+  "max_steps": 100,
+  "episodes": 20,
+  "secret_used": false,
+  "min_seed_bits": null,
+  "command": [
+    "python",
+    "-m",
+    "auditgym",
+    "run",
+    "--episodes",
+    "episodes/train",
+    "episodes/dev",
+    "--policies",
+    "random,recon,flag_all,oracle,auditor",
+    "--out",
+    "runs/train_dev"
+  ]
+}

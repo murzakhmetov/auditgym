@@ -1,0 +1,219 @@
+"""verify DIR checks what it names, and the evidence checker is independent of auditor.py and money.py."""
+
+import ast
+import copy
+import json
+import random
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from decimal import Decimal
+from pathlib import Path
+
+from auditgym import evidence_check
+from auditgym.episode import load_episode
+from auditgym.money import convert_minor
+from auditgym.transform import transform_episode
+from auditgym.verify import check_surface, verify_generated
+
+ROOT = Path(__file__).resolve().parent.parent
+D08 = ROOT / "episodes" / "dev" / "d08_both_interacting_kzt"
+
+
+def run_verify(directory: Path):
+    return subprocess.run([sys.executable, "-m", "auditgym", "verify", str(directory)], cwd=str(ROOT),
+                          capture_output=True, text=True, encoding="utf-8")
+
+
+def verify_dir(directory: Path) -> dict:
+    return verify_generated(load_episode(directory))
+
+
+class DirectoryModeTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name) / "ep"
+        shutil.copytree(D08, self.dir)
+        self.prov_path = self.dir / "grader" / "provenance.json"
+        self.prov = json.loads(self.prov_path.read_text(encoding="utf-8"))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def save(self):
+        self.prov_path.write_text(json.dumps(self.prov, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    def test_untouched_copy_passes(self):
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual(r.stdout.count("PASS  "), 9)
+
+    def test_deleted_op_fails_roundtrip(self):
+        del self.prov["ops"][0]
+        self.save()
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("FAIL  provenance_roundtrip", r.stdout)
+
+    def test_all_ops_deleted_and_digest_zeroed_fails(self):
+        # the jury's tamper test: delete every op and zero the stored digests
+        self.prov["ops"] = []
+        self.prov["clean_digest"] = "0" * 64
+        self.prov["clean_records_digest"] = "0" * 64
+        self.save()
+        rep = verify_dir(self.dir)
+        self.assertFalse(rep["ok"])
+        self.assertNotEqual(rep["checks"]["provenance_roundtrip"], "pass")
+        self.assertNotEqual(rep["checks"]["no_surface_tells"], "pass")
+
+    def test_zeroed_clean_digest_fails(self):
+        self.prov["clean_records_digest"] = "0" * 64
+        self.save()
+        rep = verify_dir(self.dir)
+        self.assertFalse(rep["ok"])
+        self.assertNotEqual(rep["checks"]["provenance_roundtrip"], "pass")
+
+    def test_zeroed_clean_digest_fails_when_no_ops(self):
+        d = Path(self._tmp.name) / "t01"
+        shutil.copytree(sorted((ROOT / "episodes" / "train").glob("t01*"))[0], d)
+        pp = d / "grader" / "provenance.json"
+        prov = json.loads(pp.read_text(encoding="utf-8"))
+        self.assertEqual(prov["ops"], [])
+        self.assertTrue(verify_dir(d)["ok"])
+        prov["clean_digest"] = "0" * 64
+        pp.write_text(json.dumps(prov, indent=2) + "\n", encoding="utf-8")
+        self.assertNotEqual(verify_dir(d)["checks"]["provenance_roundtrip"], "pass")
+
+    def test_missing_clean_digest_fails(self):
+        del self.prov["clean_records_digest"]
+        self.save()
+        rep = verify_dir(self.dir)
+        self.assertFalse(rep["ok"])
+        self.assertNotEqual(rep["checks"]["provenance_roundtrip"], "pass")
+
+    def test_edited_public_amount_fails(self):
+        path = self.dir / "public" / "invoices.jsonl"
+        lines = path.read_text(encoding="utf-8").splitlines()
+        rec = json.loads(lines[0])
+        rec["total_minor"] += 1
+        lines[0] = json.dumps(rec, ensure_ascii=False, separators=(",", ":"))
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        rep = verify_dir(self.dir)
+        self.assertFalse(rep["ok"])
+        self.assertNotEqual(rep["checks"]["provenance_roundtrip"], "pass")
+
+    def test_issue_without_ops_fails_surface(self):
+        ep = load_episode(D08)
+        self.assertEqual(check_surface(ep, strict=True), [])
+        ep.provenance["ops"] = []
+        self.assertTrue(check_surface(ep, strict=True))
+        self.assertEqual(check_surface(ep, strict=False), [])  # generation mode keeps its old behaviour
+        rep = verify_generated(ep)
+        self.assertFalse(rep["ok"])
+        self.assertNotEqual(rep["checks"]["no_surface_tells"], "pass")
+
+    def test_issue_whose_ops_miss_its_records_fails(self):
+        ep = load_episode(D08)
+        ep.truth["issues"][0]["affected_ids"] = ["NOT-A-RECORD"]
+        rep = verify_generated(ep)
+        self.assertTrue(any("no provenance op touches" in m for m in rep["checks"]["provenance_roundtrip"]))
+
+
+class TransformedEpisodeTests(unittest.TestCase):
+    def test_transformed_episodes_verify_in_directory_mode(self):
+        ep = load_episode(D08)
+        for tf in ({"permute_seed": 3, "remap_seed": 4}, {"ts_repr": "mixed", "remap_seed": 8}, {"ts_repr": "utc"}):
+            with self.subTest(tf=tf):
+                t = transform_episode(ep, **tf)
+                self.assertTrue(verify_generated(t)["ok"], verify_generated(t)["failures"][:2])
+
+    def _tampered_transform_fails(self, rel, edit):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / "ep"
+            shutil.copytree(D08, d)
+            edit(d / rel)
+            self.assertNotEqual(verify_dir(d)["checks"]["provenance_roundtrip"], "pass")  # sanity: source is bad
+            t = transform_episode(load_episode(d), remap_seed=4)
+            self.assertFalse(verify_generated(t)["ok"])
+            self.assertNotEqual(verify_generated(t)["checks"]["provenance_roundtrip"], "pass")
+
+    def test_transform_of_tampered_payments_fails(self):
+        def edit(p):
+            lines = p.read_text(encoding="utf-8").splitlines()
+            rec = json.loads(lines[0])
+            rec["bank_ref"] = str(rec.get("bank_ref", "")) + "X"
+            lines[0] = json.dumps(rec, ensure_ascii=False, separators=(",", ":"))
+            p.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        self._tampered_transform_fails(Path("public") / "payments.jsonl", edit)
+
+    def test_transform_of_tampered_fx_fails(self):
+        def edit(p):
+            p.write_text(p.read_text(encoding="utf-8").replace("1", "2", 1), encoding="utf-8", newline="\n")
+        self._tampered_transform_fails(Path("public") / "fx.csv", edit)
+
+    def test_transform_of_deleted_op_fails(self):
+        def edit(p):
+            prov = json.loads(p.read_text(encoding="utf-8"))
+            del prov["ops"][0]
+            p.write_text(json.dumps(prov, indent=2) + "\n", encoding="utf-8")
+        self._tampered_transform_fails(Path("grader") / "provenance.json", edit)
+
+
+class EvidenceCheckerTests(unittest.TestCase):
+    def test_evidence_check_imports_nothing_from_auditor_or_money(self):
+        tree = ast.parse(Path(evidence_check.__file__).read_text(encoding="utf-8"))
+        imported = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported += [(0, a.name) for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                imported.append((node.level, node.module or ""))
+        stdlib = {"datetime", "fractions", "__future__"}
+        for level, mod in imported:
+            if level == 0:
+                self.assertIn(mod.split(".")[0], stdlib, f"non-stdlib import {mod}")
+            else:
+                self.assertIn(mod, {"timeutil", "episode"}, f"forbidden relative import .{mod}")
+        names = " ".join(m for _l, m in imported)
+        self.assertNotIn("auditor", names)
+        self.assertNotIn("money", names)
+
+    def test_fraction_conversion_matches_money(self):
+        rng = random.Random(20251119)
+        for _ in range(10000):
+            amount = rng.randint(0, 10 ** rng.randint(1, 12))
+            rate = format(Decimal(rng.randint(1, 10 ** 9)) / Decimal(10 ** rng.randint(0, 9)), "f")
+            src, dst = rng.choice((0, 2, 3)), rng.choice((0, 2, 3))
+            mode = rng.choice(("half_even", "half_up"))
+            self.assertEqual(evidence_check.convert_fraction(amount, rate, src, dst, mode),
+                             convert_minor(amount, rate, src, dst, mode), (amount, rate, src, dst, mode))
+
+    def test_fraction_conversion_exact_halves(self):
+        # amount 5 minor units at rate 0.5, same exponent: 2.5 exactly
+        self.assertEqual(evidence_check.convert_fraction(5, "0.5", 2, 2, "half_even"), 2)
+        self.assertEqual(evidence_check.convert_fraction(5, "0.5", 2, 2, "half_up"), 3)
+        self.assertEqual(evidence_check.convert_fraction(7, "0.5", 2, 2, "half_even"), 4)
+
+    def test_reduced_evidence_derives_nothing(self):
+        ep = load_episode(D08)
+        for issue in ep.truth["issues"]:
+            es = issue["evidence_sets"][0]
+            self.assertEqual(evidence_check.derive_from_evidence(issue["type"], es, ep),
+                             (issue["type"], frozenset(issue["affected_ids"]), issue["expected_amount_minor"]))
+            for i in range(len(es)):
+                self.assertIsNone(evidence_check.derive_from_evidence(issue["type"], es[:i] + es[i + 1:], ep))
+
+    def test_duplicate_rule_must_name_the_fields(self):
+        ep = load_episode(ROOT / "episodes" / "train" / "t03_duplicate")
+        issue = ep.truth["issues"][0]
+        es = issue["evidence_sets"][0]
+        self.assertIsNotNone(evidence_check.derive_from_evidence(issue["type"], es, ep))
+        broken = copy.deepcopy(ep)
+        broken.policy["duplicate_rule"] = "Invoices are duplicates when they look alike."
+        self.assertIsNone(evidence_check.derive_from_evidence(issue["type"], es, broken))
+
+
+if __name__ == "__main__":
+    unittest.main()

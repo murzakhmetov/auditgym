@@ -81,7 +81,8 @@ def build_task(episode, max_steps: int, mode: str) -> dict:
             "list_records": {"table": "ledger | invoices | payments | fx", "cursor": "null or next_cursor", "limit": "1..50"},
             "get_record": {"table": "ledger | invoices | payments | fx", "id": "row_id | invoice_id | payment_id | fx id"},
             "get_document": {"doc_id": "doc_id of an invoice or payment"},
-            "calculator": {"expression": "arithmetic on decimal numbers: + - * / and parentheses"},
+            "calculator": {"expression": "arithmetic on decimal numbers: + - * / and parentheses; at most 256 characters "
+                                                              "and at most 200 tokens (each number, operator and parenthesis is one token)"},
             "submit": {"findings": {"episode_id": "...", "findings": [{"type": "...", "affected_ids": ["..."],
                                                                       "claimed_amount_minor": 0, "currency": "XXX",
                                                                       "evidence_ids": ["..."], "explanation": "..."}]}},

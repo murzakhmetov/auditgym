@@ -8,3 +8,5 @@ viewer/sample_bundle.json
 .playwright-mcp
 .github
 docs/design
+runs/check_closed
+runs/stress

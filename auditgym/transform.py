@@ -22,6 +22,7 @@ from .episode import Episode
 from .ids import STYLES, IdFactory
 from .rng import Rng, seed_from_text
 from .timeutil import format_ts, format_utc, parse_ts
+from .verify import reconstruct_clean, records_digest
 
 ALT_OFFSETS = (-420, -180, 0, 60, 345, 480, 660)
 
@@ -151,5 +152,29 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
         new.truth["episode_id"] = new_id
     new.provenance["transformed_from"] = {"episode_id": ep.episode_id, "permute_seed": permute_seed,
                                           "remap_seed": remap_seed, "ts_repr": ts_repr}
+    # The clean-records digest comes from the SOURCE episode's reverted clean tables pushed through the same ID map and
+    # timestamp rewrite, never from the transformed tables it will later be checked against.
+    clean_src = reconstruct_clean(ep)
+    src_digest = records_digest(list(clean_src["ledger"].values()), list(clean_src["invoices"].values()),
+                                list(clean_src["payments"].values()))
+    # Fresh digests only vouch for a source that was itself intact; a tampered source gets none (verify then FAILs).
+    # No raise: env.reset calls transform on every episode.
+    src_ok = (ep.provenance.get("clean_records_digest") == src_digest
+              and ep.provenance.get("final_digest") == ep.public_digest())
+    if not src_ok:
+        new.provenance.pop("clean_records_digest", None)
+        new.provenance.pop("final_digest", None)
+        return new
+    clean_new = {}
+    for table, key_field in (("ledger", "row_id"), ("invoices", "doc_id"), ("payments", "doc_id")):
+        recs = list(clean_src[table].values())
+        if remap_seed is not None:
+            recs = [_map_record(r, m) for r in recs]
+        if ts_repr is not None:
+            recs = [_retime(r, fmt, key_field) for r in recs]
+        clean_new[table] = recs
+    new.provenance["clean_records_digest"] = records_digest(clean_new["ledger"], clean_new["invoices"], clean_new["payments"])
     new.provenance["final_digest"] = new.public_digest()
+    if not new.provenance.get("ops"):
+        new.provenance["clean_digest"] = new.provenance["final_digest"]  # no ops: the clean twin is the published books
     return new

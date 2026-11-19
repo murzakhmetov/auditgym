@@ -8,7 +8,7 @@ generator, in an order that does not depend on the error plan.
 
 from __future__ import annotations
 
-import random
+from .rng import Rng
 
 STYLES = ("prefixed", "slashed", "hex", "numeric")
 
@@ -63,7 +63,7 @@ _DIGITS = {"prefixed": 6, "slashed": 6, "hex": 8, "numeric": 7}
 
 
 class IdFactory:
-    def __init__(self, rng: random.Random, style: str, year: int):
+    def __init__(self, rng: Rng, style: str, year: int):
         if style not in STYLES:
             raise ValueError(f"unknown id style {style!r}")
         self.rng = rng

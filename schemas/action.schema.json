@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "auditgym/action.schema.json",
   "title": "auditgym action",
+  "description": "Plain form {action, ...args} or the accepted alias {action, args: {...}}. Semantic errors (unknown_id, bad_cursor, calc_error, a submission episode_id that is not the current one) are not structural: a schema-valid action may still return them.",
   "oneOf": [
     {
       "type": "object",
@@ -89,7 +90,8 @@
         },
         "expression": {
           "type": "string",
-          "maxLength": 256
+          "maxLength": 256,
+          "description": "At most 256 characters and at most 200 tokens (numbers, + - * / and parentheses each count as one token)."
         }
       }
     },
@@ -106,6 +108,158 @@
         },
         "findings": {
           "$ref": "findings.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "args"
+      ],
+      "properties": {
+        "action": {
+          "const": "list_records"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "table"
+          ],
+          "properties": {
+            "table": {
+              "enum": [
+                "ledger",
+                "invoices",
+                "payments",
+                "fx"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "args"
+      ],
+      "properties": {
+        "action": {
+          "const": "get_record"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "table",
+            "id"
+          ],
+          "properties": {
+            "table": {
+              "enum": [
+                "ledger",
+                "invoices",
+                "payments",
+                "fx"
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "args"
+      ],
+      "properties": {
+        "action": {
+          "const": "get_document"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "doc_id"
+          ],
+          "properties": {
+            "doc_id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "args"
+      ],
+      "properties": {
+        "action": {
+          "const": "calculator"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expression"
+          ],
+          "properties": {
+            "expression": {
+              "type": "string",
+              "maxLength": 256,
+              "description": "At most 256 characters and at most 200 tokens (numbers, + - * / and parentheses each count as one token)."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "args"
+      ],
+      "properties": {
+        "action": {
+          "const": "submit"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "findings"
+          ],
+          "properties": {
+            "findings": {
+              "$ref": "findings.schema.json"
+            }
+          }
         }
       }
     }

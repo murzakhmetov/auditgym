@@ -9,3 +9,4 @@ viewer/sample_bundle.json
 build/
 dist/
 .playwright-mcp/
+runs/check_closed/

@@ -400,6 +400,7 @@
     }
   ],
   "clean_digest": "aac454e8928b50d75ac09c2cab86d8358321fb01c34caaffb9440ef857df8b3a",
+  "clean_records_digest": "b396dbdbb7b7004dc1e86de0e0e55efc3842607879cbbe38933f04514b2077c6",
   "final_digest": "d8f97dece08ca1b08b7f7aab5bab3b931d99c769dab8b2db1fb6713d99cbb95f",
   "rejected_attempts": []
 }

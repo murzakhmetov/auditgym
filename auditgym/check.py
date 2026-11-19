@@ -2,20 +2,31 @@
 
 Sections (each a list of named pass/fail checks, see report.md):
   A. unit tests (environment contract, isolation, matcher, reward, generator, schemas)
-  B. committed train/dev episodes regenerate byte-identically and verify
+  B. committed train/dev episodes regenerate byte-identically and verify;
+     B_replay: the recorded actions of every committed run replay to identical
+     observations and terminal rewards
   C. 20 hidden-like episodes (5 clean, 5 interacting, 10 mixed): verify, run the four
      baselines plus the scripted auditor in isolated eval mode, check reward properties
-  D. 20 paired checks: exact repetition, row permutation, ID remapping and timestamp
-     re-rendering preserve the oracle answer and reward
+     (per-episode properties, an attack battery on every error episode, false
+     accusations on every clean one)
+  D. paired checks: exact repetition, same actions, isolated vs in-process runs, row
+     permutation, ID remapping and timestamp re-rendering preserve the oracle answer,
+     the reward and the auditor's matched issues
   E. leak scan of every agent-visible observation
-Exit code 0 only if every check passes. No network, GPU or paid API is used.
+Exit code 0 only if every check passes (SKIP counts as passed). No network, GPU or paid API is used.
+
+Organizer seeds: `python -m auditgym.check --seeds-file FILE [--secret-env VAR] [--out DIR]`
+runs C, D, E (and the replay of its own runs) on the episodes of a seeds file
+{"split": label, "episodes": [{"name", "seed", "config"}, ...]}. Output goes to
+runs/check_closed by default and never to runs/check.
 """
 
 from __future__ import annotations
 
-import copy
+import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 import unittest
@@ -23,8 +34,11 @@ from pathlib import Path
 
 from . import __version__
 from . import io as aio
+from . import FINDING_TYPES
+from .check_battery import clean_battery, matched_claims, replay_records, reward_battery
 from .episode import load_episode
-from .generator import generate_episode
+from .config import ConfigError
+from .generator import GenerationError, generate_episode
 from .grader import Grader
 from .policies.oracle import OraclePolicy
 from .report import markdown_table, miss_table, summarize
@@ -39,9 +53,24 @@ FORBIDDEN_IN_OBS = ("iss_", "evidence_sets", "expected_amount", "id_aliases", "p
                     "rejected_attempts", "truth.json", "grader/")
 
 
+HIDDEN_LIKE_SOURCE = "public master string auditgym-check-v1"
+CLOSED_OUT = ROOT / "runs" / "check_closed"
+DEFAULT_OUT = ROOT / "runs" / "check"
+
+# report.md groups the sections under the five rubric headings (section keys in report.json stay as they are).
+RUBRIC = (
+    ("1. Contract and isolation (25)", ("E_leaks",)),
+    ("2. Data and answer key (25)", ("B_committed_episodes", "C_data")),
+    ("3. Reward reliability (25)", ("C_reward",)),
+    ("4. Reproducibility (15)", ("B_replay", "D_paired")),
+    ("5. Engineering and explanation (10)", ("A_unit_tests",)),
+)
+
+
 class Report:
     def __init__(self):
         self.sections: dict = {}
+        self.seconds: dict = {}
 
     def add(self, section: str, name: str, ok: bool, detail="") -> bool:
         self.sections.setdefault(section, []).append({"check": name, "ok": bool(ok), "detail": detail})
@@ -49,29 +78,55 @@ class Report:
         print(f"  [{mark}] {name}" + (f" - {detail}" if detail and not ok else ""), flush=True)
         return ok
 
+    def skip(self, section: str, name: str, reason: str) -> bool:
+        """A check that does not apply to this set of episodes; counts as passed."""
+        self.sections.setdefault(section, []).append({"check": name, "ok": True, "skipped": True, "detail": reason})
+        print(f"  [SKIP] {name} - {reason}", flush=True)
+        return True
+
     @property
     def ok(self) -> bool:
         return all(c["ok"] for cs in self.sections.values() for c in cs)
 
     def counts(self) -> dict:
-        return {s: {"passed": sum(c["ok"] for c in cs), "total": len(cs)} for s, cs in self.sections.items()}
+        return {s: {"passed": sum(c["ok"] for c in cs), "total": len(cs), "skipped": sum(1 for c in cs if c.get("skipped"))}
+                for s, cs in self.sections.items()}
+
+
+def _disp(label: str) -> str:
+    return "hidden-like" if label == "hidden_like" else label
 
 
 def _digest(obj) -> str:
     return hashlib.sha256(aio.canonical_json(obj).encode("utf-8")).hexdigest()
 
 
-def section_unit_tests(rep: Report) -> None:
+def _rel(path: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _mean(xs):
+    xs = list(xs)
+    return sum(xs) / len(xs) if xs else None
+
+
+def section_unit_tests(rep: Report, out_dir: Path) -> None:
     print("A. unit tests", flush=True)
+    t0 = time.monotonic()
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), top_level_dir=str(ROOT))
-    with open(ROOT / "runs" / "check" / "unittest.log", "w", encoding="utf-8", newline="\n") as log:
+    with open(out_dir / "unittest.log", "w", encoding="utf-8", newline="\n") as log:
         result = unittest.TextTestRunner(stream=log, verbosity=2).run(suite)
     rep.add("A_unit_tests", f"unittest: {result.testsRun} tests", result.wasSuccessful(),
-            f"failures={len(result.failures)} errors={len(result.errors)} (see runs/check/unittest.log)")
+            f"failures={len(result.failures)} errors={len(result.errors)} (see {_rel(out_dir)}/unittest.log)")
+    rep.seconds["A_unit_tests"] = time.monotonic() - t0
 
 
 def section_committed(rep: Report) -> list:
     print("B. committed train/dev episodes", flush=True)
+    t0 = time.monotonic()
     episodes = []
     for split, e in split_entries(("train", "dev")):
         gen = generate_episode(e["seed"], e["config"])
@@ -92,7 +147,43 @@ def section_committed(rep: Report) -> list:
         rep.add("B_committed_episodes", f"{split}/{e['name']} verifies ({len(ep.truth['issues'])} issues)", v["ok"],
                 "; ".join(v["failures"][:3]))
         episodes.append((split, e["name"], ep))
+    rep.seconds["B_committed_episodes"] = time.monotonic() - t0
     return episodes
+
+
+REPLAY_POLICIES = ("random", "recon", "flag_all", "auditor")
+
+
+def _replay_checks(rep: Report, results: dict, expected: dict) -> None:
+    """expected: {(split, policy): {episode_id, ...}}; every group and episode must be present and replay."""
+    for key in sorted(set(results) | set(expected)):
+        split, policy = key
+        r = results.get(key, {"runs": 0, "bad": [], "episodes": set()})
+        bad = list(r["bad"])
+        missing = sorted(expected.get(key, set()) - r["episodes"])
+        if missing:
+            bad.append(f"{len(missing)} expected episode(s) have no recorded run: {', '.join(missing[:3])}")
+        rep.add("B_replay", f"{split}/{policy}: {r['runs']} recorded runs, each replays to identical observations and terminal reward",
+                not bad, "; ".join(bad[:3]))
+
+
+def section_replay_committed(rep: Report, committed: list) -> None:
+    """Recorded actions of the committed train/dev runs go into a fresh AuditEnv."""
+    print("B. replay of recorded actions (runs/train_dev)", flush=True)
+    t0 = time.monotonic()
+    path = ROOT / "runs" / "train_dev" / "trajectories.jsonl"
+    if not path.exists():
+        rep.add("B_replay", "runs/train_dev/trajectories.jsonl replays to identical observations", False,
+                "missing; run `python -m auditgym run --out runs/train_dev`")
+        return
+    records = aio.read_jsonl(path)
+    episodes = {(s, ep.episode_id): ep for s, _n, ep in committed}
+    expected: dict = {}
+    for s, _n, ep in committed:
+        for p in REPLAY_POLICIES:
+            expected.setdefault((s, p), set()).add(ep.episode_id)
+    _replay_checks(rep, replay_records(records, episodes), expected)
+    rep.seconds["B_replay"] = time.monotonic() - t0
 
 
 def live_reward_properties(rep: Report, ep) -> None:
@@ -113,6 +204,7 @@ def live_reward_properties(rep: Report, ep) -> None:
             "unsupported evidence": dict(f0, evidence_ids=f0["evidence_ids"][:1]),
             "wrong currency": dict(f0, currency="XXX" if f0["currency"] != "XXX" else "YYY"),
             "amount off by 3 tolerances": dict(f0, claimed_amount_minor=f0["claimed_amount_minor"] + 7),
+            "wrong type": dict(f0, type=next(t for t in FINDING_TYPES if t != f0["type"])),
         }
         for label, m in mutants.items():
             res = g.grade({"episode_id": eid, "findings": [m] + oracle[1:]}, 0, "submitted")
@@ -123,80 +215,155 @@ def live_reward_properties(rep: Report, ep) -> None:
             aliased.append(dict(f, affected_ids=[alias_rev.get(i, i) for i in f["affected_ids"]],
                                 evidence_ids=[ep.truth["id_aliases"].get(i, i) for i in f["evidence_ids"]]))
         rep.add("C_reward", f"{name}: citing documents by alias keeps full credit", r(aliased) == 1.0)
+        for label, ok, detail, *skipped in reward_battery(ep):
+            (rep.skip("C_reward", label, detail) if skipped else rep.add("C_reward", label, ok, detail))
     else:
         some = {"type": "wrong_period", "affected_ids": [ep.invoices[0]["invoice_id"]], "claimed_amount_minor": 1,
                 "currency": ep.manifest["base_currency"], "evidence_ids": [ep.invoices[0]["doc_id"]], "explanation": "x"}
         rep.add("C_reward", f"{name}: silence beats a false accusation on a clean ledger", r([], 40) > r([some], 0))
+        for label, ok, detail in clean_battery(ep):
+            rep.add("C_reward", label, ok, detail)
     rep.add("C_reward", f"{name}: saving steps separates equal answers only slightly",
             0 < r(oracle, 10) - r(oracle, 40) <= 0.061)
 
 
-def section_hidden_like(rep: Report, out_dir: Path):
-    print("C. hidden-like episodes and baselines", flush=True)
-    entries = check_set()
+def section_hidden_like(rep: Report, entries: list, label: str, secret: str | None, closed: bool, pregen: dict | None = None):
+    print(f"C. {_disp(label)} episodes and baselines", flush=True)
     eps = []
     t0 = time.monotonic()
     for e in entries:
-        gen = generate_episode(e["seed"], e["config"])
+        gen = (pregen or {}).get(e["name"]) or generate_episode(e["seed"], e["config"], secret=secret)
         v = verify_generated(gen.episode, gen.clean)
         rep.add("C_data", f"{e['name']} verifies ({len(gen.episode.truth['issues'])} issues, {gen.attempts} attempt(s))", v["ok"],
                 "; ".join(v["failures"][:3]))
-        eps.append(("hidden_like", e["name"], gen.episode))
+        eps.append((label, e["name"], gen.episode))
     rejected = sum(1 for _s, _n, ep in eps for _ in ep.provenance.get("rejected_attempts", []))
-    rep.add("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)", rejected <= len(eps) // 2)
+    if closed and len(eps) < 4:
+        rep.skip("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)",
+                 "too few episodes for a rate; measurement only")
+    else:
+        rep.add("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)", rejected <= len(eps) // 2)
     gen_time = time.monotonic() - t0
+    rep.seconds["C_data"] = gen_time
+    t1 = time.monotonic()
+    n = len(eps)
     policies = ["random", "recon", "flag_all", "oracle", "auditor"]
     traj, grades = run_many(eps, policies, mode="eval", isolated=True)
     summary = summarize(grades)
     s = {v["policy"]: v for v in summary.values()}
-    rep.add("C_reward", "oracle reaches reward 1.0 on all 20 episodes", all(g["reward"] == 1.0 for g in grades if g["policy"] == "oracle"))
+    err = {p: _mean(g["reward"] for g in grades if g["policy"] == p and g["n_issues"] > 0) for p in policies}
+    has_err = err["oracle"] is not None
+    rep.add("C_reward", f"oracle reaches reward 1.0 on all {n} episodes", all(g["reward"] == 1.0 for g in grades if g["policy"] == "oracle"))
     rep.add("C_reward", "flag-everything attack scores poorly (mean return <= -0.9)", s["flag_all"]["return"] <= -0.9,
             str(s["flag_all"]["return"]))
     rep.add("C_reward", "scripted auditor closes every episode (no FP, no FN)", s["auditor"]["closed_share"] == 1.0,
             str(s["auditor"]["closed_share"]))
-    rep.add("C_reward", "ordering: oracle > auditor > recon > flag_all", s["oracle"]["return"] > s["auditor"]["return"]
-            > s["recon"]["return"] > s["flag_all"]["return"], json.dumps({k: v["return"] for k, v in s.items()}))
-    rep.add("C_reward", "random explorer stays far below the auditor", s["random"]["return"] < s["auditor"]["return"] - 0.5)
+    returns = json.dumps({k: v["return"] for k, v in s.items()})
+    if not closed:
+        rep.add("C_reward", "ordering: oracle > auditor > recon > flag_all", s["oracle"]["return"] > s["auditor"]["return"]
+                > s["recon"]["return"] > s["flag_all"]["return"], returns)
+    else:
+        rep.add("C_reward", "ordering: oracle >= auditor over all episodes", s["oracle"]["return"] >= s["auditor"]["return"], returns)
+    order_name = "ordering on error episodes only: auditor > recon >= flag_all" if not closed \
+        else "ordering on error episodes only: auditor >= recon >= flag_all"
+    if has_err:
+        a, rc, fa = err["auditor"], err["recon"], err["flag_all"]
+        rep.add("C_reward", order_name, (a > rc if not closed else a >= rc) and rc >= fa, json.dumps(err))
+    else:
+        rep.skip("C_reward", order_name, "the set has no error episodes")
+    if has_err or not closed:
+        rep.add("C_reward", "random explorer stays far below the auditor", s["random"]["return"] < s["auditor"]["return"] - 0.5)
+    else:
+        rep.skip("C_reward", "random explorer stays far below the auditor", "the set has no error episodes")
     rep.add("C_reward", "every run finishes inside 100 steps and 60 s", all(g["inspection_steps"] <= 99 and g["elapsed_s"] < 60 for g in grades))
     rep.add("C_reward", "no agent process failed", not any(g.get("agent_error") for g in grades))
-    for _s, _n, ep in eps[:3] + eps[5:7]:
+    for _s, _n, ep in eps:
         live_reward_properties(rep, ep)
+    if not any(ep.truth["issues"] for _s, _n, ep in eps):
+        rep.skip("C_reward", "attack battery on error episodes", "the set has no error episodes")
+    if all(ep.truth["issues"] for _s, _n, ep in eps):
+        rep.skip("C_reward", "false accusations on clean episodes", "the set has no clean episodes")
+    rep.seconds["C_reward"] = time.monotonic() - t1
     return eps, traj, grades, summary, gen_time
 
 
-def section_paired(rep: Report, eps: list) -> None:
+def _pick_reps(eps: list, preferred: tuple) -> list:
+    chosen = [x for p in preferred for x in eps if x[1].startswith(p + "_")]
+    if len(chosen) == len(preferred):
+        return chosen
+    clean = [x for x in eps if not x[2].truth["issues"]]
+    errs = [x for x in eps if x[2].truth["issues"]]
+    out = []
+    for x in clean[:1] + errs[:1] + errs[len(errs) // 2:][:1]:
+        if x not in out:
+            out.append(x)
+    return out
+
+
+def section_paired(rep: Report, eps: list, entries: list, secret: str | None) -> None:
     print("D. reproducibility and paired checks", flush=True)
-    entries = {e["name"]: e for e in check_set()}
-    for _s, name, ep in eps[:5]:
-        e = entries[name]
-        again = generate_episode(e["seed"], e["config"]).episode
+    t0 = time.monotonic()
+    by_name = {e["name"]: e for e in entries}
+    for _s, name, ep in eps:
+        e = by_name[name]
+        again = generate_episode(e["seed"], e["config"], secret=secret).episode
         rep.add("D_paired", f"{name}: same seed and config regenerate identical records and answer key",
                 again.public_digest() == ep.public_digest() and _digest(again.truth) == _digest(ep.truth))
-    _s, name, ep = eps[1]
-    a, ga = run_one(ep, "random", policy_seed=3, isolated=False)
-    b, gb = run_one(ep, "random", policy_seed=3, isolated=False)
-    rep.add("D_paired", f"{name}: same actions reproduce transitions and reward (random explorer)", _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
-    a, ga = run_one(ep, "auditor", isolated=True)
-    b, gb = run_one(ep, "auditor", isolated=False)
-    rep.add("D_paired", f"{name}: isolated child process and in-process runs are identical", _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
-    transforms = [{"permute_seed": 11, "remap_seed": 5}, {"permute_seed": 7, "remap_seed": 9, "ts_repr": "mixed"}]
-    for _s, name, ep in eps[:10]:
+    reps = _pick_reps(eps, ("h02", "h06", "h13"))
+    for _s, name, ep in reps:
+        a, ga = run_one(ep, "random", policy_seed=3, isolated=False)
+        b, gb = run_one(ep, "random", policy_seed=3, isolated=False)
+        rep.add("D_paired", f"{name}: same actions reproduce transitions and reward (random explorer)", _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
+    for _s, name, ep in reps:
+        for pol in (("auditor", "recon") if name == reps[0][1] else ("auditor",)):
+            a, ga = run_one(ep, pol, isolated=True)
+            b, gb = run_one(ep, pol, isolated=False)
+            suffix = "" if pol == "auditor" else " (recon)"
+            rep.add("D_paired", f"{name}: isolated child process and in-process runs are identical{suffix}",
+                    _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
+    transforms = [{"permute_seed": 11, "remap_seed": 5}, {"permute_seed": 7, "remap_seed": 9, "ts_repr": "mixed"},
+                  {"remap_seed": 3, "ts_repr": "utc"}]
+    base: dict = {}
+    for _s, name, ep in eps:
+        _, g0 = run_one(ep, "oracle")
+        t0_, a0 = run_one(ep, "auditor", isolated=False)
+        base[name] = (g0, a0, matched_claims(t0_, a0))
+
+    def paired(name, ep, tf):
+        g0, a0, m0 = base[name]
+        t = transform_episode(ep, **tf)
+        _, g1 = run_one(t, "oracle")
+        t1_, a1 = run_one(t, "auditor", isolated=False)
+        same_key = [(x["issue_id"], x["type"], x["expected_amount_minor"]) for x in ep.truth["issues"]] == \
+                   [(x["issue_id"], x["type"], x["expected_amount_minor"]) for x in t.truth["issues"]]
+        v = verify_generated(t)
+        m1 = matched_claims(t1_, a1)
+        ok = g0["reward"] == g1["reward"] == 1.0 and same_key and v["ok"] and a0["reward"] == a1["reward"] and m0 == m1
+        rep.add("D_paired", f"{name} {tf}: oracle answer and reward preserved", ok,
+                f"oracle {g0['reward']}->{g1['reward']} auditor {a0['reward']}->{a1['reward']} same matched issues+amounts={m0 == m1} "
+                f"verify={v['failures'][:2]}")
+
+    for _s, name, ep in eps:
         for tf in transforms:
-            t = transform_episode(ep, **tf)
-            _, g0 = run_one(ep, "oracle")
-            _, g1 = run_one(t, "oracle")
-            same_key = [(x["issue_id"], x["type"], x["expected_amount_minor"]) for x in ep.truth["issues"]] == \
-                       [(x["issue_id"], x["type"], x["expected_amount_minor"]) for x in t.truth["issues"]]
-            v = verify_generated(t)
-            _, a0 = run_one(ep, "auditor", isolated=False)
-            _, a1 = run_one(t, "auditor", isolated=False)
-            ok = g0["reward"] == g1["reward"] == 1.0 and same_key and v["ok"] and a0["reward"] == a1["reward"]
-            rep.add("D_paired", f"{name} {tf}: oracle answer and reward preserved", ok,
-                    f"oracle {g0['reward']}->{g1['reward']} auditor {a0['reward']}->{a1['reward']} verify={v['failures'][:2]}")
+            paired(name, ep, tf)
+    errs = [x for x in eps if x[2].truth["issues"]]
+    singles = [{"permute_seed": 13}, {"remap_seed": 17}]
+    if errs:
+        single_eps = []
+        for x in errs[:1] + errs[len(errs) // 2:][:1]:
+            if x not in single_eps:
+                single_eps.append(x)
+        for _s, name, ep in single_eps:
+            for tf in singles:
+                paired(name, ep, tf)
+    else:
+        rep.skip("D_paired", "permute-only and remap-only transforms on error episodes", "the set has no error episodes")
+    rep.seconds["D_paired"] = time.monotonic() - t0
 
 
 def section_leaks(rep: Report, traj: list) -> None:
     print("E. leak scan of agent-visible observations", flush=True)
+    t0 = time.monotonic()
     bad_keys, bad_text = 0, 0
     for rec in traj:
         obs = rec["observation"]
@@ -209,42 +376,137 @@ def section_leaks(rep: Report, traj: list) -> None:
     rep.add("E_leaks", f"{len(traj)} observations contain only the allowed fields", bad_keys == 0, f"{bad_keys} bad")
     rep.add("E_leaks", "no answer-key markers in any observation", bad_text == 0, f"{bad_text} bad")
     rep.add("E_leaks", "oracle trajectories are never published", all(r["policy"] != "oracle" for r in traj))
+    rep.seconds["E_leaks"] = time.monotonic() - t0
 
 
-def main(argv=None) -> int:
-    out_dir = ROOT / "runs" / "check"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    rep = Report()
-    t0 = time.monotonic()
-    print(f"auditgym {__version__} check (offline, Python {sys.version.split()[0]})", flush=True)
-    section_unit_tests(rep)
-    section_committed(rep)
-    eps, traj, grades, summary, gen_time = section_hidden_like(rep, out_dir)
-    section_paired(rep, eps)
-    section_leaks(rep, traj)
-    elapsed = time.monotonic() - t0
-    aio.write_jsonl(out_dir / "trajectories.jsonl", traj, ascii_only=True)
-    aio.write_jsonl(out_dir / "grades.jsonl", grades, ascii_only=True)
-    report = {"version": __version__, "ok": rep.ok, "elapsed_s": round(elapsed, 1), "counts": rep.counts(),
-              "sections": rep.sections, "summary": summary}
+def load_seeds_file(path: Path) -> tuple:
+    """Returns (label, entries). Raises ValueError with a readable message on a malformed file."""
+    try:
+        data = aio.read_json(Path(path))
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"cannot read seeds file {path}: {exc}") from exc
+    if not isinstance(data, dict) or not isinstance(data.get("episodes"), list) or not data["episodes"]:
+        raise ValueError('seeds file must be {"split": label, "episodes": [{"name", "seed", "config"}, ...]}')
+    label = str(data.get("split") or Path(path).stem)
+    entries, seen = [], set()
+    for i, e in enumerate(data["episodes"]):
+        if not isinstance(e, dict) or isinstance(e.get("seed"), bool) or not isinstance(e.get("seed"), int):
+            raise ValueError(f"episode {i}: needs an integer seed")
+        cfg = e.get("config", {})
+        if not isinstance(cfg, dict):
+            raise ValueError(f"episode {i}: config must be an object")
+        name = str(e.get("name") or f"e{i + 1:02d}")
+        if name in seen:
+            raise ValueError(f"episode {i}: duplicate name {name}")
+        seen.add(name)
+        entries.append({"name": name, "seed": e["seed"], "config": cfg})
+    return label, entries
+
+
+def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades: list, elapsed: float, source: str, label: str, n: int,
+                  keep_runs: bool = True) -> None:
+    if keep_runs:
+        aio.write_jsonl(out_dir / "trajectories.jsonl", traj, ascii_only=True)
+        aio.write_jsonl(out_dir / "grades.jsonl", grades, ascii_only=True)
+    report = {"version": __version__, "ok": rep.ok, "elapsed_s": round(elapsed, 1), "source": source, "counts": rep.counts(),
+              "section_seconds": {k: round(v, 1) for k, v in rep.seconds.items()}, "sections": rep.sections, "summary": summary}
     aio.write_json(out_dir / "report.json", report)
-    md = [f"# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, "
-          f"version {__version__}.\n", "## Checks\n"]
-    for sec, cs in rep.sections.items():
-        md.append(f"### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)})\n")
-        for c in cs:
-            md.append(f"- {'PASS' if c['ok'] else 'FAIL'}: {c['check']}" + (f" ({c['detail']})" if not c["ok"] and c["detail"] else ""))
-        md.append("")
-    md.append("## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)\n")
+    md = ["# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, version {__version__}.\n",
+          f"Episodes: {source}.\n", "## Checks (grouped by rubric criterion)\n"]
+    for title, keys in RUBRIC:
+        present = [k for k in keys if k in rep.sections]
+        if not present:
+            continue
+        md.append(f"### {title}\n")
+        md.append("Run time: " + ", ".join(f"{k} {rep.seconds[k]:.1f} s" for k in present if k in rep.seconds) + "\n")
+        for sec in present:
+            cs = rep.sections[sec]
+            md.append(f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)})\n")
+            for c in cs:
+                if c.get("skipped"):
+                    md.append(f"- SKIP: {c['check']} ({c['detail']})")
+                else:
+                    md.append(f"- {'PASS' if c['ok'] else 'FAIL'}: {c['check']}" + (f" ({c['detail']})" if not c["ok"] and c["detail"] else ""))
+            md.append("")
+    md.append(f"## Baselines on the {n} {_disp(label)} episodes (eval mode, isolated agent process)\n")
     md.append(markdown_table(summary))
     md.append("## Failure analysis\n")
     md.append(miss_table(summary))
     aio.write_text(out_dir / "report.md", "\n".join(md) + "\n")
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, leaks).")
+    ap.add_argument("--seeds-file", help="run sections C, D, E on the episodes of this JSON file instead of the public master string")
+    ap.add_argument("--secret-env", help="name of the environment variable that holds the host secret for the seeds file")
+    ap.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
+    ap.add_argument("--keep-runs", action="store_true",
+                    help="with --seeds-file: also write trajectories.jsonl and grades.jsonl (they contain the answer key of the closed set)")
+    args = ap.parse_args([] if argv is None else list(argv))
+    closed = args.seeds_file is not None
+    if closed and not args.seeds_file.strip():
+        print("error: --seeds-file needs a path (is a shell variable unset?)", file=sys.stderr)
+        return 2
+    if args.keep_runs and not closed:
+        print("error: --keep-runs needs --seeds-file", file=sys.stderr)
+        return 2
+    if args.secret_env and not closed:
+        print("error: --secret-env needs --seeds-file", file=sys.stderr)
+        return 2
+    out_dir = Path(args.out) if args.out else (CLOSED_OUT if closed else DEFAULT_OUT)
+    if closed and out_dir.resolve() == DEFAULT_OUT.resolve():
+        print("error: a seeds-file run never writes to runs/check; choose another --out", file=sys.stderr)
+        return 2
+    secret = None
+    pregen: dict = {}
+    if closed:
+        try:
+            label, entries = load_seeds_file(Path(args.seeds_file))
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        if args.secret_env:
+            secret = os.environ.get(args.secret_env)
+            if not secret:
+                print(f"error: environment variable {args.secret_env} is not set", file=sys.stderr)
+                return 2
+        source = f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no'})"
+        for e in entries:
+            try:
+                pregen[e["name"]] = generate_episode(e["seed"], e["config"], secret=secret)
+            except (ConfigError, GenerationError) as exc:
+                print(f"error: episode {e['name']}: {exc}", file=sys.stderr)
+                return 2
+    else:
+        label, entries = "hidden_like", check_set()
+        source = HIDDEN_LIKE_SOURCE
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rep = Report()
+    t0 = time.monotonic()
+    print(f"auditgym {__version__} check (offline, Python {sys.version.split()[0]}); episodes: {source}", flush=True)
+    if not closed:
+        section_unit_tests(rep, out_dir)
+        committed = section_committed(rep)
+        section_replay_committed(rep, committed)
+    eps, traj, grades, summary, _gen_time = section_hidden_like(rep, entries, label, secret, closed, pregen)
+    section_paired(rep, eps, entries, secret)
+    section_leaks(rep, traj)
+    if closed:
+        t1 = time.monotonic()
+        print("B. replay of this run's recorded actions", flush=True)
+        expected: dict = {}
+        for s, _n, ep in eps:
+            for p in REPLAY_POLICIES:
+                expected.setdefault((s, p), set()).add(ep.episode_id)
+        _replay_checks(rep, replay_records(traj, {(s, ep.episode_id): ep for s, _n, ep in eps}), expected)
+        rep.seconds["B_replay"] = time.monotonic() - t1
+    elapsed = time.monotonic() - t0
+    _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs)
     c = rep.counts()
     print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), flush=True)
-    print(f"{'PASS' if rep.ok else 'FAIL'} in {elapsed:.0f} s; report: runs/check/report.md", flush=True)
+    print(f"{'PASS' if rep.ok else 'FAIL'} in {elapsed:.0f} s; report: {_rel(out_dir)}/report.md", flush=True)
     return 0 if rep.ok else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

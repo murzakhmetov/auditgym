@@ -32,10 +32,42 @@ _CURRENCY_RE = re.compile(r"^[A-Za-z]{3}$")
 TABLES = ("ledger", "invoices", "payments", "fx")
 ACTIONS = ("list_records", "get_record", "get_document", "calculator", "submit")
 MAX_PAGE = 50
+MAX_EXPRESSION_CHARS = 256  # calculator.MAX_LENGTH
+MAX_EXPRESSION_TOKENS = 200  # calculator.MAX_TOKENS
 
 
 def _is_int(value) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def coerce_int(value):
+    """JSON Schema treats 5.0 and 1e1 as integers; return the int for such floats, else the value unchanged."""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
+
+def safe_str(key) -> str:
+    """Text for a dict key that may be any in-process object (never raises, even for hostile objects)."""
+    if isinstance(key, str):
+        return key
+    try:
+        return str(key)
+    except BaseException:  # includes RecursionError and a raising __str__
+        return f"<{type(key).__name__}>"
+
+
+def coerce_submission(obj):
+    """Copy of a submission with integral floats in claimed_amount_minor turned into ints. Other shapes pass through."""
+    if not isinstance(obj, dict) or not isinstance(obj.get("findings"), list):
+        return obj
+    out = dict(obj)
+    out["findings"] = [
+        {**f, "claimed_amount_minor": coerce_int(f["claimed_amount_minor"])}
+        if isinstance(f, dict) and "claimed_amount_minor" in f else f
+        for f in obj["findings"]
+    ]
+    return out
 
 
 def _check_id_list(value, field: str, max_items: int, min_items: int, errors: list[str], prefix: str) -> None:
@@ -58,7 +90,7 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
     errors: list[str] = []
     if not isinstance(obj, dict):
         return ["submission must be a JSON object"]
-    extra = sorted(set(obj) - set(SUBMISSION_KEYS))
+    extra = sorted(map(safe_str, set(obj) - set(SUBMISSION_KEYS)))  # keys are strings in JSON; stay safe for in-process callers
     if extra:
         errors.append(f"unknown top-level keys: {', '.join(extra)[:120]}")
     if "episode_id" not in obj or not isinstance(obj.get("episode_id"), str):
@@ -79,7 +111,7 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
         missing = [k for k in FINDING_KEYS if k not in f]
         if missing:
             errors.append(f"{prefix} missing keys: {', '.join(missing)}")
-        extra_f = sorted(set(f) - set(FINDING_KEYS))
+        extra_f = sorted(map(safe_str, set(f) - set(FINDING_KEYS)))
         if extra_f:
             errors.append(f"{prefix} unknown keys: {', '.join(extra_f)[:120]}")
         if "type" in f and f["type"] not in FINDING_TYPES:
@@ -105,6 +137,11 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
     return errors
 
 
+# A finding ID must contain a non-whitespace character: validate_submission() rejects blank IDs.
+# The class lists the 29 characters str.isspace() accepts: JSON Schema (ECMA-262) \s and \S differ from str.strip().
+WS_CLASS = r"\t\n\v\f\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000"
+ID_ITEM = {"type": "string", "minLength": 1, "maxLength": MAX_ID_CHARS, "pattern": "[^" + WS_CLASS + "]"}
+
 SUBMISSION_JSON_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "auditgym/findings.schema.json",
@@ -127,14 +164,14 @@ SUBMISSION_JSON_SCHEMA = {
                         "type": "array",
                         "minItems": 1,
                         "maxItems": MAX_AFFECTED_IDS,
-                        "items": {"type": "string", "minLength": 1, "maxLength": MAX_ID_CHARS},
+                        "items": ID_ITEM,
                     },
                     "claimed_amount_minor": {"type": "integer", "minimum": 0, "maximum": MAX_AMOUNT_MINOR},
-                    "currency": {"type": "string", "pattern": "^\\s*[A-Za-z]{3}\\s*$"},
+                    "currency": {"type": "string", "pattern": "^[" + WS_CLASS + "]*[A-Za-z]{3}[" + WS_CLASS + "]*$"},
                     "evidence_ids": {
                         "type": "array",
                         "maxItems": MAX_EVIDENCE_IDS,
-                        "items": {"type": "string", "minLength": 1, "maxLength": MAX_ID_CHARS},
+                        "items": ID_ITEM,
                     },
                     "explanation": {"type": "string", "maxLength": MAX_EXPLANATION_CHARS},
                 },
@@ -143,11 +180,7 @@ SUBMISSION_JSON_SCHEMA = {
     },
 }
 
-ACTION_JSON_SCHEMA = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "auditgym/action.schema.json",
-    "title": "auditgym action",
-    "oneOf": [
+_PLAIN_ACTION_BRANCHES = [
         {
             "type": "object",
             "additionalProperties": False,
@@ -179,7 +212,15 @@ ACTION_JSON_SCHEMA = {
             "type": "object",
             "additionalProperties": False,
             "required": ["action", "expression"],
-            "properties": {"action": {"const": "calculator"}, "expression": {"type": "string", "maxLength": 256}},
+            "properties": {
+                "action": {"const": "calculator"},
+                "expression": {
+                    "type": "string",
+                    "maxLength": MAX_EXPRESSION_CHARS,
+                    "description": f"At most {MAX_EXPRESSION_CHARS} characters and at most {MAX_EXPRESSION_TOKENS} tokens "
+                                   "(numbers, + - * / and parentheses each count as one token).",
+                },
+            },
         },
         {
             "type": "object",
@@ -187,5 +228,35 @@ ACTION_JSON_SCHEMA = {
             "required": ["action", "findings"],
             "properties": {"action": {"const": "submit"}, "findings": {"$ref": "findings.schema.json"}},
         },
-    ],
+]
+
+
+def _alias_branch(branch: dict) -> dict:
+    """{"action": NAME, "args": {...}}: the environment unwraps it into the plain form."""
+    props = dict(branch["properties"])
+    name = props.pop("action")
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["action", "args"],
+        "properties": {
+            "action": name,
+            "args": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": [k for k in branch["required"] if k != "action"],
+                "properties": props,
+            },
+        },
+    }
+
+
+ACTION_JSON_SCHEMA = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "auditgym/action.schema.json",
+    "title": "auditgym action",
+    "description": "Plain form {action, ...args} or the accepted alias {action, args: {...}}. Semantic errors "
+                   "(unknown_id, bad_cursor, calc_error, a submission episode_id that is not the current one) "
+                   "are not structural: a schema-valid action may still return them.",
+    "oneOf": _PLAIN_ACTION_BRANCHES + [_alias_branch(b) for b in _PLAIN_ACTION_BRANCHES],
 }

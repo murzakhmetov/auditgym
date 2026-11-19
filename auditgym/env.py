@@ -32,7 +32,13 @@ RESET_KEYS = {"episode_dir", "episode", "generator", "transform"}
 
 
 def _echo(value) -> str:
-    text = value if isinstance(value, str) else repr(value)
+    if isinstance(value, str):
+        text = value
+    else:
+        try:
+            text = repr(value)
+        except Exception:  # RecursionError on deeply nested input, or a failing __repr__
+            text = f"<{type(value).__name__}>"
     return text if len(text) <= ECHO_CHARS else text[:ECHO_CHARS] + "..."
 
 
@@ -71,7 +77,11 @@ class AuditEnv:
           {"generator": {...generator config...}}  (needs seed)  -- or the generator config itself
           {"episode_dir": "path/to/episode"}       load a pre-generated or transformed episode
           optional "transform": {"permute_seed": int, "remap_seed": int, "ts_repr": "local|utc|mixed"}
+        options: reset(options={"config": ...}) is the same as config=... when no config is given;
+        every other option key is ignored (never an error).
         """
+        if config is None and isinstance(options, dict) and isinstance(options.get("config"), dict):
+            config = options["config"]  # Gymnasium-style reset(options=...); any other option key is ignored
         config = dict(config or {})
         if "episode_dir" in config:
             episode = load_episode(Path(config["episode_dir"]))
@@ -128,11 +138,11 @@ class AuditEnv:
             action = {"action": action["action"], **action["args"]}  # accepted alias: {"action", "args": {...}}
         name = action.get("action") if isinstance(action, dict) else None
         if name == "submit":
-            findings = action.get("findings")
+            findings = schemas.coerce_submission(action.get("findings"))
             errors = schemas.validate_submission(findings, self._episode.episode_id)
-            extra = sorted(set(action) - {"action", "findings"})
+            extra = sorted(map(schemas.safe_str, set(action) - {"action", "findings"}))
             if extra:
-                errors.append("unknown action keys: " + _echo(", ".join(map(str, extra))))
+                errors.append("unknown action keys: " + _echo(", ".join(extra)))
             if errors:
                 self._finish(submission=None, truncated=False, reason="invalid_submission", invalid=errors)
                 obs = self._obs(None, _err("invalid_submission", "Submission rejected: invalid structure."))
@@ -162,9 +172,9 @@ class AuditEnv:
             "get_document": {"action", "doc_id"},
             "calculator": {"action", "expression"},
         }[name]
-        extra = sorted(set(action) - allowed)
+        extra = sorted(map(schemas.safe_str, set(action) - allowed))
         if extra:
-            return None, _err("bad_args", "Unknown argument(s): " + _echo(", ".join(map(str, extra))))
+            return None, _err("bad_args", "Unknown argument(s): " + _echo(", ".join(extra)))
         return {
             "list_records": self._list_records,
             "get_record": self._get_record,
@@ -182,10 +192,12 @@ class AuditEnv:
         table, err = self._table_arg(action)
         if err:
             return None, err
-        limit = action.get("limit", schemas.MAX_PAGE)
+        limit = schemas.coerce_int(action.get("limit", schemas.MAX_PAGE))
         if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= schemas.MAX_PAGE:
             return None, _err("bad_args", f"limit must be an integer in [1, {schemas.MAX_PAGE}].")
         cursor = action.get("cursor")
+        if cursor is not None and not isinstance(cursor, str):
+            return None, _err("bad_args", "cursor must be a string or null.")
         rows = self._episode.table(table)
         if cursor is None:
             offset = 0
@@ -226,6 +238,10 @@ class AuditEnv:
 
     def _calculator(self, action):
         expr = action.get("expression")
+        if not isinstance(expr, str):
+            return None, _err("bad_args", "expression must be a string.")
+        if len(expr) > schemas.MAX_EXPRESSION_CHARS:
+            return None, _err("bad_args", f"expression is longer than {schemas.MAX_EXPRESSION_CHARS} characters.")
         try:
             value = calculator.evaluate(expr)
         except calculator.CalcError as exc:

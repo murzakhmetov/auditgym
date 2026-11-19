@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import time
 
+from .diagnostics import run_diagnostics
 from .env import AuditEnv
 from .matcher import normalize_finding, normalize_issue
 from .policies import make_policy
@@ -110,15 +111,20 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
     grade = env.grader_report()
     wall = time.monotonic() - t_start
     seen_by_step = None
+    observations = None
     if traj is not None:
         for rec in traj:
-            if isinstance(rec.get("action"), dict) and rec["action"].get("action") == "submit":
-                f = rec["action"].get("findings")
-                if isinstance(f, dict) and isinstance(f.get("findings"), list) and grade.get("valid"):
+            a = rec.get("action")
+            if isinstance(a, dict) and set(a) == {"action", "args"} and isinstance(a["args"], dict)                     and "action" not in a["args"]:
+                a = {"action": a["action"], **a["args"]}  # same alias flattening as env.step
+            if isinstance(a, dict) and a.get("action") == "submit":
+                f = a.get("findings")
+                if isinstance(f, dict) and isinstance(f.get("findings"), list) and grade.get("status") == "submitted":
                     submission = f["findings"]
         if traj:
             traj[-1]["reward"] = grade["reward"]  # terminal reward filled in after the run
         seen_by_step = [observed_ids(rec["observation"]) for rec in traj]
+        observations = [rec["observation"] for rec in traj]
         traj = [{"run_id": run_id, "split": split, "policy": policy, "episode_id": episode.episode_id, **rec} for rec in traj]
     record = {
         "run_id": run_id,
@@ -133,6 +139,7 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
         "wall_time_s": round(wall, 6),
         "agent_error": agent_error,
         "issues": analyse(grade, episode.truth, submission, seen_by_step),
+        **run_diagnostics(grade, episode.truth, episode.provenance, submission, observations),
     }
     return traj, record
 

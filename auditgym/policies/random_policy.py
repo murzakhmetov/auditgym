@@ -2,7 +2,8 @@
 
 Picks uniformly among tools with random (sometimes invalid) arguments, reuses
 IDs it has seen, and at a random moment submits 0-3 findings assembled from
-seen IDs. Deterministic for a given seed and observation sequence.
+seen IDs. Deterministic for a given seed, episode_id and observation sequence: the
+stream is re-seeded from `seed:episode_id` at every reset.
 """
 
 from __future__ import annotations
@@ -69,6 +70,8 @@ class RandomPolicy:
             self._reset_state()
             self.episode_id = obs["manifest"]["episode_id"]
             self.base = obs["manifest"]["base_currency"]
+            # one stream per episode: still fixed-seed and deterministic, but not the same 15 steps everywhere
+            self.rng = random.Random(f"{self.seed}:{self.episode_id}")
         self._remember(obs)
         remaining = obs.get("remaining_steps", 0)
         if remaining <= 1 or self.rng.random() < 0.04:

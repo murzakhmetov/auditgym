@@ -101,6 +101,16 @@ class VerificationTests(unittest.TestCase):
             self.assertTrue(rep["ok"], rep["failures"][:3])
             self.assertLessEqual(len(gen.episode.truth["issues"]), 12)
 
+    def test_generated_episode_records_clean_records_digest_and_verifies_as_a_directory(self):
+        gen = generate_episode(61, {"size": "small", "errors": {"wrong_fx_rate": 1, "duplicate_invoice": 1}})
+        self.assertEqual(len(gen.episode.provenance["clean_records_digest"]), 64)
+        self.assertTrue(verify_generated(gen.episode)["ok"], verify_generated(gen.episode)["failures"][:2])
+
+    def test_fixed_period_boundary_error_names_nearest_feasible_months(self):
+        with self.assertRaises(ConfigError) as cm:
+            generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-02"})
+        self.assertIn("Nearest feasible periods: ", str(cm.exception))
+
     def test_clean_company_has_empty_key(self):
         gen = generate_episode(55, {"size": "small"})
         self.assertEqual(gen.episode.truth["issues"], [])

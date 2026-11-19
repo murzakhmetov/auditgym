@@ -108,6 +108,9 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
     manifest = renderer.manifest(episode_id, tables["ledger"], tables["invoices"], tables["payments"], tables["fx"])
     clean_manifest = renderer.manifest(episode_id, tables_clean["ledger"], tables_clean["invoices"],
                                        tables_clean["payments"], tables_clean["fx"])
+    from .verify import records_digest
+
+    clean_records_digest = records_digest(tables_clean["ledger"], tables_clean["invoices"], tables_clean["payments"])
     episode = Episode(manifest=manifest, policy=policy, **tables, truth=truth)
     clean = Episode(manifest=clean_manifest, policy=policy, **tables_clean,
                     truth={"schema_version": SCHEMA_VERSION, "episode_id": episode_id, "issues": [],
@@ -134,6 +137,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
         "distractors": distractors,
         "ops": ops,
         "clean_digest": clean.public_digest(),
+        "clean_records_digest": clean_records_digest,
         "final_digest": episode.public_digest(),
     }
     clean.provenance = {"schema_version": SCHEMA_VERSION, "clean_twin_of": episode_id}

@@ -215,6 +215,7 @@
   ],
   "ops": [],
   "clean_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
+  "clean_records_digest": "e6f7da145ac1f23697d9667b814ff8c3013d78ba83fa78acad59b66604d23fd6",
   "final_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
   "rejected_attempts": []
 }

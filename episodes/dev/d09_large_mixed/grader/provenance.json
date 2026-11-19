@@ -459,6 +459,7 @@
     }
   ],
   "clean_digest": "2f31d3e61dc2234607fbeee47be79b10a31bd7718466e19bc5d00b16471c1c57",
+  "clean_records_digest": "8ada965dcb6298c17dde276714c5425b3b1a5b315ddf96be82723de1c68884ff",
   "final_digest": "a139d495c7be4f95ce36802635eeafd89bf1cb84cf33a487418199b28bfcf6da",
   "rejected_attempts": []
 }
