@@ -33,6 +33,13 @@ mode. The channel is bounded in every direction:
     Job Object on Windows) and the host hashes every file under auditgym/ (bytecode in
     __pycache__ included), configs/*.json and schemas/*.json before and after: a change is
     an agent error and changed bytecode is deleted.
+Separate user: when the host runs as root (euid 0), AUDITGYM_AGENT_USER names an unprivileged account
+and the platform is POSIX (the official Docker image), the child runs as that account (uid, gid, no
+supplementary groups, umask 077), its working directory belongs to it, and close() kills every process
+of that uid. It then cannot read the host's /proc/<pid>/environ, root-owned 0600 files or the grader
+directories (written with umask 077), and cannot write to the root-owned package. If the switch is not
+possible (Windows, not root, no CAP_SETUID/CAP_CHOWN) the child runs as the host's user and one warning
+line is printed to stderr, once per process; nothing crashes.
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
 guess the path of, and (outside a container) its parent's command line. Only tracked
 processes are killed: a process that leaves the group or job (setsid, start_new_session,
@@ -45,6 +52,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import errno
 import os
 import queue
 import re
@@ -57,6 +65,7 @@ import threading
 import time
 from pathlib import Path
 
+from . import io as aio
 from .policies import is_external
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -302,6 +311,70 @@ class _WinJob:
         return True
 
 
+def _uid_pids(uid: int) -> list:
+    pids = []
+    try:
+        names = os.listdir("/proc")
+    except OSError:
+        return pids
+    for name in names:
+        if not name.isdigit():
+            continue
+        try:
+            with open(f"/proc/{name}/status", encoding="ascii", errors="replace") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        state = re.search(r"^State:\s*(\S)", text, re.M)
+        real = re.search(r"^Uid:\s*(\d+)", text, re.M)
+        if real and int(real.group(1)) == uid and not (state and state.group(1) in "ZX"):
+            pids.append(int(name))
+    return pids
+
+
+def kill_uid(uid: int, gid: int | None = None) -> bool:
+    """SIGKILL every process of `uid` (needs root). Returns True when none is left.
+
+    A helper started as that uid calls kill(-1), which signals all of its processes atomically, so a
+    fork loop cannot grow back between two scans. The /proc scan is only a check and a fallback."""
+    for _ in range(5):
+        if not _uid_pids(uid):
+            return True
+        try:
+            subprocess.run([sys.executable, "-c", "import os,signal;os.kill(-1,signal.SIGKILL)"],
+                           user=uid, group=gid if gid is not None else uid, extra_groups=[], env={}, cwd="/",
+                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            pass
+        for pid in _uid_pids(uid):
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except OSError:
+                pass
+        time.sleep(0.05)
+    return not _uid_pids(uid)
+
+
+_SWITCHED = False  # a user switch has worked in this process: never fall back to the host user silently
+_WARNED = False
+
+
+def _warn_same_user(reason: str) -> None:
+    global _WARNED
+    if _WARNED or not os.environ.get("AUDITGYM_AGENT_USER", "").strip():
+        return  # nobody asked for a separate user: nothing to warn about
+    _WARNED = True
+    print(f"auditgym: warning: policy runs as the host user ({reason}); "
+          "the official image run as root with default capabilities uses a separate policy user", file=sys.stderr)
+
+
+def _chown_tree(root: str, uid: int, gid: int) -> None:
+    os.chown(root, uid, gid)
+    for base, dirs, files in os.walk(root):
+        for name in dirs + files:
+            os.chown(os.path.join(base, name), uid, gid, follow_symlinks=False)
+
+
 def _kill_tree(proc, job) -> None:
     """Kill the child and everything it started, even when the direct child already exited."""
     if os.name == "posix":
@@ -331,17 +404,51 @@ class AgentProcess:
         self.write_timed_out = False
         self.abandon = False  # set by the host when the agent timed out: skip the polite shutdown
         stage = stage_agent_code(Path(self._tmp.name) / "code", policy)
+        global _SWITCHED
+        self._agent_uid = self._agent_gid = None
+        ident = aio.agent_identity()
+        if ident is not None:
+            if not _SWITCHED and _uid_pids(ident[1]):
+                _warn_same_user(f"account {ident[0]} already has processes; use a dedicated account, one run per container")
+                ident = None
+            elif _SWITCHED and not kill_uid(ident[1], ident[2]):
+                self._tmp.cleanup()
+                raise OSError(f"processes of uid {ident[1]} survived the previous episode")
+        if ident is not None:
+            try:
+                _chown_tree(self._tmp.name, ident[1], ident[2])
+            except OSError as exc:
+                if not isinstance(exc, PermissionError) and exc.errno != errno.EINVAL:
+                    self._tmp.cleanup()
+                    raise
+                _warn_same_user(f"chown refused: {exc.strerror or exc}")
+                ident = None
+        if ident is None:
+            _warn_same_user("not root, or AUDITGYM_AGENT_USER unknown")
         cmd = [sys.executable, "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         kw = {"start_new_session": True} if os.name == "posix" else {}
-        self.proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=self._tmp.name,
-            env=_child_env(policy_path, stage=str(stage)),
-            **kw,
-        )
+        popen = dict(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self._tmp.name,
+                     env=_child_env(policy_path, stage=str(stage)), **kw)
+        if ident is not None:
+            try:
+                self.proc = subprocess.Popen(cmd, user=ident[1], group=ident[2], extra_groups=[], umask=0o077, **popen)
+                self._agent_uid, self._agent_gid = ident[1], ident[2]
+                _SWITCHED = True
+            except PermissionError as exc:  # setuid refused (capability dropped): same user, tmp back to the host
+                if _SWITCHED:
+                    self._tmp.cleanup()
+                    raise
+                _warn_same_user(f"setuid refused: {exc.strerror or exc}")
+                try:
+                    _chown_tree(self._tmp.name, os.geteuid(), os.getegid())
+                except OSError:
+                    pass
+                ident = None
+            except OSError:  # EAGAIN, ENOMEM, EMFILE ...: an error, never a silent switch to the host user
+                self._tmp.cleanup()
+                raise
+        if ident is None:
+            self.proc = subprocess.Popen(cmd, **popen)
         self._job = _WinJob(self.proc) if os.name == "nt" else None
         self._stop = threading.Event()
         self._eof = False
@@ -469,6 +576,8 @@ class AgentProcess:
                         pass
         finally:
             _kill_tree(self.proc, self._job)
+            if self._agent_uid is not None:
+                kill_uid(self._agent_uid, self._agent_gid)
             self._stop.set()
             self._wq.put(None)
             try:
@@ -509,7 +618,12 @@ def run_episode_isolated(env, reset_kwargs: dict, policy: str, policy_seed: int 
     obs, info = env.reset(**reset_kwargs)
     refresh_bytecode()
     before = code_digest()
-    agent = AgentProcess(policy, policy_seed, policy_path)
+    try:
+        agent = AgentProcess(policy, policy_seed, policy_path)
+    except OSError as exc:
+        message = f"agent process could not be started: {exc.strerror or exc}"
+        env.force_agent_error("agent_error", message)
+        return {"grade": env.grader_report(), "agent_time_s": 0.0, "agent_error": message}
     agent_time = 0.0
     agent_error = None
     reward, terminated, truncated = 0.0, False, False

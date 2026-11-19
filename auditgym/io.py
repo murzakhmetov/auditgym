@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import contextlib
 import io
 import json
+import os
 from pathlib import Path
 
 LEDGER_COLUMNS = (
@@ -34,6 +36,39 @@ def sha256_text(text: str) -> str:
 
 def dumps_pretty(obj) -> str:
     return json.dumps(obj, indent=2, ensure_ascii=False) + "\n"
+
+
+def agent_identity():
+    """(name, uid, gid) of the unprivileged policy user, or None.
+
+    Only on POSIX, only when this process is root (euid 0) and AUDITGYM_AGENT_USER names an existing
+    non-root account. The official image sets it (Dockerfile). Anywhere else: None."""
+    name = os.environ.get("AUDITGYM_AGENT_USER", "").strip()
+    if not name or os.name != "posix" or os.geteuid() != 0:
+        return None
+    try:
+        import pwd
+
+        entry = pwd.getpwnam(name)
+    except (ImportError, KeyError):
+        return None
+    if entry.pw_uid == 0:
+        return None
+    return name, entry.pw_uid, entry.pw_gid
+
+
+@contextlib.contextmanager
+def private_files():
+    """umask 077 while grader files are written, when the policy runs as a separate user (see
+    agent_identity). Otherwise a no-op: committed episodes keep their usual modes."""
+    if agent_identity() is None:
+        yield
+        return
+    old = os.umask(0o077)
+    try:
+        yield
+    finally:
+        os.umask(old)
 
 
 def write_text(path: Path, text: str) -> None:

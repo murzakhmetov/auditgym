@@ -66,8 +66,13 @@ class Episode:
         directory = Path(directory)
         for name, text in self.public_texts().items():
             aio.write_text(directory / "public" / name, text)
-        for name, text in self.grader_texts().items():
-            aio.write_text(directory / "grader" / name, text)
+        with aio.private_files():  # 0700 / 0600 when the policy runs as another user (container)
+            for name, text in self.grader_texts().items():
+                aio.write_text(directory / "grader" / name, text)
+            if aio.agent_identity() is not None:  # an existing folder may hold old 0644 files: force private modes
+                (directory / "grader").chmod(0o700)
+                for name in self.grader_texts():
+                    (directory / "grader" / name).chmod(0o600)
 
     def public_copy(self) -> "Episode":
         return Episode(

@@ -17,11 +17,20 @@ from pathlib import Path
 from unittest import mock
 
 from auditgym import protocol
+from tests import same_user_start, same_user_stop
 from auditgym.env import AuditEnv
 from auditgym.redteam import run_hostile as _run_hostile, write_policy  # noqa: F401
 from tests.test_env import episode
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def setUpModule():
+    same_user_start(__name__)
+
+
+def tearDownModule():
+    same_user_stop(__name__)
 PEAK_LIMIT = 8 * 1024 * 1024
 
 

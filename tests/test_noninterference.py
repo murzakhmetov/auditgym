@@ -17,6 +17,7 @@ from pathlib import Path
 
 from auditgym import io as aio
 from auditgym import protocol
+from tests import same_user_start, same_user_stop
 from auditgym.env import AuditEnv
 from auditgym.episode import load_episode
 from auditgym.policies import make_policy
@@ -24,6 +25,14 @@ from auditgym.schema_files import TRUTH, validate
 from examples.hostile.policies import IdProbe
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def setUpModule():
+    same_user_start(__name__)
+
+
+def tearDownModule():
+    same_user_stop(__name__)
 NAMES = {"t07": "train/t07_boundary_fx_payment", "d04": "dev/d04_unallocated_missing_eur",
          "d08": "dev/d08_both_interacting_kzt"}
 _EPISODES: dict = {}

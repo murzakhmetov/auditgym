@@ -29,6 +29,7 @@ from auditgym.episode import load_episode
 from auditgym.rng import Rng
 from auditgym.task import build_task
 from tests import fuzz_policies as fz
+from tests import same_user_start, same_user_stop
 from tests.test_env import episode
 from tests.test_matcher import GOOD
 
@@ -210,6 +211,14 @@ def run_in_process(n: int = IN_PROCESS_ACTIONS):
                 chk.v(f"#{i - 1}", "after the end: the grader report changed")
             h.update(json.dumps([obs, r2, t2, u2], sort_keys=True).encode())
     return chk, h.hexdigest(), stats
+
+
+def setUpModule():
+    same_user_start(__name__)  # the piped child imports tests.* from the repo root: same user
+
+
+def tearDownModule():
+    same_user_stop(__name__)
 
 
 def run_piped():
