@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from . import io as aio
@@ -9,7 +10,23 @@ from .episode import load_episode
 from .generator import generate_episode
 from .rng import Rng
 
-ROOT = Path(__file__).resolve().parent.parent
+
+def _data_root() -> Path:
+    """The repository that holds configs/ and episodes/: AUDITGYM_ROOT if set, else the source checkout this
+    package lives in, else the working directory (an installed console script run from inside a clone)."""
+    env = os.environ.get("AUDITGYM_ROOT")
+    if env:
+        return Path(env).resolve()
+    here = Path(__file__).resolve().parent.parent
+    if (here / "configs" / "splits.json").is_file():
+        return here
+    cwd = Path.cwd()
+    if (cwd / "configs" / "splits.json").is_file():
+        return cwd
+    return here
+
+
+ROOT = _data_root()
 SPLITS_FILE = ROOT / "configs" / "splits.json"
 EPISODES_DIR = ROOT / "episodes"
 
