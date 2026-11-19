@@ -1,0 +1,292 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "3171845029911648203",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "interacting": [
+      "boundary_fx_payment"
+    ]
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "KZT",
+    "foreign_currencies": [
+      "EUR",
+      "USD"
+    ],
+    "timezone": "Asia/Almaty",
+    "period": "2027-09",
+    "rounding": "half_even",
+    "id_style": "hex",
+    "ts_repr": "utc",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [
+      "boundary_fx_payment"
+    ],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 14,
+      "suppliers": 8,
+      "sales_invoices": 40,
+      "purchase_invoices": 20,
+      "prior_invoices": 6,
+      "target_rows": 922
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Maren Trading LLP",
+    "customers": 14,
+    "suppliers": 8,
+    "invoices": 93,
+    "payments": 60,
+    "misc_journals": 279,
+    "holidays": []
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "boundary_fx_payment",
+      "targets": {
+        "payment": "rc_b9936b74"
+      },
+      "change": {
+        "wrong_rate_date": "2027-09-30",
+        "correct_rate": "543.701",
+        "correct_rate_date": "2027-10-01",
+        "wrong_rate": "544.169"
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "boundary_fx_payment",
+      "targets": {
+        "payment": "rc_b9936b74"
+      },
+      "change": {
+        "posting_ts": "2027-09-30T16:52:05+00:00"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_3a4f3437",
+        "pi_99bf8a16"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_3258ef62",
+        "pi_9578256d"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_6c063889",
+        "pi_632563d9"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_381af064",
+        "pi_3f6de025"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_390c88eb",
+        "rc_3ad6704a",
+        "rc_5ab918e6"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_fda66e46",
+        "rc_2a7a437b",
+        "rc_0e7eda31"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_edd4f71a",
+        "si_0d35cf95",
+        "rc_e518570b"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_7a2c0f95",
+        "rc_b63ceb30"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_d8241769",
+        "rc_1e8e143c"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_ab12f3f8",
+        "rc_fa6eabc6",
+        "rf_468aa739"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_5022a268"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_1552f65c"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_04c33962"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_dd30377a"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_f3b60fe6"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "pi_efd62a87"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_6e07116c"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_a9d74da3"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_f90ea03d"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_23b8727b",
+      "field": "timestamp",
+      "before": "2027-09-30T21:52:05Z",
+      "after": "2027-09-30T16:52:05Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_7941d5da",
+      "field": "timestamp",
+      "before": "2027-09-30T21:52:05Z",
+      "after": "2027-09-30T16:52:05Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_7941d5da",
+      "field": "debit_minor",
+      "before": 299376994,
+      "after": 299634688
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_eaebbc48",
+      "field": "timestamp",
+      "before": "2027-09-30T21:52:05Z",
+      "after": "2027-09-30T16:52:05Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_eaebbc48",
+      "field": "credit_minor",
+      "before": 1910679,
+      "after": 2168373
+    }
+  ],
+  "clean_digest": "514eadbb9197b21244cbb7c3d04ac28ec9a9720dd15fb369b373624e592750fc",
+  "final_digest": "32fc29adb4b3e3ee9780eb7f55c1ee4742b086aaad7f1958c471dcb0bf3a0dbe",
+  "rejected_attempts": []
+}

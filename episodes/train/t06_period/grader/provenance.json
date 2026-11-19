@@ -1,0 +1,198 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "6403388190752104479",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "errors": {
+      "wrong_period": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "KWD",
+    "foreign_currencies": [
+      "BHD",
+      "USD"
+    ],
+    "timezone": "Asia/Kathmandu",
+    "period": "2025-06",
+    "rounding": "half_even",
+    "id_style": "hex",
+    "ts_repr": "mixed",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 1
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 6,
+      "suppliers": 7,
+      "sales_invoices": 22,
+      "purchase_invoices": 9,
+      "prior_invoices": 5,
+      "target_rows": 259
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Eloeta Analytics Pvt Ltd",
+    "customers": 6,
+    "suppliers": 8,
+    "invoices": 52,
+    "payments": 28,
+    "misc_journals": 41,
+    "holidays": []
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_period",
+      "variant": "booked_early",
+      "scenario": "single",
+      "targets": {
+        "invoice": "pi_a34785ac"
+      },
+      "change": {
+        "posting_ts": "2025-06-30T03:25:11+00:00"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_ba086050",
+        "pi_bb0a81fb"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_0980590d",
+        "pi_3b0a3e24"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_314509c8",
+        "rc_d865c73a",
+        "rc_a502112d"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_1b4fdf61",
+        "si_d49f86ca",
+        "rc_89c4ef1d"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_07c589cb",
+        "rc_a63d3ab6"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_e0d3af72",
+        "rc_ff47e82e",
+        "rf_82caa6c5"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_9b0a1b2b"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_b3f3beda"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_28cda4e4"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "pi_3e9352cb"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_ed9d3d0b"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_95c413f3",
+      "field": "timestamp",
+      "before": "2025-07-01T07:19:46Z",
+      "after": "2025-06-30T03:25:11Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_bc13cb4e",
+      "field": "timestamp",
+      "before": "2025-07-01T07:19:46+00:00",
+      "after": "2025-06-30T03:25:11+00:00"
+    }
+  ],
+  "clean_digest": "e12397a2ae7458f7a13609ced6a2afa351fe5c352f52711d143d11d8b2f8e981",
+  "final_digest": "6dedb5b0ef5a20554e92b9b77ff4b523938e7505f3a7f1c4d338b6b29efe2748",
+  "rejected_attempts": []
+}

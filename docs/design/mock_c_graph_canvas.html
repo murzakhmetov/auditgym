@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Graph Canvas</title>
+<style>
+:root{
+  --bg:#0F1013;--panel:rgba(26,27,32,.92);--surface:#1A1B20;--surface-2:#22242B;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);
+  --text:#ECECEC;--muted:#9A9AA3;--faint:#62636C;--accent:#E8B45A;--accent-soft:rgba(232,180,90,.15);
+  --ok:#6BBF7A;--ok-soft:rgba(107,191,122,.15);--bad:#E5534B;--bad-soft:rgba(229,83,75,.15);
+  --c-doc:#E8B45A;--c-row:#7AA2F7;--c-fx:#BB9AF7;--c-ent:#73DACA;
+  --ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;background:var(--bg);color:var(--text);font:13px/1.45 var(--ui);overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
+.canvas{position:absolute;inset:0;background:radial-gradient(1200px 700px at 42% 48%,rgba(232,180,90,.06),transparent 60%),radial-gradient(circle,rgba(255,255,255,.055) 1px,transparent 1.4px) 0 0/26px 26px}
+.top{position:absolute;left:16px;right:16px;top:14px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:14px;padding:7px 12px;border-radius:12px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2),0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(10px)}
+.brand i{width:20px;height:20px;border-radius:6px;background:conic-gradient(from 210deg,#E8B45A,#BB9AF7,#73DACA,#E8B45A)}
+.filters{display:flex;gap:6px;padding:6px;border-radius:12px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2),0 10px 30px rgba(0,0,0,.35)}
+.f{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:8px;font-size:12.5px;color:var(--muted)}
+.f.on{background:var(--surface-2);color:var(--text)}
+.f i{width:9px;height:9px;border-radius:50%}
+.issue{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:12px;background:var(--panel);box-shadow:0 0 0 1px rgba(232,180,90,.35),0 10px 30px rgba(0,0,0,.35);font-size:12.5px}
+.issue b{color:var(--accent);font-family:var(--mono)}
+.tr{margin-left:auto;display:flex;gap:8px}
+.seg{display:flex;padding:4px;border-radius:10px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2)}
+.seg span{padding:4px 10px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg span.on{background:var(--surface-2);color:var(--text)}
+svg.g{position:absolute;left:0;top:0;width:1060px;height:900px}
+.lbl{font:600 12px var(--ui);fill:var(--text)}
+.sub{font:11px var(--mono);fill:var(--muted)}
+.elbl{font:11px var(--mono);fill:#B8B9C2}
+.panel{position:absolute;right:16px;top:70px;bottom:16px;width:352px;border-radius:16px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2),0 20px 50px rgba(0,0,0,.45);overflow:hidden;display:flex;flex-direction:column;backdrop-filter:blur(12px)}
+.ph{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.kind{font:600 10.5px var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--c-row)}
+.ph h2{font-size:18px;font-weight:650;margin-top:4px;font-family:var(--mono)}
+.ph p{color:var(--muted);font-size:12.5px;margin-top:6px}
+.kv{display:grid;grid-template-columns:108px 1fr;gap:6px 12px;padding:12px 18px;font-size:12.5px;border-bottom:1px solid var(--line)}
+.kv span{color:var(--faint)}.kv b{font:500 12px var(--mono)}
+.sect{padding:12px 18px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.cent{display:grid;grid-template-columns:12px 1fr 90px 30px;gap:10px;align-items:center;padding:6px 18px;font-size:12.5px}
+.cent i{width:9px;height:9px;border-radius:50%}
+.cent .bar{height:6px;border-radius:9px;background:var(--surface-2);overflow:hidden}
+.cent .bar b{display:block;height:100%;background:var(--accent);border-radius:9px}
+.cent .n{font:11px var(--mono);color:var(--muted);text-align:right}
+.gv{display:inline-block;margin:10px 18px 0;font:600 10px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:99px}
+.walk{position:absolute;left:16px;bottom:16px;width:1010px;border-radius:16px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2),0 20px 50px rgba(0,0,0,.45);padding:14px 16px;display:flex;align-items:center;gap:16px}
+.steps{display:flex;gap:6px}
+.st{width:34px;height:6px;border-radius:9px;background:var(--surface-2)}
+.st.on{background:var(--accent)}.st.done{background:rgba(232,180,90,.45)}
+.walk .t{font-size:14px;font-weight:600}
+.walk .d{color:var(--muted);font-size:12.5px;margin-top:2px}
+.btns{margin-left:auto;display:flex;gap:8px}
+.btn{padding:8px 14px;border-radius:10px;font-weight:600;font-size:12.5px;background:var(--surface-2);box-shadow:0 0 0 1px var(--line-2)}
+.btn.p{background:var(--accent);color:#1A1406;box-shadow:none}
+.mini{position:absolute;left:16px;top:70px;width:210px;border-radius:14px;background:var(--panel);box-shadow:0 0 0 1px var(--line-2);padding:12px 14px;font-size:12px}
+.mini .r{display:flex;justify-content:space-between;color:var(--muted);padding:3px 0}
+.mini .r b{color:var(--text);font:500 12px var(--mono)}
+</style>
+</head>
+<body>
+<div class="canvas"></div>
+<svg class="g" viewBox="0 0 1060 900">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#6B6C75"/></marker>
+    <marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#E8B45A"/></marker>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- edges -->
+  <g stroke="#3A3B43" stroke-width="1.6" fill="none">
+    <path d="M420 300 C 470 360, 520 380, 560 420" marker-end="url(#ar)"/>
+    <path d="M300 520 C 360 470, 470 440, 545 432"/>
+    <path d="M300 520 L 250 640"/>
+    <path d="M590 460 C 610 540, 640 600, 660 640"/>
+    <path d="M610 445 C 700 470, 760 500, 800 520"/>
+    <path d="M420 300 L 330 210"/>
+    <path d="M420 300 L 560 210"/>
+    <path d="M150 420 C 200 470, 250 500, 285 515"/>
+  </g>
+  <g stroke="#E8B45A" stroke-width="2.4" fill="none" filter="url(#glow)">
+    <path d="M590 455 C 650 520, 700 560, 735 640" marker-end="url(#ara)"/>
+    <path d="M420 300 C 470 360, 520 380, 560 420" stroke-dasharray="1 0"/>
+    <path d="M560 210 C 600 260, 590 330, 575 410" marker-end="url(#ara)"/>
+  </g>
+  <g class="elbl">
+    <text x="452" y="356">invoice_refs</text><text x="640" y="560">credited 2900</text><text x="598" y="300">rate 2025-06-09</text>
+    <text x="330" y="470">relief 1100</text><text x="690" y="488">bank 1000</text><text x="168" y="456">entity</text>
+  </g>
+  <!-- nodes -->
+  <g>
+    <circle cx="575" cy="432" r="34" fill="#1E2028" stroke="#E8B45A" stroke-width="2.5" filter="url(#glow)"/>
+    <circle cx="575" cy="432" r="26" fill="#E8B45A"/>
+    <text class="lbl" x="575" y="485" text-anchor="middle">Receipt 35659962</text><text class="sub" x="575" y="501" text-anchor="middle">18 235.65 AED</text>
+    <circle cx="420" cy="300" r="24" fill="#1E2028" stroke="#E8B45A" stroke-width="2"/><circle cx="420" cy="300" r="17" fill="#E8B45A" opacity=".85"/>
+    <text class="lbl" x="420" y="345" text-anchor="middle" style="display:none">x</text>
+    <text class="lbl" x="372" y="268" text-anchor="middle">Invoice 13859230</text><text class="sub" x="372" y="284" text-anchor="middle">sales · 18 235.65 AED</text>
+    <circle cx="740" cy="650" r="22" fill="#1E2028" stroke="#E8B45A" stroke-width="2.5" filter="url(#glow)"/><rect x="728" y="638" width="24" height="24" rx="6" fill="#7AA2F7"/>
+    <text class="lbl" x="740" y="694" text-anchor="middle">Row 92261679 · 2900</text><text class="sub" x="740" y="710" text-anchor="middle">Cr 1 324 009.05 ₸</text>
+    <rect x="288" y="508" width="24" height="24" rx="6" fill="#7AA2F7"/><text class="lbl" x="300" y="550" text-anchor="middle">Row 92937326 · 1100</text>
+    <rect x="802" y="510" width="22" height="22" rx="6" fill="#7AA2F7"/><text class="lbl" x="813" y="550" text-anchor="middle">Row 93412876 · 1000</text>
+    <rect x="648" y="628" width="20" height="20" rx="6" fill="#7AA2F7" opacity=".7"/><text class="sub" x="620" y="668" text-anchor="middle">7900 FX</text>
+    <rect x="238" y="630" width="20" height="20" rx="6" fill="#7AA2F7" opacity=".7"/><text class="sub" x="248" y="668" text-anchor="middle">4000 revenue</text>
+    <rect x="320" y="198" width="20" height="20" rx="6" fill="#7AA2F7" opacity=".7"/><text class="sub" x="330" y="190" text-anchor="middle">1100 Dr 2 318 024.65</text>
+    <polygon points="560,192 576,210 560,228 544,210" fill="#BB9AF7" stroke="#E8B45A" stroke-width="2"/><text class="lbl" x="560" y="178" text-anchor="middle">fx 2025-06-09 AED→KZT</text><text class="sub" x="560" y="246" text-anchor="middle" dy="0" style="display:none">x</text>
+    <circle cx="140" cy="410" r="16" fill="#73DACA"/><text class="lbl" x="140" y="446" text-anchor="middle">entity 63677047</text>
+  </g>
+</svg>
+<div class="top">
+  <div class="brand"><i></i>auditgym · graph</div>
+  <div class="filters"><span class="f on"><i style="background:var(--c-doc)"></i>Documents</span><span class="f on"><i style="background:var(--c-row)"></i>Ledger rows</span><span class="f on"><i style="background:var(--c-fx)"></i>FX</span><span class="f"><i style="background:var(--c-ent)"></i>Entities</span></div>
+  <div class="issue">Focus <b>iss_04</b> unallocated_payment · evidence path highlighted</div>
+  <div class="tr"><div class="seg"><span class="on">EN</span><span>RU</span></div><div class="seg"><span class="on">Dark</span><span>Light</span></div></div>
+</div>
+<div class="mini">
+  <div style="font-weight:600;margin-bottom:6px">d08_both_interacting_kzt</div>
+  <div class="r">base<b>KZT</b></div><div class="r">time zone<b>+05:00</b></div><div class="r">nodes shown<b>11 / 910</b></div><div class="r">issues<b>5</b></div>
+</div>
+<div class="panel">
+  <div class="ph"><div class="kind">Ledger row · evidence</div><h2>92261679</h2><p>Credit to 2900 Unallocated receipts from receipt 35659962, although the referenced invoice was open for the full amount.</p></div>
+  <div class="kv"><span>account</span><b>2900 Unallocated</b><span>credit</span><b>1 324 009.05 KZT</b><span>timestamp</span><b>2025-06-13 17:25 +05:00</b><span>payment_id</span><b>35659962</b><span>invoice_id</span><b>null</b></div>
+  <span class="gv">Grader view · post-run</span>
+  <div class="sect">Most connected in this episode</div>
+  <div class="cent"><i style="background:var(--c-fx)"></i><span>fx 2025-06-09 AED→KZT</span><span class="bar"><b style="width:92%"></b></span><span class="n">23</span></div>
+  <div class="cent"><i style="background:var(--c-doc)"></i><span>Receipt 35659962</span><span class="bar"><b style="width:40%"></b></span><span class="n">5</span></div>
+  <div class="cent"><i style="background:var(--c-doc)"></i><span>Invoice 13859230</span><span class="bar"><b style="width:36%"></b></span><span class="n">4</span></div>
+  <div class="cent"><i style="background:var(--c-ent)"></i><span>entity 63677047</span><span class="bar"><b style="width:66%"></b></span><span class="n">15</span></div>
+  <div class="sect">Evidence sets</div>
+  <div style="padding:2px 18px 14px;font:12px/1.8 var(--mono);color:var(--muted)">set 1 · <span style="color:var(--accent)">84405618 · 87548428 · 92261679</span></div>
+</div>
+<div class="walk">
+  <div class="steps"><span class="st done"></span><span class="st on"></span><span class="st"></span><span class="st"></span></div>
+  <div><div class="t">Step 2 of 4 · the receipt was only partly allocated</div><div class="d">18 235.65 AED arrived for invoice 13859230 (open 18 235.65 AED); 1 002 121.27 ₸ relieved receivables, 1 324 009.05 ₸ went to 2900.</div></div>
+  <div class="btns"><span class="btn">Back</span><span class="btn p">Next step</span></div>
+</div>
+</body>
+</html>

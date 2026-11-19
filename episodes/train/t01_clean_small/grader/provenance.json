@@ -1,0 +1,167 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "7310428851902345611",
+  "secret_used": false,
+  "config": {
+    "size": "small"
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "KWD",
+    "foreign_currencies": [
+      "USD",
+      "BHD"
+    ],
+    "timezone": "Asia/Kolkata",
+    "period": "2025-11",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "utc",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 9,
+      "suppliers": 5,
+      "sales_invoices": 21,
+      "purchase_invoices": 12,
+      "prior_invoices": 5,
+      "target_rows": 300
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Palara Analytics Pvt Ltd",
+    "customers": 9,
+    "suppliers": 5,
+    "invoices": 53,
+    "payments": 30,
+    "misc_journals": 56,
+    "holidays": [
+      "2025-11-14"
+    ]
+  },
+  "injections": [],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_487531dc",
+        "pi_3c44b5a7"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_cef6ac1c",
+        "pi_72505a84"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_8ecd3466",
+        "rc_813fd51e",
+        "rc_a103ded9"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_5bcc217d",
+        "si_d7d99f48",
+        "rc_03a6068b"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_91120533",
+        "rc_cff5b5b5"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_a7280589",
+        "rc_7dc7acef",
+        "rf_0fbfccfe"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_eb0f0f88"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_cc1fa82a"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_1e527f52"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_004c5965"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_b6ba80d6"
+      ]
+    }
+  ],
+  "ops": [],
+  "clean_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
+  "final_digest": "9562612be4bba6562744e7f17f8ead227bd7335ad34461396672fb35c7ce0388",
+  "rejected_attempts": []
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_a59027da7660782e",
+  "company": {
+    "name": "Selix Machinery LLP",
+    "synthetic": true
+  },
+  "base_currency": "GBP",
+  "currency_exponents": {
+    "GBP": 2,
+    "USD": 2
+  },
+  "period_start": "2025-08-01T00:00:00+05:00",
+  "period_end": "2025-09-01T00:00:00+05:00",
+  "ledger_extract_end": "2025-09-08T00:00:00+05:00",
+  "timezone": "Asia/Almaty",
+  "record_counts": {
+    "ledger": 253,
+    "invoices": 50,
+    "payments": 26,
+    "fx": 92
+  },
+  "document_counts": {
+    "invoices": 50,
+    "payments": 26,
+    "total": 76
+  },
+  "rounding": {
+    "mode": "half_up",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

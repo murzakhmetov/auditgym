@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/manifest.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generator_version",
+    "episode_id",
+    "base_currency",
+    "currency_exponents",
+    "period_start",
+    "period_end",
+    "ledger_extract_end",
+    "timezone",
+    "record_counts",
+    "document_counts",
+    "rounding"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^ep_[0-9a-f]{16}$"
+    },
+    "base_currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "period_start": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "period_end": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "ledger_extract_end": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "record_counts": {
+      "type": "object",
+      "required": [
+        "ledger",
+        "invoices",
+        "payments",
+        "fx"
+      ]
+    }
+  }
+}

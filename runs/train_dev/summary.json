@@ -1,0 +1,275 @@
+{
+  "dev/auditor": {
+    "split": "dev",
+    "policy": "auditor",
+    "episodes": 10,
+    "return": 0.9466,
+    "return_experimental": 0.9466,
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1": 1.0,
+    "steps": 26.7,
+    "agent_time_s": 0.0283,
+    "closed_share": 1.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": 0.962,
+    "return_with_errors": 0.9427,
+    "return_interacting": 0.944,
+    "false_positives_on_clean": 0,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 1.0,
+      "wrong_period": 1.0
+    },
+    "miss_reasons": {}
+  },
+  "dev/flag_all": {
+    "split": "dev",
+    "policy": "flag_all",
+    "episodes": 10,
+    "return": -1.0,
+    "return_experimental": -0.9892,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "steps": 3.0,
+    "agent_time_s": 0.0093,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -1.0,
+    "return_interacting": -1.0,
+    "false_positives_on_clean": 60,
+    "recall_by_type": {
+      "duplicate_invoice": 0.0,
+      "unallocated_payment": 0.0,
+      "wrong_fx_rate": 0.0,
+      "wrong_period": 0.0
+    },
+    "miss_reasons": {
+      "amount": 2,
+      "search": 28
+    }
+  },
+  "dev/oracle": {
+    "split": "dev",
+    "policy": "oracle",
+    "episodes": 10,
+    "return": 1.0,
+    "return_experimental": 1.0,
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1": 1.0,
+    "steps": 0.0,
+    "agent_time_s": 0.0,
+    "closed_share": 1.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": 1.0,
+    "return_with_errors": 1.0,
+    "return_interacting": 1.0,
+    "false_positives_on_clean": 0,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 1.0,
+      "wrong_period": 1.0
+    },
+    "miss_reasons": {}
+  },
+  "dev/random": {
+    "split": "dev",
+    "policy": "random",
+    "episodes": 10,
+    "return": -1.0,
+    "return_experimental": -1.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "steps": 15.0,
+    "agent_time_s": 0.0047,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -1.0,
+    "return_interacting": -1.0,
+    "false_positives_on_clean": 4,
+    "recall_by_type": {
+      "duplicate_invoice": 0.0,
+      "unallocated_payment": 0.0,
+      "wrong_fx_rate": 0.0,
+      "wrong_period": 0.0
+    },
+    "miss_reasons": {
+      "search": 30
+    }
+  },
+  "dev/recon": {
+    "split": "dev",
+    "policy": "recon",
+    "episodes": 10,
+    "return": -0.5449,
+    "return_experimental": -0.5449,
+    "precision": 0.1835,
+    "recall": 0.4733,
+    "f1": 0.2481,
+    "steps": 26.7,
+    "agent_time_s": 0.0157,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -0.4311,
+    "return_interacting": -0.2062,
+    "false_positives_on_clean": 16,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 0.4444,
+      "wrong_period": 0.375
+    },
+    "miss_reasons": {
+      "not_flagged": 10
+    }
+  },
+  "train/auditor": {
+    "split": "train",
+    "policy": "auditor",
+    "episodes": 10,
+    "return": 0.9698,
+    "return_experimental": 0.9698,
+    "precision": 0.7,
+    "recall": 0.7,
+    "f1": 1.0,
+    "steps": 15.1,
+    "agent_time_s": 0.011,
+    "closed_share": 1.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": 0.9713,
+    "return_with_errors": 0.9691,
+    "return_interacting": 0.952,
+    "false_positives_on_clean": 0,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 1.0,
+      "wrong_period": 1.0
+    },
+    "miss_reasons": {}
+  },
+  "train/flag_all": {
+    "split": "train",
+    "policy": "flag_all",
+    "episodes": 10,
+    "return": -1.0,
+    "return_experimental": -1.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "steps": 3.0,
+    "agent_time_s": 0.0062,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -1.0,
+    "return_interacting": -1.0,
+    "false_positives_on_clean": 90,
+    "recall_by_type": {
+      "duplicate_invoice": 0.0,
+      "unallocated_payment": 0.0,
+      "wrong_fx_rate": 0.0,
+      "wrong_period": 0.0
+    },
+    "miss_reasons": {
+      "search": 10
+    }
+  },
+  "train/oracle": {
+    "split": "train",
+    "policy": "oracle",
+    "episodes": 10,
+    "return": 1.0,
+    "return_experimental": 1.0,
+    "precision": 0.7,
+    "recall": 0.7,
+    "f1": 1.0,
+    "steps": 0.0,
+    "agent_time_s": 0.0,
+    "closed_share": 1.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": 1.0,
+    "return_with_errors": 1.0,
+    "return_interacting": 1.0,
+    "false_positives_on_clean": 0,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 1.0,
+      "wrong_period": 1.0
+    },
+    "miss_reasons": {}
+  },
+  "train/random": {
+    "split": "train",
+    "policy": "random",
+    "episodes": 10,
+    "return": -1.0,
+    "return_experimental": -1.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "steps": 15.0,
+    "agent_time_s": 0.0032,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -1.0,
+    "return_interacting": -1.0,
+    "false_positives_on_clean": 6,
+    "recall_by_type": {
+      "duplicate_invoice": 0.0,
+      "unallocated_payment": 0.0,
+      "wrong_fx_rate": 0.0,
+      "wrong_period": 0.0
+    },
+    "miss_reasons": {
+      "search": 10
+    }
+  },
+  "train/recon": {
+    "split": "train",
+    "policy": "recon",
+    "episodes": 10,
+    "return": -0.6375,
+    "return_experimental": -0.6375,
+    "precision": 0.1176,
+    "recall": 0.5,
+    "f1": 0.1883,
+    "steps": 15.1,
+    "agent_time_s": 0.0047,
+    "closed_share": 0.0,
+    "invalid": 0,
+    "truncated": 0,
+    "return_clean": -1.0,
+    "return_with_errors": -0.4822,
+    "return_interacting": -0.771,
+    "false_positives_on_clean": 11,
+    "recall_by_type": {
+      "duplicate_invoice": 1.0,
+      "unallocated_payment": 1.0,
+      "wrong_fx_rate": 0.6667,
+      "wrong_period": 0.25
+    },
+    "miss_reasons": {
+      "not_flagged": 4
+    }
+  }
+}

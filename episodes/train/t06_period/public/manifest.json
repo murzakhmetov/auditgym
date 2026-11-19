@@ -1,0 +1,42 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_03c9fda409ec6f6b",
+  "company": {
+    "name": "Eloeta Analytics Pvt Ltd",
+    "synthetic": true
+  },
+  "base_currency": "KWD",
+  "currency_exponents": {
+    "KWD": 3,
+    "BHD": 3,
+    "USD": 2
+  },
+  "period_start": "2025-06-01T00:00:00+05:45",
+  "period_end": "2025-07-01T00:00:00+05:45",
+  "ledger_extract_end": "2025-07-08T00:00:00+05:45",
+  "timezone": "Asia/Kathmandu",
+  "record_counts": {
+    "ledger": 260,
+    "invoices": 52,
+    "payments": 28,
+    "fx": 155
+  },
+  "document_counts": {
+    "invoices": 52,
+    "payments": 28,
+    "total": 80
+  },
+  "rounding": {
+    "mode": "half_even",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

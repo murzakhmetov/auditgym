@@ -1,0 +1,61 @@
+# The official offline check on three operating systems, plus the container exactly as the README runs it.
+# Nothing here needs network access at run time except actions/checkout and the image base layer.
+name: check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check (${{ matrix.os }}, Python 3.11)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      PYTHONHASHSEED: "0"
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Official check (offline, standard library only)
+        run: python -m auditgym check
+      - name: Committed episodes and schemas regenerate byte for byte
+        shell: bash
+        run: |
+          python -m auditgym build-splits
+          python -m auditgym schemas
+          git diff --stat --exit-code -- episodes schemas
+      - name: Committed trajectories replay byte for byte
+        shell: bash
+        run: |
+          python -m auditgym run --episodes episodes/train episodes/dev --policies random,recon,flag_all,oracle,auditor --out runs/train_dev
+          git diff --stat --exit-code -- runs/train_dev/trajectories.jsonl
+      - name: Upload the check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-report-${{ matrix.os }}
+          path: runs/check/report.md
+
+  docker:
+    name: container (network none, 2 CPU, 4 GB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t auditgym .
+      - name: Image size
+        run: docker image ls auditgym --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+      - name: Official check in the container
+        run: time docker run --rm --network none --cpus 2 --memory 4g auditgym

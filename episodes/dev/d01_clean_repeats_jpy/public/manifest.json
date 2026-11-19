@@ -1,0 +1,43 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_ee223b1157d7e933",
+  "company": {
+    "name": "Kaiix Energy KK",
+    "synthetic": true
+  },
+  "base_currency": "JPY",
+  "currency_exponents": {
+    "JPY": 0,
+    "EUR": 2,
+    "USD": 2,
+    "KRW": 0
+  },
+  "period_start": "2026-04-01T00:00:00+09:00",
+  "period_end": "2026-05-01T00:00:00+09:00",
+  "ledger_extract_end": "2026-05-08T00:00:00+09:00",
+  "timezone": "Asia/Tokyo",
+  "record_counts": {
+    "ledger": 329,
+    "invoices": 74,
+    "payments": 40,
+    "fx": 207
+  },
+  "document_counts": {
+    "invoices": 74,
+    "payments": 40,
+    "total": 114
+  },
+  "rounding": {
+    "mode": "half_up",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "3390586214427051877",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "base_currency": "USD",
+    "timezone": "America/New_York",
+    "ts_repr": "mixed",
+    "errors": {
+      "wrong_fx_rate": 2
+    },
+    "variants": {
+      "wrong_fx_rate": [
+        "utc_date",
+        "stale_rate"
+      ]
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "USD",
+    "foreign_currencies": [
+      "KWD",
+      "GBP",
+      "EUR"
+    ],
+    "timezone": "America/New_York",
+    "period": "2025-03",
+    "rounding": "half_up",
+    "id_style": "slashed",
+    "ts_repr": "mixed",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 2,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "stale_rate"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 10,
+      "suppliers": 7,
+      "sales_invoices": 41,
+      "purchase_invoices": 22,
+      "prior_invoices": 5,
+      "target_rows": 717
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Coraro Retail Inc",
+    "customers": 10,
+    "suppliers": 7,
+    "invoices": 96,
+    "payments": 59,
+    "misc_journals": 181,
+    "holidays": [
+      "2025-03-03",
+      "2025-03-04"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "single",
+      "targets": {
+        "invoice": "PI/2025/883518"
+      },
+      "change": {
+        "correct_rate": "1.28262",
+        "correct_rate_date": "2025-03-24",
+        "wrong_rate": "1.28503",
+        "wrong_rate_date": "2025-03-25"
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "single",
+      "targets": {
+        "invoice": "SI/2025/731816"
+      },
+      "change": {
+        "correct_rate": "1.28262",
+        "correct_rate_date": "2025-03-24",
+        "wrong_rate": "1.28503",
+        "wrong_rate_date": "2025-03-25"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2025/624983",
+        "PI/2025/245304"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2025/483524",
+        "PI/2025/992581"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "PI/2025/893535",
+        "PI/2025/593285"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "PI/2025/922110",
+        "PI/2025/236886"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2025/338354",
+        "BR/2025/174821",
+        "BR/2025/368178"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2025/261446",
+        "BR/2025/549919",
+        "BR/2025/828421"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "SI/2025/393986",
+        "SI/2025/824041",
+        "BR/2025/920070"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "SI/2025/625744",
+        "BR/2025/929880"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "SI/2025/529946",
+        "BR/2025/326286"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "SI/2025/140445",
+        "BR/2025/490925",
+        "RF/2025/130571"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2025/624272"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2025/159799"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2025/806549"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2025/603339"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2025/241466"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "PI/2025/324520"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2025/221380"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "SI/2025/667890"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "SI/2025/188184"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2025/352574",
+      "field": "credit_minor",
+      "before": 511919,
+      "after": 512881
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2025/616744",
+      "field": "credit_minor",
+      "before": 789433,
+      "after": 790917
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2025/622101",
+      "field": "debit_minor",
+      "before": 789433,
+      "after": 790917
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2025/829210",
+      "field": "debit_minor",
+      "before": 511919,
+      "after": 512881
+    }
+  ],
+  "clean_digest": "df84dda3f033a210034e0228c8ccd2fa22bcc52fa75e88d6c09aeade0e098f41",
+  "final_digest": "1e6ef85e4a817e803558b9b4e86723d81a895a34a7395acc20f0549f12f2786e",
+  "rejected_attempts": []
+}

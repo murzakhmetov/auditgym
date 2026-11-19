@@ -1,0 +1,42 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_3814a986d97ec053",
+  "company": {
+    "name": "Kaien Agro Ltd",
+    "synthetic": true
+  },
+  "base_currency": "KWD",
+  "currency_exponents": {
+    "KWD": 3,
+    "EUR": 2,
+    "BHD": 3
+  },
+  "period_start": "2027-04-01T00:00:00+03:00",
+  "period_end": "2027-05-01T00:00:00+03:00",
+  "ledger_extract_end": "2027-05-08T00:00:00+03:00",
+  "timezone": "Asia/Kuwait",
+  "record_counts": {
+    "ledger": 416,
+    "invoices": 61,
+    "payments": 41,
+    "fx": 140
+  },
+  "document_counts": {
+    "invoices": 61,
+    "payments": 41,
+    "total": 102
+  },
+  "rounding": {
+    "mode": "half_even",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

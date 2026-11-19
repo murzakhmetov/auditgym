@@ -1,0 +1,220 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "7730195562281004417",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "base_currency": "KWD",
+    "timezone": "Asia/Kuwait"
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "KWD",
+    "foreign_currencies": [
+      "EUR",
+      "BHD"
+    ],
+    "timezone": "Asia/Kuwait",
+    "period": "2027-10",
+    "rounding": "half_up",
+    "id_style": "numeric",
+    "ts_repr": "mixed",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 10,
+      "suppliers": 8,
+      "sales_invoices": 37,
+      "purchase_invoices": 18,
+      "prior_invoices": 7,
+      "target_rows": 786
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Torum Energy Ltd",
+    "customers": 11,
+    "suppliers": 8,
+    "invoices": 87,
+    "payments": 54,
+    "misc_journals": 229,
+    "holidays": []
+  },
+  "injections": [],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "23271199",
+        "26834617"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "24282970",
+        "28260987"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "29887965",
+        "28438259"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "21732140",
+        "25808856"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "11645154",
+        "37507801",
+        "33081785"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "13509312",
+        "34546090",
+        "36053397"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "18567690",
+        "19791464",
+        "39174721"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "17004363",
+        "38103762"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "17302364",
+        "34945723"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "11248534",
+        "33893273",
+        "56191325"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "34989619"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "35872918"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "11365716"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "28704899"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "16731133"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "27731487"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "28451852"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "11945720"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "17793120"
+      ]
+    }
+  ],
+  "ops": [],
+  "clean_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
+  "final_digest": "c2df0d231120ee46f6c5bcb51db545348237724e0e1667b4452439493070e531",
+  "rejected_attempts": []
+}

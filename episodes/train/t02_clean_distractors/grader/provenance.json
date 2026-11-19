@@ -1,0 +1,229 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "1958233070461129947",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "KWD",
+    "foreign_currencies": [
+      "EUR",
+      "BHD"
+    ],
+    "timezone": "Asia/Kuwait",
+    "period": "2027-04",
+    "rounding": "half_even",
+    "id_style": "prefixed",
+    "ts_repr": "utc",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 8,
+      "suppliers": 5,
+      "sales_invoices": 18,
+      "purchase_invoices": 12,
+      "prior_invoices": 5,
+      "target_rows": 415
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Kaien Agro Ltd",
+    "customers": 8,
+    "suppliers": 5,
+    "invoices": 61,
+    "payments": 41,
+    "misc_journals": 87,
+    "holidays": []
+  },
+  "injections": [],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "BILL-867781",
+        "BILL-575568"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "BILL-861310",
+        "BILL-161933"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "BILL-774611",
+        "BILL-504843"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "BILL-326095",
+        "BILL-378191"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-111141",
+        "RCPT-839890",
+        "RCPT-988482"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-490126",
+        "RCPT-316896",
+        "RCPT-734979"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "INV-626932",
+        "INV-520255",
+        "RCPT-556717"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "INV-783106",
+        "RCPT-209630"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "INV-203499",
+        "RCPT-445703",
+        "RFND-709687"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "INV-673458",
+        "RCPT-337130",
+        "RFND-332421"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-390673"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-786842"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-100946"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-416641"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-846363"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "BILL-512865"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "INV-606784"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "INV-287855"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "INV-323183"
+      ]
+    }
+  ],
+  "ops": [],
+  "clean_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
+  "final_digest": "06c48211972981fbcf4c9c57cd399de7e4f3899845551f53e617596c0aeba596",
+  "rejected_attempts": []
+}

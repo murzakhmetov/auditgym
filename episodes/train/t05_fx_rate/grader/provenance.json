@@ -1,0 +1,203 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "2297715560094823317",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "errors": {
+      "wrong_fx_rate": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "GBP",
+    "foreign_currencies": [
+      "EUR"
+    ],
+    "timezone": "Europe/Berlin",
+    "period": "2026-10",
+    "rounding": "half_up",
+    "id_style": "slashed",
+    "ts_repr": "mixed",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 1,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 9,
+      "suppliers": 6,
+      "sales_invoices": 14,
+      "purchase_invoices": 8,
+      "prior_invoices": 3,
+      "target_rows": 253
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Eloen Textiles GmbH",
+    "customers": 9,
+    "suppliers": 6,
+    "invoices": 42,
+    "payments": 24,
+    "misc_journals": 53,
+    "holidays": [
+      "2026-10-02",
+      "2026-10-07"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_fx_rate",
+      "variant": "transposed",
+      "scenario": "single",
+      "targets": {
+        "invoice": "SI/2026/797777"
+      },
+      "change": {
+        "correct_rate": "0.842913",
+        "correct_rate_date": "2026-10-08",
+        "wrong_rate": "0.482913",
+        "wrong_rate_date": null
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2026/367098",
+        "PI/2026/438381"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "PI/2026/253675",
+        "PI/2026/918144"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2026/715966",
+        "BR/2026/907301",
+        "BR/2026/656660"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "SI/2026/875962",
+        "SI/2026/958304",
+        "BR/2026/472662"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "SI/2026/324714",
+        "BR/2026/979825"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "SI/2026/407637",
+        "BR/2026/142063",
+        "RF/2026/454016"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2026/933597"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/867051"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/460751"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "PI/2026/125298"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "SI/2026/117848"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/262865",
+      "field": "debit_minor",
+      "before": 602118,
+      "after": 344959
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/962889",
+      "field": "credit_minor",
+      "before": 602118,
+      "after": 344959
+    }
+  ],
+  "clean_digest": "3ba86d384b748fe8c4d85de17317b2e91c58a831f56311d7e779056ca5e2f508",
+  "final_digest": "ff622fb1047fdecc67065a1160ddf4d52967445b3c9ae02e6a2883b4de1dc7a1",
+  "rejected_attempts": []
+}

@@ -1,0 +1,241 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "5520017338842210093",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "errors": {
+      "duplicate_invoice": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "EUR",
+    "foreign_currencies": [
+      "USD",
+      "JPY",
+      "GBP"
+    ],
+    "timezone": "Europe/Berlin",
+    "period": "2025-01",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "local",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 1,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 6,
+      "suppliers": 5,
+      "sales_invoices": 19,
+      "purchase_invoices": 12,
+      "prior_invoices": 3,
+      "target_rows": 284
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Astana Logistics GmbH",
+    "customers": 8,
+    "suppliers": 7,
+    "invoices": 52,
+    "payments": 29,
+    "misc_journals": 51,
+    "holidays": [
+      "2025-01-10"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "duplicate_invoice",
+      "variant": "same_day_copy",
+      "scenario": "single",
+      "targets": {
+        "original": "pi_33b50739",
+        "copy": "pi_9ff22772"
+      },
+      "change": {}
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_743b7847",
+        "pi_e3976346"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_085d7d60",
+        "pi_9243b37b"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_2756513a",
+        "rc_c74ffa39",
+        "rc_560eb744"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_d9084f94",
+        "si_da8a3272",
+        "rc_0345c0e4"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_b4c31ea6",
+        "rc_b81ee350"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_666e9568",
+        "rc_06a6ef0e",
+        "rf_ce24c551"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_98de41a7"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_1e731d8a"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_18930d53"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_037ab369"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_d815d433"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "gl_20cf198a",
+      "record": {
+        "row_id": "gl_20cf198a",
+        "timestamp": "2025-01-03T18:48:27+01:00",
+        "account": "5000",
+        "debit_minor": 106965,
+        "credit_minor": 0,
+        "currency": "EUR",
+        "entity_id": "sup_7e9643bb",
+        "invoice_id": "pi_9ff22772",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "gl_50e97e5c",
+      "record": {
+        "row_id": "gl_50e97e5c",
+        "timestamp": "2025-01-03T18:48:27+01:00",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 106965,
+        "currency": "EUR",
+        "entity_id": "sup_7e9643bb",
+        "invoice_id": "pi_9ff22772",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "add",
+      "table": "invoices",
+      "id": "doc_43fd4ce7",
+      "record": {
+        "doc_id": "doc_43fd4ce7",
+        "invoice_id": "pi_9ff22772",
+        "kind": "purchase",
+        "entity_id": "sup_7e9643bb",
+        "issued_at": "2025-01-03T18:48:27+01:00",
+        "due_at": "2025-02-17T23:59:59+01:00",
+        "currency": "EUR",
+        "total_minor": 106965,
+        "line_items": [
+          {
+            "line_no": 1,
+            "description": "Maintenance call SR-83444",
+            "quantity": 1,
+            "unit_price_minor": 106965,
+            "amount_minor": 106965,
+            "ref": "SR-83444"
+          }
+        ]
+      }
+    }
+  ],
+  "clean_digest": "aad6b83320ef594af40596f516443abf8df11f3f40046b89d260d595aaecbfe4",
+  "final_digest": "0ec501815b81b315b9ccd7c3b5eea0faf352d971f2aa6434ad5b25d64162e623",
+  "rejected_attempts": []
+}

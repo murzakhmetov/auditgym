@@ -1,0 +1,43 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_cb140bf7e4fb02db",
+  "company": {
+    "name": "Selion Analytics Inc",
+    "synthetic": true
+  },
+  "base_currency": "USD",
+  "currency_exponents": {
+    "USD": 2,
+    "EUR": 2,
+    "KWD": 3,
+    "GBP": 2
+  },
+  "period_start": "2025-01-01T00:00:00-05:00",
+  "period_end": "2025-02-01T00:00:00-05:00",
+  "ledger_extract_end": "2025-02-08T00:00:00-05:00",
+  "timezone": "America/New_York",
+  "record_counts": {
+    "ledger": 1538,
+    "invoices": 114,
+    "payments": 63,
+    "fx": 210
+  },
+  "document_counts": {
+    "invoices": 114,
+    "payments": 63,
+    "total": 177
+  },
+  "rounding": {
+    "mode": "half_even",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

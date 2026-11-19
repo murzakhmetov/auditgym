@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/observation.schema.json",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task",
+        "manifest",
+        "policy",
+        "remaining_steps"
+      ],
+      "properties": {
+        "task": {
+          "type": "object"
+        },
+        "manifest": {
+          "type": "object"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "remaining_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "error",
+        "remaining_steps"
+      ],
+      "properties": {
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              }
+            }
+          ]
+        },
+        "remaining_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  ]
+}

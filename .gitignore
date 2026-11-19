@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+runs/check/trajectories.jsonl
+runs/check/grades.jsonl
+runs/check/unittest.log
+runs/tmp/
+viewer/sample_bundle.json
+*.egg-info/
+build/
+dist/
+.playwright-mcp/

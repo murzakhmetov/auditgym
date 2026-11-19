@@ -1,0 +1,464 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "5867790214330165549",
+  "secret_used": false,
+  "config": {
+    "size": "large",
+    "errors": {
+      "duplicate_invoice": 1,
+      "unallocated_payment": 1,
+      "wrong_fx_rate": 1,
+      "wrong_period": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "large",
+    "base_currency": "USD",
+    "foreign_currencies": [
+      "EUR",
+      "KWD",
+      "GBP"
+    ],
+    "timezone": "America/New_York",
+    "period": "2025-01",
+    "rounding": "half_even",
+    "id_style": "numeric",
+    "ts_repr": "mixed",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 1,
+      "unallocated_payment": 1,
+      "wrong_fx_rate": 1,
+      "wrong_period": 1
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 3,
+      "recurring": 3,
+      "split_payment": 3,
+      "multi_invoice_payment": 2,
+      "underpayment": 3,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
+      "boundary_doc": 4,
+      "midnight_fx": 3,
+      "weekend_fx": 3
+    },
+    "counts": {
+      "customers": 16,
+      "suppliers": 11,
+      "sales_invoices": 47,
+      "purchase_invoices": 19,
+      "prior_invoices": 6,
+      "target_rows": 1536
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Selion Analytics Inc",
+    "customers": 17,
+    "suppliers": 12,
+    "invoices": 113,
+    "payments": 63,
+    "misc_journals": 542,
+    "holidays": [
+      "2025-01-14"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "duplicate_invoice",
+      "variant": "same_day_copy",
+      "scenario": "single",
+      "targets": {
+        "original": "29355244",
+        "copy": "24600695"
+      },
+      "change": {}
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "unallocated_payment",
+      "variant": "partial",
+      "scenario": "single",
+      "targets": {
+        "payment": "38600421",
+        "invoice": "14600393"
+      },
+      "change": {
+        "alloc": 200323
+      }
+    },
+    {
+      "issue_id": "iss_03",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "single",
+      "targets": {
+        "invoice": "17820867"
+      },
+      "change": {
+        "correct_rate": "3.20257",
+        "correct_rate_date": "2025-01-23",
+        "wrong_rate": "3.19828",
+        "wrong_rate_date": "2025-01-24"
+      }
+    },
+    {
+      "issue_id": "iss_04",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "single",
+      "targets": {
+        "invoice": "24719629"
+      },
+      "change": {
+        "posting_ts": "2025-02-01T07:57:32+00:00"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "29207568",
+        "26002551"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "21428463",
+        "28817708"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "27874685",
+        "24485388"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "21307238",
+        "24022188"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "27816962",
+        "25199660"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "22429792",
+        "21804106"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "11755245",
+        "39806909",
+        "33851289"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "15301312",
+        "32441351",
+        "31640776"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "14018845",
+        "37228785",
+        "33183638"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "15370607",
+        "14309341",
+        "37796233"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "16666676",
+        "13424084",
+        "34415895"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "15429579",
+        "35051667"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "18185192",
+        "36238843"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "12418255",
+        "33871450"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "18490709",
+        "33571145",
+        "59853350"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "11283822",
+        "34765298",
+        "52629040"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "39368195"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "38803943"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "13747674"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "25851971"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "17520144"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "13171106"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "24747817"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "22727467"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "23285818"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "16852644"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "11577096"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "17384448"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "91281025",
+      "record": {
+        "row_id": "91281025",
+        "timestamp": "2025-01-22T15:39:28Z",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 101197,
+        "currency": "USD",
+        "entity_id": "77822190",
+        "invoice_id": "24600695",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "91507553",
+      "field": "credit_minor",
+      "before": 459040,
+      "after": 458425
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "93823781",
+      "field": "timestamp",
+      "before": "2025-01-31T21:57:32-05:00",
+      "after": "2025-02-01T02:57:32-05:00"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "97234920",
+      "field": "timestamp",
+      "before": "2025-01-31T21:57:32-05:00",
+      "after": "2025-02-01T02:57:32-05:00"
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "98706341",
+      "record": {
+        "row_id": "98706341",
+        "timestamp": "2025-01-03T14:06:55Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 137133,
+        "currency": "USD",
+        "entity_id": "69948974",
+        "invoice_id": null,
+        "payment_id": "38600421"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "98878686",
+      "field": "credit_minor",
+      "before": 8092,
+      "after": 5331
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "99069912",
+      "field": "credit_minor",
+      "before": 393790,
+      "after": 259418
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "99209243",
+      "record": {
+        "row_id": "99209243",
+        "timestamp": "2025-01-22T10:39:28-05:00",
+        "account": "5000",
+        "debit_minor": 101197,
+        "credit_minor": 0,
+        "currency": "USD",
+        "entity_id": "77822190",
+        "invoice_id": "24600695",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "99588256",
+      "field": "debit_minor",
+      "before": 459040,
+      "after": 458425
+    },
+    {
+      "op": "add",
+      "table": "invoices",
+      "id": "82791941",
+      "record": {
+        "doc_id": "82791941",
+        "invoice_id": "24600695",
+        "kind": "purchase",
+        "entity_id": "77822190",
+        "issued_at": "2025-01-22T18:39:28+03:00",
+        "due_at": "2025-03-09T07:59:59+03:00",
+        "currency": "KWD",
+        "total_minor": 314950,
+        "line_items": [
+          {
+            "line_no": 1,
+            "description": "Maintenance call SR-18857",
+            "quantity": 1,
+            "unit_price_minor": 314950,
+            "amount_minor": 314950,
+            "ref": "SR-18857"
+          }
+        ]
+      }
+    }
+  ],
+  "clean_digest": "2f31d3e61dc2234607fbeee47be79b10a31bd7718466e19bc5d00b16471c1c57",
+  "final_digest": "a139d495c7be4f95ce36802635eeafd89bf1cb84cf33a487418199b28bfcf6da",
+  "rejected_attempts": []
+}

@@ -1,0 +1,286 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "8579023346120983559",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "base_currency": "EUR",
+    "timezone": "Europe/Berlin",
+    "period": "2026-03",
+    "errors": {
+      "wrong_period": 2
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "EUR",
+    "foreign_currencies": [
+      "CHF",
+      "GBP",
+      "JPY"
+    ],
+    "timezone": "Europe/Berlin",
+    "period": "2026-03",
+    "rounding": "half_even",
+    "id_style": "prefixed",
+    "ts_repr": "utc",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 2
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 10,
+      "suppliers": 8,
+      "sales_invoices": 34,
+      "purchase_invoices": 19,
+      "prior_invoices": 7,
+      "target_rows": 888
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Verara Trading GmbH",
+    "customers": 10,
+    "suppliers": 8,
+    "invoices": 87,
+    "payments": 52,
+    "misc_journals": 280,
+    "holidays": [
+      "2026-03-03",
+      "2026-03-24"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "single",
+      "targets": {
+        "invoice": "INV-352731"
+      },
+      "change": {
+        "posting_ts": "2026-03-31T20:40:38+00:00"
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_period",
+      "variant": "booked_early",
+      "scenario": "single",
+      "targets": {
+        "invoice": "BILL-693741"
+      },
+      "change": {
+        "posting_ts": "2026-03-31T08:43:55+00:00"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "BILL-688684",
+        "BILL-834861"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "BILL-458655",
+        "BILL-842525"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "BILL-728597",
+        "BILL-396105"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "BILL-590937",
+        "BILL-783842"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-734408",
+        "RCPT-894833",
+        "RCPT-331535"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-541596",
+        "RCPT-199396",
+        "RCPT-537510"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "INV-512866",
+        "INV-646275",
+        "RCPT-752934"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "INV-355688",
+        "RCPT-354439"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "INV-511131",
+        "RCPT-345398"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "INV-718485",
+        "RCPT-811052",
+        "RFND-734168"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-704663"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-274705"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-293887"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-224701"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "INV-304424"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "INV-919137"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "BILL-869324"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "INV-987705"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "INV-158657"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "GL-374665",
+      "field": "timestamp",
+      "before": "2026-04-02T16:07:10Z",
+      "after": "2026-03-31T08:43:55Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "GL-386369",
+      "field": "timestamp",
+      "before": "2026-03-31T22:40:38Z",
+      "after": "2026-03-31T20:40:38Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "GL-535516",
+      "field": "timestamp",
+      "before": "2026-04-02T16:07:10Z",
+      "after": "2026-03-31T08:43:55Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "GL-582378",
+      "field": "timestamp",
+      "before": "2026-03-31T22:40:38Z",
+      "after": "2026-03-31T20:40:38Z"
+    }
+  ],
+  "clean_digest": "2881567451b795b8405cb68f6b73349549c9524d789bfab2761823a8998c90b2",
+  "final_digest": "d5600f2dd81e82f33899c4a676a556de037d04690f85a2f9dc39fd3166d7953d",
+  "rejected_attempts": []
+}

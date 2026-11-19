@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>D · Metrics Bench</title>
+<style>
+:root{
+  --bg:#F7F7F9;--surface:#FFFFFF;--surface-2:#F3F4F6;--line:#E7E8EC;--line-2:#D8DAE0;
+  --text:#111827;--muted:#5B6270;--faint:#8B919C;--accent:#4F46E5;--accent-soft:#EEF0FE;
+  --ok:#15803D;--ok-soft:#E8F6EC;--bad:#B91C1C;--bad-soft:#FCEBEB;--warn:#B45309;--warn-soft:#FDF2E3;
+  --s1:#4F46E5;--s2:#0F9D8A;--s3:#D97706;--s4:#DB2777;--s5:#64748B;
+  --ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;background:var(--bg);color:var(--text);font:13px/1.45 var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased}
+header{height:56px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 24px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px}
+.logo i{width:24px;height:24px;border-radius:7px;background:var(--accent);display:grid;place-items:center}
+nav{display:flex;gap:2px;margin-left:18px}
+nav span{padding:7px 12px;border-radius:8px;color:var(--muted);font-weight:500}
+nav span.on{color:var(--text);background:var(--surface-2)}
+.r{margin-left:auto;display:flex;gap:10px;align-items:center}
+.sel{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;font-size:12.5px;color:var(--muted);background:var(--surface)}
+.sel b{color:var(--text);font-weight:600}
+.seg{display:flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.seg span{padding:5px 10px;font-size:12px;font-weight:600;color:var(--muted)}.seg span.on{background:var(--text);color:#fff}
+main{padding:18px 24px;display:grid;grid-template-columns:1fr 340px;gap:18px;height:calc(900px - 56px)}
+.colm{display:flex;flex-direction:column;gap:14px;min-height:0}
+.title{display:flex;align-items:flex-end;gap:12px}
+.title h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.title .s{color:var(--muted)}
+.title .base{margin-left:auto;font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi .l{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.delta{display:inline-flex;align-items:center;gap:4px;font:600 11.5px var(--mono);padding:2px 7px;border-radius:6px;margin-left:8px;vertical-align:4px}
+.up{background:var(--ok-soft);color:var(--ok)}.down{background:var(--bad-soft);color:var(--bad)}
+.spark{position:absolute;right:12px;bottom:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ch{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ch h2{font-size:14px;font-weight:650}
+.ch .hint{color:var(--faint);font-size:12px}
+table{width:100%;border-collapse:collapse}
+th{font-size:11.5px;color:var(--faint);font-weight:600;text-align:right;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px}
+td:first-child{font-family:var(--ui);font-weight:600;font-size:13px}
+.pd{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:8px;vertical-align:0}
+.grade{display:inline-block;font:600 10.5px var(--ui);padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:1px}
+.g-imp{background:var(--ok-soft);color:var(--ok)}.g-reg{background:var(--bad-soft);color:var(--bad)}.g-tie{background:var(--surface-2);color:var(--muted)}.g-base{background:var(--accent-soft);color:var(--accent)}
+.ib{display:inline-block;width:70px;height:6px;border-radius:9px;background:var(--surface-2);margin-left:8px;vertical-align:1px;overflow:hidden}
+.ib b{display:block;height:100%;border-radius:9px}
+.heat{padding:12px 16px 14px}
+.hrow{display:grid;grid-template-columns:72px repeat(20,1fr);gap:3px;align-items:center;margin-bottom:3px}
+.hrow .p{font-size:12px;font-weight:600;color:var(--muted)}
+.cell{height:22px;border-radius:4px}
+.hx{display:grid;grid-template-columns:72px repeat(20,1fr);gap:3px;font:10px var(--mono);color:var(--faint);margin-top:4px}
+.hx span{text-align:center}
+.legend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-left:auto}
+.legend .gr{width:140px;height:8px;border-radius:9px;background:linear-gradient(90deg,#B91C1C,#F3D3D3,#F3F4F6,#BFE5CB,#15803D)}
+aside{display:flex;flex-direction:column;gap:14px}
+.drawer h3{font-size:14px;font-weight:650}
+.dl{padding:12px 16px;border-bottom:1px solid var(--line)}
+.dl .k{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.reason{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);font-size:12.5px}
+.reason .n{margin-left:auto;font:600 12px var(--mono)}
+.rb{height:6px;border-radius:9px;background:var(--surface-2);width:90px;overflow:hidden}
+.rb b{display:block;height:100%;border-radius:9px;background:var(--warn)}
+.diff{margin:12px 16px 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font:12px/1.7 var(--mono)}
+.diff div{padding:3px 10px}
+.minus{background:#FDECEC;color:#8A1C1C}.plus{background:#E8F6EC;color:#14532D}
+.gv{font:600 10px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:99px;margin-left:auto}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7"/></svg></i>auditgym</div>
+  <nav><span class="on">Benchmark</span><span>Episodes</span><span>Runs</span><span>Graph</span><span>Check report</span></nav>
+  <div class="r"><div class="sel">Split <b>train + dev</b></div><div class="sel">Baseline <b>recon</b></div><div class="seg"><span class="on">EN</span><span>RU</span></div><div class="seg"><span>Dark</span><span class="on">Light</span></div></div>
+</header>
+<main>
+  <div class="colm">
+    <div class="title"><h1>Policy benchmark</h1><span class="s">20 open episodes · eval mode · agents in isolated processes</span><span class="base">grades compare each policy with the baseline</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Best return · auditor</div><div class="v">0.958<span class="delta up">▲ 1.55</span></div><svg class="spark" width="96" height="30" viewBox="0 0 96 30"><polyline fill="none" stroke="#4F46E5" stroke-width="2" points="0,8 10,8 20,8 30,7 40,6 50,9 60,8 70,11 80,10 96,16"/></svg></div>
+      <div class="kpi"><div class="l">Mean F1 · auditor</div><div class="v">1.000<span class="delta up">▲ 0.78</span></div><svg class="spark" width="96" height="30" viewBox="0 0 96 30"><polyline fill="none" stroke="#0F9D8A" stroke-width="2" points="0,6 96,6"/></svg></div>
+      <div class="kpi"><div class="l">Fully closed episodes</div><div class="v">20/20<span class="delta up">▲ 20</span></div><svg class="spark" width="96" height="30" viewBox="0 0 96 30"><polyline fill="none" stroke="#0F9D8A" stroke-width="2" points="0,24 30,18 60,10 96,6"/></svg></div>
+      <div class="kpi"><div class="l">Mean steps · auditor</div><div class="v">20.9<span class="delta" style="background:var(--surface-2);color:var(--muted)">= 0.0</span></div><svg class="spark" width="96" height="30" viewBox="0 0 96 30"><polyline fill="none" stroke="#D97706" stroke-width="2" points="0,22 12,22 24,21 36,14 48,16 60,15 72,9 84,10 96,4"/></svg></div>
+    </div>
+    <section class="card">
+      <div class="ch"><h2>Policies</h2><span class="hint">mean over 20 episodes · grade vs baseline recon</span></div>
+      <table>
+        <tr><th>Policy</th><th>Return</th><th>F1</th><th>Precision</th><th>Recall</th><th>Steps</th><th>Closed</th><th>FP on clean</th></tr>
+        <tr><td><i class="pd" style="background:var(--s5)"></i>oracle <span class="grade g-tie">grader-side</span></td><td>1.000</td><td>1.000</td><td>0.750</td><td>0.750</td><td>0.0</td><td>100 %</td><td>0</td></tr>
+        <tr><td><i class="pd" style="background:var(--s1)"></i>auditor <span class="grade g-imp">Improvement</span></td><td>0.958<span class="ib"><b style="width:98%;background:var(--s1)"></b></span></td><td>1.000</td><td>0.750</td><td>0.750</td><td>20.9</td><td>100 %</td><td>0</td></tr>
+        <tr><td><i class="pd" style="background:var(--s3)"></i>recon <span class="grade g-base">Baseline</span></td><td>−0.591<span class="ib"><b style="width:20%;background:var(--s3)"></b></span></td><td>0.218</td><td>0.151</td><td>0.487</td><td>20.9</td><td>0 %</td><td>27</td></tr>
+        <tr><td><i class="pd" style="background:var(--s4)"></i>random <span class="grade g-reg">Regression</span></td><td>−1.000<span class="ib"><b style="width:2%;background:var(--s4)"></b></span></td><td>0.000</td><td>0.000</td><td>0.000</td><td>15.0</td><td>0 %</td><td>10</td></tr>
+        <tr><td><i class="pd" style="background:var(--s2)"></i>flag_all <span class="grade g-reg">Regression</span></td><td>−1.000<span class="ib"><b style="width:2%;background:var(--s2)"></b></span></td><td>0.000</td><td>0.000</td><td>0.000</td><td>3.0</td><td>0 %</td><td>150</td></tr>
+      </table>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>Return per episode</h2><span class="hint">train t01–t10 · dev d01–d10</span><div class="legend">−1<span class="gr"></span>+1</div></div>
+      <div class="heat">
+        <div class="hrow" id="r-oracle"><span class="p">oracle</span></div>
+        <div class="hrow" id="r-auditor"><span class="p">auditor</span></div>
+        <div class="hrow" id="r-recon"><span class="p">recon</span></div>
+        <div class="hrow" id="r-random"><span class="p">random</span></div>
+        <div class="hrow" id="r-flag_all"><span class="p">flag_all</span></div>
+        <div class="hx"><span></span><span>t01</span><span>t02</span><span>t03</span><span>t04</span><span>t05</span><span>t06</span><span>t07</span><span>t08</span><span>t09</span><span>t10</span><span>d01</span><span>d02</span><span>d03</span><span>d04</span><span>d05</span><span>d06</span><span>d07</span><span>d08</span><span>d09</span><span>d10</span></div>
+      </div>
+    </section>
+  </div>
+  <aside>
+    <section class="card drawer">
+      <div class="ch"><h3>recon · why it fails</h3><span class="gv">grader view</span></div>
+      <div class="dl"><div class="k">Dev episodes · misses and false positives</div></div>
+      <div class="reason">missed · wrong_fx_rate · not_flagged<span class="rb"><b style="width:14%"></b></span><span class="n">5</span></div>
+      <div class="reason">missed · wrong_period · not_flagged<span class="rb"><b style="width:14%"></b></span><span class="n">5</span></div>
+      <div class="reason">FP · wrong_fx_rate<span class="rb"><b style="width:100%;background:var(--bad)"></b></span><span class="n">36</span></div>
+      <div class="reason">FP · wrong_period<span class="rb"><b style="width:67%;background:var(--bad)"></b></span><span class="n">24</span></div>
+      <div class="reason">FP · duplicate_invoice<span class="rb"><b style="width:61%;background:var(--bad)"></b></span><span class="n">22</span></div>
+      <div class="reason">FP · unallocated_payment<span class="rb"><b style="width:36%;background:var(--bad)"></b></span><span class="n">13</span></div>
+      <div class="dl"><div class="k">Example · d08 · iss_02</div></div>
+      <div class="diff"><div class="minus">− rate used 126.798 (2025-06-30, UTC date)</div><div class="plus">+ policy 126.510 (2025-07-01, local date)</div><div class="minus">− claimed nothing</div><div class="plus">+ expected 3 560.66 ₸ · wrong_fx_rate</div></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h3 style="font-size:14px;font-weight:650">Budget sweep · dev</h3></div>
+      <svg width="340" height="150" viewBox="0 0 340 150" style="display:block">
+        <g stroke="#E7E8EC"><line x1="40" y1="20" x2="320" y2="20"/><line x1="40" y1="65" x2="320" y2="65"/><line x1="40" y1="110" x2="320" y2="110"/></g>
+        <g font-family="Consolas,monospace" font-size="10" fill="#8B919C"><text x="12" y="23">1.0</text><text x="12" y="68">0.5</text><text x="18" y="113">0</text><text x="40" y="132">20</text><text x="170" y="132">50</text><text x="300" y="132">100</text></g>
+        <polyline fill="none" stroke="#4F46E5" stroke-width="2.5" points="45,60 175,20 305,20"/>
+        <polyline fill="none" stroke="#D97706" stroke-width="2.5" points="45,98 175,88 305,88"/>
+        <g fill="#4F46E5"><circle cx="45" cy="60" r="4"/><circle cx="175" cy="20" r="4"/><circle cx="305" cy="20" r="4"/></g>
+        <g fill="#D97706"><circle cx="45" cy="98" r="4"/><circle cx="175" cy="88" r="4"/><circle cx="305" cy="88" r="4"/></g>
+        <text x="220" y="40" font-size="11" fill="#4F46E5" font-family="Segoe UI">auditor F1</text><text x="220" y="80" font-size="11" fill="#D97706" font-family="Segoe UI">recon F1</text>
+      </svg>
+    </section>
+  </aside>
+</main>
+<script>
+const data={"oracle":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"auditor":[0.972,0.97,0.972,0.974,0.98,0.974,0.946,0.958,0.98,0.972,0.97,0.954,0.944,0.95,0.952,0.946,0.956,0.96,0.918,0.916],"recon":[-1,-1,-0.028,-0.226,-0.353,-0.226,-1,-0.542,-1,-1,-1,-1,-0.056,-0.435,-1,-0.554,-0.822,-0.313,-0.786,0.516],"random":Array(20).fill(-1),"flag_all":Array(20).fill(-1)};
+function col(v){const t=(v+1)/2;const a=[185,28,28],m=[243,244,246],b=[21,128,61];const c=t<.5?a.map((x,i)=>x+(m[i]-x)*(t/.5)):m.map((x,i)=>x+(b[i]-x)*((t-.5)/.5));return `rgb(${c.map(Math.round).join(",")})`}
+for(const [k,vals] of Object.entries(data)){const row=document.getElementById("r-"+k);vals.forEach(v=>{const d=document.createElement("span");d.className="cell";d.style.background=col(v);d.title=v;row.appendChild(d)})}
+</script>
+</body>
+</html>

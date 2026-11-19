@@ -1,0 +1,232 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "8840212650077123541",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "errors": {
+      "unallocated_payment": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "KZT",
+    "foreign_currencies": [
+      "AED",
+      "USD",
+      "EUR"
+    ],
+    "timezone": "Asia/Almaty",
+    "period": "2026-02",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "utc",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 1,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 6,
+      "suppliers": 7,
+      "sales_invoices": 18,
+      "purchase_invoices": 8,
+      "prior_invoices": 5,
+      "target_rows": 285
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Mirana Foods LLP",
+    "customers": 6,
+    "suppliers": 8,
+    "invoices": 48,
+    "payments": 32,
+    "misc_journals": 47,
+    "holidays": []
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "single",
+      "targets": {
+        "payment": "rc_eb7de9b2",
+        "invoice": "si_b0457b45"
+      },
+      "change": {
+        "alloc": 0
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_e3e825d0",
+        "pi_9cf3bb7e"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_2e18b647",
+        "pi_85c9d62d"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_5850ea5a",
+        "rc_f8794667",
+        "rc_19f19bfe"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_a15270d9",
+        "si_eaa56d9c",
+        "rc_e6e1e26c"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_96a8f27c",
+        "rc_de374089"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_5b3df38b",
+        "rc_96c62719",
+        "rf_a2c92752"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_2dda7788"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_71c3854a"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_4dbbe43d"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_008e237e"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_2a93427e"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "gl_1674d98b",
+      "record": {
+        "row_id": "gl_1674d98b",
+        "timestamp": "2026-02-23T03:19:01Z",
+        "account": "1100",
+        "debit_minor": 0,
+        "credit_minor": 62336810,
+        "currency": "KZT",
+        "entity_id": "cus_32d82cd1",
+        "invoice_id": "si_b0457b45",
+        "payment_id": "rc_eb7de9b2"
+      }
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "gl_b9f09e1e",
+      "record": {
+        "row_id": "gl_b9f09e1e",
+        "timestamp": "2026-02-23T03:19:01Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 62367449,
+        "currency": "KZT",
+        "entity_id": "cus_32d82cd1",
+        "invoice_id": null,
+        "payment_id": "rc_eb7de9b2"
+      }
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "gl_ca6b24ac",
+      "record": {
+        "row_id": "gl_ca6b24ac",
+        "timestamp": "2026-02-23T03:19:01Z",
+        "account": "7900",
+        "debit_minor": 0,
+        "credit_minor": 30639,
+        "currency": "KZT",
+        "entity_id": "cus_32d82cd1",
+        "invoice_id": null,
+        "payment_id": "rc_eb7de9b2"
+      }
+    }
+  ],
+  "clean_digest": "d9c807ad820601a482779d09dcb99d8d08bdb27603fe8f94fd4537faf4af5a79",
+  "final_digest": "1708d534bee75813ba07391d9e98b58d8e60835d52e23cd7c85c9a3797edf3f7",
+  "rejected_attempts": []
+}

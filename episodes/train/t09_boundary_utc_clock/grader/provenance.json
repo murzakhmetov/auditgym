@@ -1,0 +1,232 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "4482910736655019231",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "timezone": "Asia/Almaty",
+    "ts_repr": "utc",
+    "errors": {
+      "wrong_period": 2
+    },
+    "variants": {
+      "wrong_period": [
+        "utc_wall_clock"
+      ]
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "GBP",
+    "foreign_currencies": [
+      "USD"
+    ],
+    "timezone": "Asia/Almaty",
+    "period": "2025-08",
+    "rounding": "half_up",
+    "id_style": "numeric",
+    "ts_repr": "utc",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 2
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 7,
+      "suppliers": 7,
+      "sales_invoices": 16,
+      "purchase_invoices": 10,
+      "prior_invoices": 5,
+      "target_rows": 252
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Selix Machinery LLP",
+    "customers": 7,
+    "suppliers": 7,
+    "invoices": 50,
+    "payments": 26,
+    "misc_journals": 46,
+    "holidays": [
+      "2025-08-28"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "single",
+      "targets": {
+        "invoice": "17850965"
+      },
+      "change": {
+        "posting_ts": "2025-08-31T14:11:43+00:00"
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "single",
+      "targets": {
+        "invoice": "13281210"
+      },
+      "change": {
+        "posting_ts": "2025-08-31T15:22:49+00:00"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "29671770",
+        "26091198"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "21816489",
+        "26210863"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "11125157",
+        "39875342",
+        "34515970"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "17657601",
+        "18752936",
+        "32872357"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "15306114",
+        "35989797"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "17034415",
+        "32624051",
+        "58771457"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "31932125"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "13064664"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "27617162"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "27627782"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "15879279"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "94109482",
+      "field": "timestamp",
+      "before": "2025-08-31T20:22:49Z",
+      "after": "2025-08-31T15:22:49Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "96038331",
+      "field": "timestamp",
+      "before": "2025-08-31T19:11:43Z",
+      "after": "2025-08-31T14:11:43Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "97580266",
+      "field": "timestamp",
+      "before": "2025-08-31T20:22:49Z",
+      "after": "2025-08-31T15:22:49Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "99829257",
+      "field": "timestamp",
+      "before": "2025-08-31T19:11:43Z",
+      "after": "2025-08-31T14:11:43Z"
+    }
+  ],
+  "clean_digest": "16994c6e0f4003181db652b3b72dbd81b02cf2623dbcdced7aa71659fb62a0ff",
+  "final_digest": "1c14248ffe9a4e388fa144345bb4c7e3999697a6a2475fef4aa6a71bbdec7b23",
+  "rejected_attempts": []
+}

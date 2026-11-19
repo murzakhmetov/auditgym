@@ -1,0 +1,338 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "6156091238847763121",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "base_currency": "EUR",
+    "timezone": "Europe/Berlin",
+    "errors": {
+      "unallocated_payment": 2
+    },
+    "variants": {
+      "unallocated_payment": [
+        "missing"
+      ]
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "EUR",
+    "foreign_currencies": [
+      "USD",
+      "CHF",
+      "JPY"
+    ],
+    "timezone": "Europe/Berlin",
+    "period": "2026-01",
+    "rounding": "half_even",
+    "id_style": "slashed",
+    "ts_repr": "mixed",
+    "row_order": "time",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 2,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 10,
+      "suppliers": 10,
+      "sales_invoices": 38,
+      "purchase_invoices": 15,
+      "prior_invoices": 5,
+      "target_rows": 774
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Torara Foods GmbH",
+    "customers": 11,
+    "suppliers": 10,
+    "invoices": 86,
+    "payments": 59,
+    "misc_journals": 218,
+    "holidays": [
+      "2026-01-20"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "single",
+      "targets": {
+        "payment": "BR/2026/952808",
+        "invoice": "SI/2026/535860"
+      },
+      "change": {
+        "alloc": 0
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "single",
+      "targets": {
+        "payment": "BR/2026/636791",
+        "invoice": "SI/2026/757518"
+      },
+      "change": {
+        "alloc": 0
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2026/523994",
+        "PI/2026/215572"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2026/961213",
+        "PI/2026/683038"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "PI/2026/678096",
+        "PI/2026/691274"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "PI/2026/528447",
+        "PI/2026/306889"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2026/586771",
+        "BR/2026/333263",
+        "BR/2026/341162"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2026/962359",
+        "BR/2026/754596",
+        "BR/2026/251849"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "SI/2026/306465",
+        "SI/2026/483867",
+        "BR/2026/972079"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "SI/2026/895846",
+        "BR/2026/214576"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "SI/2026/209821",
+        "BR/2026/126297"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "SI/2026/726523",
+        "BR/2026/550652",
+        "RF/2026/914757"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2026/633253"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2026/727794"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/431915"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/762063"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/504057"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2026/677245"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "PI/2026/851567"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "SI/2026/785533"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "SI/2026/122227"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "J/2026/298966",
+      "record": {
+        "row_id": "J/2026/298966",
+        "timestamp": "2026-01-19T17:41:57Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 617974,
+        "currency": "EUR",
+        "entity_id": "CU/831893",
+        "invoice_id": null,
+        "payment_id": "BR/2026/952808"
+      }
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "J/2026/494572",
+      "record": {
+        "row_id": "J/2026/494572",
+        "timestamp": "2026-01-19T12:41:57-05:00",
+        "account": "1100",
+        "debit_minor": 0,
+        "credit_minor": 615835,
+        "currency": "EUR",
+        "entity_id": "CU/831893",
+        "invoice_id": "SI/2026/535860",
+        "payment_id": "BR/2026/952808"
+      }
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "J/2026/541529",
+      "record": {
+        "row_id": "J/2026/541529",
+        "timestamp": "2026-01-26T17:20:51Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 105075,
+        "currency": "EUR",
+        "entity_id": "CU/226933",
+        "invoice_id": null,
+        "payment_id": "BR/2026/636791"
+      }
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "J/2026/597506",
+      "record": {
+        "row_id": "J/2026/597506",
+        "timestamp": "2026-01-20T02:41:57+09:00",
+        "account": "7900",
+        "debit_minor": 0,
+        "credit_minor": 2139,
+        "currency": "EUR",
+        "entity_id": "CU/831893",
+        "invoice_id": null,
+        "payment_id": "BR/2026/952808"
+      }
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "J/2026/881137",
+      "record": {
+        "row_id": "J/2026/881137",
+        "timestamp": "2026-01-26T18:20:51+01:00",
+        "account": "1100",
+        "debit_minor": 0,
+        "credit_minor": 105075,
+        "currency": "EUR",
+        "entity_id": "CU/226933",
+        "invoice_id": "SI/2026/757518",
+        "payment_id": "BR/2026/636791"
+      }
+    }
+  ],
+  "clean_digest": "9d2e643e572d41114a0beeb3adca8873f57ad35f46976920b7dd549616015144",
+  "final_digest": "f15ed8228e10a1dc401fea3db45eecd53a28120bfc27c9859e475187a1d1db55",
+  "rejected_attempts": []
+}

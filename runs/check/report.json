@@ -1,0 +1,788 @@
+{
+  "version": "0.1.0",
+  "ok": true,
+  "elapsed_s": 27.8,
+  "counts": {
+    "A_unit_tests": {
+      "passed": 1,
+      "total": 1
+    },
+    "B_committed_episodes": {
+      "passed": 40,
+      "total": 40
+    },
+    "C_data": {
+      "passed": 21,
+      "total": 21
+    },
+    "C_reward": {
+      "passed": 29,
+      "total": 29
+    },
+    "D_paired": {
+      "passed": 27,
+      "total": 27
+    },
+    "E_leaks": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "sections": {
+    "A_unit_tests": [
+      {
+        "check": "unittest: 83 tests",
+        "ok": true,
+        "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
+      }
+    ],
+    "B_committed_episodes": [
+      {
+        "check": "train/t01_clean_small regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t01_clean_small verifies (0 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t02_clean_distractors regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t02_clean_distractors verifies (0 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t03_duplicate regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t03_duplicate verifies (1 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t04_unallocated regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t04_unallocated verifies (1 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t05_fx_rate regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t05_fx_rate verifies (1 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t06_period regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t06_period verifies (1 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t07_boundary_fx_payment regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t07_boundary_fx_payment verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t08_fx_partial_allocation regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t08_fx_partial_allocation verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t09_boundary_utc_clock regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t09_boundary_utc_clock verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/t10_duplicate_twin_legit regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "train/t10_duplicate_twin_legit verifies (0 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d01_clean_repeats_jpy regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d01_clean_repeats_jpy verifies (0 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d02_clean_kwd_medium regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d02_clean_kwd_medium verifies (0 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d03_duplicates_gbp regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d03_duplicates_gbp verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d04_unallocated_missing_eur regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d04_unallocated_missing_eur verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d05_fx_utc_stale_mixed_ts regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d05_fx_utc_stale_mixed_ts verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d06_period_dst_march regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d06_period_dst_march verifies (2 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d07_boundary_negative_offset regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d07_boundary_negative_offset verifies (3 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d08_both_interacting_kzt regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d08_both_interacting_kzt verifies (5 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d09_large_mixed regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d09_large_mixed verifies (4 issues)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "dev/d10_large_dense_quarter_hour regenerates byte-identically",
+        "ok": true,
+        "detail": "missing or different; run `python -m auditgym build-splits`"
+      },
+      {
+        "check": "dev/d10_large_dense_quarter_hour verifies (10 issues)",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "C_data": [
+      {
+        "check": "h01_clean verifies (0 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h02_clean verifies (0 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h03_clean verifies (0 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h04_clean verifies (0 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h05_clean verifies (0 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h06_interacting verifies (2 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h07_interacting verifies (2 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h08_interacting verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h09_interacting verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h10_interacting verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h11_mixed verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h12_mixed verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h13_mixed verifies (6 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h14_mixed verifies (3 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h15_mixed verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h16_mixed verifies (5 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h17_mixed verifies (2 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h18_mixed verifies (3 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h19_mixed verifies (4 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h20_mixed verifies (5 issues, 1 attempt(s))",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "resampled attempts stay rare (0 over 20 episodes)",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "C_reward": [
+      {
+        "check": "oracle reaches reward 1.0 on all 20 episodes",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "flag-everything attack scores poorly (mean return <= -0.9)",
+        "ok": true,
+        "detail": "-1.0"
+      },
+      {
+        "check": "scripted auditor closes every episode (no FP, no FN)",
+        "ok": true,
+        "detail": "1.0"
+      },
+      {
+        "check": "ordering: oracle > auditor > recon > flag_all",
+        "ok": true,
+        "detail": "{\"auditor\": 0.9394, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -1.0, \"recon\": -0.2191}"
+      },
+      {
+        "check": "random explorer stays far below the auditor",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "every run finishes inside 100 steps and 60 s",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "no agent process failed",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_a82d2576fa61f5f8: silence beats a false accusation on a clean ledger",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_a82d2576fa61f5f8: saving steps separates equal answers only slightly",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_a00ab5ca4acb3193: silence beats a false accusation on a clean ledger",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_a00ab5ca4acb3193: saving steps separates equal answers only slightly",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_30bc013036ba23ec: silence beats a false accusation on a clean ledger",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_30bc013036ba23ec: saving steps separates equal answers only slightly",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: correct answer with evidence beats silence",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: repeating findings gains nothing",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: guessed ids is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: unsupported evidence is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: wrong currency is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: amount off by 3 tolerances is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: citing documents by alias keeps full credit",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0b0be35971deb0e4: saving steps separates equal answers only slightly",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: correct answer with evidence beats silence",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: repeating findings gains nothing",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: guessed ids is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: unsupported evidence is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: wrong currency is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: amount off by 3 tolerances is not a true positive",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: citing documents by alias keeps full credit",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_0751dd245072d0ab: saving steps separates equal answers only slightly",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "D_paired": [
+      {
+        "check": "h01_clean: same seed and config regenerate identical records and answer key",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h02_clean: same seed and config regenerate identical records and answer key",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h03_clean: same seed and config regenerate identical records and answer key",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h04_clean: same seed and config regenerate identical records and answer key",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h05_clean: same seed and config regenerate identical records and answer key",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h02_clean: same actions reproduce transitions and reward (random explorer)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h02_clean: isolated child process and in-process runs are identical",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "h01_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.978->0.978 verify=[]"
+      },
+      {
+        "check": "h01_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.978->0.978 verify=[]"
+      },
+      {
+        "check": "h02_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 verify=[]"
+      },
+      {
+        "check": "h02_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 verify=[]"
+      },
+      {
+        "check": "h03_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.902->0.902 verify=[]"
+      },
+      {
+        "check": "h03_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.902->0.902 verify=[]"
+      },
+      {
+        "check": "h04_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.976->0.976 verify=[]"
+      },
+      {
+        "check": "h04_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.976->0.976 verify=[]"
+      },
+      {
+        "check": "h05_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.962->0.962 verify=[]"
+      },
+      {
+        "check": "h05_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.962->0.962 verify=[]"
+      },
+      {
+        "check": "h06_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.958->0.958 verify=[]"
+      },
+      {
+        "check": "h06_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.958->0.958 verify=[]"
+      },
+      {
+        "check": "h07_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 verify=[]"
+      },
+      {
+        "check": "h07_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 verify=[]"
+      },
+      {
+        "check": "h08_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.974->0.974 verify=[]"
+      },
+      {
+        "check": "h08_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.974->0.974 verify=[]"
+      },
+      {
+        "check": "h09_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 verify=[]"
+      },
+      {
+        "check": "h09_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 verify=[]"
+      },
+      {
+        "check": "h10_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 verify=[]"
+      },
+      {
+        "check": "h10_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 verify=[]"
+      }
+    ],
+    "E_leaks": [
+      {
+        "check": "1732 observations contain only the allowed fields",
+        "ok": true,
+        "detail": "0 bad"
+      },
+      {
+        "check": "no answer-key markers in any observation",
+        "ok": true,
+        "detail": "0 bad"
+      },
+      {
+        "check": "oracle trajectories are never published",
+        "ok": true,
+        "detail": ""
+      }
+    ]
+  },
+  "summary": {
+    "hidden_like/auditor": {
+      "split": "hidden_like",
+      "policy": "auditor",
+      "episodes": 20,
+      "return": 0.9394,
+      "return_experimental": 0.9394,
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 1.0,
+      "steps": 30.3,
+      "agent_time_s": 0.0126,
+      "closed_share": 1.0,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": 0.9548,
+      "return_with_errors": 0.9343,
+      "return_interacting": 0.94,
+      "false_positives_on_clean": 0,
+      "recall_by_type": {
+        "duplicate_invoice": 1.0,
+        "unallocated_payment": 1.0,
+        "wrong_fx_rate": 1.0,
+        "wrong_period": 1.0
+      },
+      "miss_reasons": {}
+    },
+    "hidden_like/flag_all": {
+      "split": "hidden_like",
+      "policy": "flag_all",
+      "episodes": 20,
+      "return": -1.0,
+      "return_experimental": -0.9903,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "steps": 3.0,
+      "agent_time_s": 0.003,
+      "closed_share": 0.0,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": -1.0,
+      "return_with_errors": -1.0,
+      "return_interacting": -1.0,
+      "false_positives_on_clean": 150,
+      "recall_by_type": {
+        "duplicate_invoice": 0.0,
+        "unallocated_payment": 0.0,
+        "wrong_fx_rate": 0.0,
+        "wrong_period": 0.0
+      },
+      "miss_reasons": {
+        "amount": 2,
+        "evidence": 1,
+        "search": 53
+      }
+    },
+    "hidden_like/oracle": {
+      "split": "hidden_like",
+      "policy": "oracle",
+      "episodes": 20,
+      "return": 1.0,
+      "return_experimental": 1.0,
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 1.0,
+      "steps": 0.0,
+      "agent_time_s": 0.0,
+      "closed_share": 1.0,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": 1.0,
+      "return_with_errors": 1.0,
+      "return_interacting": 1.0,
+      "false_positives_on_clean": 0,
+      "recall_by_type": {
+        "duplicate_invoice": 1.0,
+        "unallocated_payment": 1.0,
+        "wrong_fx_rate": 1.0,
+        "wrong_period": 1.0
+      },
+      "miss_reasons": {}
+    },
+    "hidden_like/random": {
+      "split": "hidden_like",
+      "policy": "random",
+      "episodes": 20,
+      "return": -1.0,
+      "return_experimental": -1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "steps": 15.0,
+      "agent_time_s": 0.0016,
+      "closed_share": 0.0,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": -1.0,
+      "return_with_errors": -1.0,
+      "return_interacting": -1.0,
+      "false_positives_on_clean": 10,
+      "recall_by_type": {
+        "duplicate_invoice": 0.0,
+        "unallocated_payment": 0.0,
+        "wrong_fx_rate": 0.0,
+        "wrong_period": 0.0
+      },
+      "miss_reasons": {
+        "search": 56
+      }
+    },
+    "hidden_like/recon": {
+      "split": "hidden_like",
+      "policy": "recon",
+      "episodes": 20,
+      "return": -0.2191,
+      "return_experimental": -0.2191,
+      "precision": 0.3028,
+      "recall": 0.75,
+      "f1": 0.4151,
+      "steps": 30.3,
+      "agent_time_s": 0.0062,
+      "closed_share": 0.0,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": -1.0,
+      "return_with_errors": 0.0411,
+      "return_interacting": 0.1256,
+      "false_positives_on_clean": 24,
+      "recall_by_type": {
+        "duplicate_invoice": 1.0,
+        "unallocated_payment": 1.0,
+        "wrong_fx_rate": 1.0,
+        "wrong_period": 1.0
+      },
+      "miss_reasons": {}
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_dc0ead23b9be8504",
+  "company": {
+    "name": "Mirana Foods LLP",
+    "synthetic": true
+  },
+  "base_currency": "KZT",
+  "currency_exponents": {
+    "KZT": 2,
+    "AED": 2,
+    "USD": 2,
+    "EUR": 2
+  },
+  "period_start": "2026-02-01T00:00:00+05:00",
+  "period_end": "2026-03-01T00:00:00+05:00",
+  "ledger_extract_end": "2026-03-08T00:00:00+05:00",
+  "timezone": "Asia/Almaty",
+  "record_counts": {
+    "ledger": 285,
+    "invoices": 48,
+    "payments": 32,
+    "fx": 210
+  },
+  "document_counts": {
+    "invoices": 48,
+    "payments": 32,
+    "total": 80
+  },
+  "rounding": {
+    "mode": "half_up",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

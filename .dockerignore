@@ -1,0 +1,10 @@
+.git
+**/__pycache__
+**/*.pyc
+runs/check
+runs/tmp
+viewer/sample_bundle.json
+.claude
+.playwright-mcp
+.github
+docs/design

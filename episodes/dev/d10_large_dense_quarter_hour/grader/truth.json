@@ -1,0 +1,449 @@
+{
+  "schema_version": "auditgym/1.0",
+  "episode_id": "ep_912cb8fa2d34f4c4",
+  "issues": [
+    {
+      "issue_id": "iss_01",
+      "type": "duplicate_invoice",
+      "variant": "same_day_copy",
+      "scenario": "single",
+      "affected_ids": [
+        "BILL-205713",
+        "BILL-756511"
+      ],
+      "expected_amount_minor": 230666,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-653382",
+          "DOC-882046",
+          "GL-682401",
+          "GL-656946"
+        ],
+        [
+          "DOC-653382",
+          "DOC-882046",
+          "GL-551714",
+          "GL-902568"
+        ]
+      ],
+      "explanation": "Purchase invoice entered twice: same supplier, date, currency, total and line references; both copies are posted to accounts payable."
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "duplicate_invoice",
+      "variant": "same_day_copy",
+      "scenario": "single",
+      "affected_ids": [
+        "BILL-481672",
+        "BILL-460920"
+      ],
+      "expected_amount_minor": 36426,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-293733",
+          "DOC-659230",
+          "GL-972214",
+          "GL-613575"
+        ],
+        [
+          "DOC-293733",
+          "DOC-659230",
+          "GL-728519",
+          "GL-734165"
+        ]
+      ],
+      "explanation": "Purchase invoice entered twice: same supplier, date, currency, total and line references; both copies are posted to accounts payable."
+    },
+    {
+      "issue_id": "iss_03",
+      "type": "unallocated_payment",
+      "variant": "partial",
+      "scenario": "single",
+      "affected_ids": [
+        "RCPT-227768",
+        "INV-546979"
+      ],
+      "expected_amount_minor": 425895,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-948752",
+          "DOC-494845",
+          "GL-459386"
+        ]
+      ],
+      "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."
+    },
+    {
+      "issue_id": "iss_04",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "single",
+      "affected_ids": [
+        "RCPT-206697",
+        "INV-336620"
+      ],
+      "expected_amount_minor": 104827,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-569251",
+          "DOC-850154",
+          "GL-339467"
+        ]
+      ],
+      "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."
+    },
+    {
+      "issue_id": "iss_05",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "single",
+      "affected_ids": [
+        "BILL-949379"
+      ],
+      "expected_amount_minor": 846,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-559994",
+          "GL-843668",
+          "2027-11-05:CHF:EUR"
+        ],
+        [
+          "DOC-559994",
+          "GL-503692",
+          "2027-11-05:CHF:EUR"
+        ]
+      ],
+      "explanation": "Converted at 1.05710 instead of the policy rate 1.05619 for the document's local date 2027-11-05."
+    },
+    {
+      "issue_id": "iss_06",
+      "type": "wrong_fx_rate",
+      "variant": "stale_rate",
+      "scenario": "single",
+      "affected_ids": [
+        "INV-164136"
+      ],
+      "expected_amount_minor": 305,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-595574",
+          "GL-967297",
+          "2027-11-11:CHF:EUR"
+        ],
+        [
+          "DOC-595574",
+          "GL-712947",
+          "2027-11-11:CHF:EUR"
+        ]
+      ],
+      "explanation": "Converted at 1.06735 instead of the policy rate 1.06672 for the document's local date 2027-11-11."
+    },
+    {
+      "issue_id": "iss_07",
+      "type": "wrong_period",
+      "variant": "booked_late",
+      "scenario": "single",
+      "affected_ids": [
+        "BILL-327414"
+      ],
+      "expected_amount_minor": 92947,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-407172",
+          "GL-589703"
+        ],
+        [
+          "DOC-407172",
+          "GL-873480"
+        ]
+      ],
+      "explanation": "Document belongs to the reporting period by its own timestamp in company time, but is posted outside the reporting period."
+    },
+    {
+      "issue_id": "iss_08",
+      "type": "wrong_period",
+      "variant": "booked_late",
+      "scenario": "single",
+      "affected_ids": [
+        "INV-964568"
+      ],
+      "expected_amount_minor": 215910,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-491515",
+          "GL-535998"
+        ],
+        [
+          "DOC-491515",
+          "GL-150441"
+        ]
+      ],
+      "explanation": "Document belongs to the reporting period by its own timestamp in company time, but is posted outside the reporting period."
+    },
+    {
+      "issue_id": "iss_09",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "fx_invoice_partial_allocation",
+      "affected_ids": [
+        "RCPT-682429",
+        "INV-231745"
+      ],
+      "expected_amount_minor": 354656,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-254333",
+          "DOC-321586",
+          "GL-866447"
+        ]
+      ],
+      "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."
+    },
+    {
+      "issue_id": "iss_10",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "fx_invoice_partial_allocation",
+      "affected_ids": [
+        "INV-231745"
+      ],
+      "expected_amount_minor": 2586,
+      "currency": "EUR",
+      "tolerance_minor": 2,
+      "evidence_sets": [
+        [
+          "DOC-321586",
+          "GL-492016",
+          "2027-11-15:CHF:EUR"
+        ],
+        [
+          "DOC-321586",
+          "GL-825331",
+          "2027-11-15:CHF:EUR"
+        ]
+      ],
+      "explanation": "Converted at 1.07089 instead of the policy rate 1.07613 for the document's local date 2027-11-15."
+    }
+  ],
+  "id_aliases": {
+    "DOC-437702": "INV-651784",
+    "DOC-109466": "BILL-999166",
+    "DOC-453654": "INV-616170",
+    "DOC-330874": "INV-584137",
+    "DOC-271722": "BILL-856758",
+    "DOC-476537": "BILL-348193",
+    "DOC-611638": "INV-255451",
+    "DOC-763796": "INV-665317",
+    "DOC-792876": "INV-711834",
+    "DOC-118628": "INV-576151",
+    "DOC-233930": "INV-653228",
+    "DOC-931002": "INV-621504",
+    "DOC-826155": "INV-624467",
+    "DOC-809175": "INV-785394",
+    "DOC-372288": "INV-194697",
+    "DOC-205731": "INV-273215",
+    "DOC-773790": "INV-261828",
+    "DOC-106727": "INV-732517",
+    "DOC-161977": "INV-383580",
+    "DOC-509338": "INV-363026",
+    "DOC-882927": "INV-104497",
+    "DOC-249970": "INV-239996",
+    "DOC-277736": "INV-489612",
+    "DOC-234839": "INV-622267",
+    "DOC-234536": "INV-816764",
+    "DOC-946386": "INV-409312",
+    "DOC-985243": "INV-434856",
+    "DOC-586668": "INV-515168",
+    "DOC-793909": "INV-410846",
+    "DOC-602069": "INV-649145",
+    "DOC-321448": "INV-182738",
+    "DOC-173283": "INV-270948",
+    "DOC-947768": "INV-427981",
+    "DOC-445757": "INV-382922",
+    "DOC-344766": "INV-316802",
+    "DOC-565456": "INV-609941",
+    "DOC-295583": "INV-586398",
+    "DOC-646251": "INV-975045",
+    "DOC-130066": "INV-154561",
+    "DOC-589678": "INV-349887",
+    "DOC-894466": "INV-368914",
+    "DOC-776368": "INV-129315",
+    "DOC-764055": "INV-274314",
+    "DOC-110223": "INV-451016",
+    "DOC-578646": "INV-533083",
+    "DOC-503158": "INV-664068",
+    "DOC-396258": "INV-950200",
+    "DOC-842502": "INV-313803",
+    "DOC-170290": "INV-614977",
+    "DOC-178667": "INV-761438",
+    "DOC-710514": "INV-959807",
+    "DOC-733667": "INV-305936",
+    "DOC-321634": "INV-678167",
+    "DOC-921936": "INV-950355",
+    "DOC-648838": "INV-480490",
+    "DOC-120827": "INV-539781",
+    "DOC-887229": "BILL-718703",
+    "DOC-640206": "BILL-444355",
+    "DOC-522565": "BILL-423677",
+    "DOC-256281": "BILL-515937",
+    "DOC-778711": "BILL-759301",
+    "DOC-270576": "BILL-230781",
+    "DOC-343585": "BILL-674115",
+    "DOC-702738": "BILL-740755",
+    "DOC-292396": "BILL-551978",
+    "DOC-298804": "BILL-915282",
+    "DOC-881168": "BILL-363942",
+    "DOC-690585": "BILL-704475",
+    "DOC-797041": "BILL-261629",
+    "DOC-491280": "BILL-968947",
+    "DOC-831926": "BILL-334553",
+    "DOC-787616": "BILL-284586",
+    "DOC-421401": "BILL-422671",
+    "DOC-154056": "BILL-167822",
+    "DOC-401399": "BILL-120119",
+    "DOC-605182": "BILL-515683",
+    "DOC-690305": "BILL-826292",
+    "DOC-559142": "INV-491051",
+    "DOC-588946": "BILL-429469",
+    "DOC-628116": "BILL-704101",
+    "DOC-525552": "BILL-742670",
+    "DOC-248850": "BILL-743697",
+    "DOC-877537": "BILL-358021",
+    "DOC-318420": "BILL-130738",
+    "DOC-931761": "BILL-705648",
+    "DOC-698208": "BILL-730580",
+    "DOC-639361": "BILL-185172",
+    "DOC-774085": "BILL-393475",
+    "DOC-853808": "BILL-309950",
+    "DOC-422809": "BILL-804146",
+    "DOC-635605": "INV-716587",
+    "DOC-690154": "INV-160828",
+    "DOC-449330": "INV-248342",
+    "DOC-674563": "INV-206514",
+    "DOC-948882": "INV-783826",
+    "DOC-656837": "INV-182819",
+    "DOC-682266": "INV-554012",
+    "DOC-119281": "INV-116605",
+    "DOC-963613": "INV-883882",
+    "DOC-128258": "INV-922087",
+    "DOC-366011": "INV-785353",
+    "DOC-676313": "INV-438373",
+    "DOC-756127": "INV-129469",
+    "DOC-504427": "BILL-453804",
+    "DOC-165764": "INV-380555",
+    "DOC-597916": "INV-641435",
+    "DOC-247397": "BILL-658537",
+    "DOC-347790": "INV-535767",
+    "DOC-738437": "INV-401968",
+    "DOC-199397": "INV-541739",
+    "DOC-698266": "INV-107741",
+    "DOC-267600": "INV-947586",
+    "DOC-653382": "BILL-205713",
+    "DOC-882046": "BILL-756511",
+    "DOC-293733": "BILL-481672",
+    "DOC-659230": "BILL-460920",
+    "DOC-494845": "INV-546979",
+    "DOC-850154": "INV-336620",
+    "DOC-559994": "BILL-949379",
+    "DOC-595574": "INV-164136",
+    "DOC-491515": "INV-964568",
+    "DOC-407172": "BILL-327414",
+    "DOC-321586": "INV-231745",
+    "DOC-821655": "RCPT-692480",
+    "DOC-158574": "RCPT-815308",
+    "DOC-357688": "PAY-767903",
+    "DOC-152548": "RCPT-513630",
+    "DOC-857261": "RCPT-602606",
+    "DOC-853859": "RCPT-792064",
+    "DOC-113436": "RCPT-268910",
+    "DOC-410646": "RCPT-572556",
+    "DOC-700635": "RCPT-534575",
+    "DOC-373828": "RCPT-130006",
+    "DOC-762262": "RCPT-619654",
+    "DOC-404705": "RCPT-501289",
+    "DOC-817382": "RCPT-162212",
+    "DOC-791363": "RCPT-789507",
+    "DOC-998799": "RCPT-423771",
+    "DOC-945658": "RCPT-200671",
+    "DOC-913992": "RCPT-670787",
+    "DOC-615391": "RCPT-165138",
+    "DOC-984985": "RCPT-850094",
+    "DOC-542624": "RCPT-269063",
+    "DOC-491837": "RCPT-898816",
+    "DOC-238388": "RCPT-302700",
+    "DOC-128718": "RCPT-578695",
+    "DOC-332022": "RCPT-629621",
+    "DOC-992398": "RCPT-769497",
+    "DOC-362771": "RCPT-825896",
+    "DOC-540147": "RCPT-384878",
+    "DOC-453330": "RCPT-812969",
+    "DOC-183477": "RCPT-684485",
+    "DOC-348343": "RCPT-503216",
+    "DOC-522436": "RCPT-126792",
+    "DOC-797813": "RCPT-154271",
+    "DOC-441023": "RCPT-198901",
+    "DOC-576463": "RCPT-749307",
+    "DOC-733618": "RCPT-974307",
+    "DOC-988124": "RCPT-178582",
+    "DOC-139154": "RCPT-462104",
+    "DOC-867545": "RCPT-415745",
+    "DOC-310850": "RCPT-644263",
+    "DOC-389243": "RCPT-166386",
+    "DOC-460120": "RCPT-678653",
+    "DOC-488831": "RCPT-989790",
+    "DOC-827056": "RCPT-432114",
+    "DOC-844070": "PAY-415211",
+    "DOC-593618": "PAY-937667",
+    "DOC-946614": "PAY-938501",
+    "DOC-352692": "PAY-463356",
+    "DOC-808292": "PAY-733166",
+    "DOC-721452": "PAY-550452",
+    "DOC-316574": "PAY-804439",
+    "DOC-177991": "PAY-347806",
+    "DOC-221853": "PAY-399068",
+    "DOC-186879": "PAY-797519",
+    "DOC-313321": "PAY-191999",
+    "DOC-388150": "PAY-770675",
+    "DOC-162203": "PAY-247463",
+    "DOC-113257": "RCPT-662949",
+    "DOC-823771": "RCPT-888371",
+    "DOC-198993": "RCPT-763195",
+    "DOC-715515": "RCPT-515225",
+    "DOC-407952": "RCPT-148870",
+    "DOC-998913": "RCPT-963686",
+    "DOC-340589": "RCPT-204316",
+    "DOC-463346": "RCPT-358588",
+    "DOC-658691": "RCPT-987490",
+    "DOC-483012": "RCPT-180484",
+    "DOC-344754": "RCPT-680390",
+    "DOC-683576": "RCPT-766902",
+    "DOC-743753": "RCPT-681388",
+    "DOC-526101": "RFND-904015",
+    "DOC-310139": "RCPT-990409",
+    "DOC-121184": "RFND-879124",
+    "DOC-256916": "RCPT-766223",
+    "DOC-319680": "RCPT-220578",
+    "DOC-552018": "PAY-446066",
+    "DOC-948752": "RCPT-227768",
+    "DOC-569251": "RCPT-206697",
+    "DOC-254333": "RCPT-682429"
+  }
+}

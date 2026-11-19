@@ -1,0 +1,405 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "1094475830662917303",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "base_currency": "KZT",
+    "timezone": "Asia/Almaty",
+    "interacting": [
+      "fx_invoice_partial_allocation",
+      "boundary_fx_payment"
+    ],
+    "errors": {
+      "wrong_period": 1
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "KZT",
+    "foreign_currencies": [
+      "AED"
+    ],
+    "timezone": "Asia/Almaty",
+    "period": "2025-06",
+    "rounding": "half_even",
+    "id_style": "numeric",
+    "ts_repr": "utc",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 1
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [
+      "fx_invoice_partial_allocation",
+      "boundary_fx_payment"
+    ],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 13,
+      "suppliers": 7,
+      "sales_invoices": 39,
+      "purchase_invoices": 16,
+      "prior_invoices": 7,
+      "target_rows": 680
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Kenella Logistics LLP",
+    "customers": 13,
+    "suppliers": 7,
+    "invoices": 90,
+    "payments": 58,
+    "misc_journals": 164,
+    "holidays": [
+      "2025-06-19",
+      "2025-06-27"
+    ]
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "single",
+      "targets": {
+        "invoice": "12363394"
+      },
+      "change": {
+        "posting_ts": "2025-06-30T14:17:32+00:00"
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_fx_rate",
+      "variant": "utc_date",
+      "scenario": "boundary_fx_payment",
+      "targets": {
+        "payment": "35888967"
+      },
+      "change": {
+        "wrong_rate_date": "2025-06-30",
+        "correct_rate": "126.510",
+        "correct_rate_date": "2025-07-01",
+        "wrong_rate": "126.798"
+      }
+    },
+    {
+      "issue_id": "iss_03",
+      "type": "wrong_period",
+      "variant": "utc_wall_clock",
+      "scenario": "boundary_fx_payment",
+      "targets": {
+        "payment": "35888967"
+      },
+      "change": {
+        "posting_ts": "2025-06-30T14:37:34+00:00"
+      }
+    },
+    {
+      "issue_id": "iss_04",
+      "type": "unallocated_payment",
+      "variant": "partial",
+      "scenario": "fx_invoice_partial_allocation",
+      "targets": {
+        "payment": "35659962",
+        "invoice": "13859230"
+      },
+      "change": {
+        "alloc": 788358
+      }
+    },
+    {
+      "issue_id": "iss_05",
+      "type": "wrong_fx_rate",
+      "variant": "stale_rate",
+      "scenario": "fx_invoice_partial_allocation",
+      "targets": {
+        "invoice": "13859230"
+      },
+      "change": {
+        "correct_rate": "127.092",
+        "correct_rate_date": "2025-06-09",
+        "wrong_rate": "127.115",
+        "wrong_rate_date": "2025-05-30"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "25202946",
+        "24362721"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "24957833",
+        "29714503"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "25337955",
+        "25726760"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "24242010",
+        "24908112"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "12515382",
+        "35237327",
+        "35275334"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "18949044",
+        "32903627",
+        "37939804"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "19730306",
+        "19114924",
+        "33169447"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "13474254",
+        "36579031"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "17884262",
+        "33921829"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "14802571",
+        "37741875",
+        "51200652"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "35363829"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "39898521"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "12357664"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "22650573"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "11597799"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "23664015"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "19085234"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "19347008"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "14740744"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "92261679",
+      "record": {
+        "row_id": "92261679",
+        "timestamp": "2025-06-13T12:25:54Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 132400905,
+        "currency": "KZT",
+        "entity_id": "63677047",
+        "invoice_id": null,
+        "payment_id": "35659962"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "92662984",
+      "field": "credit_minor",
+      "before": 1469793,
+      "after": 617284
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "92937326",
+      "field": "credit_minor",
+      "before": 231760523,
+      "after": 100212127
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "94128829",
+      "field": "timestamp",
+      "before": "2025-06-30T19:37:34Z",
+      "after": "2025-06-30T14:37:34Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "94128829",
+      "field": "debit_minor",
+      "before": 156409120,
+      "after": 156765186
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "94248947",
+      "field": "debit_minor",
+      "before": 231760523,
+      "after": 231802465
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "96009284",
+      "field": "timestamp",
+      "before": "2025-06-30T19:17:32Z",
+      "after": "2025-06-30T14:17:32Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "97430637",
+      "field": "timestamp",
+      "before": "2025-06-30T19:37:34Z",
+      "after": "2025-06-30T14:37:34Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "98915503",
+      "field": "timestamp",
+      "before": "2025-06-30T19:37:34Z",
+      "after": "2025-06-30T14:37:34Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "98915503",
+      "field": "debit_minor",
+      "before": 2042431,
+      "after": 1686365
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "99281761",
+      "field": "timestamp",
+      "before": "2025-06-30T19:17:32Z",
+      "after": "2025-06-30T14:17:32Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "99927130",
+      "field": "credit_minor",
+      "before": 231760523,
+      "after": 231802465
+    }
+  ],
+  "clean_digest": "aac454e8928b50d75ac09c2cab86d8358321fb01c34caaffb9440ef857df8b3a",
+  "final_digest": "d8f97dece08ca1b08b7f7aab5bab3b931d99c769dab8b2db1fb6713d99cbb95f",
+  "rejected_attempts": []
+}

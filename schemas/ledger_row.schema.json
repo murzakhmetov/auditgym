@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/ledger_row.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "row_id",
+    "timestamp",
+    "account",
+    "debit_minor",
+    "credit_minor",
+    "currency",
+    "entity_id",
+    "invoice_id",
+    "payment_id"
+  ],
+  "properties": {
+    "row_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^:\\s]+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "account": {
+      "type": "string",
+      "pattern": "^\\d{4}$"
+    },
+    "debit_minor": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "credit_minor": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "entity_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "invoice_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "payment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    }
+  }
+}

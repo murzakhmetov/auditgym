@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph view prototype</title>
+<style>
+:root{--ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
+body.galaxy{--bg:#05060b;--panel:rgba(14,16,30,.96);--panel-2:rgba(40,44,80,.55);--line:rgba(150,165,255,.14);--text:#cdd5ff;--muted:#7f89bd;--accent:#8b7bff;--accent-soft:rgba(139,123,255,.18);--shadow:0 12px 40px rgba(0,0,0,.6)}
+body.obsidian{--bg:#1e1e1e;--panel:#262626;--panel-2:#2e2e2e;--line:rgba(255,255,255,.08);--text:#dcddde;--muted:#999;--accent:#a882ff;--accent-soft:rgba(168,130,255,.16);--shadow:0 12px 40px rgba(0,0,0,.45)}
+body.anytype{--off:#c9ccd3;--bg:#fbfbfa;--panel:#ffffff;--panel-2:#f2f2f0;--line:#ebebe8;--text:#252525;--muted:#8a8a87;--accent:#3e7bfa;--accent-soft:#eaf1ff;--shadow:0 8px 30px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:13px/1.45 var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased}
+canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:grab}
+.float{position:fixed;background:var(--panel);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.title{left:16px;top:16px;padding:10px 14px}
+.title b{font-size:14px}
+.title .s{color:var(--muted);font-size:12px;margin-top:2px}
+.settings{right:16px;top:16px;width:290px;max-height:calc(100vh - 32px);overflow:auto;padding:6px 0}
+.sec{border-bottom:1px solid var(--line);padding:8px 14px 10px}
+.sec:last-child{border-bottom:none}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:2px 0 8px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px}
+.row .c{margin-left:auto;font:11px var(--mono);color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.search{width:100%;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);padding:0 10px;font:12.5px var(--ui);outline:none}
+.search:focus{border-color:var(--accent)}
+.seg{display:flex;background:var(--panel-2);border-radius:8px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);font:600 12px var(--ui);padding:5px 8px;border-radius:6px;cursor:pointer}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.btn{width:100%;margin-top:8px;border:0;border-radius:8px;padding:8px;background:var(--accent);color:#fff;font:600 12.5px var(--ui);cursor:pointer}
+.toggle{margin-left:auto;width:30px;height:17px;border-radius:99px;background:var(--off,var(--panel-2));position:relative;cursor:pointer;border:1px solid var(--line)}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.18);transition:transform .15s}
+.toggle.on::after{transform:translateX(13px)}
+.issues{left:16px;bottom:16px;padding:10px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:620px}
+.issues .h{font-size:11.5px;color:var(--muted);margin-right:4px}
+.chip{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:99px;padding:4px 10px;font:12px var(--ui);cursor:pointer}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chip b{font-family:var(--mono);font-weight:600;margin-right:4px}
+.card{right:322px;bottom:16px;width:300px;padding:12px 14px;display:none}
+.card .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:600}
+.card h4{font:600 14px var(--mono);margin-top:3px;word-break:break-all}
+.card .kv{display:grid;grid-template-columns:96px 1fr;gap:3px 8px;margin-top:8px;font-size:12px}
+.card .kv span{color:var(--muted)}.card .kv b{font:500 11.5px var(--mono);word-break:break-all}
+.hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);color:var(--muted);font-size:11.5px}
+</style>
+</head>
+<body class="galaxy">
+<canvas id="cv"></canvas>
+<div class="float title"><b id="ttl">Graph view</b><div class="s" id="sub"></div></div>
+<div class="float settings">
+  <div class="sec"><h3>Filters</h3><input class="search" id="q" placeholder="Search IDs or labels"><div id="types" style="margin-top:8px"></div>
+    <div class="row">Hide orphans<span class="toggle" id="orph"></span></div></div>
+  <div class="sec"><h3>Groups</h3><div class="row" id="grpRow">Colour by type<span class="toggle on" id="grp"></span></div><div class="row">Mark evidence of errors<span class="toggle on" id="iss"></span></div></div>
+  <div class="sec"><h3>Display</h3>
+    <div class="seg" id="style"><button class="on" data-v="galaxy">Galaxy</button><button data-v="obsidian">Obsidian</button><button data-v="anytype">Anytype</button></div>
+    <div class="lbl"><span>Color by</span></div><div class="seg" id="colorMode"><button class="on" data-v="type">Type</button><button data-v="cluster">Cluster</button><button data-v="evidence">Evidence</button></div>
+    <div class="lbl"><span>Size by</span></div><div class="seg" id="sizeMode"><button class="on" data-v="degree">Degree</button><button data-v="pagerank">PageRank</button><button data-v="uniform">Uniform</button></div>
+    <div class="lbl"><span>Glow</span><span id="v-glow"></span></div><input type="range" id="glow" min="0" max="2" step="0.05" value="1">
+    <div class="lbl"><span>Link opacity</span><span id="v-linkOpacity"></span></div><input type="range" id="linkOpacity" min="0" max="1" step="0.05" value="1">
+    <div class="lbl"><span>Text fade threshold</span><span id="v-labels"></span></div><input type="range" id="labels" min="0.3" max="3" step="0.05" value="1.15">
+    <div class="lbl"><span>Node size</span><span id="v-nodeSize"></span></div><input type="range" id="nodeSize" min="0.5" max="2.2" step="0.05" value="1">
+    <div class="lbl"><span>Link thickness</span><span id="v-linkWidth"></span></div><input type="range" id="linkWidth" min="0.3" max="3" step="0.1" value="1">
+  </div>
+  <div class="sec"><h3>Forces</h3>
+    <div class="lbl"><span>Center force</span><span id="v-center"></span></div><input type="range" id="center" min="0" max="0.15" step="0.005" value="0.045">
+    <div class="lbl"><span>Repel force</span><span id="v-repel"></span></div><input type="range" id="repel" min="5" max="160" step="1" value="42">
+    <div class="lbl"><span>Link force</span><span id="v-linkForce"></span></div><input type="range" id="linkForce" min="0.1" max="2" step="0.05" value="0.9">
+    <div class="lbl"><span>Link distance</span><span id="v-linkDistance"></span></div><input type="range" id="linkDistance" min="8" max="90" step="1" value="26">
+    <button class="btn" id="anim">Animate</button>
+  </div>
+</div>
+<div class="float issues" id="issues"><span class="h">Answer key (grader view)</span></div>
+<div class="float card" id="card"></div>
+<div class="hint">scroll to zoom · drag to pan · drag a node · hover to light up neighbours · double-click to focus</div>
+<script src="graph_data_d08.js"></script>
+<script src="../../auditgym/viewer/forcegraph.js"></script>
+<script>
+(function(){
+  var G = AuditGraph.buildEpisodeGraph(window.EP);
+  var fg = new AuditGraph.ForceGraph(document.getElementById('cv'), G, { style: 'galaxy', insetRight: 320, insetBottom: 90 });
+  var m = EP.manifest;
+  document.getElementById('ttl').textContent = 'Graph view · d08_both_interacting_kzt';
+  document.getElementById('sub').textContent = G.nodes.length + ' nodes · ' + G.links.length + ' links · ' + m.company.name + ' · ' + m.base_currency;
+  var counts = {}; G.nodes.forEach(function(n){ counts[n.type] = (counts[n.type]||0) + 1; });
+  var names = {invoice:'Invoices', payment:'Payments', row:'Ledger rows', fx:'FX rates', entity:'Entities', account:'Accounts'};
+  var box = document.getElementById('types');
+  AuditGraph.TYPES.forEach(function(t){
+    var r = document.createElement('div'); r.className = 'row';
+    var d = document.createElement('span'); d.className = 'dot'; d.style.background = AuditGraph.STYLES.galaxy.groups[t]; d.dataset.t = t;
+    var l = document.createElement('span'); l.textContent = names[t];
+    var c = document.createElement('span'); c.className = 'c'; c.textContent = counts[t] || 0;
+    var tg = document.createElement('span'); tg.className = 'toggle on'; tg.style.marginLeft = '10px';
+    tg.onclick = function(){ tg.classList.toggle('on'); fg.setType(t, tg.classList.contains('on')); };
+    r.append(d, l, c, tg); box.appendChild(r);
+  });
+  function bindToggle(id, fn){ var el = document.getElementById(id); el.onclick = function(){ el.classList.toggle('on'); fn(el.classList.contains('on')); }; }
+  bindToggle('orph', function(v){ fg.setOrphans(v); });
+  bindToggle('grp', function(v){ fg.setOption('groups', v); });
+  bindToggle('iss', function(v){ fg.setOption('showIssues', v); });
+  ['labels','nodeSize','linkWidth','glow','linkOpacity'].forEach(function(id){ var el = document.getElementById(id), out = document.getElementById('v-'+id); out.textContent = el.value; el.oninput = function(){ out.textContent = el.value; fg.setOption(id, Number(el.value)); }; });
+  ['center','repel','linkForce','linkDistance'].forEach(function(id){ var el = document.getElementById(id), out = document.getElementById('v-'+id); out.textContent = el.value; el.oninput = function(){ out.textContent = el.value; fg.setForce(id, Number(el.value)); }; });
+  document.getElementById('anim').onclick = function(){ fg.animate(); };
+  document.getElementById('q').oninput = function(e){ fg.search(e.target.value); };
+  document.querySelectorAll('#style button').forEach(function(b){ b.onclick = function(){
+    document.querySelectorAll('#style button').forEach(function(x){ x.classList.toggle('on', x === b); });
+    document.body.className = b.dataset.v; fg.setStyle(b.dataset.v);
+    legend();
+  }; });
+  ['colorMode','sizeMode'].forEach(function(id){ var bs = document.querySelectorAll('#'+id+' button'); bs.forEach(function(b){ b.onclick = function(){ bs.forEach(function(x){ x.classList.toggle('on', x === b); }); fg.setOption(id, b.dataset.v); if (id === 'colorMode') legend(); }; }); });
+  // legend dots and the type toggle only mean something while colouring by type
+  function legend(){
+    var S = AuditGraph.STYLES[fg.opt.style], byType = fg.opt.colorMode === 'type';
+    document.querySelectorAll('.dot').forEach(function(d){ d.style.background = S.groups[d.dataset.t]; d.style.opacity = byType ? 1 : 0.25; });
+    var gr = document.getElementById('grpRow'); gr.style.opacity = byType ? 1 : 0.4; gr.style.pointerEvents = byType ? '' : 'none';
+  }
+  var iss = document.getElementById('issues');
+  (EP.truth.issues||[]).forEach(function(t){
+    var c = document.createElement('span'); c.className = 'chip'; c.innerHTML = '<b></b>'; c.firstChild.textContent = t.issue_id; c.append(t.type);
+    c.onclick = function(){ var on = !c.classList.contains('on'); iss.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('on'); }); if (on) c.classList.add('on'); fg.focusIssue(on ? t.issue_id : null); };
+    iss.appendChild(c);
+  });
+  var card = document.getElementById('card');
+  fg.on('select', function(n){
+    if (!n) { card.style.display = 'none'; return; }
+    card.style.display = 'block'; card.textContent = '';
+    var k = document.createElement('div'); k.className = 'k'; k.textContent = n.type + (n.issues.length ? ' · evidence of ' + n.issues.join(', ') : '');
+    var h = document.createElement('h4'); h.textContent = n.label;
+    var kv = document.createElement('div'); kv.className = 'kv';
+    var rec = n.rec || {};
+    Object.keys(rec).slice(0, 8).forEach(function(key){ if (key === 'line_items') return; var s = document.createElement('span'); s.textContent = key; var b = document.createElement('b'); var v = rec[key]; b.textContent = v === null ? 'null' : Array.isArray(v) ? v.join(', ') : String(v); kv.append(s, b); });
+    var s = document.createElement('span'); s.textContent = 'links'; var b = document.createElement('b'); b.textContent = n.deg; kv.append(s, b);
+    card.append(k, h, kv);
+  });
+  setTimeout(function(){ fg.fit(); }, 2600);
+  window.fg = fg; window.G = G;
+})();
+</script>
+</body>
+</html>

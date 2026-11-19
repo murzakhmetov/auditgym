@@ -1,0 +1,299 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "1263440917783250649",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "base_currency": "JPY",
+    "timezone": "Asia/Tokyo",
+    "distractors": {
+      "legit_repeat": 3,
+      "recurring": 3,
+      "split_payment": 3,
+      "multi_invoice_payment": 2,
+      "underpayment": 3,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
+      "boundary_doc": 4,
+      "midnight_fx": 3,
+      "weekend_fx": 3
+    }
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "JPY",
+    "foreign_currencies": [
+      "EUR",
+      "USD",
+      "KRW"
+    ],
+    "timezone": "Asia/Tokyo",
+    "period": "2026-04",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "utc",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 3,
+      "recurring": 3,
+      "split_payment": 3,
+      "multi_invoice_payment": 2,
+      "underpayment": 3,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
+      "boundary_doc": 4,
+      "midnight_fx": 3,
+      "weekend_fx": 3
+    },
+    "counts": {
+      "customers": 6,
+      "suppliers": 7,
+      "sales_invoices": 21,
+      "purchase_invoices": 11,
+      "prior_invoices": 5,
+      "target_rows": 328
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Kaiix Energy KK",
+    "customers": 7,
+    "suppliers": 9,
+    "invoices": 74,
+    "payments": 40,
+    "misc_journals": 39,
+    "holidays": [
+      "2026-04-09",
+      "2026-04-13"
+    ]
+  },
+  "injections": [],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_1fe0763e",
+        "pi_0d9f5ebe"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_8ca809e9",
+        "pi_2d45b5a4"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_8b4b13d2",
+        "pi_6a7b3d8d"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_2931ede1",
+        "pi_2ea9d159"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_404db2b7",
+        "pi_e259611d"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_583254e7",
+        "pi_c5809908"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_68507d78",
+        "rc_ef9571da",
+        "rc_ebf68c3d"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_745c01db",
+        "rc_59c7f482",
+        "rc_69ceba2f"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_a71d3f2a",
+        "rc_4b4f4acd",
+        "rc_2354fbdf"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_bba31601",
+        "si_e2c56564",
+        "rc_f61a613c"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_bd50db5e",
+        "si_dd5ec49e",
+        "rc_bb8bea76"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_4f2fa732",
+        "rc_9bb4ea7c"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_4bcf7fc9",
+        "rc_3e93fd46"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_c171a6f0",
+        "rc_ad195a25"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_b2061ed2",
+        "rc_a94c8c87",
+        "rf_1371d9a6"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_01b2abab",
+        "rc_6a47dc96",
+        "rf_97ce3994"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_78fc941e"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_e36996b9"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_bbca9393"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_c95fccbb"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_eb0828b0"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_9bb5a315"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_df702e82"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "pi_21783ac1"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "pi_3ac5e8bd"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_a000720b"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_b8cb5650"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_77076cf6"
+      ]
+    }
+  ],
+  "ops": [],
+  "clean_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
+  "final_digest": "74a2df2de27067e55c447a9634c6d51ce585d9c989739357553da3271ac8ba76",
+  "rejected_attempts": []
+}

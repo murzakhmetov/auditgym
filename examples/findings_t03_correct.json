@@ -1,0 +1,21 @@
+{
+  "episode_id": "ep_36ad821ac43fc00c",
+  "findings": [
+    {
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "pi_33b50739",
+        "pi_9ff22772"
+      ],
+      "claimed_amount_minor": 106965,
+      "currency": "EUR",
+      "evidence_ids": [
+        "doc_80129b6d",
+        "doc_43fd4ce7",
+        "gl_7227fae2",
+        "gl_50e97e5c"
+      ],
+      "explanation": "Purchase invoice entered twice: same supplier, date, currency, total and line references; both copies are posted to accounts payable."
+    }
+  ]
+}

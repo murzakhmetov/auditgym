@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B · Audit Paper</title>
+<style>
+:root{
+  --bg:#F4F2EE;--surface:#FFFFFF;--surface-2:#FAF9F7;--line:#E7E3DC;--line-2:#D9D4CB;
+  --text:#1C1F26;--muted:#5F6672;--faint:#8D939E;
+  --accent:#2F5BEA;--accent-soft:#E9EEFD;--ok:#1F8A5B;--ok-soft:#E5F4EC;--bad:#C2413B;--bad-soft:#FBEAE8;--warn:#A86A12;--warn-soft:#FBF0DC;
+  --serif:Georgia,"Times New Roman",serif;--ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;background:var(--bg);color:var(--text);font:13px/1.5 var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased}
+header{height:64px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 28px}
+.mark{width:30px;height:30px;border-radius:8px;background:#1C1F26;color:#fff;display:grid;place-items:center;font:700 14px var(--serif)}
+.ttl{font:600 18px/1.2 var(--serif);letter-spacing:-.01em}
+.ttl small{display:block;font:12px var(--ui);color:var(--muted);letter-spacing:0;margin-top:2px}
+.tabs{display:flex;gap:4px;margin-left:24px}
+.tab{padding:7px 12px;border-radius:8px;color:var(--muted);font-weight:500}
+.tab.on{background:var(--accent-soft);color:var(--accent)}
+.right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.seg{display:flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.seg span{padding:5px 10px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg span.on{background:#1C1F26;color:#fff}
+.search{width:300px;height:34px;border:1px solid var(--line-2);border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--faint);background:var(--surface-2)}
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kbd{margin-left:auto;font:11px var(--mono);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;color:var(--muted)}
+.summary{display:flex;align-items:baseline;gap:30px;padding:16px 28px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.big{font:600 34px/1 var(--serif);letter-spacing:-.02em;color:var(--bad)}
+.big small{font:12px var(--ui);color:var(--muted);letter-spacing:0;margin-left:8px}
+.stat{display:flex;flex-direction:column}
+.stat b{font:600 18px var(--serif)}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.note{margin-left:auto;font:12px var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:6px 10px;border-radius:8px}
+.wrap{display:grid;grid-template-columns:430px 1fr;height:calc(900px - 64px - 74px)}
+.queue{border-right:1px solid var(--line);background:var(--surface);overflow:hidden;padding:16px 18px}
+.qh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.qh h2{font:600 15px var(--serif)}
+.qh .cnt{font:600 11px var(--mono);background:var(--warn-soft);color:var(--warn);border-radius:99px;padding:1px 7px}
+.qh .f{margin-left:auto;font-size:12px;color:var(--muted)}
+.item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+.item.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.item .top{display:flex;align-items:center;gap:8px}
+.tag{font:600 11px var(--mono);border-radius:6px;padding:2px 7px}
+.t-fn{background:var(--warn-soft);color:var(--warn)}.t-fp{background:var(--bad-soft);color:var(--bad)}.t-tp{background:var(--ok-soft);color:var(--ok)}
+.item .ty{font-weight:600}
+.item .am{margin-left:auto;font:600 12.5px var(--mono)}
+.item p{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
+.item .ids{font:11.5px var(--mono);color:var(--faint);margin-top:6px}
+.collapsed{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;padding:10px 14px;border:1px dashed var(--line-2);border-radius:12px}
+.desk{padding:20px 26px;display:grid;grid-template-columns:1fr 330px;gap:20px;overflow:hidden}
+.papers{display:flex;flex-direction:column;gap:16px}.paper.twin{transform:translateX(26px);opacity:.96}.paper{background:var(--surface);border-radius:4px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -12px rgba(28,31,38,.25),0 0 0 1px rgba(0,0,0,.05);padding:34px 40px;position:relative;height:fit-content}
+.paper::after{content:"";position:absolute;right:-1px;top:-1px;width:26px;height:26px;background:linear-gradient(225deg,var(--bg) 50%,#E9E5DD 50%);border-bottom-left-radius:6px}
+.ph{display:flex;justify-content:space-between;align-items:flex-start}
+.ph h3{font:600 26px var(--serif);letter-spacing:-.01em}
+.ph .meta{font-size:12px;color:var(--muted);margin-top:4px}
+.ph .no{text-align:right;font:12px var(--mono);color:var(--muted);margin-right:18px}
+.ph .no b{display:block;font:600 15px var(--mono);color:var(--text)}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:22px 0 18px;font-size:12.5px}
+.parties span{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;border-bottom:1px solid var(--line-2);padding:8px 6px}
+td{padding:9px 6px;border-bottom:1px solid var(--line)}
+td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tot td{border-bottom:none;font-weight:600}
+.snip{position:relative;background:rgba(47,91,234,.07);box-shadow:inset 0 0 0 1.5px rgba(47,91,234,.55);border-radius:4px}
+.snipnum{position:absolute;left:-30px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font:600 11px var(--ui);display:grid;place-items:center}
+.stamp{position:absolute;left:44px;bottom:20px;transform:rotate(-8deg);border:2px solid var(--bad);color:var(--bad);font:700 13px var(--ui);letter-spacing:.12em;padding:6px 12px;border-radius:6px;opacity:.85}
+.side{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.box h4{font:600 13.5px var(--serif);padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.box h4 .gv{margin-left:auto;font:600 10px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:99px}
+.mrow{display:grid;grid-template-columns:22px 52px 1fr auto;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+.mrow .num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font:600 10.5px var(--ui);display:grid;place-items:center}
+.mrow .ac{font:600 11px var(--mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:5px;text-align:center;padding:1px 0}
+.mrow .v{font:12px var(--mono)}
+.mrow.hot{background:#FFF8EC}
+.mrow.hot .ac{background:var(--warn-soft);color:var(--warn);border-color:#F1DDB7}
+.calc{padding:12px 14px;font:12px/1.7 var(--mono);color:var(--muted)}
+.calc b{color:var(--text)}
+.calc .res{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">a</div>
+  <div class="ttl">Kenella Logistics LLP — June 2025 audit file<small>dev · d08_both_interacting_kzt · KZT · Asia/Almaty</small></div>
+  <div class="tabs"><span class="tab">Overview</span><span class="tab on">Findings</span><span class="tab">Ledger</span><span class="tab">Documents</span><span class="tab">Runs</span></div>
+  <div class="right">
+    <div class="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find an invoice, payment, row<span class="kbd">Ctrl K</span></div>
+    <div class="seg"><span class="on">EN</span><span>RU</span></div>
+    <div class="seg"><span>Dark</span><span class="on">Light</span></div>
+  </div>
+</header>
+<div class="summary">
+  <div class="big">−0.313<small>reward · recon policy · grader view</small></div>
+  <div class="stat"><b>0.364</b><span>F1</span></div>
+  <div class="stat"><b>2 / 6</b><span>findings correct</span></div>
+  <div class="stat"><b>3 of 5</b><span>issues missed</span></div>
+  <div class="stat"><b>20 / 100</b><span>steps used</span></div>
+  <div class="note">2·0.364 − 1 − 0.002·20 = −0.313</div>
+</div>
+<div class="wrap">
+  <section class="queue">
+    <div class="qh"><h2>Needs attention</h2><span class="cnt">7</span><span class="f">Missed first · then false positives</span></div>
+    <div class="item"><div class="top"><span class="tag t-fn">MISSED</span><span class="ty">wrong_period</span><span class="am">975 436.38 ₸</span></div><p>Document dated outside June in company time, posted inside the period. Evidence seen at step 13, not flagged.</p><div class="ids">invoice 12363394 · rows 96009284</div></div>
+    <div class="item"><div class="top"><span class="tag t-fn">MISSED</span><span class="ty">wrong_fx_rate</span><span class="am">3 560.66 ₸</span></div><p>Receipt converted at 126.798 (30 Jun, UTC date) instead of 126.510 (1 Jul, local date).</p><div class="ids">receipt 35888967 · fx 2025-07-01:AED:KZT</div></div>
+    <div class="item sel"><div class="top"><span class="tag t-fp">FALSE POSITIVE</span><span class="ty">duplicate_invoice</span><span class="am">394 404.60 ₸</span></div><p>Same supplier, date and amount — but line refs WO-2367 and WO-8602 differ: two separate work orders, a legitimate repeat.</p><div class="ids">invoices 24957833 · 29714503</div></div>
+    <div class="item"><div class="top"><span class="tag t-fp">FALSE POSITIVE</span><span class="ty">unallocated_payment</span><span class="am">251 461.52 ₸</span></div><p>2900 credit is the overpayment excess: allowed by policy and refunded later.</p><div class="ids">receipt 37741875 · invoice 14802571</div></div>
+    <div class="collapsed"><svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>2 confirmed findings · 2 more false positives · 1 missed</div>
+  </section>
+  <section class="desk">
+    <div class="papers">
+    <div class="paper" style="padding-bottom:58px">
+      <div class="ph"><div><h3>Invoice</h3><div class="meta">Purchase invoice · issued 2025-06-09 15:41 +05:00 · due 2025-07-09</div></div><div class="no">INVOICE ID<b>24957833</b>doc 84760311</div></div>
+      <div class="parties"><div><span>Supplier</span>entity 74429039<br>Warehouse services</div><div><span>Bill to</span>Kenella Logistics LLP<br>Almaty, KZ</div></div>
+      <table>
+        <tr><th>#</th><th>Description</th><th>Ref</th><th style="text-align:right">Qty</th><th style="text-align:right">Amount</th></tr>
+        <tr class="snip"><td style="position:relative"><span class="snipnum">1</span>1</td><td>Warehouse cleaning WO-2367</td><td style="font-family:var(--mono)">WO-2367</td><td class="n">1</td><td class="n">3 103.30</td></tr>
+        <tr class="tot"><td></td><td>Total</td><td></td><td></td><td class="n">3 103.30 AED</td></tr>
+      </table>
+      <div class="stamp">LEGIT REPEAT</div>
+    </div>
+    <div class="paper twin">
+      <div class="ph"><div><h3 style="font-size:20px">Invoice</h3><div class="meta">Same supplier · same timestamp · same total</div></div><div class="no">INVOICE ID<b>29714503</b>doc 87998488</div></div>
+      <table style="margin-top:14px">
+        <tr><th>#</th><th>Description</th><th>Ref</th><th style="text-align:right">Qty</th><th style="text-align:right">Amount</th></tr>
+        <tr class="snip" style="background:rgba(168,106,18,.08);box-shadow:inset 0 0 0 1.5px rgba(168,106,18,.6)"><td style="position:relative"><span class="snipnum" style="background:var(--warn)">2</span>1</td><td>Warehouse cleaning WO-8602</td><td style="font-family:var(--mono)">WO-8602</td><td class="n">1</td><td class="n">3 103.30</td></tr>
+      </table>
+    </div>
+    </div>
+    <div class="side">
+      <div class="box">
+        <h4>Matched records<span class="gv">grader view</span></h4>
+        <div class="mrow"><span class="num">1</span><span class="ac">2000</span><span>Payables · Cr · 9 Jun</span><span class="v">394 404.60</span></div>
+        <div class="mrow"><span class="num">1</span><span class="ac">5000</span><span>Purchases · Dr · 9 Jun</span><span class="v">394 404.60</span></div>
+        <div class="mrow hot"><span class="num">2</span><span class="ac">2000</span><span>Twin invoice 29714503 · ref WO-8602</span><span class="v">394 404.60</span></div>
+      </div>
+      <div class="box">
+        <h4>Why it is not a duplicate</h4>
+        <div class="calc">supplier &nbsp;&nbsp;&nbsp;<b>same</b><br>date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>same</b><br>amount &nbsp;&nbsp;&nbsp;&nbsp;<b>same</b><br>line ref &nbsp;&nbsp;<b>WO-2367 ≠ WO-8602</b><br><span class="res">policy.duplicate_rule → separate supplies</span></div>
+      </div>
+      <div class="box">
+        <h4>Agent trail</h4>
+        <div class="calc">step 1–2 &nbsp;read invoices (90)<br>step 3–6 &nbsp;read payments, fx<br>step 7–20 read ledger (682 rows)<br>step 21 &nbsp;&nbsp;submit 6 findings</div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

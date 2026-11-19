@@ -1,0 +1,10 @@
+{
+  "config_version": "1",
+  "size": "medium",
+  "base_currency": "EUR",
+  "timezone": "Europe/Berlin",
+  "errors": {"duplicate_invoice": 1, "unallocated_payment": 1, "wrong_fx_rate": 1, "wrong_period": 1},
+  "variants": {"wrong_fx_rate": ["utc_date", "posting_date"]},
+  "interacting": ["boundary_fx_payment"],
+  "ts_repr": "mixed"
+}

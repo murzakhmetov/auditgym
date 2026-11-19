@@ -1,0 +1,155 @@
+"""Harmless transformations for paired checks.
+
+* permute_seed: shuffles the order of ledger rows, invoices, payments and FX rows;
+* remap_seed:   replaces every public ID (rows, documents, invoices, payments,
+                entities) by a fresh opaque ID, consistently in records, answer
+                key and provenance;
+* ts_repr:      re-writes every timestamp as the same instant with another
+                offset ("utc", "local" company time, or "mixed").
+
+The answer is unchanged up to the ID mapping, so the oracle's reward must not
+change. Available as AuditEnv.reset(config={"transform": {...}}) and as
+`python -m auditgym transform`.
+"""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+
+from .auditor import OffsetSchedule
+from .episode import Episode
+from .ids import STYLES, IdFactory
+from .rng import Rng, seed_from_text
+from .timeutil import format_ts, format_utc, parse_ts
+
+ALT_OFFSETS = (-420, -180, 0, 60, 345, 480, 660)
+
+
+def _id_map(ep: Episode, remap_seed: int) -> dict:
+    rng = Rng(f"remap:{remap_seed}:{ep.episode_id}")
+    year = int(ep.manifest["period_start"][:4])
+    style = STYLES[seed_from_text(f"style:{remap_seed}") % len(STYLES)]
+    ids = IdFactory(rng, style, year)
+    mapping = {}
+    ents = sorted({r["entity_id"] for r in ep.invoices} | {r["entity_id"] for r in ep.payments if r["entity_id"]}
+                  | {r["entity_id"] for r in ep.ledger if r["entity_id"]})
+    kinds_by_entity = {}
+    for d in ep.invoices:
+        kinds_by_entity[d["entity_id"]] = "customer" if d["kind"] == "sales" else "supplier"
+    for e in ents:
+        mapping[e] = ids.new(kinds_by_entity.get(e, "customer"))
+    for d in sorted(ep.invoices, key=lambda x: x["doc_id"]):
+        mapping[d["invoice_id"]] = ids.new("sales_invoice" if d["kind"] == "sales" else "purchase_invoice")
+        mapping[d["doc_id"]] = ids.new("doc")
+    for d in sorted(ep.payments, key=lambda x: x["doc_id"]):
+        mapping[d["payment_id"]] = ids.new(d["kind"])
+        mapping[d["doc_id"]] = ids.new("doc")
+    for r in sorted(ep.ledger, key=lambda x: x["row_id"]):
+        mapping[r["row_id"]] = ids.new("row")
+    for op in sorted(ep.provenance.get("ops", []), key=lambda o: (o["table"], o["id"])):
+        if op["id"] not in mapping:
+            mapping[op["id"]] = ids.new("row" if op["table"] == "ledger" else "doc")
+    return mapping
+
+
+def _map_record(rec: dict, m: dict) -> dict:
+    out = dict(rec)
+    for k in ("row_id", "doc_id", "invoice_id", "payment_id", "entity_id"):
+        if out.get(k) is not None:
+            out[k] = m.get(out[k], out[k])
+    if out.get("invoice_refs") is not None:
+        out["invoice_refs"] = [m.get(x, x) for x in out["invoice_refs"]]
+    return out
+
+
+def _ts_function(ep: Episode, mode: str):
+    sched = OffsetSchedule(ep.policy["utc_offset_schedule"])
+
+    def fmt(text: str, key: str) -> str:
+        inst = parse_ts(text)
+        if mode == "utc":
+            return format_utc(inst)
+        if mode == "local":
+            return format_ts(inst, sched.offset_at(inst))
+        h = seed_from_text(f"tsrepr:{key}")
+        if h % 3 == 0:
+            return format_utc(inst)
+        if h % 3 == 1:
+            return format_ts(inst, sched.offset_at(inst))
+        return format_ts(inst, ALT_OFFSETS[(h // 3) % len(ALT_OFFSETS)])
+
+    return fmt
+
+
+def _retime(rec: dict, fmt, key_field: str) -> dict:
+    out = dict(rec)
+    key = str(out.get(key_field))
+    for f in ("timestamp", "issued_at", "due_at"):
+        if f in out and isinstance(out[f], str):
+            out[f] = fmt(out[f], key)
+    return out
+
+
+def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None) -> Episode:
+    if ts_repr is not None and ts_repr not in ("utc", "local", "mixed"):
+        raise ValueError("ts_repr must be utc, local or mixed")
+    new = Episode(
+        manifest=copy.deepcopy(ep.manifest),
+        policy=copy.deepcopy(ep.policy),
+        ledger=[dict(r) for r in ep.ledger],
+        invoices=copy.deepcopy(ep.invoices),
+        payments=copy.deepcopy(ep.payments),
+        fx=[dict(r) for r in ep.fx],
+        truth=copy.deepcopy(ep.truth),
+        provenance=copy.deepcopy(ep.provenance),
+    )
+    if remap_seed is not None:
+        m = _id_map(ep, int(remap_seed))
+        new.ledger = [_map_record(r, m) for r in new.ledger]
+        new.invoices = [_map_record(r, m) for r in new.invoices]
+        new.payments = [_map_record(r, m) for r in new.payments]
+        for t in new.truth.get("issues", []):
+            t["affected_ids"] = [m.get(x, x) for x in t["affected_ids"]]
+            t["evidence_sets"] = [[m.get(x, x) for x in es] for es in t["evidence_sets"]]
+        if "id_aliases" in new.truth:
+            new.truth["id_aliases"] = {m.get(k, k): m.get(v, v) for k, v in new.truth["id_aliases"].items()}
+        for op in new.provenance.get("ops", []):
+            op["id"] = m.get(op["id"], op["id"])
+            if "record" in op:
+                op["record"] = _map_record(op["record"], m)
+            if op.get("field") in ("entity_id", "invoice_id", "payment_id", "row_id", "doc_id"):
+                op["before"] = m.get(op["before"], op["before"]) if op["before"] is not None else None
+                op["after"] = m.get(op["after"], op["after"]) if op["after"] is not None else None
+            if op.get("field") == "invoice_refs":
+                op["before"] = [m.get(x, x) for x in op["before"]] if op["before"] is not None else None
+                op["after"] = [m.get(x, x) for x in op["after"]] if op["after"] is not None else None
+        for inj in new.provenance.get("injections", []):
+            inj["targets"] = {k: m.get(v, v) for k, v in inj.get("targets", {}).items()}
+        for d in new.provenance.get("distractors", []):
+            d["ids"] = [m.get(x, x) for x in d.get("ids", [])]
+    if ts_repr is not None:
+        fmt = _ts_function(ep, ts_repr)
+        new.ledger = [_retime(r, fmt, "row_id") for r in new.ledger]
+        new.invoices = [_retime(r, fmt, "doc_id") for r in new.invoices]
+        new.payments = [_retime(r, fmt, "doc_id") for r in new.payments]
+        for op in new.provenance.get("ops", []):
+            if "record" in op:
+                op["record"] = _retime(op["record"], fmt, "row_id" if op["table"] == "ledger" else "doc_id")
+            if op.get("field") in ("timestamp", "issued_at", "due_at"):
+                op["before"] = fmt(op["before"], op["id"])
+                op["after"] = fmt(op["after"], op["id"])
+    if permute_seed is not None:
+        rng = Rng(f"permute:{permute_seed}:{ep.episode_id}")
+        for table in ("ledger", "invoices", "payments", "fx"):
+            rows = new.table(table)
+            rng.fork(table).shuffle(rows)
+    tag = f"{ep.episode_id}|{permute_seed}|{remap_seed}|{ts_repr}"
+    new_id = "ep_" + hashlib.sha256(tag.encode("utf-8")).hexdigest()[:16]
+    new.manifest["episode_id"] = new_id
+    if new.truth:
+        new.truth["episode_id"] = new_id
+    new.provenance["transformed_from"] = {"episode_id": ep.episode_id, "permute_seed": permute_seed,
+                                          "remap_seed": remap_seed, "ts_repr": ts_repr}
+    new.provenance["final_digest"] = new.public_digest()
+    return new

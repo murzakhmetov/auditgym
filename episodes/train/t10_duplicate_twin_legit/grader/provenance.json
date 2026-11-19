@@ -1,0 +1,179 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "5520017338842210093",
+  "secret_used": false,
+  "config": {
+    "size": "small",
+    "errors": {
+      "duplicate_invoice": 1
+    },
+    "twin": true
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "small",
+    "base_currency": "EUR",
+    "foreign_currencies": [
+      "USD",
+      "JPY",
+      "GBP"
+    ],
+    "timezone": "Europe/Berlin",
+    "period": "2025-01",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "local",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 1,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [],
+    "distractors": {
+      "legit_repeat": 1,
+      "recurring": 1,
+      "split_payment": 1,
+      "multi_invoice_payment": 1,
+      "underpayment": 1,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 1,
+      "boundary_doc": 2,
+      "midnight_fx": 1,
+      "weekend_fx": 1
+    },
+    "counts": {
+      "customers": 6,
+      "suppliers": 5,
+      "sales_invoices": 19,
+      "purchase_invoices": 12,
+      "prior_invoices": 3,
+      "target_rows": 284
+    },
+    "twin": true
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Astana Logistics GmbH",
+    "customers": 8,
+    "suppliers": 7,
+    "invoices": 53,
+    "payments": 29,
+    "misc_journals": 51,
+    "holidays": [
+      "2025-01-10"
+    ]
+  },
+  "injections": [],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_743b7847",
+        "pi_e3976346"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_085d7d60",
+        "pi_9243b37b"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_2756513a",
+        "rc_c74ffa39",
+        "rc_560eb744"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_d9084f94",
+        "si_da8a3272",
+        "rc_0345c0e4"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_b4c31ea6",
+        "rc_b81ee350"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_666e9568",
+        "rc_06a6ef0e",
+        "rf_ce24c551"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_98de41a7"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_1e731d8a"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_18930d53"
+      ]
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "si_037ab369"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_d815d433"
+      ]
+    },
+    {
+      "kind": "twin_legit_repeat",
+      "ids": [
+        "pi_33b50739",
+        "pi_9ff22772"
+      ]
+    }
+  ],
+  "ops": [],
+  "clean_digest": "94123931c4d4d584248bcd90ca0010d5c8ef848dbc25a8d7a20b4ba0b901543d",
+  "final_digest": "94123931c4d4d584248bcd90ca0010d5c8ef848dbc25a8d7a20b4ba0b901543d",
+  "rejected_attempts": []
+}

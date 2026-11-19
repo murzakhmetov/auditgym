@@ -1,0 +1,42 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "episode_id": "ep_b5bf306d6ff9f184",
+  "company": {
+    "name": "Rynella Systems Ltda",
+    "synthetic": true
+  },
+  "base_currency": "USD",
+  "currency_exponents": {
+    "USD": 2,
+    "KWD": 3,
+    "EUR": 2
+  },
+  "period_start": "2025-03-01T00:00:00-03:00",
+  "period_end": "2025-04-01T00:00:00-03:00",
+  "ledger_extract_end": "2025-04-08T00:00:00-03:00",
+  "timezone": "America/Sao_Paulo",
+  "record_counts": {
+    "ledger": 741,
+    "invoices": 88,
+    "payments": 48,
+    "fx": 155
+  },
+  "document_counts": {
+    "invoices": 88,
+    "payments": 48,
+    "total": 136
+  },
+  "rounding": {
+    "mode": "half_up",
+    "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
+  },
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ]
+}

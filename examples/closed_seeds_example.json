@@ -1,0 +1,7 @@
+{
+  "split": "closed_example",
+  "episodes": [
+    {"name": "c01", "seed": 6602239917354212077, "config": {"size": "small"}},
+    {"name": "c02", "seed": 1188430263590011237, "config": {"size": "medium", "interacting": ["boundary_fx_payment"], "errors": {"duplicate_invoice": 1}}}
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "schema_version": "auditgym/1.0",
+  "generator_version": "0.1.0",
+  "config_version": "1",
+  "seed": "9012646071356280087",
+  "secret_used": false,
+  "config": {
+    "size": "medium",
+    "interacting": [
+      "fx_invoice_partial_allocation"
+    ]
+  },
+  "resolved_config": {
+    "config_version": "1",
+    "size": "medium",
+    "base_currency": "KZT",
+    "foreign_currencies": [
+      "AED",
+      "EUR"
+    ],
+    "timezone": "Europe/London",
+    "period": "2025-01",
+    "rounding": "half_up",
+    "id_style": "hex",
+    "ts_repr": "mixed",
+    "row_order": "shuffled",
+    "errors": {
+      "duplicate_invoice": 0,
+      "unallocated_payment": 0,
+      "wrong_fx_rate": 0,
+      "wrong_period": 0
+    },
+    "variants": {
+      "duplicate_invoice": [
+        "same_day_copy"
+      ],
+      "unallocated_payment": [
+        "missing",
+        "partial"
+      ],
+      "wrong_fx_rate": [
+        "utc_date",
+        "posting_date",
+        "stale_rate",
+        "transposed"
+      ],
+      "wrong_period": [
+        "booked_early",
+        "booked_late",
+        "utc_wall_clock"
+      ]
+    },
+    "interacting": [
+      "fx_invoice_partial_allocation"
+    ],
+    "distractors": {
+      "legit_repeat": 2,
+      "recurring": 2,
+      "split_payment": 2,
+      "multi_invoice_payment": 1,
+      "underpayment": 2,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
+      "boundary_doc": 3,
+      "midnight_fx": 2,
+      "weekend_fx": 2
+    },
+    "counts": {
+      "customers": 13,
+      "suppliers": 8,
+      "sales_invoices": 40,
+      "purchase_invoices": 17,
+      "prior_invoices": 5,
+      "target_rows": 688
+    },
+    "twin": false
+  },
+  "attempt": 0,
+  "history": {
+    "company": "Zanen Retail Ltd",
+    "customers": 13,
+    "suppliers": 8,
+    "invoices": 87,
+    "payments": 56,
+    "misc_journals": 180,
+    "holidays": []
+  },
+  "injections": [
+    {
+      "issue_id": "iss_01",
+      "type": "unallocated_payment",
+      "variant": "missing",
+      "scenario": "fx_invoice_partial_allocation",
+      "targets": {
+        "payment": "rc_b5614eb2",
+        "invoice": "si_08296365"
+      },
+      "change": {
+        "alloc": 0
+      }
+    },
+    {
+      "issue_id": "iss_02",
+      "type": "wrong_fx_rate",
+      "variant": "posting_date",
+      "scenario": "fx_invoice_partial_allocation",
+      "targets": {
+        "invoice": "si_08296365"
+      },
+      "change": {
+        "posting_ts": "2025-01-28T08:40:42+00:00",
+        "correct_rate": "561.102",
+        "correct_rate_date": "2025-01-22",
+        "wrong_rate": "563.744",
+        "wrong_rate_date": "2025-01-28"
+      }
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_4b0b4e7c",
+        "pi_d2307473"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_3b2cf3c1",
+        "pi_660f11b5"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_2adf83bd",
+        "pi_4eacb771"
+      ]
+    },
+    {
+      "kind": "recurring",
+      "ids": [
+        "pi_594670e1",
+        "pi_11eba3dd"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_e98319a0",
+        "rc_236d172c",
+        "rc_9c5b86df"
+      ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_f977f578",
+        "rc_d0d22822",
+        "rc_664274ed"
+      ]
+    },
+    {
+      "kind": "multi_invoice_payment",
+      "ids": [
+        "si_024e61bb",
+        "si_93777386",
+        "rc_a65f22c7"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_ff7552a6",
+        "rc_c3ee77a6"
+      ]
+    },
+    {
+      "kind": "underpayment",
+      "ids": [
+        "si_6b8714b7",
+        "rc_eb653776"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_66a8ad7e",
+        "rc_60a1f186",
+        "rf_6b96f75b"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_5f81a568"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_c430e348"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_395e28d1"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_f5ab0021"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "si_89d13078"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_a339c99e"
+      ]
+    },
+    {
+      "kind": "weekend_fx",
+      "ids": [
+        "si_17feb069"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "gl_08f5b081",
+      "record": {
+        "row_id": "gl_08f5b081",
+        "timestamp": "2025-01-31T12:56:12+00:00",
+        "account": "1100",
+        "debit_minor": 0,
+        "credit_minor": 189460018,
+        "currency": "KZT",
+        "entity_id": "cus_09aa4bd3",
+        "invoice_id": "si_08296365",
+        "payment_id": "rc_b5614eb2"
+      }
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "gl_9ca8919a",
+      "record": {
+        "row_id": "gl_9ca8919a",
+        "timestamp": "2025-01-31T22:56:12+10:00",
+        "account": "7900",
+        "debit_minor": 0,
+        "credit_minor": 1183825,
+        "currency": "KZT",
+        "entity_id": "cus_09aa4bd3",
+        "invoice_id": null,
+        "payment_id": "rc_b5614eb2"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_9f8e048e",
+      "field": "timestamp",
+      "before": "2025-01-22T09:21:15+00:00",
+      "after": "2025-01-28T08:40:42+00:00"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_9f8e048e",
+      "field": "debit_minor",
+      "before": 227195811,
+      "after": 228265583
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "gl_c3170cf4",
+      "record": {
+        "row_id": "gl_c3170cf4",
+        "timestamp": "2025-01-31T12:56:12+00:00",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 190643843,
+        "currency": "KZT",
+        "entity_id": "cus_09aa4bd3",
+        "invoice_id": null,
+        "payment_id": "rc_b5614eb2"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_e3e5004b",
+      "field": "timestamp",
+      "before": "2025-01-22T09:21:15Z",
+      "after": "2025-01-28T08:40:42Z"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_e3e5004b",
+      "field": "credit_minor",
+      "before": 227195811,
+      "after": 228265583
+    }
+  ],
+  "clean_digest": "d30af4ee52f036ad1a6b78d34d09769cc219e4e1c2c66f1fb6c115b14a5d23aa",
+  "final_digest": "512d5e71f841d1203be04c99d8d975665c69b9be5e7a0f00243ef4ede9f5c9bd",
+  "rejected_attempts": []
+}

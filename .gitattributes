@@ -1,0 +1,6 @@
+# LF everywhere; generated episode files and logs are compared byte for byte.
+* text=auto eol=lf
+episodes/** -text
+runs/** -text
+schemas/** -text
+viewer/index.html -text
