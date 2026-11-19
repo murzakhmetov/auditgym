@@ -289,6 +289,21 @@ class AuditEnv:
         if self._episode is not None and not self._done:
             self._finish(submission=None, truncated=True, reason=reason)
 
+    def force_agent_error(self, reason: str, message: str) -> None:
+        """Host-side: the agent process crashed, could not load, or tampered with grader code.
+
+        The run is graded as an invalid submission (reward -1, closed false) with status `reason`,
+        replacing any grade already recorded: a crash is not an empty answer and must never beat a
+        real one on a clean ledger. Only the time and step limits stay empty answers."""
+        if self._episode is None:
+            return
+        inspection = self._final["inspection_steps"] if self._final else self._steps
+        if not self._done:
+            self._done, self._truncated, self._terminated = True, True, False
+        self._final = self._grader.grade(submission=None, inspection_steps=inspection, status="invalid_submission",
+                                         invalid_errors=[message[:200]], elapsed_s=self._clock() - self._t0)
+        self._final["status"] = reason
+
     # ------------------------------------------------------- grader access
     @property
     def steps(self) -> int:
