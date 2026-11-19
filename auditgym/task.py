@@ -5,7 +5,7 @@ or error counts."""
 from __future__ import annotations
 
 from . import FINDING_TYPES
-from .schemas import MAX_AFFECTED_IDS, MAX_EVIDENCE_IDS, MAX_EXPLANATION_CHARS, MAX_FINDINGS, MAX_PAGE
+from .schemas import MAX_AFFECTED_IDS, MAX_EVIDENCE_IDS, MAX_EXPLANATION_CHARS, MAX_FINDINGS, MAX_ID_CHARS, MAX_PAGE
 
 TOLERANCE_MINOR = 2
 
@@ -43,7 +43,7 @@ FINDING_TYPE_RULES = {
 }
 
 
-def build_task(episode, max_steps: int, mode: str) -> dict:
+def build_task(episode, max_steps: int, mode: str, time_limit_s: float = 60) -> dict:
     return {
         "objective": (
             "Audit the reporting period's ledger against the source documents and the policy. Report every "
@@ -58,7 +58,9 @@ def build_task(episode, max_steps: int, mode: str) -> dict:
             "tolerance_minor": TOLERANCE_MINOR,
             "ids": "affected_ids and evidence_ids are compared as sets after trimming spaces (case-sensitive). A "
                    "document may be cited by doc_id or by its invoice_id/payment_id. FX records are cited as "
-                   "'YYYY-MM-DD:SRC:TGT'. A finding needs at least one complete evidence set; extra IDs are ignored.",
+                   "'YYYY-MM-DD:SRC:TGT'. A finding needs at least one complete evidence set; extra well-formed IDs "
+                   "are ignored. Every ID must be a non-blank string of at most max_id_chars characters; a submission "
+                   "with a malformed ID is rejected as invalid.",
             "matching": "one-to-one with the answer key; repeated or unmatched findings are false positives",
         },
         "reward": {
@@ -75,7 +77,8 @@ def build_task(episode, max_steps: int, mode: str) -> dict:
             "max_affected_ids": MAX_AFFECTED_IDS,
             "max_evidence_ids": MAX_EVIDENCE_IDS,
             "max_explanation_chars": MAX_EXPLANATION_CHARS,
-            "time_limit_s": 60,
+            "max_id_chars": MAX_ID_CHARS,
+            "time_limit_s": int(time_limit_s) if float(time_limit_s).is_integer() else time_limit_s,
         },
         "actions": {
             "list_records": {"table": "ledger | invoices | payments | fx", "cursor": "null or next_cursor", "limit": "1..50"},

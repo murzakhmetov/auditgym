@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
-  "ok": true,
-  "elapsed_s": 50.0,
+  "ok": false,
+  "elapsed_s": 53.5,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -15,7 +15,7 @@
       "skipped": 0
     },
     "B_replay": {
-      "passed": 8,
+      "passed": 0,
       "total": 8,
       "skipped": 0
     },
@@ -41,18 +41,18 @@
     }
   },
   "section_seconds": {
-    "A_unit_tests": 13.6,
-    "B_committed_episodes": 2.9,
-    "B_replay": 1.1,
-    "C_data": 3.7,
-    "C_reward": 11.8,
-    "D_paired": 16.5,
-    "E_leaks": 0.3
+    "A_unit_tests": 14.9,
+    "B_committed_episodes": 3.2,
+    "B_replay": 1.3,
+    "C_data": 4.0,
+    "C_reward": 13.2,
+    "D_paired": 16.4,
+    "E_leaks": 0.4
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 144 tests",
+        "check": "unittest: 145 tests",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -262,43 +262,43 @@
     "B_replay": [
       {
         "check": "dev/auditor: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs"
       },
       {
         "check": "dev/flag_all: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs"
       },
       {
         "check": "dev/random: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs"
       },
       {
         "check": "dev/recon: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs"
       },
       {
         "check": "train/auditor: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs"
       },
       {
         "check": "train/flag_all: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs"
       },
       {
         "check": "train/random: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs"
       },
       {
         "check": "train/recon: 10 recorded runs, each replays to identical observations and terminal reward",
-        "ok": true,
-        "detail": ""
+        "ok": false,
+        "detail": "ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs"
       }
     ],
     "C_data": [
@@ -2176,7 +2176,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0016,
+      "agent_time_s": 0.0054,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -2271,7 +2271,7 @@
       "recall": 0.0,
       "f1": 0.1,
       "steps": 23.6,
-      "agent_time_s": 0.0024,
+      "agent_time_s": 0.0023,
       "closed_share": 0.1,
       "invalid": 0,
       "truncated": 0,
@@ -2319,7 +2319,7 @@
       "recall": 0.5533,
       "f1": 0.2786,
       "steps": 32.6,
-      "agent_time_s": 0.0126,
+      "agent_time_s": 0.006,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,

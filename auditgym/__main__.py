@@ -247,7 +247,17 @@ def cmd_grade(args) -> int:
 
     with _input(broad=True):
         ep = load_episode(Path(args.episode))
-        sub = aio.read_json(Path(args.findings))
+        if args.steps < 0:
+            raise ValueError("--steps must be 0 or more")
+        try:
+            sub = json.loads(Path(args.findings).read_text(encoding="utf-8-sig"))  # tolerate a UTF-8 BOM
+        except json.JSONDecodeError as exc:
+            sub = None
+            errors = [f"{Path(args.findings).name} is not valid JSON: {exc.msg} (line {exc.lineno})"]
+    if sub is None:
+        rep = Grader(ep.truth, ep.episode_id).grade(None, args.steps, "invalid_submission", invalid_errors=errors)
+        print(json.dumps(rep, indent=2))
+        return 0
     errors = validate_submission(sub, ep.episode_id)
     g = Grader(ep.truth, ep.episode_id)
     if errors:

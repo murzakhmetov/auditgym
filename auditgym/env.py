@@ -100,7 +100,7 @@ class AuditEnv:
             episode = transform_episode(episode, **config["transform"])
         self._load(episode)
         obs = {
-            "task": build_task(episode, self.max_steps, self.mode),
+            "task": build_task(episode, self.max_steps, self.mode, self.time_limit_s),
             "manifest": copy.deepcopy(episode.manifest),
             "policy": copy.deepcopy(episode.policy),
             "remaining_steps": self.max_steps,

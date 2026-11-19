@@ -73,6 +73,21 @@ class ExperimentalRewardTests(unittest.TestCase):
         spam = partial + [dict(GOOD[0], evidence_ids=[f"E{i}"]) for i in range(10)]
         self.assertLess(experimental_reward(spam, ISSUES, 0)["soft_f1"], r_partial["soft_f1"])
 
+    def test_issues_sharing_type_and_ids_get_optimal_credit_in_any_order(self):
+        # Two issues with the same type and affected_ids, amounts 1000 and 1002 (tolerance 2). Finding f_both
+        # (1001) fits both issues; f_a (999) fits only "a". A greedy pass that serves "a" first takes f_both and
+        # leaves "b" with partial credit (soft F1 0.875). The assignment is one-to-one by maximum total weight,
+        # so this exact answer scores 1 whatever the finding order.
+        base = dict(ISSUES[0], tolerance_minor=2)
+        a = dict(base, issue_id="a", expected_amount_minor=1000)
+        b = dict(base, issue_id="b", expected_amount_minor=1002)
+        f_both = dict(GOOD[0], claimed_amount_minor=1001, currency=base["currency"])
+        f_a = dict(GOOD[0], claimed_amount_minor=999, currency=base["currency"])
+        for order in ([f_both, f_a], [f_a, f_both]):
+            r = experimental_reward(order, [a, b], 0)
+            self.assertEqual(r["soft_f1"], 1.0)
+            self.assertEqual(r["credit_per_issue"], {"a": 1.0, "b": 1.0})
+
 
 if __name__ == "__main__":
     unittest.main()

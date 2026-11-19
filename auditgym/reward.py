@@ -34,28 +34,69 @@ def terminal_reward(tp: int, fp: int, fn: int, inspection_steps: int) -> float:
     return terminal_reward_from_f1(f1_fraction(tp, fp, fn), inspection_steps)
 
 
+def _max_weight_assignment(weights: list[list[int]]) -> list[tuple[int, int]]:
+    """Rows x columns of non-negative integer weights -> (row, col) pairs with positive weight that maximise
+    the total (Hungarian algorithm on a square padded cost matrix; deterministic for a given input order)."""
+    n_rows = len(weights)
+    n_cols = len(weights[0]) if n_rows else 0
+    n = max(n_rows, n_cols)
+    if n == 0:
+        return []
+    top = max(max(row) for row in weights) if n_cols else 0
+    cost = [[top - (weights[i][j] if i < n_rows and j < n_cols else 0) for j in range(n)] for i in range(n)]
+    inf = float("inf")
+    u, v, p, way = [0] * (n + 1), [0] * (n + 1), [0] * (n + 1), [0] * (n + 1)
+    for i in range(1, n + 1):
+        p[0], j0 = i, 0
+        minv, used = [inf] * (n + 1), [False] * (n + 1)
+        while True:
+            used[j0] = True
+            i0, delta, j1 = p[j0], inf, 0
+            for j in range(1, n + 1):
+                if not used[j]:
+                    cur = cost[i0 - 1][j - 1] - u[i0] - v[j]
+                    if cur < minv[j]:
+                        minv[j], way[j] = cur, j0
+                    if minv[j] < delta:
+                        delta, j1 = minv[j], j
+            for j in range(n + 1):
+                if used[j]:
+                    u[p[j]] += delta
+                    v[j] -= delta
+                else:
+                    minv[j] -= delta
+            j0 = j1
+            if p[j0] == 0:
+                break
+        while j0:
+            j1 = way[j0]
+            p[j0] = p[j1]
+            j0 = j1
+    return sorted((p[j] - 1, j - 1) for j in range(1, n + 1)
+                  if p[j] and p[j] - 1 < n_rows and j - 1 < n_cols and weights[p[j] - 1][j - 1] > 0)
+
+
 def experimental_reward(findings: list[dict], issues: list[dict], inspection_steps: int, aliases: dict | None = None) -> dict:
     nfs = [normalize_finding(i, f, aliases) for i, f in enumerate(findings)]
     nis = sorted((normalize_issue(t) for t in issues), key=lambda t: t.issue_id)
-    used: set[int] = set()
+    # credit in quarters: 2 for the right type and affected_ids, +1 amount and currency, +1 complete evidence set.
+    # Findings only compete for issues with the same (type, affected_ids); within such a group the credit is
+    # assigned one-to-one by maximum total weight, so finding order never lowers an exact answer below 1.
+    groups: dict = {}
+    for ni in nis:
+        groups.setdefault((ni.type, ni.ids), []).append(ni)
     credit_total = Fraction(0)
     per_issue = {}
-    for ni in nis:
-        best = None
-        for nf in nfs:
-            if nf.index in used or nf.type != ni.type or nf.ids != ni.ids:
-                continue
-            credit = Fraction(1, 2)
-            if nf.currency == ni.currency and abs(nf.amount - ni.amount) <= ni.tolerance:
-                credit += Fraction(1, 4)
-            if any(es <= nf.evidence for es in ni.evidence_sets):
-                credit += Fraction(1, 4)
-            if best is None or credit > best[0]:
-                best = (credit, nf.index)
-        if best is not None:
-            used.add(best[1])
-            credit_total += best[0]
-            per_issue[ni.issue_id] = float(best[0])
+    for key, group in groups.items():
+        cands = [nf for nf in nfs if (nf.type, nf.ids) == key]
+        if not cands:
+            continue
+        weights = [[2 + (nf.currency == ni.currency and abs(nf.amount - ni.amount) <= ni.tolerance)
+                    + any(es <= nf.evidence for es in ni.evidence_sets) for nf in cands] for ni in group]
+        for r, c in _max_weight_assignment(weights):
+            credit = Fraction(weights[r][c], 4)
+            credit_total += credit
+            per_issue[group[r].issue_id] = float(credit)
     denom = len(nfs) + len(nis)
     soft_f1 = Fraction(1) if denom == 0 else Fraction(2) * credit_total / denom
     return {
