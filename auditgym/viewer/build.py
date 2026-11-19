@@ -19,11 +19,13 @@ Bundle schema (window.AUDITGYM_DATA):
       "isolated" (agent in its own process), "mode",
       "pairs": [{"finding_index", "issue_id"}], "unmatched_findings": [{"index", "reason", "closest_issue"}],
       "missed_issues": [...], "issues": [{"issue_id", "type", "found", "first_full_evidence_step", "miss_reason"}],
+      "n_cited", "n_cited_unobserved", "cited_unobserved", "fp_details": [{"finding_index", "cause"}],
       "submission": [findings] | null,
       "steps": [{"step", "action", "error", "ids", "n_rows", "value", "remaining_steps"}] | null   # null for the oracle
   }],
   "summary": {"<split>/<policy>": {...report.summarize fields...}},
-  "check": {"ok", "counts", "elapsed_s", "summary"} | null,
+  "check": {"ok", "counts", "elapsed_s", "summary", "section_seconds", "sections": {section: [{"check", "ok", "skipped"}]}} | null,
+  "rubric": [{"label", "n", "name", "weight", "sections": [section keys]}]   # check.RUBRIC, the jury rubric lines
   "budget": {"split", "episodes", "budgets": [int], "f1": {policy: [float]}, "return": {policy: [float]}} | null
 }
 
@@ -34,6 +36,7 @@ output stays a single file with no external scripts.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from .. import __version__
@@ -51,6 +54,13 @@ BUDGETS = (10, 20, 30, 50, 100)
 BUDGET_POLICIES = ("auditor", "recon")
 
 
+def _flatten_action(a) -> dict:
+    """Same alias flattening as env.step and runner.run_one: {"action", "args": {...}} becomes one flat dict."""
+    if isinstance(a, dict) and set(a) == {"action", "args"} and isinstance(a["args"], dict) and "action" not in a["args"]:
+        return {"action": a["action"], **a["args"]}
+    return a if isinstance(a, dict) else {}
+
+
 def _compact_steps(traj: list) -> list:
     out = []
     for rec in traj:
@@ -59,7 +69,7 @@ def _compact_steps(traj: list) -> list:
         err = obs.get("error")
         out.append({
             "step": rec["step"],
-            "action": rec["action"],
+            "action": _flatten_action(rec["action"]) or rec["action"],
             "error": err["code"] if err else None,
             "ids": sorted(observed_ids(obs)),
             "n_rows": len(res.get("rows") or []) if isinstance(res, dict) else 0,
@@ -83,6 +93,18 @@ def _budget_sweep(episodes: list) -> dict | None:
             f1[pol].append(round(sum(g["f1"] for g in grades) / len(grades), 4))
             ret[pol].append(round(sum(g["reward"] for g in grades) / len(grades), 4))
     return {"split": "dev", "episodes": len(dev), "budgets": list(BUDGETS), "f1": f1, "return": ret}
+
+
+def _rubric() -> list:
+    """The jury rubric lines exactly as check.py groups the sections for report.md."""
+    from ..check import RUBRIC
+
+    out = []
+    for label, sections in RUBRIC:
+        m = re.match(r"^(\d+)\.\s*(.*?)\s*\((\d+)\)\s*$", label)
+        out.append({"label": label, "n": int(m.group(1)) if m else len(out) + 1, "name": m.group(2) if m else label,
+                    "weight": int(m.group(3)) if m else None, "sections": list(sections)})
+    return out
 
 
 def make_bundle() -> dict:
@@ -109,9 +131,10 @@ def make_bundle() -> dict:
             submission = None
             if traj:
                 for rec in traj:
-                    a = rec.get("action")
-                    if isinstance(a, dict) and a.get("action") == "submit" and isinstance(a.get("findings"), dict):
-                        submission = a["findings"].get("findings")
+                    a = _flatten_action(rec.get("action"))
+                    f = a.get("findings") if a.get("action") == "submit" else None
+                    if isinstance(f, dict) and isinstance(f.get("findings"), list) and g.get("status") == "submitted":
+                        submission = f["findings"]
             elif pol == "oracle":
                 from ..policies.oracle import OraclePolicy
 
@@ -120,7 +143,8 @@ def make_bundle() -> dict:
                 "run_id": g["run_id"], "split": split, "episode_name": name, "episode_id": ep.episode_id, "policy": pol,
                 **{k: g.get(k) for k in ("reward", "reward_experimental", "tp", "fp", "fn", "precision", "recall", "f1",
                                          "inspection_steps", "agent_time_s", "status", "closed", "isolated", "mode", "pairs",
-                                         "unmatched_findings", "missed_issues", "issues")},
+                                         "unmatched_findings", "missed_issues", "issues",
+                                         "n_cited", "n_cited_unobserved", "cited_unobserved", "fp_details")},
                 "submission": submission,
                 "steps": _compact_steps(traj) if traj else None,
             })
@@ -129,7 +153,11 @@ def make_bundle() -> dict:
     if rep.exists():
         r = aio.read_json(rep)
         check = {"ok": r.get("ok"), "counts": r.get("counts"), "elapsed_s": r.get("elapsed_s"),
-                 "summary": r.get("summary")}
+                 "summary": r.get("summary"), "section_seconds": r.get("section_seconds"),
+                 # named checks per section (the detail text is kept only for a failing or skipped check)
+                 "sections": {sec: [{"check": c["check"], "ok": bool(c["ok"]), "skipped": bool(c.get("skipped")),
+                                     **({} if c["ok"] and not c.get("skipped") else {"detail": str(c.get("detail", ""))[:300]})} for c in cs]
+                              for sec, cs in (r.get("sections") or {}).items()}}
     return {
         "version": __version__,
         "built_from": "episodes/train, episodes/dev, runs/check/report.json",
@@ -137,6 +165,7 @@ def make_bundle() -> dict:
         "runs": runs,
         "summary": summarize(grades),
         "check": check,
+        "rubric": _rubric(),
         "budget": _budget_sweep(episodes),
     }
 

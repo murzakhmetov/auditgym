@@ -337,6 +337,10 @@ button.lrow:hover{background:var(--surface-2)}
 .hx span{text-align:center;overflow:hidden}
 .hleg{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--faint);padding:0 16px 16px}
 .hleg i{display:block;width:144px;height:8px;border-radius:4px}
+.pdesc{font-size:12px;color:var(--faint);margin-top:2px;white-space:normal;max-width:15ch;line-height:1.3}
+.dt.tight td.r,.dt.tight th.r{padding-left:4px;padding-right:4px}.dt.tight td.r:last-child,.dt.tight th.r:last-child{padding-right:16px}
+.dt.tight td:first-child{white-space:normal}
+.dt.diag td:first-child{white-space:normal;min-width:84px;max-width:120px}
 .grade{display:inline-block;font-size:12px;margin-left:8px;color:var(--faint)}
 .grade.c-ok{color:var(--ok)}.grade.c-bad{color:var(--bad)}.grade.c-acc{color:var(--faint)}
 .ib{display:inline-block;width:56px;height:4px;border-radius:2px;background:var(--surface-3);margin-left:8px;vertical-align:2px;overflow:hidden}
@@ -365,6 +369,39 @@ button.lrow:hover{background:var(--surface-2)}
 @media (max-width:1600px) and (min-width:1281px){.kpis.five{grid-template-columns:repeat(6,minmax(0,1fr))}.kpis.five>*{grid-column:span 2}.kpis.five>:nth-child(n+4){grid-column:span 3}}
 @media (max-width:1280px){.app{grid-template-columns:56px 216px minmax(0,1fr) 320px}body.no-drawer .app{grid-template-columns:56px 216px minmax(0,1fr) 0}.search{width:200px}}
 @media (max-width:1050px){body .app,body.no-drawer .app{grid-template-columns:56px 0 minmax(0,1fr) 0}.side,.drawer{display:none}.search{width:160px}.search span:not(.kbd){display:none}}
+.cop{border-top:1px solid var(--line);padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+.cth{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;min-width:0}
+.cth .verb{font:12px var(--mono);color:var(--muted);padding:0 6px;height:20px;line-height:20px;border-radius:var(--r-tag);background:var(--surface-2)}
+.cth .ck{color:var(--faint)}.cth .cf{color:var(--muted)}
+.cg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.cg.hh{padding:8px 12px 8px}.cg.hh span{font-size:12px;color:var(--faint)}
+.cv{font:12px/1.5 var(--mono);font-variant-numeric:tabular-nums;padding:8px;border-radius:var(--r-tag);background:var(--surface-2);overflow-wrap:anywhere;min-width:0;color:var(--muted)}
+.cv.a{color:var(--text)}
+.cv small{display:block;color:var(--faint);font-size:12px}
+.cv .null{color:var(--faint)}
+.doc .gvrow{padding:8px 12px 0}
+.rub{display:flex;flex-direction:column;gap:16px}
+.rub details{border-top:1px solid var(--line)}
+.rub summary{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;cursor:pointer;font-size:13px;list-style:none}
+.rub summary::-webkit-details-marker{display:none}
+.rub summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rub summary:hover{background:var(--surface-2)}
+.rub summary .chev{color:var(--faint);transition:transform .15s var(--ease);flex:none;width:14px;height:14px}
+.rub details[open]>summary .chev{transform:rotate(90deg)}
+.rub .c{margin-left:auto;font:12px var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.rub .c.c-bad{color:var(--bad)}
+.rub .kl{padding:4px 16px 12px 40px;display:flex;flex-direction:column;gap:4px}
+.rub .kl div{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--muted);min-width:0}
+.rub .kl .tk{flex:none}
+.rub .kl .fd{display:block;font:12px var(--mono);color:var(--bad);overflow-wrap:anywhere;margin-top:2px}
+.rub .kl span.t{overflow-wrap:anywhere;min-width:0}
+.rub .kl .n{margin-left:auto;font:12px var(--mono);color:var(--faint);flex:none}
+.rub .cmds{display:flex;flex-direction:column;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+.rub .cmds p{font-size:12px;color:var(--muted);margin-bottom:4px;line-height:1.5}
+.rub code{display:block;font:12px/1.5 var(--mono);background:var(--surface-2);border-radius:var(--r-tag);padding:8px 12px;white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
+.rub .wt{font:12px var(--mono);color:var(--faint)}
+.dt.tight th{white-space:normal;vertical-align:bottom;line-height:1.3}.dt.tight th,.dt.tight td{padding-left:8px;padding-right:8px}.dt.tight th:first-child,.dt.tight td:first-child{padding-left:16px}.dt.tight th:last-child,.dt.tight td:last-child{padding-right:16px}
+.fpc td.z{color:var(--faint)}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -406,7 +443,7 @@ var L = {
     grade_imp: 'Improvement', grade_reg: 'Regression', grade_tie: 'Tie', grade_base: 'Baseline', grader_side: 'grader-side',
     vs_baseline: 'graded against the recon baseline', heat: 'Return per episode', heat_sub: 'click a cell to open the run',
     budget: 'Step budget · dev', budget_sub: 'mean F1 when the step budget is cut', budget_none: 'Budget sweep not in this bundle',
-    pr_note: 'P and R are 0 on clean episodes by definition; an empty answer on a clean episode has F1 = 1',
+    pr_note: 'Macro P and R average over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there (F1 = 1), which pulls macro P and R below 1 for every policy, the oracle included. Micro P and R pool TP, FP and FN over all episodes and do not have this artefact.',
     ep_issues: 'Errors in key', ep_rows: 'Ledger rows', ep_docs: 'Documents', ep_fx: 'FX rates', ep_run: 'Auditor run', n_accounts: '{n} accounts', inv_pay: '{i} invoices · {p} payments', clean_short: 'clean company',
     tab_key: 'Answer key', tab_ledger: 'Ledger', tab_invoices: 'Invoices', tab_payments: 'Payments', tab_fx: 'FX rates', tab_policy: 'Policy', tab_graph: 'Graph', runs: 'Runs',
     grader_view: 'Grader view · post-run', clean_company: 'Clean company: the correct answer is an empty findings list. Plausible distractors are present.',
@@ -437,6 +474,28 @@ var L = {
     chk_title: 'Offline check', chk_none: 'No check report in this bundle. Run python -m auditgym check, then python -m auditgym viewer.',
     chk_time: '{s} s, offline, no network', chk_sum: 'Policies on the hidden-like split', col_split: 'Split', col_closed_share: 'Closed',
     chk_A_unit_tests: 'Unit tests', chk_B_committed_episodes: 'Committed episodes', chk_C_data: 'Data and answer key', chk_C_reward: 'Reward reliability', chk_D_paired: 'Reproducibility and paired checks', chk_E_leaks: 'Leak checks',
+    ret_soft: 'Soft return', micro_p: 'Micro P', micro_r: 'Micro R', macro_p: 'Macro P', macro_r: 'Macro R', unobs: 'Unobserved citations',
+    diag_title: 'Diagnostics', diag_sub: 'soft return, pooled P and R, citation check', metric: 'Metric', cause: 'Cause', soft_title: 'The experimental reward', more_n: '+{n} more', shared_with: 'shared with {i}', removed_title: 'removed by the injector; not in the published ledger', set_to: 'set to', failing: 'Failing checks', skipped_n: '{n} skipped', fold_hint: 'raw names',
+    unobs_title: 'How many of the IDs named in findings the run never observed. 0 is healthy.',
+    unobs_oracle: 'The oracle never looks, so a non-zero value is expected: it is the alarm\'s positive control.',
+    diag_note: 'Soft return is the experimental reward. Unobserved citations count IDs a finding cited that the run never observed: 0 is healthy; the oracle never looks, so it is expected to be non-zero.',
+    fpc_title: 'False-positive causes', fpc_sub: 'what each wrong finding pointed at', fpc_none: 'No false positives in this selection',
+    fpc_near_issue: 'near an issue', fpc_unrelated: 'unrelated', fpc_fp: 'FP',
+    causal: 'Causal changes', causal_sub: 'what the injector changed on this error\'s records', causal_none: 'No recorded change touches this error\'s records.',
+    col_before: 'before', col_after: 'after', op_set: 'changed', op_add: 'added', op_remove: 'removed', injected: 'injected change', crosses: 'crosses the period end',
+    tbl_ledger: 'ledger', tbl_invoices: 'invoices', tbl_payments: 'payments', tbl_fx: 'fx',
+    fld_timestamp: 'posted at', fld_debit_minor: 'debit', fld_credit_minor: 'credit', fld_account: 'account',
+    chg_rate: 'rate', chg_rate_date: 'rate date', chg_alloc: 'allocation', chg_posting_ts: 'posting time', ops_n: '{n} changes',
+    rubric: 'Rubric map', rub_title: 'Jury rubric map', rub_sub: 'Each rubric line, the check sections that cover it, and the command that reproduces it',
+    rub_pts: '{n} points', rub_checks: 'Named checks', rub_verify: 'How a judge verifies', rub_none: 'No check report in this bundle. Run python -m auditgym check, then python -m auditgym viewer.',
+    rub_src: 'Grouping from check.py (RUBRIC), counts and seconds from runs/check/report.json', rub_total: '{n} points in total',
+    rub_1: 'Contract and isolation', rub_2: 'Data and answer key', rub_3: 'Reward reliability', rub_4: 'Reproducibility', rub_5: 'Engineering and explanation',
+    rc_1a: 'Leak scan of every agent-visible observation (section E), run with the whole check', rc_1b: 'Your own policy in the isolated child process',
+    rc_2a: 'Named accounting and answer-key checks for one episode', rc_2b: 'Committed episodes regenerate byte-identically and verify (section B), data of 20 hidden-like episodes (section C)',
+    rc_3a: 'Reward properties and attack battery on closed episodes from organizer seeds', rc_3b: 'Baselines on episode folders, graded by the same reward',
+    rc_4a: 'Paired copy of an episode: row permutation, ID remap, timestamp re-rendering', rc_4b: 'Recorded runs replay to identical observations (section B), paired checks (section D)', rc_4c: 'The same check inside the container, offline (after docker build -t auditgym .)',
+    rc_5a: 'Unit tests run as section A of the same command', rc_5b: 'Write the JSON schemas to schemas/',
+    chk_B_replay: 'Recorded runs replay',
     pal: 'Search episodes, runs and IDs', pal_none: 'No matches', k_episode: 'episode', k_run: 'run', k_view: 'view', k_record: 'record',
     status: 'bundle · {e} episodes · {r} runs', offline: 'offline',
     col_row: 'Row', col_ts: 'Timestamp (UTC)', col_acc: 'Account', col_dr: 'Debit', col_cr: 'Credit', col_cur: 'Cur.',
@@ -470,7 +529,7 @@ var L = {
     grade_imp: 'Лучше', grade_reg: 'Хуже', grade_tie: 'Наравне', grade_base: 'База', grader_side: 'у грейдера',
     vs_baseline: 'оценка относительно базовой политики recon', heat: 'Награда по эпизодам', heat_sub: 'клик по ячейке открывает прогон',
     budget: 'Бюджет шагов · валидация', budget_sub: 'средний F1 при урезанном бюджете шагов', budget_none: 'В сборке нет замера бюджета',
-    pr_note: 'P и R на чистых эпизодах равны 0 по определению; пустой ответ на чистом эпизоде даёт F1 = 1',
+    pr_note: 'Макро P и R — средние по эпизодам. На чистом эпизоде нет TP, поэтому даже верный пустой ответ даёт там P = R = 0 (F1 = 1): из-за этого макро P и R ниже 1 у любой политики, включая оракул. Микро P и R суммируют TP, FP и FN по всем эпизодам и этого артефакта не имеют.',
     ep_issues: 'Ошибок в ключе', ep_rows: 'Строк в книге', ep_docs: 'Документов', ep_fx: 'Курсов валют', ep_run: 'Прогон auditor', n_accounts: 'счетов: {n}', inv_pay: 'инвойсов: {i} · платежей: {p}', clean_short: 'чистая компания',
     tab_key: 'Ключ ответов', tab_ledger: 'Книга', tab_invoices: 'Инвойсы', tab_payments: 'Платежи', tab_fx: 'Курсы', tab_policy: 'Политика', tab_graph: 'Граф', runs: 'Прогоны',
     grader_view: 'Вид грейдера · после прогона', clean_company: 'Чистая компания: правильный ответ — пустой список находок. Правдоподобные отвлекающие случаи на месте.',
@@ -501,6 +560,28 @@ var L = {
     chk_title: 'Офлайн-проверка', chk_none: 'В сборке нет отчёта проверки. Запустите python -m auditgym check, затем python -m auditgym viewer.',
     chk_time: '{s} с, без сети', chk_sum: 'Политики на скрытом наборе', col_split: 'Набор', col_closed_share: 'Закрыто',
     chk_A_unit_tests: 'Модульные тесты', chk_B_committed_episodes: 'Опубликованные эпизоды', chk_C_data: 'Данные и ключ ответов', chk_C_reward: 'Надёжность награды', chk_D_paired: 'Воспроизводимость и парные проверки', chk_E_leaks: 'Проверки утечек',
+    ret_soft: 'Мягкая награда', micro_p: 'Микро P', micro_r: 'Микро R', macro_p: 'Макро P', macro_r: 'Макро R', unobs: 'Ссылки вне наблюдений',
+    diag_title: 'Диагностика', diag_sub: 'мягкая награда, суммарные P и R, проверка ссылок', metric: 'Метрика', cause: 'Причина', soft_title: 'Экспериментальная награда', more_n: 'ещё {n}', shared_with: 'общая с {i}', removed_title: 'удалена инжектором; в опубликованной книге её нет', set_to: 'устанавливается', failing: 'Непройденные проверки', skipped_n: 'пропущено: {n}', fold_hint: 'исходные имена',
+    unobs_title: 'Сколько ID из названных в находках прогон ни разу не наблюдал. 0 — норма.',
+    unobs_oracle: 'Оракул ничего не смотрит, поэтому ненулевое значение ожидаемо: это положительный контроль сигнализации.',
+    diag_note: 'Мягкая награда — экспериментальная награда. «Ненаблюдавшиеся ссылки» — ID, которые назвала находка, хотя прогон их не видел: 0 — норма; оракул ничего не смотрит, поэтому у него ожидаемо не ноль.',
+    fpc_title: 'Причины ложных срабатываний', fpc_sub: 'на что указывала каждая неверная находка', fpc_none: 'В этой выборке нет ложных срабатываний',
+    fpc_near_issue: 'рядом с ошибкой', fpc_unrelated: 'не связано', fpc_fp: 'FP',
+    causal: 'Что изменил инжектор', causal_sub: 'что инжектор изменил в записях этой ошибки', causal_none: 'В записях этой ошибки нет зафиксированных изменений.',
+    col_before: 'до', col_after: 'после', op_set: 'изменено', op_add: 'добавлено', op_remove: 'удалено', injected: 'внесённое изменение', crosses: 'пересекает конец периода',
+    tbl_ledger: 'книга', tbl_invoices: 'инвойсы', tbl_payments: 'платежи', tbl_fx: 'курсы',
+    fld_timestamp: 'время проводки', fld_debit_minor: 'дебет', fld_credit_minor: 'кредит', fld_account: 'счёт',
+    chg_rate: 'курс', chg_rate_date: 'дата курса', chg_alloc: 'разнесение', chg_posting_ts: 'время проводки', ops_n: 'изменений: {n}',
+    rubric: 'Критерии жюри', rub_title: 'Карта критериев жюри', rub_sub: 'Каждый критерий, секции проверки, которые её покрывают, и команда, которая это воспроизводит',
+    rub_pts: 'баллов: {n}', rub_checks: 'Именованные проверки', rub_verify: 'Как проверяет жюри', rub_none: 'В сборке нет отчёта проверки. Запустите python -m auditgym check, затем python -m auditgym viewer.',
+    rub_src: 'Группировка из check.py (RUBRIC), счётчики и секунды из runs/check/report.json', rub_total: 'всего баллов: {n}',
+    rub_1: 'Контракт и изоляция', rub_2: 'Данные и ключ ответов', rub_3: 'Надёжность награды', rub_4: 'Воспроизводимость', rub_5: 'Инженерное качество и пояснения',
+    rc_1a: 'Поиск утечек во всех наблюдениях агента (секция E), запускается вместе со всей проверкой', rc_1b: 'Ваша политика в изолированном дочернем процессе',
+    rc_2a: 'Именованные бухгалтерские проверки и проверки ключа ответов для одного эпизода', rc_2b: 'Опубликованные эпизоды воспроизводятся байт в байт и проходят verify (секция B), данные 20 похожих на скрытый набор эпизодов (секция C)',
+    rc_3a: 'Свойства награды и батарея атак на закрытых эпизодах из сидов организаторов', rc_3b: 'Базовые политики на папках эпизодов, оценка той же наградой',
+    rc_4a: 'Парная копия эпизода: перестановка строк, переименование ID, другое представление времени', rc_4b: 'Повтор записанных прогонов даёт те же наблюдения (секция B), парные проверки (секция D)', rc_4c: 'Та же проверка в контейнере, без сети (после docker build -t auditgym .)',
+    rc_5a: 'Модульные тесты идут секцией A той же команды', rc_5b: 'Записать JSON-схемы в schemas/',
+    chk_B_replay: 'Повтор записанных прогонов',
     pal: 'Поиск эпизодов, прогонов и ID', pal_none: 'Ничего не найдено', k_episode: 'эпизод', k_run: 'прогон', k_view: 'раздел', k_record: 'запись',
     status: 'данные · эпизодов: {e} · прогонов: {r}', offline: 'офлайн',
     col_row: 'Строка', col_ts: 'Время (UTC)', col_acc: 'Счёт', col_dr: 'Дебет', col_cr: 'Кредит', col_cur: 'Вал.',
@@ -600,6 +681,9 @@ var ICONS = {
   spark: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   tick: '<path d="M5 12.5l4.2 4.2L19 7"/>', cross: '<path d="M7 7l10 10M17 7 7 17"/>', ring: '<circle cx="12" cy="12" r="6.5"/>',
+  rubric: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6.5l1.3 1.3L7 5.5M3.5 12.5l1.3 1.3L7 11.5M3.5 18.5l1.3 1.3L7 17.5"/>',
+  diff: '<path d="M7 7h11M7 7l3-3M7 7l3 3M17 17H6M17 17l-3-3M17 17l-3 3"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
   eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
 };
 function gvLabel(key) { return h('span', { class: 'gv' }, icon('eye'), t(key || 'grader_view')); }
@@ -774,7 +858,7 @@ function readHash() {
     S.view = v; S.ep = p[1];
     if (v === 'episode') S.tab = oneOf(p[2], TABS, 'key');
     if (v === 'run') S.run = oneOf(p[2], POLICIES, 'auditor');
-  } else S.view = v === 'check' ? 'check' : 'overview';
+  } else S.view = v === 'check' ? 'check' : v === 'rubric' ? 'rubric' : 'overview';
   if ([S.view, S.ep, S.run, S.tab].join('|') !== before) { S.sel = S.issue = S.finding = S.step = S.expanded = null; S.page = 0; S.filter = ''; }
 }
 var lastKey = null;
@@ -824,7 +908,8 @@ function renderRail() {
   [['overview', 'home', t('overview'), function () { go({ view: 'overview' }); }],
    ['episode', 'layers', t('episodes'), function () { go({ view: 'episode', ep: ep, tab: S.tab || 'key' }); }],
    ['graph', 'graph', t('graph'), function () { go({ view: 'graph', ep: ep }); }],
-   ['check', 'check', t('check'), function () { go({ view: 'check' }); }]].forEach(function (b) {
+   ['check', 'check', t('check'), function () { go({ view: 'check' }); }],
+   ['rubric', 'rubric', t('rubric'), function () { go({ view: 'rubric' }); }]].forEach(function (b) {
     var on = S.view === b[0] || (b[0] === 'episode' && S.view === 'run');
     r.appendChild(h('button', { class: 'rbtn' + (on ? ' on' : ''), 'aria-label': b[2], 'aria-current': on ? 'page' : null, onclick: b[3] }, icon(b[1]), h('span', { class: 'tt', 'aria-hidden': 'true', text: b[2] })));
   });
@@ -840,6 +925,7 @@ function renderTop() {
   function crumb(label, fn) { if (cr.childNodes.length) cr.appendChild(h('span', { class: 'sep', 'aria-hidden': 'true', text: '/' })); cr.appendChild(fn ? h('button', { text: label, onclick: fn }) : h('b', { text: label, title: label })); }
   if (S.view === 'overview') crumb(t('overview'));
   else if (S.view === 'check') crumb(t('check'));
+  else if (S.view === 'rubric') crumb(t('rubric'));
   else {
     var ep = epByName(S.ep);
     crumb(t(ep.split), function () { go({ view: 'overview', split: ep.split }); });
@@ -892,6 +978,7 @@ function renderMain() {
   if (!EPS.length) { m.appendChild(h('div', { class: 'empty', text: t('no_data') })); return; }
   if (S.view === 'overview') renderOverview(m);
   else if (S.view === 'check') renderCheck(m);
+  else if (S.view === 'rubric') renderRubric(m);
   else if (S.view === 'run') renderRun(m, epByName(S.ep));
   else if (S.view === 'graph') renderGraphView(m, epByName(S.ep));
   else renderEpisode(m, epByName(S.ep));
@@ -906,6 +993,13 @@ function heatColor(v) {
   var c = x < 0.5 ? bad.map(function (b, i) { return b + (mid[i] - b) * (x / 0.5); }) : mid.map(function (b, i) { return b + (good[i] - b) * ((x - 0.5) / 0.5); });
   return 'rgb(' + c.map(Math.round).join(',') + ')';
 }
+function sumOf(rs, k) { return rs.reduce(function (a, r) { return a + (r[k] || 0); }, 0); }
+function fpCauses(rs) {
+  var c = {};
+  rs.forEach(function (r) { (r.fp_details || []).forEach(function (d) { c[d.cause] = (c[d.cause] || 0) + 1; }); });
+  return c;
+}
+function ratio(n, d) { return d ? n / d : null; }
 function statsFor(eps) {
   var out = {};
   POLICIES.forEach(function (p) {
@@ -913,6 +1007,8 @@ function statsFor(eps) {
     var clean = rs.filter(function (r) { var e = epById(r.episode_id); return e && !e.truth.issues.length; });
     out[p] = { ret: mean(rs.map(function (r) { return r.reward; })), f1: mean(rs.map(function (r) { return r.f1; })), p: mean(rs.map(function (r) { return r.precision; })),
       r: mean(rs.map(function (r) { return r.recall; })), steps: mean(rs.map(function (r) { return r.inspection_steps; })), closed: rs.filter(function (r) { return r.closed; }).length,
+      soft: mean(rs.filter(function (r) { return typeof r.reward_experimental === 'number'; }).map(function (r) { return r.reward_experimental; })),
+      tp: sumOf(rs, 'tp'), fpAll: sumOf(rs, 'fp'), fn: sumOf(rs, 'fn'), cited: sumOf(rs, 'n_cited'), unobs: sumOf(rs, 'n_cited_unobserved'), fpc: fpCauses(rs),
       n: rs.length, fp: clean.reduce(function (a, r) { return a + r.fp; }, 0), time: mean(rs.map(function (r) { return r.agent_time_s || 0; })),
       series: rs.map(function (r) { return r.reward; }), f1s: rs.map(function (r) { return r.f1; }), stepsS: rs.map(function (r) { return r.inspection_steps; }) };
   });
@@ -940,21 +1036,24 @@ function renderOverview(m) {
     kpi(t('k_closed'), [String(A.closed), '/ ' + A.n], t('recon_v', { v: R.closed + ' / ' + R.n })),
     kpi(t('k_steps'), fmt(A.steps, 1), t('of_budget')),
     c ? kpi(t('k_check'), [String(ct.pass), '/ ' + ct.total], (c.ok ? t('pass') : t('fail')) + ' · ' + fmt(c.elapsed_s, 1) + ' ' + t('sec'), null, c.ok ? '' : 'hero bad', function () { go({ view: 'check' }); }) : null));
-  var tb = h('table', { class: 'dt plain' });
-  tb.appendChild(h('thead', null, h('tr', null, [t('policy'), t('ret'), t('f1'), t('precision'), t('recall'), t('steps'), t('closed'), t('fp_clean')].map(function (x, i) { return h('th', { class: i ? 'r' : '', text: x }); }))));
+  var tb = h('table', { class: 'dt plain tight' });
+  var cols = [t('policy'), t('ret'), t('f1'), t('macro_p'), t('macro_r'), t('steps'), t('closed'), t('fp_clean')];
+  tb.appendChild(h('thead', null, h('tr', null, cols.map(function (x, i) { return h('th', { class: i ? 'r' : '', text: x }); }))));
   var body = h('tbody');
   POLICIES.forEach(function (p) {
     var s = st[p];
     var grade = p === 'recon' ? ['grade_base', 'c-acc'] : p === 'oracle' ? ['grader_side', 'c-mute'] : s.ret > R.ret + 0.01 ? ['grade_imp', 'c-ok'] : s.ret < R.ret - 0.01 ? ['grade_reg', 'c-bad'] : ['grade_tie', 'c-mute'];
     body.appendChild(h('tr', null,
-      h('td', null, h('b', { text: p }), h('span', { class: 'grade ' + grade[1], text: t(grade[0]) }), h('div', { style: 'color:var(--faint);font-size:12px;margin-top:2px', text: t('pol_' + p) })),
+      h('td', { title: t('pol_' + p) }, h('b', { text: p }), h('div', { class: 'grade ' + grade[1], style: 'display:block;margin:2px 0 0', text: t(grade[0]) }), h('div', { class: 'pdesc', text: t('pol_' + p) })),
       h('td', { class: 'r num ' + (s.ret >= 0.5 ? 'c-ok' : s.ret <= -0.5 ? 'c-bad' : ''), text: signed(s.ret) }),
       h('td', { class: 'r num', text: fmt(s.f1) }), h('td', { class: 'r num', text: fmt(s.p) }), h('td', { class: 'r num', text: fmt(s.r) }),
-      h('td', { class: 'r num', text: fmt(s.steps, 1) }), h('td', { class: 'r num', text: s.closed + ' / ' + s.n }), h('td', { class: 'r num', title: t('agent_time') + ': ' + fmt(s.time, 3) + ' ' + t('sec'), text: String(s.fp) })));
+      h('td', { class: 'r num', text: fmt(s.steps, 1) }), h('td', { class: 'r num', text: s.closed + '/' + s.n }), h('td', { class: 'r num', title: t('agent_time') + ': ' + fmt(s.time, 3) + ' ' + t('sec'), text: String(s.fp) })));
   });
   tb.appendChild(body);
   var policyCard = h('section', { class: 'card' }, h('div', { class: 'ch' }, h('h2', { text: t('policy') }), h('span', { class: 'sub', text: t('vs_baseline') })),
-    h('div', { style: 'overflow:auto' }, tb), h('div', { class: 'hint', text: t('pr_note') }));
+    h('div', { style: 'overflow:auto' }, tb), h('div', { class: 'hint', style: 'padding-bottom:8px', text: t('pr_note') }),
+    diagBlock(st), h('div', { class: 'hint', style: 'padding-top:8px', text: t('diag_note') }),
+    fpCausesBlock(st));
   var heat = h('div', { class: 'heat', style: '--n:' + eps.length });
   POLICIES.forEach(function (p) {
     var row = h('div', { class: 'hrow' }, h('span', { class: 'p', text: p }));
@@ -970,6 +1069,47 @@ function renderOverview(m) {
     h('i', { style: 'background:linear-gradient(90deg,' + heatColor(-1) + ',' + heatColor(0) + ',' + heatColor(1) + ')' }), h('span', { text: '+1' }));
   m.appendChild(h('section', { class: 'card' }, h('div', { class: 'ch' }, h('h2', { text: t('heat') }), h('span', { class: 'sub', text: t('heat_sub') })), heat, leg));
   m.appendChild(h('div', { class: 'grid2 ov' }, policyCard, budgetCard()));
+}
+function diagBlock(st) {
+  var wrap = h('div', { style: 'border-top:1px solid var(--line)' });
+  wrap.appendChild(h('div', { class: 'ch', style: 'border-bottom:0;min-height:40px' }, h('h2', { text: t('diag_title') }), h('span', { class: 'sub', title: t('diag_sub'), text: t('diag_sub') })));
+  var tb = h('table', { class: 'dt plain fpc tight diag' });
+  tb.appendChild(h('thead', null, h('tr', null, [h('th', { text: t('metric') })].concat(POLICIES.map(function (p) { return h('th', { class: 'r', text: p }); })))));
+  var body = h('tbody');
+  function row(label, title, cell) { body.appendChild(h('tr', null, [h('td', { title: title || null, text: label })].concat(POLICIES.map(cell)))); }
+  row(t('ret_soft'), t('soft_title'), function (p) { var v = st[p].soft; return h('td', { class: 'r num', text: v === null || v === undefined || isNaN(v) ? '—' : signed(v) }); });
+  row(t('micro_p'), null, function (p) { var s = st[p], v = ratio(s.tp, s.tp + s.fpAll); return h('td', { class: 'r num', text: v === null ? '—' : fmt(v) }); });
+  row(t('micro_r'), null, function (p) { var s = st[p], v = ratio(s.tp, s.tp + s.fn); return h('td', { class: 'r num', text: v === null ? '—' : fmt(v) }); });
+  row(t('unobs'), t('unobs_title'), function (p) {
+    var s = st[p], uk = s.unobs ? 'bad' : 'ok';
+    return h('td', { class: 'r', title: p === 'oracle' ? t('unobs_oracle') : t('unobs_title') }, p === 'oracle' ? h('span', { class: 'c-mute num', text: s.unobs + '/' + s.cited }) : tick(uk, s.unobs + '/' + s.cited));
+  });
+  tb.appendChild(body);
+  wrap.appendChild(h('div', { style: 'overflow:auto' }, tb));
+  return wrap;
+}
+function fpCausesBlock(st) {
+  var seen = {}, wrap = h('div', { style: 'border-top:1px solid var(--line)' });
+  POLICIES.forEach(function (p) { Object.keys(st[p].fpc).forEach(function (k) { seen[k] = 1; }); });
+  var keys = Object.keys(seen).filter(function (k) { return k !== 'near_issue' && k !== 'unrelated'; }).sort().concat(['near_issue', 'unrelated'].filter(function (k) { return seen[k]; }));
+  wrap.appendChild(h('div', { class: 'ch', style: 'border-bottom:0;min-height:40px' }, h('h2', { text: t('fpc_title') }), h('span', { class: 'sub', title: t('fpc_sub'), text: t('fpc_sub') })));
+  if (!keys.length) { wrap.appendChild(h('div', { class: 'hint', style: 'padding-top:0', text: t('fpc_none') })); return wrap; }
+  var tb = h('table', { class: 'dt plain fpc tight' });
+  tb.appendChild(h('thead', null, h('tr', null, [h('th', { text: t('cause') })].concat(POLICIES.map(function (p) { return h('th', { class: 'r', text: p }); })))));
+  var body = h('tbody');
+  keys.forEach(function (k) {
+    body.appendChild(h('tr', null, [h('td', { title: k, text: tOr('d_' + k, tOr('fpc_' + k, k)) })].concat(POLICIES.map(function (p) {
+      var v = st[p].fpc[k] || 0;
+      return h('td', { class: 'r num' + (v ? '' : ' z'), text: v ? String(v) : '·' });
+    }))));
+  });
+  body.appendChild(h('tr', null, [h('td', null, h('b', { text: t('fpc_fp') }))].concat(POLICIES.map(function (p) {
+    var n = 0; Object.keys(st[p].fpc).forEach(function (k) { n += st[p].fpc[k]; });
+    return h('td', { class: 'r num' }, h('b', { text: String(n) }));
+  }))));
+  tb.appendChild(body);
+  wrap.appendChild(h('div', { style: 'overflow:auto' }, tb));
+  return wrap;
 }
 function budgetCard() {
   var b = DATA.budget;
@@ -1020,6 +1160,74 @@ function renderCheck(m) {
   }
 }
 
+// ------------------------------------------------------------------ rubric map
+var RUB_CMDS = {
+  E_leaks: [['rc_1a', 'python -m auditgym check'], ['rc_1b', 'python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom']],
+  B_committed_episodes: [['rc_2a', 'python -m auditgym verify episodes/dev/d08_both_interacting_kzt'], ['rc_2b', 'python -m auditgym check']],
+  C_reward: [['rc_3a', 'python -m auditgym check --seeds-file examples/closed_seeds_example.json'], ['rc_3b', 'python -m auditgym run --episodes episodes/dev --policies random,recon,flag_all,oracle --out runs/dev']],
+  B_replay: [['rc_4a', 'python -m auditgym transform --in episodes/dev/d08_both_interacting_kzt --out runs/d08_paired --permute-seed 1 --remap-seed 2 --ts-repr utc'], ['rc_4b', 'python -m auditgym check'],
+      ['rc_4c', 'docker run --rm --network none --cpus 2 --memory 4g auditgym']],
+  A_unit_tests: [['rc_5a', 'python -m auditgym check'], ['rc_5b', 'python -m auditgym schemas']]
+};
+function checkKind(name) {
+  return String(name).replace(/ep_[0-9a-f]{8,}/g, 'ep_…').replace(/^(train|dev)\/[A-Za-z0-9_]+/, '$1/…').replace(/^h\d+_[a-z]+/, 'h…')
+    .replace(/\{[^}]*\}/g, '{…}').replace(/\(\d+ issues/, '(N issues').replace(/\bby \d+ tolerances/, 'by N tolerances').replace(/\b\d+ junk findings/, 'N junk findings');
+}
+function sectionBlock(c, key) {
+  var list = (c.sections && c.sections[key]) || [], kinds = [], idx = {}, fails = [], skips = 0;
+  list.forEach(function (x) {
+    var k = checkKind(x.check), e = idx[k];
+    if (!e) { e = idx[k] = { name: k, n: 0, ok: 0, skip: 0, raw: [] }; kinds.push(e); }
+    e.n++; if (x.ok) e.ok++; if (x.skipped) { e.skip++; skips++; }
+    e.raw.push(x.check);
+    if (!x.ok && !x.skipped) fails.push(x);
+  });
+  var cnt = (c.counts && c.counts[key]) || { passed: 0, total: list.length }, secs = c.section_seconds && c.section_seconds[key];
+  var ok = cnt.passed === cnt.total && !fails.length;
+  function kindTick(e) { return e.ok !== e.n ? 'bad' : e.skip === e.n ? 'warn' : 'ok'; }
+  var body = [h('div', { class: 'kl', 'aria-label': t('rub_checks') }, kinds.length ? kinds.map(function (e) {
+    var cntTxt = e.n > 1 ? e.ok + ' / ' + e.n : '';
+    return h('div', { title: e.raw.slice(0, 12).join('\n') + (e.raw.length > 12 ? '\n…' : '') }, tick(kindTick(e)), h('span', { class: 't', text: e.name }),
+      h('span', { class: 'n', text: cntTxt + (e.skip ? (cntTxt ? ' · ' : '') + t('skipped_n', { n: e.skip }) : '') }));
+  }) : h('div', { text: '—' }))];
+  if (fails.length) {
+    body.push(h('div', { class: 'kl fails', 'aria-label': t('failing') }, h('div', { class: 'sect', style: 'padding:0', text: t('failing') }), fails.map(function (x) {
+      return h('div', null, tick('bad'), h('span', { class: 't' }, x.check, x.detail ? h('span', { class: 'fd', text: x.detail }) : null));
+    })));
+  }
+  var det = h('details', ok ? null : { open: 'open' },
+    h('summary', null, icon('chev'), tick(ok ? (skips && skips === list.length ? 'warn' : 'ok') : 'bad'), h('span', { text: tOr('chk_' + key, key) }),
+      h('span', { class: 'c' + (ok ? '' : ' c-bad'), text: cnt.passed + ' / ' + cnt.total + (skips ? ' · ' + t('skipped_n', { n: skips }) : '') + (secs !== undefined && secs !== null ? ' · ' + fmt(secs, 1) + ' ' + t('sec') : '') })),
+    body);
+  return det;
+}
+function renderRubric(m) {
+  var c = DATA.check, R = DATA.rubric || [];
+  var total = R.reduce(function (a, r) { return a + (r.weight || 0); }, 0);
+  m.appendChild(h('div', null, h('div', { class: 'eyebrow', text: t('rubric') }), h('h1', { text: t('rub_title') }),
+    h('div', { class: 'meta', text: t('rub_sub') + (total ? ' · ' + t('rub_total', { n: total }) : '') })));
+  if (!c || !R.length) { m.appendChild(h('div', { class: 'card' }, h('div', { class: 'empty', text: t('rub_none') }))); return; }
+  var wrap = h('div', { class: 'rub' });
+  R.forEach(function (r) {
+    var pass = 0, tot = 0, secs = 0, any = false;
+    r.sections.forEach(function (k) {
+      var v = c.counts && c.counts[k]; if (v) { pass += v.passed; tot += v.total; }
+      if (c.section_seconds && typeof c.section_seconds[k] === 'number') { secs += c.section_seconds[k]; any = true; }
+    });
+    var ok = tot > 0 && pass === tot, nm = L.en['rub_' + r.n] === r.name ? t('rub_' + r.n) : r.name;
+    var card = h('section', { class: 'card' },
+      h('div', { class: 'ch' }, tick(ok ? 'ok' : 'bad'), h('h2', { text: r.n + ' · ' + nm }), h('span', { class: 'wt', text: t('rub_pts', { n: r.weight }) }),
+        h('span', { class: 'right num', style: 'color:var(--muted);font-size:12px', text: pass + ' / ' + tot + (any ? ' · ' + fmt(secs, 1) + ' ' + t('sec') : '') })));
+    r.sections.forEach(function (k) { card.appendChild(sectionBlock(c, k)); });
+    var cmds = h('div', { class: 'cmds' }, h('div', { class: 'sect', style: 'padding:0', text: t('rub_verify') }));
+    (RUB_CMDS[r.sections[0]] || []).forEach(function (x) { cmds.appendChild(h('div', null, h('p', { text: t(x[0]) }), h('code', { text: x[1] }))); });
+    card.appendChild(cmds);
+    wrap.appendChild(card);
+  });
+  m.appendChild(wrap);
+  m.appendChild(h('div', { class: 'hint', style: 'padding:0', text: t('rub_src') }));
+}
+
 // ------------------------------------------------------------------ episode view
 function renderEpisode(m, ep) {
   var man = ep.manifest, issues = ep.truth.issues;
@@ -1061,7 +1269,8 @@ function answerKey(ep) {
       h('button', { class: 'hd', 'data-fk': 'iss:' + iss.issue_id, onclick: function (e) { e.stopPropagation(); open(); }, 'aria-pressed': S.issue === iss.issue_id ? 'true' : 'false' },
         h('span', { class: 'tid', text: iss.issue_id }), h('span', { class: 'ty', text: typeName(iss.type) }), h('span', { class: 'amt', text: money(ep, iss.expected_amount_minor, iss.currency) })),
       h('div', { class: 'tags' }, h('span', { class: 'tag', text: iss.variant }), h('span', { class: 'tag', text: tOr('sc_' + iss.scenario, iss.scenario) }),
-        iss.affected_ids.map(function (id) { return h('button', { class: 'tag', text: id, onclick: function (e) { e.stopPropagation(); go({ sel: id, issue: iss.issue_id }); } }); })),
+        iss.affected_ids.map(function (id) { return h('button', { class: 'tag', text: id, onclick: function (e) { e.stopPropagation(); go({ sel: id, issue: iss.issue_id }); } }); }),
+        causalOf(ep, iss).ops.length ? h('span', { class: 'tag', title: t('causal'), text: 'Δ ' + t('ops_n', { n: causalOf(ep, iss).ops.length }) }) : null),
       h('div', { class: 'ex', text: explain(iss.explanation) })));
   });
   box.appendChild(grid);
@@ -1410,7 +1619,7 @@ function renderDrawer() {
   d.setAttribute('aria-label', t('inspector'));
   if (!S.drawer) return;
   var ep = S.ep && epByName(S.ep);
-  if (!ep || S.view === 'overview' || S.view === 'check') { guidePanel(d); return; }
+  if (!ep || S.view === 'overview' || S.view === 'check' || S.view === 'rubric') { guidePanel(d); return; }
   if (S.sel) { recordPanel(d, ep, S.sel); return; }
   if (S.view === 'run' && S.finding !== null) { var run = runOf(ep, S.run); if (run && run.submission && run.submission[S.finding]) { findingPanel(d, ep, run, S.finding); return; } }
   if (S.issue && issueOf(ep, S.issue)) { issuePanel(d, ep, S.issue); return; }
@@ -1439,11 +1648,131 @@ function episodePanel(d, ep) {
     d.appendChild(box);
   }
 }
+function causalBase(ep, iss) {
+  ep._cz = ep._cz || {};
+  if (ep._cz[iss.issue_id]) return ep._cz[iss.issue_id];
+  var prov = ep.provenance || {}, al = (ep.truth && ep.truth.id_aliases) || {}, ids = {}, X = ix(ep), inj = null, ops = [];
+  function addId(id) { if (typeof id === 'string' && id) ids[id] = 1; }
+  iss.affected_ids.forEach(addId);
+  iss.evidence_sets.forEach(function (st) { st.forEach(addId); });
+  (prov.injections || []).forEach(function (i) { if (i.issue_id === iss.issue_id) inj = i; });
+  if (inj) Object.keys(inj.targets || {}).forEach(function (k) { addId(inj.targets[k]); });
+  Object.keys(al).forEach(function (k) { if (ids[k]) addId(al[k]); if (ids[al[k]]) addId(k); });
+  var type = inj ? inj.type : iss.type, tg = (inj && inj.targets) || {}, ch = (inj && inj.change) || {};
+  (prov.ops || []).forEach(function (o) {
+    var hit = !!ids[o.id], rec = o.record || (o.table === 'ledger' ? X.row.get(o.id) : null);
+    if (!hit && rec && ((rec.invoice_id && ids[rec.invoice_id]) || (rec.payment_id && ids[rec.payment_id]))) hit = true;
+    if (!hit) return;
+    // keep only the ops this error type causes; neighbouring errors on the same documents are theirs
+    if (type === 'wrong_period') hit = o.op === 'set' && o.field === 'timestamp';
+    else if (type === 'wrong_fx_rate') hit = o.op === 'set' && (/_minor$/.test(o.field || '') || (o.field === 'timestamp' && ch.posting_ts !== undefined));
+    else if (type === 'unallocated_payment') hit = !!rec && !!tg.payment && rec.payment_id === tg.payment;
+    else if (type === 'duplicate_invoice') hit = o.op === 'add';
+    if (hit) ops.push(o);
+  });
+  return (ep._cz[iss.issue_id] = { inj: inj, ops: ops });
+}
+function causalOf(ep, iss) {
+  var base = causalBase(ep, iss), shared = [];
+  base.ops.forEach(function (o) {
+    var other = [];
+    ((ep.truth && ep.truth.issues) || []).forEach(function (x) {
+      if (x.issue_id !== iss.issue_id && causalBase(ep, x).ops.indexOf(o) >= 0) other.push(x.issue_id);
+    });
+    shared.push(other);
+  });
+  return { inj: base.inj, ops: base.ops, shared: shared };
+}
+function cv(cls, nodes) { return h('div', { class: 'cv ' + cls }, nodes); }
+function nullVal() { return h('span', { class: 'null', text: '—' }); }
+function utcStr(v) {
+  var x = String(v);
+  if (!/(Z|[+-]\d\d:?\d\d)$/.test(x)) return x.replace('T', ' ');
+  var ms = Date.parse(x);
+  return isNaN(ms) ? x.replace('T', ' ') : new Date(ms).toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+}
+function tsVal(ep, v) { return h('span', { title: String(v) }, utcStr(v), h('small', { text: localTime(ep, v) })); }
+function opValue(ep, o, field, v) {
+  if (v === null || v === undefined) return nullVal();
+  var row = o.record || ix(ep).row.get(o.id) || {};
+  if (/_minor$/.test(field)) return money(ep, v, row.currency);
+  if (field === 'timestamp') return tsVal(ep, v);
+  if (field === 'account') return [String(v), h('small', { text: accName(ep, String(v)) })];
+  return String(v);
+}
+function recLines(ep, tb, rec) {
+  var out = [];
+  if (tb === 'ledger') {
+    out.push(rec.account + ' ' + accName(ep, rec.account));
+    out.push(rec.debit_minor ? t('col_dr') + ' ' + money(ep, rec.debit_minor, rec.currency) : t('col_cr') + ' ' + money(ep, rec.credit_minor, rec.currency));
+    if (rec.timestamp) out.push([utcStr(rec.timestamp), String(rec.timestamp)]);
+  } else if (tb === 'invoices' || tb === 'payments') {
+    out.push(rec.doc_id || rec.invoice_id || rec.payment_id || '');
+    out.push((rec.kind ? tOr('k_' + rec.kind, rec.kind) + ' · ' : '') + money(ep, rec.total_minor !== undefined ? rec.total_minor : rec.amount_minor, rec.currency));
+  } else out.push(JSON.stringify(rec).slice(0, 120));
+  return out.map(function (x) { return Array.isArray(x) ? h('div', { text: x[0], title: x[1] }) : h('div', { text: x }); });
+}
+function crossesEnd(ep, a, b) {
+  var pe = Date.parse(ep.manifest.period_end), x = Date.parse(a), y = Date.parse(b);
+  return !isNaN(pe) && !isNaN(x) && !isNaN(y) && ((x < pe) !== (y < pe));
+}
+function opBlock(ep, o, shared) {
+  var before, after, crossed = false;
+  if (o.op === 'set') {
+    before = opValue(ep, o, o.field, o.before); after = opValue(ep, o, o.field, o.after);
+    crossed = o.field === 'timestamp' && crossesEnd(ep, o.before, o.after);
+  } else if (o.op === 'add') { before = nullVal(); after = o.record ? recLines(ep, o.table, o.record) : nullVal(); }
+  else { before = o.record ? recLines(ep, o.table, o.record) : nullVal(); after = nullVal(); }
+  return h('div', { class: 'cop' },
+    h('div', { class: 'cth' }, h('span', { class: 'verb', text: t('op_' + o.op) }), h('span', { class: 'ck', text: tOr('tbl_' + o.table, o.table) }), o.op === 'remove' ? h('span', { class: 'mono', title: t('removed_title'), text: o.id }) : idLink(o.id),
+      o.field ? h('span', { class: 'cf', text: tOr('fld_' + o.field, o.field) }) : null, crossed ? tick('warn', t('crosses')) : null,
+      shared && shared.length ? h('span', { class: 'tag', text: t('shared_with', { i: shared.join(', ') }) }) : null),
+    h('div', { class: 'cg' }, cv('b', before), cv('a', after)));
+}
+function injBlocks(ep, inj, ops) {
+  var ch = (inj && inj.change) || {}, out = [], done = {};
+  Object.keys(ch).forEach(function (k) {
+    if (done[k]) return;
+    var m = /^correct_(.+)$/.exec(k);
+    if (m && Object.prototype.hasOwnProperty.call(ch, 'wrong_' + m[1])) {
+      done[k] = done['wrong_' + m[1]] = 1;
+      var fmtv = function (v) { return v === null || v === undefined ? nullVal() : m[1] === 'rate' ? rateStr(v) : String(v); };
+      out.push(h('div', { class: 'cop' }, h('div', { class: 'cth' }, h('span', { class: 'verb', text: t('injected') }), h('span', { class: 'cf', text: tOr('chg_' + m[1], m[1]) })),
+        h('div', { class: 'cg' }, cv('b', fmtv(ch[k])), cv('a', fmtv(ch['wrong_' + m[1]])))));
+    }
+  });
+  Object.keys(ch).forEach(function (k) {
+    if (done[k] || /^(correct|wrong)_/.test(k)) return;
+    var v = ch[k], bef = null, aft, ms = Date.parse(v);
+    if (k === 'posting_ts') {
+      (ops || []).forEach(function (o) { if (!bef && o.op === 'set' && o.field === 'timestamp' && Date.parse(o.after) === ms) bef = o; });
+      aft = tsVal(ep, v);
+    } else if (k === 'alloc') {
+      var invr = ix(ep).inv.get((inj.targets || {}).invoice);
+      aft = invr && typeof v === 'number' ? money(ep, v, invr.currency) : String(v);
+    } else aft = String(v);
+    out.push(h('div', { class: 'cop' }, h('div', { class: 'cth' }, h('span', { class: 'verb', text: t('injected') }), h('span', { class: 'cf', text: tOr('chg_' + k, k) }), bef ? null : h('span', { class: 'cf', text: t('set_to') })),
+      h('div', { class: 'cg' }, cv('b', bef ? tsVal(ep, bef.before) : nullVal()), cv('a', aft))));
+  });
+  return out;
+}
+function causalCard(ep, iss) {
+  var cz = causalOf(ep, iss), inj = injBlocks(ep, cz.inj, cz.ops), card = h('div', { class: 'doc' });
+  card.appendChild(h('div', { class: 'hd' }, icon('diff'), h('span', { text: t('causal') }), h('span', { class: 'k', text: t('causal_sub') })));
+  card.appendChild(h('div', { class: 'gvrow' }, gvLabel()));
+  if (!inj.length && !cz.ops.length) { card.appendChild(h('div', { class: 'hint', text: t('causal_none') })); return card; }
+  card.appendChild(h('div', { class: 'cg hh' }, h('span', { text: t('col_before') }), h('span', { text: t('col_after') })));
+  inj.forEach(function (b) { card.appendChild(b); });
+  cz.ops.slice(0, 24).forEach(function (o, i) { card.appendChild(opBlock(ep, o, cz.shared[i])); });
+  if (cz.ops.length > 24) card.appendChild(h('div', { class: 'hint', text: t('more_n', { n: cz.ops.length - 24 }) }));
+  return card;
+}
 function issuePanel(d, ep, issueId) {
   var iss = issueOf(ep, issueId), X = ix(ep);
   d.appendChild(h('div', { class: 'dh' }, h('div', { class: 't' }, icon('warn'), h('span', { text: iss.issue_id + ' · ' + typeName(iss.type) }), closeBtn(function () { go({ issue: null, finding: null }); })),
     h('div', { class: 'd', text: explain(iss.explanation) }),
     h('div', { class: 'chips', style: 'align-items:center;gap:12px' }, gvLabel(), h('span', { class: 'chip c-warn', text: money(ep, iss.expected_amount_minor, iss.currency) }))));
+  d.appendChild(causalCard(ep, iss));
   var ids = []; iss.evidence_sets.forEach(function (s) { s.forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
   var evRows = new Set(ids), docs = [];
   iss.affected_ids.concat(ids).forEach(function (id) { var r = docRecord(ep, id); if (r && docs.indexOf(r) < 0) docs.push(r); });
@@ -1579,7 +1908,7 @@ function openPalette() {
   p.onclick = function (e) { if (e.target === p) closePalette(); };
   function refresh() {
     var q = input.value.trim().toLowerCase(), items = [];
-    [['overview', t('overview')], ['check', t('check')]].forEach(function (v) { items.push({ k: t('k_view'), label: v[1], sub: '', run: function () { go({ view: v[0] }); } }); });
+    [['overview', t('overview')], ['check', t('check')], ['rubric', t('rubric')]].forEach(function (v) { items.push({ k: t('k_view'), label: v[1], sub: '', run: function () { go({ view: v[0] }); } }); });
     EPS.forEach(function (e) {
       items.push({ k: t('k_episode'), label: e.name, sub: t(e.split) + ' · ' + e.truth.issues.length, run: function () { go({ view: 'episode', ep: e.name, tab: 'key', sel: null, issue: null, finding: null, step: null }); } });
       items.push({ k: t('k_view'), label: t('graph') + ' · ' + e.name, sub: '', run: function () { go({ view: 'graph', ep: e.name, sel: null, issue: null }); } });
@@ -1592,7 +1921,7 @@ function openPalette() {
         pair[1].forEach(function (rec, id) {
           if (cnt < 60 && id.toLowerCase().indexOf(q) >= 0) {
             cnt++;
-            items.unshift({ k: t('k_record'), label: id, sub: t('k_' + pair[0]) + ' · ' + ep.name, run: function () { if (S.view === 'overview' || S.view === 'check') go({ view: 'episode', sel: id }); else go({ sel: id }); } });
+            items.unshift({ k: t('k_record'), label: id, sub: t('k_' + pair[0]) + ' · ' + ep.name, run: function () { if (S.view === 'overview' || S.view === 'check' || S.view === 'rubric') go({ view: 'episode', sel: id }); else go({ sel: id }); } });
           }
         });
       });
@@ -1641,7 +1970,7 @@ if (EPS.length) S.ep = EPS[0].name;
 readHash();
 try { if (location.hash !== hashOf()) history.replaceState(null, '', hashOf()); } catch (e) { /* file:// quirk */ }
 render();
-window.__auditgym = { S: S, GS: GS, go: go, graph: function () { return gmain; } };
+window.__auditgym = { S: S, GS: GS, go: go, causalOf: causalOf, graph: function () { return gmain; } };
 })();
 </script>
 </body>

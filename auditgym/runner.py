@@ -115,7 +115,8 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
     if traj is not None:
         for rec in traj:
             a = rec.get("action")
-            if isinstance(a, dict) and set(a) == {"action", "args"} and isinstance(a["args"], dict)                     and "action" not in a["args"]:
+            if (isinstance(a, dict) and set(a) == {"action", "args"} and isinstance(a["args"], dict)
+                    and "action" not in a["args"]):
                 a = {"action": a["action"], **a["args"]}  # same alias flattening as env.step
             if isinstance(a, dict) and a.get("action") == "submit":
                 f = a.get("findings")
