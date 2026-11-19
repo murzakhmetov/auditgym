@@ -701,7 +701,7 @@
       if (!vis[i]) continue;
       n = nodes[i];
       var csx = n.x * k + this.tx, csy = n.y * k + this.ty;
-      if (csx < -200 || csx > this.w + 200 || csy < -40 || csy > this.h + 40) continue; // off-screen labels are never drawn
+      if (csx < 0 || csx > this.w || csy < -40 || csy > this.h + 40) continue; // off-screen labels are never drawn
       var inEm = em && em.has(i), hub = n.type === 'account' && k > 0.25;
       var a2 = inEm || i === this.selected ? 1 : hub ? 0.9 : this.opt.labelsAll ? (em ? 0.25 : 0.9) : (em ? 0 : fade * (n.type === 'row' ? 0.55 : 1));
       if (a2 <= 0.02) continue;
@@ -718,8 +718,9 @@
       hub = n.type === 'account' && k > 0.25;
       var fs = (hub ? 12.5 : 11.5) / k * Math.max(0.85, Math.min(1.2, Math.pow(k, 0.25)));
       var ly = n.y + this.radius(n) + 3 / k;
+      var hwW = n.label.length * fs * 0.28, lxMin = ((this.opt.insetLeft || 0) + 4 - this.tx) / k + hwW, lxMax = (this.w - 4 - this.tx) / k - hwW, lx = lxMin > lxMax ? n.x : Math.min(Math.max(n.x, lxMin), lxMax);
       if (avoid) {
-        var lw2 = n.label.length * fs * 0.56, lh = fs * 1.2, ox = n.x - lw2 / 2, hit = false;
+        var lw2 = n.label.length * fs * 0.56, lh = fs * 1.2, ox = lx - lw2 / 2, hit = false;
         if (cand[ci + 2] < 3) {
           for (var q2 = 0; q2 < boxes.length; q2 += 4) {
             if (ox < boxes[q2] + boxes[q2 + 2] && ox + lw2 > boxes[q2] && ly < boxes[q2 + 1] + boxes[q2 + 3] && ly + lh > boxes[q2 + 1]) { hit = true; break; }
@@ -730,7 +731,7 @@
       }
       ctx.font = (hub || i === center ? '600 ' : '') + fs + 'px "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif';
       ctx.globalAlpha = a2; ctx.fillStyle = S.text;
-      ctx.fillText(n.label, n.x, ly);
+      ctx.fillText(n.label, lx, ly);
     }
     ctx.restore();
   };

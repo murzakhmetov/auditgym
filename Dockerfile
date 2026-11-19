@@ -8,9 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONHASHSEED=0 \
     PYTHONIOENCODING=utf-8
 
+RUN useradd --create-home --uid 10001 auditor
 WORKDIR /app
-COPY . /app
-RUN useradd --create-home --uid 10001 auditor && chown -R auditor:auditor /app
+COPY --chown=auditor:auditor . /app
 USER auditor
 
 CMD ["python", "-m", "auditgym", "check"]

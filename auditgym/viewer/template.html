@@ -314,10 +314,13 @@ button.lrow:hover{background:var(--surface-2)}
 .gtools button{height:32px;padding:0 10px;border-radius:var(--r-ctl);color:var(--muted);font-size:12px;display:flex;align-items:center;gap:8px;transition:background-color .15s var(--ease),color .15s var(--ease)}
 .gtools button:hover{color:var(--text);background:var(--surface-2)}
 .gtools button[aria-pressed=true]{color:var(--text);background:var(--surface-3)}
-.gissues{left:16px;bottom:16px;right:16px;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;align-items:center;padding:8px 12px}
+.gview{container-type:inline-size}
+.gissues{left:16px;bottom:16px;right:16px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:8px 12px}
+.gissues .h{flex-basis:100%;margin:0 0 4px}
+@container (max-width:760px){.gview.pan .gissues{flex-wrap:nowrap;overflow-x:auto}.gview.pan .gissues .h{flex-basis:auto;margin:0 8px 0 0}}
 .gview.pan .gissues{left:304px}
 .gchip{flex:none;white-space:nowrap}
-.gissues .h{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);margin-right:8px;flex:none;white-space:nowrap}
+.gissues .h{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);flex:none;white-space:nowrap}
 .gchip{height:28px;border-radius:var(--r-tag);padding:0 10px;font-size:12px;color:var(--muted);transition:background-color .15s var(--ease),color .15s var(--ease)}
 .gchip b{font:12px var(--mono);margin-right:6px;color:var(--text)}
 .gchip:hover{background:var(--surface-2);color:var(--text)}
@@ -358,7 +361,8 @@ button.lrow:hover{background:var(--surface-2)}
 /* status */
 .status{display:flex;align-items:center;gap:16px;padding:0 16px;border-top:1px solid var(--line);color:var(--faint);font:12px var(--mono);white-space:nowrap;overflow:hidden;background:var(--bg)}
 @media (max-width:1500px){.grid2:not(.ov){grid-template-columns:minmax(0,1fr)}.grid2>.verdict{order:-1}}
-@media (max-width:1600px){.kpis.five{grid-template-columns:repeat(6,minmax(0,1fr))}.kpis.five>*{grid-column:span 2}.kpis.five>:nth-child(n+4){grid-column:span 3}}
+@media (max-width:1280px){.hx{align-items:start}.hx span{writing-mode:vertical-rl;transform:rotate(180deg);height:30px;overflow:visible;justify-self:center;text-align:left}.kpis.five{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis.five>*,.kpis.five>:nth-child(n+4){grid-column:auto}.kpis.five>:first-child{grid-column:1/-1}}
+@media (max-width:1600px) and (min-width:1281px){.kpis.five{grid-template-columns:repeat(6,minmax(0,1fr))}.kpis.five>*{grid-column:span 2}.kpis.five>:nth-child(n+4){grid-column:span 3}}
 @media (max-width:1280px){.app{grid-template-columns:56px 216px minmax(0,1fr) 320px}body.no-drawer .app{grid-template-columns:56px 216px minmax(0,1fr) 0}.search{width:200px}}
 @media (max-width:1050px){body .app,body.no-drawer .app{grid-template-columns:56px 0 minmax(0,1fr) 0}.side,.drawer{display:none}.search{width:160px}.search span:not(.kbd){display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
@@ -410,7 +414,7 @@ var L = {
     rounding: 'rounding', base: 'base', tz: 'time zone', period: 'period', company_time: 'company time', extract_end: 'ledger extract to', offsets: 'UTC offset schedule',
     on: 'on', eval_mode: 'eval mode', isolated: 'isolated process', split: '{s} split',
     reward: 'Reward', post_run: 'post-run', pr: 'Precision · Recall', budget_k: 'Budget', steps_word: 'steps', verdict: 'Verdict', vs_key: 'vs key',
-    f_i: '{f} findings · {i} errors', n_findings: '{n} findings', trajectory: 'Trajectory', traj_sub: '{n} inspection steps + submit · agent view', s_steps: 'Steps', s_timeline: 'Timeline', bar_rows: 'bar = rows returned',
+    f_i: '{f} findings · {i} errors', n_findings: '{n} findings', trajectory: 'Trajectory', traj_sub: '{n} steps + submit · agent view', s_steps: 'Steps', s_timeline: 'Timeline', bar_rows: 'bar = rows returned',
     submit: 'submit', terminated: 'terminated', truncated: 'truncated', ev_complete: 'all evidence for {ids} seen at this step',
     missed: 'Missed', exact: 'exact match', action: 'Action', observed: 'Observed IDs ({n})', none: 'none', start: 'reset',
     oracle_note: 'The oracle runs grader-side with the answer key; it has no agent trajectory', no_findings: 'Empty answer, no findings',
@@ -474,7 +478,7 @@ var L = {
     rounding: 'округление', base: 'базовая валюта', tz: 'часовой пояс', period: 'период', company_time: 'время компании', extract_end: 'выгрузка книги до', offsets: 'Смещения UTC',
     on: 'на', eval_mode: 'режим eval', isolated: 'отдельный процесс', split: 'набор: {s}',
     reward: 'Награда', post_run: 'после прогона', pr: 'Точность · Полнота', budget_k: 'Бюджет', steps_word: 'шаги', verdict: 'Вердикт', vs_key: 'против ключа',
-    f_i: 'находок: {f} · ошибок: {i}', n_findings: 'находок: {n}', trajectory: 'Траектория', traj_sub: 'шагов осмотра: {n} + отправка · вид агента', s_steps: 'Шаги', s_timeline: 'Лента', bar_rows: 'полоса = полученные строки',
+    f_i: 'находок: {f} · ошибок: {i}', n_findings: 'находок: {n}', trajectory: 'Траектория', traj_sub: 'шагов: {n} + отправка · вид агента', s_steps: 'Шаги', s_timeline: 'Лента', bar_rows: 'полоса = полученные строки',
     submit: 'отправка', terminated: 'завершено', truncated: 'обрезано', ev_complete: 'на этом шаге собраны все доказательства для {ids}',
     missed: 'Пропущено', exact: 'точное совпадение', action: 'Действие', observed: 'Увиденные ID ({n})', none: 'нет', start: 'reset',
     oracle_note: 'Оракул работает на стороне грейдера с ключом ответов; траектории агента у него нет', no_findings: 'Пустой ответ, находок нет',
@@ -737,7 +741,7 @@ function killMain() {
 function syncGraph() {
   if (!gmain) return;
   gmain.focusIssue(S.issue || null);
-  document.querySelectorAll('.gchip').forEach(function (c) { var on = c.getAttribute('data-id') === S.issue; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  document.querySelectorAll('.gchip').forEach(function (c) { var on = c.getAttribute('data-id') === S.issue; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); if (on && c.parentNode) c.parentNode.scrollLeft = c.offsetLeft - 12; });
   var i = resolveAny(gmain.g, S.sel);
   if (i !== undefined) { if (gmain.selected !== i) { gmain.select(i); gmain.fitTo([i].concat(gmain.g.nodes[i].nb)); } }
   else if (gmain.selected >= 0) gmain.select(-1);
@@ -1200,7 +1204,7 @@ function trajectoryCard(ep, run) {
     card.appendChild(h('div', { class: 'empty', text: t('oracle_note') }));
     return card;
   }
-  card.appendChild(h('div', { class: 'ch' }, h('h2', { text: t('trajectory') }), h('span', { class: 'sub', text: t('traj_sub', { n: run.inspection_steps }) }),
+  card.appendChild(h('div', { class: 'ch' }, h('h2', { text: t('trajectory') }), h('span', { class: 'sub', title: t('traj_sub', { n: run.inspection_steps }), text: t('traj_sub', { n: run.inspection_steps }) }),
     h('div', { class: 'right' }, seg([['steps', t('s_steps')], ['timeline', t('s_timeline')]], S.trajMode, function (v) { go({ trajMode: v }); }))));
   card.appendChild(h('div', { class: 'legend' }, S.trajMode === 'timeline' ? null : ['invoices', 'payments', 'fx', 'ledger'].map(function (tb) { return h('span', null, h('i', { style: 'background:' + tblColor(tb) }), tb); }),
     h('span', { style: 'margin-left:auto', text: t('bar_rows') })));
@@ -1325,6 +1329,8 @@ function renderGraphView(m, ep) {
         onclick: function () { go({ issue: S.issue === iss.issue_id ? null : iss.issue_id, sel: null, finding: null }); } }, h('b', { text: iss.issue_id }), typeName(iss.type)));
     });
     wrap.appendChild(chips);
+    fg.setOption('insetBottom', chips.offsetHeight + 24);
+    var onc = chips.querySelector('.gchip.on'); if (onc) chips.scrollLeft = onc.offsetLeft - 12;
   }
 }
 function graphPanel(ep, G, fg, style) {
@@ -1504,6 +1510,7 @@ function recordPanel(d, ep, id) {
   else if (kind === 'row') {
     var r = X.row.get(id), kv = h('div', { class: 'kv' });
     Object.keys(r).forEach(function (k) {
+      if (k === 'account') return;
       var v = r[k];
       var cdef = COLS.ledger.filter(function (c) { return c[0] === k; })[0];
       kv.appendChild(h('span', { text: cdef ? t(cdef[1]) : k, title: k }));

@@ -1,6 +1,6 @@
 # auditgym check report
 
-Result: **PASS** in 28 s, version 0.1.0.
+Result: **PASS** in 27 s, version 0.1.0.
 
 ## Checks
 
@@ -147,11 +147,11 @@ Result: **PASS** in 28 s, version 0.1.0.
 
 | split | policy | n | return | P | R | F1 | steps | agent s | closed | return clean | return errors | FP on clean |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9394 | 0.75 | 0.75 | 1.0 | 30.3 | 0.0126 | 1.0 | 0.9548 | 0.9343 | 0 |
-| hidden_like | flag_all | 20 | -1.0 | 0.0 | 0.0 | 0.0 | 3.0 | 0.003 | 0.0 | -1.0 | -1.0 | 150 |
+| hidden_like | auditor | 20 | 0.9394 | 0.75 | 0.75 | 1.0 | 30.3 | 0.0118 | 1.0 | 0.9548 | 0.9343 | 0 |
+| hidden_like | flag_all | 20 | -1.0 | 0.0 | 0.0 | 0.0 | 3.0 | 0.0024 | 0.0 | -1.0 | -1.0 | 150 |
 | hidden_like | oracle | 20 | 1.0 | 0.75 | 0.75 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 |
-| hidden_like | random | 20 | -1.0 | 0.0 | 0.0 | 0.0 | 15.0 | 0.0016 | 0.0 | -1.0 | -1.0 | 10 |
-| hidden_like | recon | 20 | -0.2191 | 0.3028 | 0.75 | 0.4151 | 30.3 | 0.0062 | 0.0 | -1.0 | 0.0411 | 24 |
+| hidden_like | random | 20 | -1.0 | 0.0 | 0.0 | 0.0 | 15.0 | 0.0023 | 0.0 | -1.0 | -1.0 | 10 |
+| hidden_like | recon | 20 | -0.2191 | 0.3028 | 0.75 | 0.4151 | 30.3 | 0.0046 | 0.0 | -1.0 | 0.0411 | 24 |
 
 ## Failure analysis
 
