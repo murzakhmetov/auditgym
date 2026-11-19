@@ -139,7 +139,10 @@ def replay_run(records: list, episode) -> list:
     """Replay one recorded run (list of trajectory records, step order). Returns a list of problems (empty = identical)."""
     first = records[0]["observation"]
     mode = infer_mode(first)
-    env = AuditEnv(mode=mode, max_steps=int(first["remaining_steps"]), time_limit_s=1e9)
+    # Replay with the time limit the run published, on a frozen clock: the reset observation (which states the
+    # limit) must match byte for byte, and wall-clock time can never truncate a replay.
+    limit = (((first.get("task") or {}).get("limits") or {}).get("time_limit_s")) or 60
+    env = AuditEnv(mode=mode, max_steps=int(first["remaining_steps"]), time_limit_s=limit, clock=lambda: 0.0)
     obs, _info = env.reset(config={"episode": episode})
     problems = []
     if _j(obs) != _j(first):

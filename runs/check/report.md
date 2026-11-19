@@ -1,6 +1,6 @@
 # auditgym check report
 
-Result: **FAIL** in 54 s, version 0.1.0.
+Result: **PASS** in 52 s, version 0.1.0.
 
 Episodes: public master string auditgym-check-v1.
 
@@ -8,7 +8,7 @@ Episodes: public master string auditgym-check-v1.
 
 ### 1. Contract and isolation (25)
 
-Run time: E_leaks 0.4 s
+Run time: E_leaks 0.3 s
 
 #### E_leaks (3/3)
 
@@ -18,7 +18,7 @@ Run time: E_leaks 0.4 s
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 3.2 s, C_data 4.0 s
+Run time: B_committed_episodes 3.3 s, C_data 3.9 s
 
 #### B_committed_episodes (40/40)
 
@@ -89,7 +89,7 @@ Run time: B_committed_episodes 3.2 s, C_data 4.0 s
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 13.2 s
+Run time: C_reward 13.6 s
 
 #### C_reward (248/248)
 
@@ -344,18 +344,18 @@ Run time: C_reward 13.2 s
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.3 s, D_paired 16.4 s
+Run time: B_replay 1.2 s, D_paired 16.8 s
 
-#### B_replay (0/8)
+#### B_replay (8/8)
 
-- FAIL: dev/auditor: 10 recorded runs, each replays to identical observations and terminal reward (ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs)
-- FAIL: dev/flag_all: 10 recorded runs, each replays to identical observations and terminal reward (ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs)
-- FAIL: dev/random: 10 recorded runs, each replays to identical observations and terminal reward (ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs)
-- FAIL: dev/recon: 10 recorded runs, each replays to identical observations and terminal reward (ep_ee223b1157d7e933: reset observation differs; ep_5a13f5014447e4ae: reset observation differs; ep_e02cf9b4701342c8: reset observation differs)
-- FAIL: train/auditor: 10 recorded runs, each replays to identical observations and terminal reward (ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs)
-- FAIL: train/flag_all: 10 recorded runs, each replays to identical observations and terminal reward (ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs)
-- FAIL: train/random: 10 recorded runs, each replays to identical observations and terminal reward (ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs)
-- FAIL: train/recon: 10 recorded runs, each replays to identical observations and terminal reward (ep_22fbf4823e039c90: reset observation differs; ep_3814a986d97ec053: reset observation differs; ep_36ad821ac43fc00c: reset observation differs)
+- PASS: dev/auditor: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: dev/flag_all: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: dev/random: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: dev/recon: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: train/auditor: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: train/flag_all: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: train/random: 10 recorded runs, each replays to identical observations and terminal reward
+- PASS: train/recon: 10 recorded runs, each replays to identical observations and terminal reward
 
 #### D_paired (91/91)
 
@@ -453,7 +453,7 @@ Run time: B_replay 1.3 s, D_paired 16.4 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 14.9 s
+Run time: A_unit_tests 13.1 s
 
 #### A_unit_tests (1/1)
 
@@ -463,11 +463,11 @@ Run time: A_unit_tests 14.9 s
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9348 | 0.9348 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.6 | 0.0181 | 1.0 | 0.9548 | 0.9281 | 0 | 0.0 |
-| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0054 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
+| hidden_like | auditor | 20 | 0.9348 | 0.9348 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.6 | 0.018 | 1.0 | 0.9548 | 0.9281 | 0 | 0.0 |
+| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0015 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.8055 | -0.8055 | 0.0 | 0.0 | 0.0 | 0.0 | 0.1 | 0.1 | 23.6 | 0.0023 | 0.1 | -0.222 | -1.0 | 5 | 0.0 |
-| hidden_like | recon | 20 | -0.49 | -0.49 | 0.1954 | 0.5533 | 0.2126 | 0.7857 | 0.2786 | 0.2786 | 32.6 | 0.006 | 0.0 | -1.0 | -0.32 | 24 | 0.0 |
+| hidden_like | random | 20 | -0.8055 | -0.8055 | 0.0 | 0.0 | 0.0 | 0.0 | 0.1 | 0.1 | 23.6 | 0.004 | 0.1 | -0.222 | -1.0 | 5 | 0.0 |
+| hidden_like | recon | 20 | -0.49 | -0.49 | 0.1954 | 0.5533 | 0.2126 | 0.7857 | 0.2786 | 0.2786 | 32.6 | 0.0148 | 0.0 | -1.0 | -0.32 | 24 | 0.0 |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
 
