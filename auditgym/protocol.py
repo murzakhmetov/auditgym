@@ -130,9 +130,12 @@ def stage_agent_code(dest: Path, policy: str | None = None) -> Path:
 def code_digest(root: Path | None = None) -> dict:
     """{relative path: sha256} of every file under auditgym/ (bytecode included), configs/*.json
     and schemas/*.json. Compiled files count: a planted .pyc with a matching header would be
-    loaded in place of the source by every later Python process."""
+    loaded in place of the source by every later Python process. auditgym/viewer/ is left out:
+    the offline viewer (template, graph engine, builder) is never imported by the environment,
+    the grader or an agent, and editing it during a run must not fail the run."""
     root = Path(root) if root else PROJECT_ROOT
-    files = {p for p in (root / "auditgym").rglob("*") if p.is_file()}
+    pkg = root / "auditgym"
+    files = {p for p in pkg.rglob("*") if p.is_file() and p.relative_to(pkg).parts[0] != "viewer"}
     files |= set((root / "configs").glob("*.json")) | set((root / "schemas").glob("*.json"))
     out = {}
     for path in sorted(files):
