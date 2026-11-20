@@ -12,7 +12,7 @@ splits:         ## regenerate episodes/train and episodes/dev
 	$(PY) -m auditgym build-splits
 
 logs:           ## trajectories and grades for the open splits
-	$(PY) -m auditgym run --episodes episodes/train episodes/dev --policies random,recon,flag_all,oracle,auditor --out runs/train_dev
+	$(PY) -m auditgym run --episodes episodes/train episodes/dev --policies random,recon,flag_all,oracle,auditor,silent --out runs/train_dev
 
 stress:         ## generator stress run: 300 random + 17 extreme configurations -> runs/stress/report.md
 	$(PY) -m auditgym stress --n 300

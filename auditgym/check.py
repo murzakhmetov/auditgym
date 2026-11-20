@@ -178,7 +178,7 @@ def section_committed(rep: Report) -> list:
     return episodes
 
 
-REPLAY_POLICIES = ("random", "recon", "flag_all", "auditor")
+REPLAY_POLICIES = ("random", "recon", "flag_all", "auditor", "silent")
 
 
 def _replay_checks(rep: Report, results: dict, expected: dict) -> None:

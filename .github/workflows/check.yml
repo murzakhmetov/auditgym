@@ -38,7 +38,7 @@ jobs:
       - name: Committed trajectories replay byte for byte
         shell: bash
         run: |
-          python -m auditgym run --episodes episodes/train episodes/dev --policies random,recon,flag_all,oracle,auditor --out runs/train_dev
+          python -m auditgym run --episodes episodes/train episodes/dev --policies random,recon,flag_all,oracle,auditor,silent --out runs/train_dev
           git diff --stat --exit-code -- runs/train_dev/trajectories.jsonl
       - name: Upload the check report
         if: always()

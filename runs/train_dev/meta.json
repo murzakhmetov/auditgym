@@ -13,7 +13,8 @@
     "recon",
     "flag_all",
     "oracle",
-    "auditor"
+    "auditor",
+    "silent"
   ],
   "policy_seed": 0,
   "max_steps": 100,
@@ -29,7 +30,7 @@
     "episodes/train",
     "episodes/dev",
     "--policies",
-    "random,recon,flag_all,oracle,auditor",
+    "random,recon,flag_all,oracle,auditor,silent",
     "--out",
     "runs/train_dev"
   ]

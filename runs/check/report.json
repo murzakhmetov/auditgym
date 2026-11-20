@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "ok": true,
-  "elapsed_s": 101.3,
+  "elapsed_s": 100.7,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -15,8 +15,8 @@
       "skipped": 0
     },
     "B_replay": {
-      "passed": 8,
-      "total": 8,
+      "passed": 10,
+      "total": 10,
       "skipped": 0
     },
     "C_data": {
@@ -46,12 +46,12 @@
     }
   },
   "section_seconds": {
-    "A_unit_tests": 44.1,
-    "B_committed_episodes": 4.0,
-    "B_replay": 1.3,
-    "C_data": 4.5,
+    "A_unit_tests": 44.5,
+    "B_committed_episodes": 3.5,
+    "B_replay": 1.4,
+    "C_data": 4.1,
     "C_reward": 29.5,
-    "D_paired": 17.5,
+    "D_paired": 17.3,
     "E_leaks": 0.4,
     "F_contract": 0.0
   },
@@ -287,6 +287,11 @@
         "detail": ""
       },
       {
+        "check": "dev/silent: 10 recorded runs, each replays to identical observations and terminal reward",
+        "ok": true,
+        "detail": ""
+      },
+      {
         "check": "train/auditor: 10 recorded runs, each replays to identical observations and terminal reward",
         "ok": true,
         "detail": ""
@@ -303,6 +308,11 @@
       },
       {
         "check": "train/recon: 10 recorded runs, each replays to identical observations and terminal reward",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "train/silent: 10 recorded runs, each replays to identical observations and terminal reward",
         "ok": true,
         "detail": ""
       }
@@ -3149,7 +3159,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.0,
-      "agent_time_s": 0.0125,
+      "agent_time_s": 0.0188,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3189,7 +3199,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0024,
+      "agent_time_s": 0.0031,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3283,7 +3293,7 @@
       "recall": 0.0,
       "f1": 0.2,
       "steps": 33.95,
-      "agent_time_s": 0.0056,
+      "agent_time_s": 0.008,
       "closed_share": 0.2,
       "invalid": 0,
       "truncated": 0,
@@ -3334,7 +3344,7 @@
       "recall": 0.5425,
       "f1": 0.2307,
       "steps": 32.0,
-      "agent_time_s": 0.0125,
+      "agent_time_s": 0.0101,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
