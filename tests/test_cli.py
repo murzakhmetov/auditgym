@@ -285,8 +285,13 @@ class CustomPolicyInProcess(unittest.TestCase):
             self.assertEqual(rc, 2, err)
             lines = [ln for ln in err.splitlines() if ln.strip()]
             self.assertEqual(len(lines), 1, err)
-            # no separate policy user on this host, so the advice is the image, not dropping --in-process
-            for word in ("error: custom policy", "host's user", "closed episodes", "official image", "--allow-same-user"):
+            # the advice names what works on this host: where the child can switch to the separate policy user (the
+            # official image), dropping --in-process; elsewhere, running it in the official image
+            from auditgym import io as aio
+
+            switch = aio.agent_identity() is not None and protocol._proc_listable()
+            advice = "drop --in-process" if switch else "official image"
+            for word in ("error: custom policy", "host's user", "closed episodes", advice, "--allow-same-user"):
                 self.assertIn(word, lines[0])
             self.assertFalse((Path(d) / "o").exists(), "a refused run writes nothing")
             rc, _o, err = self.run_custom(d, "--seeds-file", seeds, "--secret-env", "AUDITGYM_TEST_SECRET_W",

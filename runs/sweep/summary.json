@@ -1,82 +1,14 @@
 {
  "code": {
-  "code_sha256": "2c8fb0c2f6bfe6ca92a8971e234bcfdb037860c0e63c1e2a136798bdebddc7c8",
+  "code_sha256": "5ca9203f885bcf6321afa9bd1b516b956599ddb08ee835ec6a79dcc5fc4f7134",
   "code_files": 60,
   "python": "3.11.4",
   "platform": "Windows-10-10.0.19045-SP0"
  },
  "chunk_size": 60,
  "configurations": 423,
- "feasible": 401,
+ "feasible": 418,
  "infeasible": [
-  {
-   "name": "random_018",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-01 fails that. Nearest feasible periods: 2024-12, 2025-03"
-  },
-  {
-   "name": "random_037",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-02 fails that. Nearest feasible periods: 2026-03, 2025-12"
-  },
-  {
-   "name": "random_038",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-01 fails that. Nearest feasible periods: 2025-12, 2026-03"
-  },
-  {
-   "name": "random_079",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09"
-  },
-  {
-   "name": "random_085",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09"
-  },
-  {
-   "name": "random_119",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-10 fails that. Nearest feasible periods: 2026-09, 2026-11"
-  },
-  {
-   "name": "random_122",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09"
-  },
-  {
-   "name": "random_134",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-01 fails that. Nearest feasible periods: 2024-12, 2025-03"
-  },
-  {
-   "name": "random_137",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-01 fails that. Nearest feasible periods: 2026-12, 2026-11"
-  },
-  {
-   "name": "random_145",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12"
-  },
-  {
-   "name": "random_168",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-12 fails that. Nearest feasible periods: 2027-11, 2028-01"
-  },
-  {
-   "name": "random_206",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-10 fails that. Nearest feasible periods: 2026-09, 2026-11"
-  },
-  {
-   "name": "random_207",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-01 fails that. Nearest feasible periods: 2026-12, 2026-11"
-  },
-  {
-   "name": "random_221",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12"
-  },
-  {
-   "name": "random_237",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-04 fails that. Nearest feasible periods: 2027-03, 2027-05"
-  },
-  {
-   "name": "random_239",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-05 fails that. Nearest feasible periods: 2025-04, 2025-06"
-  },
-  {
-   "name": "random_257",
-   "reason": "boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12"
-  },
   {
    "name": "random_271",
    "reason": "timezone UTC never has a UTC offset, but the requested errors need one"
@@ -402,6 +334,25 @@
    }
   },
   {
+   "name": "random_018",
+   "group": "random",
+   "seed": 3868489039253454690,
+   "chunk": 0,
+   "config": {
+    "size": "small",
+    "errors": {
+     "duplicate_invoice": 1,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 1,
+     "wrong_period": 2
+    },
+    "period": "2025-01",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_019",
    "group": "random",
    "seed": 7442345756860248715,
@@ -705,6 +656,46 @@
     "timezone": "Europe/Berlin",
     "interacting": [
      "boundary_fx_payment"
+    ]
+   }
+  },
+  {
+   "name": "random_037",
+   "group": "random",
+   "seed": 827170601237565646,
+   "chunk": 0,
+   "config": {
+    "size": "medium",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 0,
+     "wrong_period": 2
+    },
+    "period": "2026-02",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
+   "name": "random_038",
+   "group": "random",
+   "seed": 51484995622096467,
+   "chunk": 0,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 0,
+     "wrong_period": 1
+    },
+    "timezone": "Asia/Kolkata",
+    "period": "2026-01",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
     ]
    }
   },
@@ -1091,7 +1082,7 @@
    "name": "random_060",
    "group": "random",
    "seed": 7042868753043142193,
-   "chunk": 0,
+   "chunk": 1,
    "config": {
     "size": "large",
     "errors": {
@@ -1111,7 +1102,7 @@
    "name": "random_061",
    "group": "random",
    "seed": 7182278497351057553,
-   "chunk": 0,
+   "chunk": 1,
    "config": {
     "size": "medium",
     "errors": {
@@ -1131,7 +1122,7 @@
    "name": "random_062",
    "group": "random",
    "seed": 2599878357776231364,
-   "chunk": 0,
+   "chunk": 1,
    "config": {
     "size": "medium",
     "errors": {
@@ -1422,6 +1413,27 @@
    }
   },
   {
+   "name": "random_079",
+   "group": "random",
+   "seed": 3468100415847806098,
+   "chunk": 1,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 0,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 2,
+     "wrong_period": 2
+    },
+    "timezone": "Asia/Kolkata",
+    "period": "2025-08",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
+    ]
+   }
+  },
+  {
    "name": "random_080",
    "group": "random",
    "seed": 1910531972866734186,
@@ -1511,6 +1523,25 @@
     "timezone": "America/Sao_Paulo",
     "interacting": [
      "fx_invoice_partial_allocation"
+    ]
+   }
+  },
+  {
+   "name": "random_085",
+   "group": "random",
+   "seed": 8998699723473655653,
+   "chunk": 1,
+   "config": {
+    "size": "small",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 0,
+     "wrong_period": 0
+    },
+    "period": "2025-08",
+    "interacting": [
+     "boundary_fx_payment"
     ]
    }
   },
@@ -2070,10 +2101,30 @@
    }
   },
   {
+   "name": "random_119",
+   "group": "random",
+   "seed": 1237801328181556772,
+   "chunk": 1,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 1,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 0,
+     "wrong_period": 0
+    },
+    "timezone": "Europe/Berlin",
+    "period": "2026-10",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_120",
    "group": "random",
    "seed": 1756200181644333691,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "large",
     "errors": {
@@ -2089,7 +2140,7 @@
    "name": "random_121",
    "group": "random",
    "seed": 4468529435179000769,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "large",
     "errors": {
@@ -2106,10 +2157,30 @@
    }
   },
   {
+   "name": "random_122",
+   "group": "random",
+   "seed": 6278786578355435084,
+   "chunk": 2,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 0,
+     "wrong_fx_rate": 1,
+     "wrong_period": 2
+    },
+    "timezone": "Europe/London",
+    "period": "2025-08",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_123",
    "group": "random",
    "seed": 8523056305190418526,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "large",
     "errors": {
@@ -2129,7 +2200,7 @@
    "name": "random_124",
    "group": "random",
    "seed": 3731430349751157763,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "large",
     "errors": {
@@ -2144,7 +2215,7 @@
    "name": "random_125",
    "group": "random",
    "seed": 8950057946338282591,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "small",
     "errors": {
@@ -2160,7 +2231,7 @@
    "name": "random_126",
    "group": "random",
    "seed": 2018574405302180452,
-   "chunk": 1,
+   "chunk": 2,
    "config": {
     "size": "medium",
     "errors": {
@@ -2295,6 +2366,27 @@
    }
   },
   {
+   "name": "random_134",
+   "group": "random",
+   "seed": 3056849944081449458,
+   "chunk": 2,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 1,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 2,
+     "wrong_period": 1
+    },
+    "timezone": "Australia/Sydney",
+    "period": "2025-01",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
+    ]
+   }
+  },
+  {
    "name": "random_135",
    "group": "random",
    "seed": 4467703487202916923,
@@ -2326,6 +2418,26 @@
      "wrong_fx_rate": 1,
      "wrong_period": 1
     }
+   }
+  },
+  {
+   "name": "random_137",
+   "group": "random",
+   "seed": 5555540435396508902,
+   "chunk": 2,
+   "config": {
+    "size": "small",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 0,
+     "wrong_fx_rate": 1,
+     "wrong_period": 2
+    },
+    "period": "2027-01",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
+    ]
    }
   },
   {
@@ -2450,6 +2562,27 @@
      "wrong_fx_rate": 0,
      "wrong_period": 0
     }
+   }
+  },
+  {
+   "name": "random_145",
+   "group": "random",
+   "seed": 7116391822316144461,
+   "chunk": 2,
+   "config": {
+    "size": "medium",
+    "errors": {
+     "duplicate_invoice": 0,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 1,
+     "wrong_period": 1
+    },
+    "timezone": "Asia/Kolkata",
+    "period": "2025-02",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
+    ]
    }
   },
   {
@@ -2834,6 +2967,25 @@
    }
   },
   {
+   "name": "random_168",
+   "group": "random",
+   "seed": 1391319307877178392,
+   "chunk": 2,
+   "config": {
+    "size": "medium",
+    "errors": {
+     "duplicate_invoice": 1,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 0,
+     "wrong_period": 1
+    },
+    "period": "2027-12",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_169",
    "group": "random",
    "seed": 6131045679011439506,
@@ -3029,7 +3181,7 @@
    "name": "random_180",
    "group": "random",
    "seed": 1333377950013085311,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "small",
     "errors": {
@@ -3046,7 +3198,7 @@
    "name": "random_181",
    "group": "random",
    "seed": 3443885926449088829,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "medium",
     "errors": {
@@ -3061,7 +3213,7 @@
    "name": "random_182",
    "group": "random",
    "seed": 1226322717536925878,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "small",
     "errors": {
@@ -3078,7 +3230,7 @@
    "name": "random_183",
    "group": "random",
    "seed": 8092089156484018842,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "small",
     "errors": {
@@ -3098,7 +3250,7 @@
    "name": "random_184",
    "group": "random",
    "seed": 5307405136008681703,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "medium",
     "errors": {
@@ -3114,7 +3266,7 @@
    "name": "random_185",
    "group": "random",
    "seed": 4679648412056733462,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "medium",
     "errors": {
@@ -3133,7 +3285,7 @@
    "name": "random_186",
    "group": "random",
    "seed": 3959442280999505966,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "large",
     "errors": {
@@ -3149,7 +3301,7 @@
    "name": "random_187",
    "group": "random",
    "seed": 4021250325390824752,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "medium",
     "errors": {
@@ -3169,7 +3321,7 @@
    "name": "random_188",
    "group": "random",
    "seed": 2602752141042840978,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "medium",
     "errors": {
@@ -3185,7 +3337,7 @@
    "name": "random_189",
    "group": "random",
    "seed": 562788224041909775,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "small",
     "errors": {
@@ -3203,7 +3355,7 @@
    "name": "random_190",
    "group": "random",
    "seed": 3588251300504350009,
-   "chunk": 2,
+   "chunk": 3,
    "config": {
     "size": "large",
     "errors": {
@@ -3470,6 +3622,46 @@
    }
   },
   {
+   "name": "random_206",
+   "group": "random",
+   "seed": 6309694503937767368,
+   "chunk": 3,
+   "config": {
+    "size": "small",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 0,
+     "wrong_fx_rate": 1,
+     "wrong_period": 1
+    },
+    "period": "2026-10",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
+   "name": "random_207",
+   "group": "random",
+   "seed": 8338148303527606685,
+   "chunk": 3,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 1,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 2,
+     "wrong_period": 2
+    },
+    "timezone": "Asia/Tokyo",
+    "period": "2027-01",
+    "interacting": [
+     "boundary_fx_payment",
+     "fx_invoice_partial_allocation"
+    ]
+   }
+  },
+  {
    "name": "random_208",
    "group": "random",
    "seed": 750717857688239286,
@@ -3689,6 +3881,26 @@
      "wrong_period": 0
     },
     "period": "2027-09"
+   }
+  },
+  {
+   "name": "random_221",
+   "group": "random",
+   "seed": 9028283340388102453,
+   "chunk": 3,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 0,
+     "wrong_period": 2
+    },
+    "timezone": "Asia/Tokyo",
+    "period": "2025-02",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
    }
   },
   {
@@ -3949,6 +4161,26 @@
    }
   },
   {
+   "name": "random_237",
+   "group": "random",
+   "seed": 4908793548657545453,
+   "chunk": 3,
+   "config": {
+    "size": "large",
+    "errors": {
+     "duplicate_invoice": 0,
+     "unallocated_payment": 1,
+     "wrong_fx_rate": 0,
+     "wrong_period": 2
+    },
+    "timezone": "Asia/Tokyo",
+    "period": "2027-04",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_238",
    "group": "random",
    "seed": 3512839674184901417,
@@ -3964,10 +4196,29 @@
    }
   },
   {
+   "name": "random_239",
+   "group": "random",
+   "seed": 5769182194928791443,
+   "chunk": 3,
+   "config": {
+    "size": "medium",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 2,
+     "wrong_period": 0
+    },
+    "period": "2025-05",
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
    "name": "random_240",
    "group": "random",
    "seed": 8670952960258124377,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "small",
     "errors": {
@@ -3985,7 +4236,7 @@
    "name": "random_241",
    "group": "random",
    "seed": 4949160570206668315,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "large",
     "errors": {
@@ -4006,7 +4257,7 @@
    "name": "random_242",
    "group": "random",
    "seed": 7218292676931941012,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4025,7 +4276,7 @@
    "name": "random_243",
    "group": "random",
    "seed": 4418989406012317554,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4041,7 +4292,7 @@
    "name": "random_244",
    "group": "random",
    "seed": 3567865964710540810,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "large",
     "errors": {
@@ -4060,7 +4311,7 @@
    "name": "random_245",
    "group": "random",
    "seed": 4026130685687568244,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "large",
     "errors": {
@@ -4075,7 +4326,7 @@
    "name": "random_246",
    "group": "random",
    "seed": 8163411083562246177,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "small",
     "errors": {
@@ -4094,7 +4345,7 @@
    "name": "random_247",
    "group": "random",
    "seed": 8952372957373849745,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "small",
     "errors": {
@@ -4111,7 +4362,7 @@
    "name": "random_248",
    "group": "random",
    "seed": 3416468231786611212,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4130,7 +4381,7 @@
    "name": "random_249",
    "group": "random",
    "seed": 1980461967821662405,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "large",
     "errors": {
@@ -4145,7 +4396,7 @@
    "name": "random_250",
    "group": "random",
    "seed": 3417062212256014312,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "small",
     "errors": {
@@ -4160,7 +4411,7 @@
    "name": "random_251",
    "group": "random",
    "seed": 2954024065903855389,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4177,7 +4428,7 @@
    "name": "random_252",
    "group": "random",
    "seed": 3810851500165725322,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4198,7 +4449,7 @@
    "name": "random_253",
    "group": "random",
    "seed": 3921274818762464699,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "small",
     "errors": {
@@ -4214,7 +4465,7 @@
    "name": "random_254",
    "group": "random",
    "seed": 8732680347304791706,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4232,7 +4483,7 @@
    "name": "random_255",
    "group": "random",
    "seed": 8528325740434548466,
-   "chunk": 3,
+   "chunk": 4,
    "config": {
     "size": "medium",
     "errors": {
@@ -4257,6 +4508,26 @@
      "wrong_fx_rate": 0,
      "wrong_period": 0
     },
+    "interacting": [
+     "boundary_fx_payment"
+    ]
+   }
+  },
+  {
+   "name": "random_257",
+   "group": "random",
+   "seed": 5542737502554732294,
+   "chunk": 4,
+   "config": {
+    "size": "medium",
+    "errors": {
+     "duplicate_invoice": 2,
+     "unallocated_payment": 2,
+     "wrong_fx_rate": 2,
+     "wrong_period": 1
+    },
+    "timezone": "America/Sao_Paulo",
+    "period": "2025-02",
     "interacting": [
      "boundary_fx_payment"
     ]
@@ -4997,7 +5268,7 @@
    "name": "tz_America/Sao_Paulo",
    "group": "extreme",
    "seed": 8018342568044755726,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "America/Sao_Paulo",
@@ -5013,7 +5284,7 @@
    "name": "tz_Asia/Almaty",
    "group": "extreme",
    "seed": 8250690061280887158,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Asia/Almaty",
@@ -5029,7 +5300,7 @@
    "name": "tz_Asia/Kathmandu",
    "group": "extreme",
    "seed": 7076318359123232370,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Asia/Kathmandu",
@@ -5045,7 +5316,7 @@
    "name": "tz_Asia/Kolkata",
    "group": "extreme",
    "seed": 305656480627036822,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Asia/Kolkata",
@@ -5061,7 +5332,7 @@
    "name": "tz_Asia/Kuwait",
    "group": "extreme",
    "seed": 7960715779069489870,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Asia/Kuwait",
@@ -5077,7 +5348,7 @@
    "name": "tz_Asia/Tokyo",
    "group": "extreme",
    "seed": 8999550785930885758,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Asia/Tokyo",
@@ -5093,7 +5364,7 @@
    "name": "tz_Australia/Sydney",
    "group": "extreme",
    "seed": 5488411113408912696,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Australia/Sydney",
@@ -5109,7 +5380,7 @@
    "name": "tz_Europe/Berlin",
    "group": "extreme",
    "seed": 2520127363001426468,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Europe/Berlin",
@@ -5125,7 +5396,7 @@
    "name": "tz_Europe/London",
    "group": "extreme",
    "seed": 5487054128216686180,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Europe/London",
@@ -5141,7 +5412,7 @@
    "name": "tz_UTC",
    "group": "extreme",
    "seed": 6590195066192726871,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "UTC",
@@ -5157,7 +5428,7 @@
    "name": "exp_jpy_kwd_bhd",
    "group": "extreme",
    "seed": 2057760189343818780,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "base_currency": "JPY",
@@ -5177,7 +5448,7 @@
    "name": "exp_kwd_bhd_usd",
    "group": "extreme",
    "seed": 638691452313986339,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "base_currency": "KWD",
@@ -5197,7 +5468,7 @@
    "name": "exp_usd_jpy_kwd",
    "group": "extreme",
    "seed": 5434933202946132605,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "base_currency": "USD",
@@ -5217,7 +5488,7 @@
    "name": "year_boundary",
    "group": "extreme",
    "seed": 4165852766397144056,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "period": "2025-12",
@@ -5233,7 +5504,7 @@
    "name": "sydney_dst",
    "group": "extreme",
    "seed": 865764788559679376,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "small",
     "timezone": "Australia/Sydney",
@@ -5250,7 +5521,7 @@
    "name": "large_twelve",
    "group": "extreme",
    "seed": 5187730531666044757,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "size": "large",
     "errors": {
@@ -5265,7 +5536,7 @@
    "name": "bnd_foreign_none",
    "group": "boundary",
    "seed": 4995350619855191193,
-   "chunk": 4,
+   "chunk": 5,
    "config": {
     "foreign_currencies": []
    }
@@ -5853,7 +6124,7 @@
    "name": "bnd_errors_unallocated_payment_max",
    "group": "boundary",
    "seed": 3030896622765755824,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "unallocated_payment": 12
@@ -5864,7 +6135,7 @@
    "name": "bnd_errors_wrong_fx_rate_max",
    "group": "boundary",
    "seed": 6549428639017262890,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "wrong_fx_rate": 12
@@ -5875,7 +6146,7 @@
    "name": "bnd_errors_wrong_period_max",
    "group": "boundary",
    "seed": 1141051364640328100,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "wrong_period": 12
@@ -5886,7 +6157,7 @@
    "name": "bnd_interacting_boundary_fx_payment",
    "group": "boundary",
    "seed": 5666636805853439022,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "interacting": [
      "boundary_fx_payment"
@@ -5897,7 +6168,7 @@
    "name": "bnd_interacting_fx_invoice_partial_allocation",
    "group": "boundary",
    "seed": 4939849414088723035,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "interacting": [
      "fx_invoice_partial_allocation"
@@ -5908,7 +6179,7 @@
    "name": "bnd_interacting_both",
    "group": "boundary",
    "seed": 4172449003648957190,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "interacting": [
      "boundary_fx_payment",
@@ -5920,7 +6191,7 @@
    "name": "bnd_interacting_both_plus_max_errors",
    "group": "boundary",
    "seed": 1922151688485480403,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "interacting": [
      "boundary_fx_payment",
@@ -5938,7 +6209,7 @@
    "name": "bnd_twin",
    "group": "boundary",
    "seed": 4623845112150632579,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "twin": true
    }
@@ -5947,7 +6218,7 @@
    "name": "bnd_twin_with_errors",
    "group": "boundary",
    "seed": 6077905466624003020,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "twin": true,
     "errors": {
@@ -5962,7 +6233,7 @@
    "name": "bnd_twin_off",
    "group": "boundary",
    "seed": 4403163976202078216,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "twin": false
    }
@@ -5971,7 +6242,7 @@
    "name": "bnd_period_first_supported",
    "group": "boundary",
    "seed": 2125576715763921966,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "period": "2000-01"
    }
@@ -5980,7 +6251,7 @@
    "name": "bnd_period_last_supported",
    "group": "boundary",
    "seed": 6429687600521282847,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "period": "2100-12"
    }
@@ -5989,7 +6260,7 @@
    "name": "bnd_period_year_end",
    "group": "boundary",
    "seed": 5616810031131865374,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "period": "2025-12",
     "errors": {
@@ -6001,7 +6272,7 @@
    "name": "bnd_period_leap_february",
    "group": "boundary",
    "seed": 7712029950891555313,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "period": "2028-02",
     "errors": {
@@ -6013,7 +6284,7 @@
    "name": "bnd_period_century_february",
    "group": "boundary",
    "seed": 8655612714665941128,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "period": "2100-02"
    }
@@ -6022,7 +6293,7 @@
    "name": "bnd_period_utc_wall_clock_dst_new_york",
    "group": "boundary",
    "seed": 8572389311330552038,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "timezone": "America/New_York",
     "period": "2026-03",
@@ -6040,7 +6311,7 @@
    "name": "bnd_period_dst_end_london",
    "group": "boundary",
    "seed": 3040438618275349563,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "timezone": "Europe/London",
     "period": "2026-10",
@@ -6652,7 +6923,7 @@
    "chunk": 0,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1443/1443 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1905 named checks of 70 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 70 kinds)"
   },
   {
    "chunk": 1,
@@ -6670,25 +6941,25 @@
    "chunk": 3,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 70 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds)"
   },
   {
    "chunk": 4,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1430/1430, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1893 named checks of 78 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds)"
   },
   {
    "chunk": 5,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1157/1157 (2 skipped), D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1622 named checks of 82 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1200/1200 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1665 named checks of 81 kinds)"
   },
   {
    "chunk": 6,
-   "episodes": 41,
+   "episodes": 58,
    "exit_code": 0,
-   "summary": "summary: C_data 43/43, C_reward 812/812, D_paired 259/259, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1142 named checks of 80 kinds)"
+   "summary": "summary: C_data 60/60, C_reward 1160/1160, D_paired 357/357 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1609 named checks of 81 kinds)"
   }
  ],
  "all_exit_codes_zero": true

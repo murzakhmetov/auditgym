@@ -2,23 +2,23 @@
 
 `python tools/organizer_sweep.py OUT_DIR 60 --record`: the closed path (`check --seeds-file --secret-env`) over the stress mix and the boundary mix. The contract battery also ran in-process on every feasible episode (the check itself runs it on one episode per seeds file).
 
-- code: code 2c8fb0c2f6bfe6ca92a8971e234bcfdb037860c0e63c1e2a136798bdebddc7c8 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
-- configurations: 423 (401 feasible, 22 infeasible, 0 generation failures)
-- contract battery in-process: 401 of 401 episodes pass
-- feasible by group: random 282, extreme 17, boundary 102
+- code: code 5ca9203f885bcf6321afa9bd1b516b956599ddb08ee835ec6a79dcc5fc4f7134 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
+- configurations: 423 (418 feasible, 5 infeasible, 0 generation failures)
+- contract battery in-process: 418 of 418 episodes pass
+- feasible by group: random 299, extreme 17, boundary 102
 - chunks of 60: 7; every exit code 0: yes
 
 ## Chunks
 
 | chunk | episodes | exit code | summary |
 |---|---|---|---|
-| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1443/1443 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1905 named checks of 70 kinds) |
+| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 70 kinds) |
 | 1 | 60 | 0 | summary: C_data 62/62, C_reward 1428/1428, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1891 named checks of 80 kinds) |
 | 2 | 60 | 0 | summary: C_data 62/62, C_reward 1437/1437 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1899 named checks of 70 kinds) |
-| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 70 kinds) |
-| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1430/1430, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1893 named checks of 78 kinds) |
-| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1157/1157 (2 skipped), D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1622 named checks of 82 kinds) |
-| 6 | 41 | 0 | summary: C_data 43/43, C_reward 812/812, D_paired 259/259, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1142 named checks of 80 kinds) |
+| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds) |
+| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds) |
+| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1200/1200 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1665 named checks of 81 kinds) |
+| 6 | 58 | 0 | summary: C_data 60/60, C_reward 1160/1160, D_paired 357/357 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1609 named checks of 81 kinds) |
 
 ## Generation failures (accepted by config.py, GenerationError in the generator)
 
@@ -30,23 +30,6 @@
 
 ## Infeasible configurations (ConfigError, skipped)
 
-- `random_018`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-01 fails that. Nearest feasible periods: 2024-12, 2025-03
-- `random_037`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-02 fails that. Nearest feasible periods: 2026-03, 2025-12
-- `random_038`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-01 fails that. Nearest feasible periods: 2025-12, 2026-03
-- `random_079`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09
-- `random_085`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09
-- `random_119`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-10 fails that. Nearest feasible periods: 2026-09, 2026-11
-- `random_122`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-08 fails that. Nearest feasible periods: 2025-07, 2025-09
-- `random_134`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-01 fails that. Nearest feasible periods: 2024-12, 2025-03
-- `random_137`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-01 fails that. Nearest feasible periods: 2026-12, 2026-11
-- `random_145`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12
-- `random_168`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-12 fails that. Nearest feasible periods: 2027-11, 2028-01
-- `random_206`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2026-10 fails that. Nearest feasible periods: 2026-09, 2026-11
-- `random_207`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-01 fails that. Nearest feasible periods: 2026-12, 2026-11
-- `random_221`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12
-- `random_237`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2027-04 fails that. Nearest feasible periods: 2027-03, 2027-05
-- `random_239`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-05 fails that. Nearest feasible periods: 2025-04, 2025-06
-- `random_257`: boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; period 2025-02 fails that. Nearest feasible periods: 2025-03, 2024-12
 - `random_271`: timezone UTC never has a UTC offset, but the requested errors need one
 - `bnd_tz_UTC_utc_wall_clock`: timezone UTC never has a UTC offset, but the requested errors need one
 - `bnd_counts_sales_invoices_max`: counts too large for the 100-step budget: 2014 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts
