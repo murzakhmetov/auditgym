@@ -73,15 +73,23 @@ across tables, never sequential, and assigned the same way for injected and ordi
 | Type | Variants | Canonical affected_ids | Amount (base minor units) | Acceptable evidence sets |
 |---|---|---|---|---|
 | duplicate_invoice | same-day copy with identical line refs | both invoice_ids | one copy's posted amount | {doc A, doc B, payable row A, payable row B} or {doc A, doc B, expense row A, expense row B} |
-| unallocated_payment | missing, partial | payment_id + invoice_id | amount wrongly credited to 2900 | {payment doc, invoice doc, 2900 row} |
+| unallocated_payment | missing, partial | payment_id + invoice_id | amount wrongly credited to 2900 | {payment doc, invoice doc, payment's 2900 row, every 1100 row carrying the invoice ID (posting or opening item, any relief by this payment)} plus, for a foreign-currency invoice, the payment's bank (1000) row: 4 to 6 IDs |
 | wrong_fx_rate | utc_date, posting_date, stale_rate, transposed | invoice_id or payment_id | abs(posted - policy amount) | {doc, primary row, fx row of the correct date} or {doc, counter row, fx row} (invoices) |
 | wrong_period | booked_early, booked_late, utc_wall_clock | invoice_id or payment_id | posted primary amount | {doc, primary row} or {doc, counter row} (invoices); {doc, bank row} (payments) |
 
 Interacting scenarios:
-- `boundary_fx_payment`: a partial foreign-currency receipt is booked by its UTC date and UTC wall clock:
-  wrong period and wrong FX rate on the same payment, one root cause. The receipt is placed just after local
-  midnight at the period boundary (positive UTC offsets) or shortly before the period's last midnight (negative
-  offsets). It needs weekdays on both sides of the period end.
+- `boundary_fx_payment`: a partial foreign-currency receipt at the period boundary, with a wrong period and a wrong FX
+  rate on the same payment. The receipt is placed just after local midnight (positive UTC offsets: from 00:05 on the
+  first day after the period) or in the late evening of the period's last day (negative offsets). It is always booked
+  by the UTC wall clock (`wrong_period`, variant `utc_wall_clock`). Its rate error is `utc_date` where the boundary
+  gives that error an amount. Rates are published on weekdays only and a weekend date takes the latest earlier rate, so
+  a positive offset needs the first day after the period to be a weekday, and a negative offset needs that day and the
+  period's last day to be weekdays (`boundary_utc_date_ok` in `config.py`). In the other months the same receipt
+  carries a `stale_rate` or `transposed` rate error instead. The two errors stay coupled (the `wrong_period` amount is
+  the bank row posted at the wrong rate), but in those fallback months they have two causes, not one.
+  `variants.wrong_fx_rate` only selects the fallback; the scenario uses `utc_date` wherever it has an amount. Where a
+  DST change follows the boundary (America/New_York at the end of October when 1 November is a Sunday), the receipt is
+  placed so that its posting stays 75 minutes clear of the change (`inject._clear_of_dst`).
 - `fx_invoice_partial_allocation`: a foreign invoice booked at a wrong rate, then its receipt partly left in 2900.
   The scenario always uses the `partial` variant of the unallocated receipt (part relieved against the invoice,
   part left in 2900), so the receipt's 1100 relief and 7900 difference follow the invoice's wrong carrying amount.
@@ -128,7 +136,7 @@ purchases, and a policy could learn to search for duplicates there alone. No sal
 Guards: injected monetary differences are at least 100 minor units (50 times the tolerance); FX targets fall
 on dates with a published rate; unallocated targets are single-reference receipts with no other receipt on the
 invoice and no legitimate excess; (type, affected_ids) is unique per episode; at most 12 errors per episode
-(`MAX_ERRORS`). The cited evidence of an unallocated receipt does not show alone that no other receipt settled the invoice; `verify` checks it on all public records (sections 7 and 10).
+(`MAX_ERRORS`). The cited evidence of an unallocated receipt shows the invoice's open balance (its 1100 rows); `verify` checks on all public records that no other receipt settled the invoice and that the set is complete (sections 7 and 10).
 
 ## 4. Environment contract
 
@@ -282,12 +290,11 @@ runs as `module.path:ClassName` (`--policy-path DIR` for code outside the reposi
 run starts (a module that exists but lacks the class fails in the child, exit 3), and the oracle is refused in the child (`examples/custom_policy.py`, `examples/hostile/`).
 `run` with a `module:Class` policy and closed data (a seeds file or `--secret-env`) refuses to start, exit 2 with one
 `error: custom policy ...` line, when the policy would run as the host's user (no separate policy user, or
-`--in-process`), unless `--allow-same-user` is given. With the flag it runs, prints one `WARNING` line and records
-`"allow_same_user": true` in `meta.json`. In the official image the policy runs as the separate user and needs no flag;
+`--in-process`), unless `--allow-same-user` is given. The refusal says to drop `--in-process` on a host that can switch to the policy user, and to run the policy in the official image elsewhere. With the flag the run proceeds, prints one `WARNING` line and records `"allow_same_user": true` in `meta.json`, which is true only when the override took effect (a custom policy really ran as the host's user on closed episodes). In the official image the policy runs as the separate user and needs no flag;
 strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) still refuses any same-user fallback. When such a policy runs as the host's
-user on an `--episodes` directory that has `grader/` and lies outside the repository's own `episodes/` (the open train
-and dev splits, whose answer keys are public by design), one `WARNING` line says it can read the answer keys and points
-to `--seeds-file` and the image. `check --seeds-file` runs only the built-in baselines and the scripted auditor, so it is
+user on an `--episodes` directory that has `grader/` and lies outside `episodes/train` and `episodes/dev` (their
+answer keys are public by design; any other folder under `episodes/` is warned about), one `WARNING` line says it can read the answer keys and points
+to `--seeds-file` and the way out that fits the host (the image, or dropping `--in-process` where the host can switch to the policy user). `check --seeds-file` runs only the built-in baselines and the scripted auditor, so it is
 unchanged. `python -m auditgym.redteam --parent` passes `--allow-same-user` to its probe run, because it measures exactly
 that case; its report lines are unchanged.
 
@@ -360,7 +367,7 @@ the stored digests instead of the twin.
 | clean_equalities | clean books rebuilt from provenance: every journal and the trial balance balance; the independent auditor finds no discrepancy and no anomaly |
 | provenance_roundtrip | revert-and-reapply reproduces the published tables; the reverted tables hash to `clean_records_digest`; `public_digest()` equals `final_digest`; every declared issue has an op that touches its records; injection and distractor IDs name existing invoices or payments in their role (the payment role needs a payment ID), truth issues and injections match one to one by (issue_id, type), targets are non-empty, every distractor has an ID list, and malformed injections and distractors give a FAIL line, not a traceback; an overflow during replay (for example a `1e400` amount) is a FAIL line too; a `provenance.json` that is not an object, or `ops` that is not a list, an op that is not an object or lacks a known table, ID, record or field, and a non-string issue ID give FAIL lines of this check (the replay and clean-books steps are then skipped), not a traceback. At generation time the reverted tables are also compared with the clean twin. It also cross-checks every `provenance.injections[].change` against the public records and the ops; an unknown, missing or malformed key of a known type is a FAIL line (details below). Not caught by `verify DIR` alone: see the list below the table |
 | declared_discrepancies | the independent auditor (`auditor.py`, which imports only the standard library and `timeutil`: no generator module and not `money.py`; its FX conversion and proportional relief are its own integer arithmetic, tested against `money.py` on 10 000 random cases each in `tests/test_verify.py`) reproduces exactly the answer key: types, IDs, amounts, evidence sets; truth `id_aliases` equals `{doc_id: invoice_id or payment_id}` for every public invoice and payment (nothing missing or extra), and every issue variant is a known variant of its type |
-| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it (test). For every `unallocated_payment` issue it also checks, on all public records, that no other receipt settled the invoice (the cited three-record set does not show that alone; section 10) |
+| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it, with no exception (`test_reduced_evidence_derives_nothing` drops each record in turn from every committed set). For `unallocated_payment` the checker derives the invoice's open balance from the cited 1100 rows and requires the invoice's posting to be booked at or before the receipt's 2900 row; `verify` also checks on all public records that no other receipt settled the invoice and that the set holds every 1100 row of the invoice and, for a foreign invoice, the payment's bank row (below the table and section 10) |
 | budget_feasible | reading every page of every table plus the submit fits in 100 steps |
 | no_surface_tells | every injected or modified row has an untouched row with the same account and null pattern; in directory mode it fails when issues are declared but no ledger op exists |
 | no_leaks | no answer-key markers or seed in public files |
@@ -381,18 +388,41 @@ The change cross-check of `provenance_roundtrip` (`verify.py`, `_ChangeIndex`, `
 
 The rates in `provenance.injections[].change`, and the `fx.csv` rate the cross-check reads, are checked against the
 `fx.csv` format (`RATE_SYNTAX`: digits, an optional decimal part, no exponent, sign or space) before the cross-check
-converts with them, so such a value cannot hang that step. A malformed rate in `fx.csv` itself is reported too: the
-auditor (`_ratio`) and the evidence checker (`_rate_fraction`) refuse an exponent above 64 (`ValueError`, "exponent out
-of range") instead of computing `10 ** exponent`, and `records_schema` flags a rate that is not a positive finite number
-(`1e99999999` parses as `inf`). The auditor's failure is a FAIL line ("clean books cannot be reconstructed: ValueError:
-..." in `clean_equalities`, "the independent auditor cannot run: ValueError: ..." in `declared_discrepancies`), and an
-evidence set that cannot be evaluated is a FAIL line of `evidence_sufficient`. `verify DIR` on such a copy exits 1
-within a second, with no traceback.
+converts with them, so such a value cannot hang that step. A malformed rate in `fx.csv` itself is reported too. The
+auditor (`_ratio`) and the evidence checker (`_rate_fraction`) accept only a plain ASCII decimal: at most 30 digits on
+each side of the point and an optional exponent of at most 3 digits with an absolute value of at most 64 (`ValueError`
+otherwise). `Fraction()` alone also reads `_` separators and non-ASCII digits, so a rate such as `1e9999_9999` would
+otherwise reach `10 ** 99999999`; a very long rate (4,299 digits) gives no traceback either. `records_schema` flags a
+rate that is not a positive finite number (`1e99999999` parses as `inf`). The auditor's failure is a FAIL line ("clean
+books cannot be reconstructed: ValueError: ..." in `clean_equalities`, "the independent auditor cannot run:
+ValueError: ..." in `declared_discrepancies`), and an evidence set that cannot be evaluated is a FAIL line of
+`evidence_sufficient`. `verify DIR` on such a copy exits 1 within a second, with no traceback.
 
-The `evidence_sufficient` check for `unallocated_payment` reads all payments and ledger rows, not the cited records: no
-payment but the issue's own lists the invoice in `invoice_refs`, and no ledger row but the issue's own payment relieves it
-(a credit to 1100 for a sales invoice, a debit to 2000 for a purchase invoice). More than one payment or invoice
-document that carries the issue's IDs fails too.
+For `unallocated_payment` the acceptable set is the payment document, the invoice document, the payment's 2900 row,
+every 1100 row that carries the invoice ID (its posting or opening item, and any relief by this payment) and, for a
+foreign-currency invoice, the payment's bank (1000) row: 4 to 6 IDs, within the cap of 10 (`MAX_EVIDENCE_IDS`). The
+evidence checker derives the invoice's open balance from the cited 1100 rows (debits minus credits, in the base
+currency), not from the document total. It requires that no cited row is a relief by another payment, that the posted
+amount minus the relief is positive, that the relief does not exceed what the receipt paid (the proportional carrying
+amount), and that the invoice's posting or opening item is booked at or before the receipt's 2900 row (an invoice
+booked after the receipt was not open when the receipt arrived). In the base currency the balance posted on the cited
+rows covers the receipt, and the receipt equals its relief plus the 2900 amount. In a foreign currency the bank row is
+required: the whole bank amount sits in 2900 when nothing was relieved, and 2900 holds less than the bank amount
+otherwise. In a foreign currency the checker compares the receipt with the invoice document total, not with the open
+balance in document currency, because ledger rows carry base amounts only and the payment-date rate is on no cited
+record. Completeness of the cited 1100 rows is checked by `verify` on all public rows, not by the evidence checker.
+
+`verify` reads all public payments and ledger rows for what the cited records cannot show: no payment but the issue's
+own lists the invoice in `invoice_refs` (`_sole_receipt_errors`), no ledger row but the issue's own payment relieves it
+(a credit to 1100 for a sales invoice, a debit to 2000 for a purchase invoice), and every acceptable set holds every
+1100 (2000) row of the invoice and, for a foreign invoice, the payment's bank row (`_complete_set_errors`). More than
+one payment or invoice document that carries the issue's IDs fails too. In these checks a hand-edited record without a field (a
+manifest without `base_currency`, an invoice without `currency`) is a FAIL line, not a traceback (a record without its ID field still gives a traceback, see TASKS.md); the base currency is
+read from `policy.json`, as the evidence checker does. `UnallocatedRecordsTests` in `tests/test_verify.py` enumerates
+every subset of the issue's ledger rows (rows of the payment or of the invoice) together with both documents, for all 9
+committed unallocated issues: exactly the key's set derives. The generator raises this type only for receipts on sales
+invoices and the evidence checker refuses a purchase invoice, so the 2000 branch of the completeness check has no
+generated case (section 10).
 
 `verify DIR` does not catch, on its own: a changed `provenance.seed`, a removed or shortened distractor list, a distractor
 kind swapped for another known one, a `wrong_period` injection variant, an injection's scenario (`verify` never reads it)
@@ -457,7 +487,7 @@ Sections:
 
 Section counts list the checks that applied, and the skips in parentheses: `C_data 3/3 (1 skipped)` means three checks ran and one was skipped. The count appears in stdout, in `report.md` and in the viewer; `report.json` keeps `passed` and `total` and adds `applicable` and `applicable_passed`. The public check has no skips, so its lines did not change.
 
-Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` carries a stamp that starts with `2c8fb0c2…` (60 files), which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (656 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
+Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` carries a stamp that starts with `5ca9203f…` (60 files), which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (656 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
 
 Unit tests rerun generation under two `PYTHONHASHSEED` values (`tests/test_generator.py`), and the committed schema
 files must stay byte-equal to the generated ones (`tests/test_contract_fuzz.py`, test_committed_schema_files_equal_generated_ones).
@@ -466,36 +496,38 @@ Closed runs: `python -m auditgym check --seeds-file FILE --secret-env VAR --out 
 the replay of its own runs on the organizer's episodes, and warns about seeds of 40 bits or fewer when no secret is
 set. Checks that need error or clean episodes missing from the file are
 reported as SKIP. An entry that the generator refuses (`ConfigError` or `GenerationError`, for example `boundary_fx_payment`
-in a month whose last day or the day after falls on a weekend) is a named SKIP line in `C_data`, "[SKIP] <name>: generated
+with `"timezone": "UTC"`) is a named SKIP line in `C_data`, "[SKIP] <name>: generated
 from its seed and config - refused, ConfigError: <reason>", and the other entries are still checked and the report is
 written. The header reads "seeds file <label> (N entries: G generated, R refused, secret: ...)" and the summary counts
 the skip. The exit code is 0 when every check that ran passes. Only a seeds file in which no entry can be generated
 exits 2, with one line "error: no entry of the seeds file can be generated; <name>: <reason>". `run --seeds-file` does the
 same: each refused entry prints "WARNING: entry <name> refused, <reason>" and is listed in `meta.json` under
-`refused_entries`; only a file with no generable entry exits 2. It writes `runs/check_closed` by default, never `runs/check`. `--keep-runs` also writes trajectories and grades, which
+`refused_entries`; only a file with no generable entry exits 2. Each refused entry adds one named check (its SKIP line), and all refused entries together add one kind, because their names are stripped from the label; the seed-size warning looks only at the entries that were generated. It writes `runs/check_closed` by default, never `runs/check`. `--keep-runs` also writes trajectories and grades, which
 contain the closed answer key. CI runs it in the image with the seeds
 file and the output directory mounted, `--network none` and strict mode. `python tools/organizer_sweep.py DIR 60
 --record` runs it over the stress mix plus one boundary configuration per edge value that `config.py` accepts
-(423 configurations, 401 feasible; 63-bit seeds, a host secret, chunks of 60: six chunks of 60 episodes and one of 41) and runs the contract battery in
-process on every feasible episode. On the code of `03283bd` (code stamp `2c8fb0c2…`, the same as the check report's) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
-no feasible configuration failed to generate. Four date-shift checks were skipped, in chunk 5: the two shift transforms on the boundary configurations `bnd_period_last_supported` and `bnd_period_century_february`, whose dates no 28-year shift in either direction keeps inside 1901-03-01 .. 2099-12-31. In an earlier round a sweep failed one chunk on "no agent process failed" because a package file had been edited while that chunk ran; the line now names the failing runs, and a sweep is recorded only without edits. A sweep takes about 21 minutes on Windows 10 (one local run, with other jobs on the machine); the summary records no time. The 22 infeasible
-configurations each raise a ConfigError that names the reason; among them, invoice counts with a total of 1,651 or more are rejected at
+(423 configurations, 418 feasible; 63-bit seeds, a host secret, chunks of 60: six chunks of 60 episodes and one of 58) and runs the contract battery in
+process on every feasible episode. On the code of `c47af43` (code stamp `5ca9203f…`, the same as the check report's) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
+no feasible configuration failed to generate. Date-shift checks are skipped, as the chunk rows of the summary show: the two shift transforms on the boundary configurations `bnd_period_last_supported` and `bnd_period_century_february`, whose dates no 28-year shift in either direction keeps inside 1901-03-01 .. 2099-12-31. In an earlier round a sweep failed one chunk on "no agent process failed" because a package file had been edited while that chunk ran; the line now names the failing runs, and a sweep is recorded only without edits. A sweep takes about 21 minutes on Windows 10 (one local run, with other jobs on the machine); the summary records no time. The 5 infeasible
+configurations (the `UTC` time zone twice and invoice counts at the maximum three times) each raise a ConfigError that names the reason; the three count configurations have a total of 1,651 or more invoices and are rejected at
 once because a full read would need more than 100 steps; section 1 gives the band below that (`config.min_read_pages`: one invoices row and two ledger
 rows per counted invoice, a lower bound that a unit test checks on every committed episode).
 
 ### Mutation run
 
 `python tools/mutation_smoke.py OUT_DIR [--record] [--jobs N]` asks how strongly the unit tests pin the core. It holds
-109 hand-written one-line mutants of `matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`,
-`evidence_check.py`, `protocol.py`, `transform.py`, `agent.py` and `check.py` (the newest, `check-shift-direction-order`,
-makes `D_paired` try the -28 shift before +28). Each mutant runs in a fresh temporary copy of the
+122 hand-written one-line mutants of `matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`,
+`evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`, `check.py`, `config.py` and `inject.py` (13 files; the
+summary's file list is generated from the mutant list). Among them are the mutants for the unallocated evidence rules
+(for example `evidence-unallocated-booked-after`) and for the boundary rule and its fallback
+(`config-boundary-utc-date-positive`, `inject-boundary-fallback`, `config-boundary-fallback-refusal`). Each mutant runs in a fresh temporary copy of the
 repository (the working tree is never touched), first against the unit-test modules listed for it and, only if those
 pass, against `tests/test_mutation_survivors.py`. That module was written for the mutants that the first run let survive.
 A timeout counts as a kill; the tool stops the whole process tree of a timed-out test.
 
-Result ([runs/mutation/summary.md](../runs/mutation/summary.md), recorded on Windows with Python 3.11): 109 of
-109 mutants are killed, none survived and none is equivalent. The test modules listed for each mutant kill 64 of
-them. The other 45 pass their listed modules and are killed by `tests/test_mutation_survivors.py`; the remaining
+Result ([runs/mutation/summary.md](../runs/mutation/summary.md), recorded on Windows with Python 3.11): 122 of
+122 mutants are killed, none survived and none is equivalent. The test modules listed for each mutant kill 78 of
+them. The other 44 pass their listed modules and are killed by `tests/test_mutation_survivors.py`; the remaining
 test modules were not run against them, and some of those kill a few of them too (for example `tests/test_contract_fuzz.py`
 kills `schemas-blank-id`, `schemas-coerce-int` and `env-submit-extra-keys`). The summary's "killed by" column says "listed tests" or "survivor tests". One mutant
 (policy-path-append) is killed only by a Windows-only test, so the tool runs it only on Windows and reports it as "not run
@@ -550,24 +582,28 @@ misses on dev are `search` (they never observed a complete evidence set), with o
 (train) and 0.8 (dev); micro P and R are the figures to read.
 
 Action budget (dev, scripted auditor and recon; `python -m auditgym budget`): auditor F1 0.472 at 20 steps, 1.000 at 50
-and 100; recon F1 0.082, 0.178 and 0.178. The default budgets are 20, 50 and 100 steps; `make budget` runs the same command
-where make is installed.
+and 100; recon F1 0.063, 0.178 and 0.178. The default budgets are 20, 50 and 100 steps; `make budget` runs the same command
+where make is installed. At 20 steps the larger unallocated evidence set costs recon one true positive on d09, because its
+truncated read has not seen the invoice's 1100 rows: recon return −0.885 (was −0.849) and F1 0.063 (was 0.082). Returns at
+50 and 100 steps and in `runs/train_dev` are unchanged.
 
-Generator stress (`python -m auditgym stress --n 300`): 300 random configurations, 282 generated and verified, 18
-infeasible with a ConfigError (17 `boundary_fx_payment` with a fixed period, 1 `UTC` request needing an offset), no
-verify failures; 17 extreme configurations all verified, and the scripted auditor closes all of them in 11 to 47 steps.
-The 17 extreme configurations are 12 errors in each of the 11 time zones, three currency-exponent mixes, a year
-boundary, Sydney DST and one large episode with 12 errors. The 18 infeasible requests are 17 `boundary_fx_payment`
-requests with a fixed period (the period's last day or the next day is a weekend) and one `UTC` request for errors that
-need a non-zero offset. The whole stress run took 346 s on the machine that produced `runs/stress/report.md`.
-Timings and memory are machine-dependent, counts are not.
+Generator stress (`python -m auditgym stress --n 300`): 300 random configurations, 299 generated and verified (276 at the
+first attempt, 23 later), 1 infeasible with a ConfigError (a request for the `UTC` time zone, which never has a UTC offset),
+no verify failures and no generation failures; 17 extreme configurations all verified, and the scripted auditor closes all
+of them in 11 to 47 steps. The 17 extreme configurations are 12 errors in each of the 11 time zones, three
+currency-exponent mixes, a year boundary, Sydney DST and one large episode with 12 errors. The whole stress run took 373 s
+on the machine that produced `runs/stress/report.md`. Timings and memory are machine-dependent, counts are not.
 
 Feasibility: an unspecified time zone or period is redrawn (on a side RNG stream, so feasible draws and the committed
-episodes are unchanged) until the requested errors can be placed. A fixed period with `boundary_fx_payment` fails when
-the period's last day or the next day is a weekend: 17 of the 36 months of 2025–2027 are infeasible, and the
-ConfigError names the nearest feasible months. The count follows from the rule (the period's last day and the first day
-after it must both be weekdays): `python -c "from auditgym.config import feasibility_problems as f; print(sum(bool(f('UTC', f'{y}-{m:02d}', {'boundary_offset': False, 'boundary_weekdays': True, 'utc_date': False})) for y in (2025, 2026, 2027) for m in range(1, 13)))"` prints 17. A fixed zero-offset time zone fails for offset-dependent requests. Both
-give a one-line ConfigError. The generator never silently injects fewer errors than requested. `check` fails if
+episodes are unchanged) until the requested errors can be placed. With the default variants all 36 months of 2025–2027
+host `boundary_fx_payment` with a fixed period: where the boundary gives `utc_date` no amount, the same receipt carries a
+`stale_rate` or `transposed` rate error (section 3). A ConfigError remains in two cases. A fixed time zone with a zero
+UTC offset at the boundary (`UTC`, Europe/London in winter) is refused for the offset alone, also with default variants.
+And when `variants.wrong_fx_rate` has neither `stale_rate` nor `transposed`, a month in which the boundary gives
+`utc_date` no amount is refused, and the ConfigError names the nearest feasible months: 11 of the 36 months with a
+positive or unset offset and 17 with a negative one. The counts follow from `boundary_utc_date_ok(period, offset)` (a
+positive offset needs the first day after the period to be a weekday; a negative offset needs that day and the period's
+last day to be weekdays): `python -c "from auditgym.config import boundary_utc_date_ok as ok; ms=[f'{y}-{m:02d}' for y in (2025,2026,2027) for m in range(1,13)]; print(sum(not ok(p,60) for p in ms), sum(not ok(p,-60) for p in ms))"` prints `11 17`. Both cases give a one-line ConfigError. The generator never silently injects fewer errors than requested. `check` fails if
 resampling exceeds half the number of episodes in the check set.
 
 ## 10. Limitations
@@ -595,15 +631,15 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
   uses `check --seeds-file`.
 - **Scripted auditor.** It shares `auditor.py` with the verifier. Its perfect F1 shows that every scenario is solvable
   through the tool interface within the budget, not that an agent would reason this way.
-- **Unallocated payment evidence.** The cited three-record evidence set does not show alone that no other receipt settled
-  the invoice; an agent can confirm it only by reading all payments. `verify` checks this property on all public records
-  (section 7), and the generator picks single-reference receipts with no other receipt on the invoice (section 3).
-  An open-items listing is not offered. [CASE.md](CASE.md), "Open records", defines the open records (`ledger.csv`,
-  `invoices.jsonl`, `payments.jsonl`, `fx.csv`, `policy.json`, plus `manifest.json`), and none of them is an open-items
-  listing or carries an open balance. A new record type would change the tool contract that organizer policies run
-  against, and an open-balance field would itself be a surface tell (an invoice still open while a receipt references
-  it). So the acceptable set stays the payment, the invoice and the 2900 row, and `verify` checks from all public
-  payments and journal rows that no other receipt settled the invoice.
+- **Unallocated payment evidence.** The cited set (the payment, the invoice, the payment's 2900 row, every 1100 row of the
+  invoice and, for a foreign invoice, the payment's bank row) shows the invoice's open balance; `verify` checks on all
+  public records that the set is complete and that no other receipt settled the invoice (section 7). In a foreign
+  currency the checker compares the receipt with the invoice document total, not with the open balance in document
+  currency, because ledger rows carry base amounts only; completeness of the cited 1100 rows is checked by `verify` on
+  all public rows, not by the evidence checker. Purchase-side unallocated issues are not generated: the generator raises
+  this type only for receipts on sales invoices, and the evidence checker refuses a purchase invoice. An open-items
+  listing is still not offered: [CASE.md](CASE.md), "Open records", defines the open records, and none of them is an
+  open-items listing; a new record type would change the tool contract that organizer policies run against.
 - **Shortcut tells** are measured only for the rules written down in `auditgym/tells.py` (section 3). A feature nobody
   listed may still leak.
 - **Evidence padding.** Extra evidence IDs up to the 10-ID cap are free (published superset rule); the battery checks
@@ -618,7 +654,8 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 - **Invoice counts.** A total of 1,651 or more invoices is a ConfigError at once; counts from about 900 sales invoices up to that total pass validation and fail after 16 attempts with exit 2 (section 1).
 - **Directory verification.** `verify DIR` accepts some edited copies (a changed `provenance.seed`, a removed or shortened distractor list, a distractor kind swapped for another known one, a `wrong_period` variant, an injection's scenario, a `truth.json` variant swapped for another known one); section 7 lists them.
 - **Noninterference** is measured by replay (section 5). Timing is not covered, because the time limit is part of the contract.
-- **boundary_fx_payment feasibility.** With a fixed period, 17 of the 36 months of 2025–2027 are infeasible (section 9). A closed seeds file with such an entry reports it as a SKIP line and checks the rest (section 8).
+- **boundary_fx_payment feasibility.** With the default variants every month of 2025–2027 hosts the scenario. A fixed zone with a zero UTC offset at the boundary (`UTC`, Europe/London in winter) is refused, and so is a month where the boundary gives `utc_date` no amount when `variants.wrong_fx_rate` has neither `stale_rate` nor `transposed` (11 months with a positive or unset offset, 17 with a negative one; section 9). A closed seeds file with such an entry reports it as a SKIP line and checks the rest (section 8). In the fallback months the two errors of the scenario have two causes, not one (section 3).
+- **DST and standalone period errors.** The boundary receipt is placed so that its UTC-wall-clock posting stays 75 minutes clear of a DST change. A standalone `utc_wall_clock` `wrong_period` error is not: in America/New_York at the end of October, when 1 November is a Sunday (for example 2026-10), it can still post inside the DST hour, which ordinary documents never use. This is unchanged from earlier versions and applies to single errors only.
 - **Evidence IDs and amounts.** A blank or over-long ID (more than 64 characters) makes the submission invalid, even as
   an extra evidence ID. Both are kept in this version: the task publishes `max_id_chars` and also says unknown extra IDs
   are ignored. An
@@ -680,28 +717,37 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   closed path as organizers run it: `check --seeds-file` with the example seeds file mounted read-only at
   `/app/secrets/closed.json`, the output directory mounted at `/app/runs/closed`, `--network none`, strict mode and
   the secret in `AUDITGYM_SECRET`; the step requires PASS and greps the output for answer-key issue IDs and the
-  secret. The container logs and the closed-path output are uploaded as artifacts.
+  secret. The official-check, strict-mode and closed-path steps also fail unless the report written in the image carries the line
+  `Policy isolation: separate user (uid N)`. The container logs and the closed-path output are uploaded as artifacts.
 
-Latest completed run at the time of writing: run 44775177143, commit `03283bdbb73b2b8d04f89c3030ee8351d3d5cda1`
-(subject: `Closed runs: refused entries are named SKIP lines; same-user custom policies need --allow-same-user; verify no longer hangs on a malformed rate`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44775177143 --log`), which is not
+Latest run at the time of writing: run 44814588471, commit `c47af431f3a0da3ab5c0319a6226dbbe909a2b95`
+(subject: `Tests: the closed-run refusal advice follows the host; sweep re-recorded with the report's code stamp`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44814588471 --log`), which is not
 committed. The lines cited here are kept in
-[runs/ci/44775177143.txt](../runs/ci/44775177143.txt). The conclusion of every job and step is in [runs/ci/44775177143.jobs.json](../runs/ci/44775177143.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped); it shows that the byte-for-byte regeneration steps and every container step succeeded. The excerpt of the previous round's run, 44712065782 on commit `c9c7ab4`, stays in [runs/ci/44712065782.txt](../runs/ci/44712065782.txt).
+[runs/ci/44814588471.txt](../runs/ci/44814588471.txt). The conclusion of every job and step is in [runs/ci/44814588471.jobs.json](../runs/ci/44814588471.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped). It also holds the start and end time of every job. The excerpt shows the container steps of the official check in the default image, of strict mode and of the closed path as organizers run it printing `Policy isolation: separate user (uid 10002).` (the `agent` user of the Dockerfile): the report written in the image says that the policy ran as a separate user. The committed `runs/check/report.md` is from a Windows host and says that the policy ran as the host's user.
+
+The run before it, 44811366128 on the round's code commit `56a11c628f09b0ece2cc6aca9858b521b153ef55`, failed in the container job only: one
+unit test expected the refusal advice of a host that cannot switch to the policy user, while inside the image the child can, and
+the CLI rightly advises dropping `--in-process` there. `c47af43` changed only that test (it now derives the expected advice from
+the condition the CLI uses), re-recorded the check report and the viewer with the same code stamp, and re-recorded the sweep. The last
+run on a code commit before that, 44775177143 on commit `03283bdbb73b2b8d04f89c3030ee8351d3d5cda1`, was a success on all six jobs; its excerpt stays
+in [runs/ci/44775177143.txt](../runs/ci/44775177143.txt) and [runs/ci/44775177143.jobs.json](../runs/ci/44775177143.jobs.json). The
+table and the skip counts below are from run 44814588471 (476 unit tests). The excerpt of the previous round's run, 44712065782 on commit `c9c7ab4`, stays in [runs/ci/44712065782.txt](../runs/ci/44712065782.txt).
 
 | Job | Result | Unit tests (run, passed, skipped) | Time reported by the job |
 |---|---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | 453, 430, 23 | `PASS in 71 s` |
-| check (ubuntu-latest, Python 3.12) | success | 453, 430, 23 | `PASS in 89 s` |
-| check (ubuntu-latest, Python 3.13) | success | 453, 430, 23 | `PASS in 109 s` |
-| check (windows-latest, Python 3.11) | success | 453, 442, 11 | `PASS in 121 s` |
-| check (macos-latest, Python 3.11) | success | 453, 427, 26 | `PASS in 101 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 235 MB | 453, 435, 18 | `PASS in 137 s`; `time` reports 138.2 s; the 9 tests in `tests/test_container.py` ran, none skipped |
-| container, `--user 10001` | success | 453, 429, 24 | `PASS in 136 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, `--cap-drop ALL` | success | 453, 427, 26 | `PASS in 143 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 453, 435, 18 | `PASS in 152 s`; the 9 container tests `OK` |
+| check (ubuntu-latest, Python 3.11) | success | 476, 453, 23 | `PASS in 88 s` |
+| check (ubuntu-latest, Python 3.12) | success | 476, 453, 23 | `PASS in 99 s` |
+| check (ubuntu-latest, Python 3.13) | success | 476, 453, 23 | `PASS in 101 s` |
+| check (windows-latest, Python 3.11) | success | 476, 465, 11 | `PASS in 84 s` |
+| check (macos-latest, Python 3.11) | success | 476, 450, 26 | `PASS in 135 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 235 MB | 476, 458, 18 | `PASS in 115 s`; `time` reports 116.6 s; `Policy isolation: separate user (uid 10002).`; the 9 tests in `tests/test_container.py` ran, none skipped |
+| container, `--user 10001` | success | 476, 452, 24 | `PASS in 114 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, `--cap-drop ALL` | success | 476, 450, 26 | `PASS in 112 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 476, 458, 18 | `PASS in 117 s`; `Policy isolation: separate user (uid 10002).`; the 9 container tests `OK` |
 | container, strict mode with `--cap-drop ALL` | success | not run | `exit code 2`, one `error:` line |
-| container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 4 s`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 20/20`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (97 named checks of 80 kinds) |
+| container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 3 s`; `Policy isolation: separate user (uid 10002).`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 20/20`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (97 named checks of 80 kinds) |
 
-Every skip is platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image and under `--user 10001` and `--cap-drop ALL`; 15 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 23 (the 8 container-only tests and the 15 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 26 (the 8, the 15 and the 3); the default image 18 (the 15, the workflow-label test and the 2 negative assertions under root); `--user 10001` 24 (the 8, the 15 and the workflow-label test); `--cap-drop ALL` 26 (the 8, the 15, the workflow-label test and the 2 negative assertions under root).
+In run 44814588471, as in 44775177143, every skip was platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image and under `--user 10001` and `--cap-drop ALL`; 15 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 23 (the 8 container-only tests and the 15 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 26 (the 8, the 15 and the 3); the default image 18 (the 15, the workflow-label test and the 2 negative assertions under root); `--user 10001` 24 (the 8, the 15 and the workflow-label test); `--cap-drop ALL` 26 (the 8, the 15, the workflow-label test and the 2 negative assertions under root).
 
 The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity", "same user as the host: child at Low integrity, the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)" and "--secret-env: the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)", while the control with the lowering off reads the variable ("child at the host's integrity level (off: control run), parent's environment readable, host variable found there"); on macOS, "same user as the host: not measured on this platform (no /proc)". In run 44712065782 (commit `c9c7ab4`, before the lowering) windows printed "same user as the host: parent's environment readable, host variable found there". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
 
@@ -711,7 +757,7 @@ Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion cover
 ## 14. Open items at this version
 
 - Blank or over-long IDs make a submission invalid, as documented (section 4).
-- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `2c8fb0c2…`; its timings differ from the CI logs.
+- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `5ca9203f…`; its timings differ from the CI logs.
 - Code gaps from the review of commit `849d0da` that are still open (the
   invoice count band, the `resampled attempts stay rare` check (it still counts every rejection), the sweep's invoice counts, purchase-only duplicates, the closed-run kinds count) are listed in [TASKS.md](TASKS.md).
 

@@ -84,14 +84,14 @@ Opening AR/AP items are booked per invoice against 3900; misc journals have uniq
 | type | affected_ids | amount | evidence sets (any one complete set) |
 |---|---|---|---|
 | duplicate_invoice | both invoice_ids | base amount of one copy's AP line | {doc A, doc B, AP row A, AP row B} or {doc A, doc B, expense row A, expense row B} |
-| unallocated_payment | payment_id + referenced invoice_id | base amount wrongly left in 2900 | {payment doc, invoice doc, 2900 row} or {payment doc, invoice AR/opening row, 2900 row} |
+| unallocated_payment | payment_id + referenced invoice_id | base amount wrongly left in 2900 | {payment doc, invoice doc, 2900 row} or {payment doc, invoice AR/opening row, 2900 row} (superseded: see DESIGN.md §3) |
 | wrong_fx_rate | document id (invoice_id or payment_id) | abs(posted − correct) on primary line | {doc, primary row, fx row of the correct date} or {doc, counter row, fx row} (invoices) |
 | wrong_period | document id | posted base amount of primary line | {doc, primary row} or {doc, counter row} |
 
 Variants: wrong_fx_rate = utc_date | posting_date | stale_rate | transposed; wrong_period = booked_early |
 booked_late | utc_wall_clock; unallocated_payment = missing | partial.
 Interacting scenarios: `boundary_fx_payment` (foreign partial receipt after local midnight booked by UTC date →
-wrong_period + wrong_fx_rate on one payment); `fx_invoice_partial_allocation` (invoice booked at wrong rate,
+wrong_period + wrong_fx_rate on one payment) (superseded: see DESIGN.md §3); `fx_invoice_partial_allocation` (invoice booked at wrong rate,
 then its partial receipt partly left in 2900 → wrong_fx_rate + unallocated_payment on linked records).
 Distractors: legit repeats (same supplier/amount/date, different refs), recurring monthly amounts, split
 payments, multi-invoice payments, underpayments, overpayment + refund, null-ref receipts, boundary documents
