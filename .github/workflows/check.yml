@@ -96,6 +96,16 @@ jobs:
           test "${PIPESTATUS[0]}" -eq 0
           grep -q "^PASS in" capdrop.log
           docker run --rm --network none --cap-drop ALL auditgym python -m unittest tests.test_container -v
+      - name: What a policy child sees of its parent in each container mode (measured, not asserted; see the logs)
+        run: |
+          set -o pipefail
+          echo "container mode: default image"
+          docker run --rm --network none auditgym python -m auditgym.redteam --parent 2>&1 | tee redteam_default.log
+          echo "container mode: --user 10001"
+          docker run --rm --network none --user 10001 auditgym python -m auditgym.redteam --parent 2>&1 | tee redteam_user10001.log
+          echo "container mode: --cap-drop ALL"
+          docker run --rm --network none --cap-drop ALL auditgym python -m auditgym.redteam --parent 2>&1 | tee redteam_capdrop.log
+        shell: bash
       - name: Strict mode in the default image (AUDITGYM_REQUIRE_AGENT_USER=1, the policy really runs as the agent user)
         run: |
           set +e
@@ -154,6 +164,9 @@ jobs:
             container_tests.log
             user10001.log
             capdrop.log
+            redteam_default.log
+            redteam_user10001.log
+            redteam_capdrop.log
             strict_default.log
             strict_unittest.log
             strict_container.log

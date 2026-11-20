@@ -575,11 +575,15 @@ class AgentProcess:
                 except OSError:
                     pass
                 ident = None
-            except OSError:  # EAGAIN, ENOMEM, EMFILE ...: an error, never a silent switch to the host user
+            except BaseException:  # EAGAIN, ENOMEM, EMFILE ...: an error, never a silent switch to the host user
                 self._tmp.cleanup()
                 raise
         if ident is None:
-            self.proc = subprocess.Popen(cmd, **popen)
+            try:
+                self.proc = subprocess.Popen(cmd, **popen)
+            except BaseException:  # the child never started: drop the staged temporary directory
+                self._tmp.cleanup()
+                raise
         self._job = _WinJob(self.proc) if os.name == "nt" else None
         self._stop = threading.Event()
         self._eof = False

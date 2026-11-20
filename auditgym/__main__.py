@@ -71,9 +71,11 @@ def _input(broad: bool = False):
 
 def _secret_from_env(name: str | None) -> str | None:
     """Read the host secret from the environment variable `name` and remove that one variable from this process's
-    environment block, so a child reading the parent's environment block no longer finds it. The value stays in the
-    host's memory, which a same-user child can read on Windows; Linux keeps the start-up copy in
-    /proc/<pid>/environ. Only the image's separate policy uid protects the secret."""
+    environment block, so a child reading the parent's environment block no longer finds it. What remains depends on
+    the platform. Linux: main() has already made the host non-dumpable (protocol.harden_host), so a same-user child
+    without CAP_SYS_PTRACE cannot read /proc/<host>/environ (the start-up copy) or the host's memory; the residuals
+    are a root or CAP_SYS_PTRACE child, the command line, ancestor processes and interpreter start-up. Windows: the
+    value stays in the host's memory, which a same-user child can read. macOS: not hardened."""
     if not name:
         return None
     value = os.environ.pop(name, None)

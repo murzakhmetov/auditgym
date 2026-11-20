@@ -18,7 +18,7 @@ import sys
 KEEP = re.compile(
     r"(^summary: |^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|python -m auditgym\.redteam --parent|time docker|mkdir -p)"
     r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED"
-    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest:"
+    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest:|^container mode: "
     r"|^\s+(host hardening: |control with host hardening off: |--secret-env[: ]"
     r"|(separate policy user|same user as the host): |probe failed))"
 )

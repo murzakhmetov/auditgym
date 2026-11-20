@@ -136,7 +136,8 @@ out = {}
 if os.name == "nt":
     cmd = ["powershell", "-NoProfile", "-Command",
            "(Get-CimInstance Win32_Process -Filter 'ProcessId=%d').CommandLine" % ppid]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    # PowerShell writes piped output in the console's OEM code page; the ANSI default garbles non-ASCII paths
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="oem", errors="replace", timeout=30)
     out["command_line"] = r.stdout.strip()[:200]
 else:
     try:
@@ -153,8 +154,11 @@ print(out)
 
 def parent_visibility() -> str:
     marker = "auditgym-redteam-marker"
-    p = subprocess.run([sys.executable, "-c", PARENT_PROBE, marker], capture_output=True, text=True, timeout=60)
-    return p.stdout.strip() or p.stderr.strip()[-300:]
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")  # the child writes stdout and stderr as UTF-8 on any console code page
+    p = subprocess.run([sys.executable, "-c", PARENT_PROBE, marker], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", env=env, timeout=60)
+    out, err = p.stdout.strip(), p.stderr.strip()
+    return out or err[-300:]
 
 
 # A policy that looks for a host variable in its parent's environment: on Windows by reading the parent's

@@ -11,7 +11,6 @@ import subprocess
 import sys
 import tempfile
 import unittest
-import warnings
 from pathlib import Path
 from unittest import mock
 
@@ -178,12 +177,20 @@ class NeverRaises(unittest.TestCase):
             calls.append("popen")
             raise RuntimeError("stop here")
 
+        cleanups = []
+        real_cleanup = tempfile.TemporaryDirectory.cleanup
+
+        def cleanup(tmp):
+            cleanups.append(tmp.name)
+            real_cleanup(tmp)
+
         with mock.patch.object(protocol, "harden_host", side_effect=lambda: calls.append("harden")), \
-                mock.patch.object(subprocess, "Popen", side_effect=popen):
-            with self.assertRaises(RuntimeError), warnings.catch_warnings():
-                warnings.simplefilter("ignore", ResourceWarning)  # the half-built object leaves its temp dir
+                mock.patch.object(subprocess, "Popen", side_effect=popen), \
+                mock.patch.object(tempfile.TemporaryDirectory, "cleanup", cleanup):
+            with self.assertRaises(RuntimeError):
                 protocol.AgentProcess("recon")
         self.assertEqual(calls[:2], ["harden", "popen"])
+        self.assertEqual(len(cleanups), 1, "the staged temporary directory must be removed when the child never starts")
 
 
 class ReportLines(unittest.TestCase):
@@ -205,6 +212,35 @@ class ReportLines(unittest.TestCase):
         raw = [f"job\tstep\t2026-01-01T00:00:00.0000000Z {line}\n" for line in self.LINES]
         kept = ci_excerpt.excerpt(raw, "1", "abc")[3:]
         self.assertEqual([k.split(" | ", 2)[2] for k in kept], self.LINES)
+
+    def test_excerpt_labels_each_container_mode_block(self):
+        """The real log shape of the step: one group line (`Run set -o pipefail`), the script lines in ANSI codes, then
+        for each mode a label echoed by the script and the report. Only the label tells the three blocks apart."""
+        from tools import ci_excerpt
+
+        step = "What a policy child sees of its parent in each container mode"
+        stamp = "2026-01-01T00:00:00.0000000Z "
+        script = ["set -o pipefail",
+                  'echo "container mode: default image"',
+                  "docker run --rm --network none auditgym python -m auditgym.redteam --parent 2>&1 | tee a.log"]
+        msgs = ["##[group]Run set -o pipefail"] + [f"\x1b[36;1m{x}\x1b[0m" for x in script] + ["##[endgroup]"]
+        expected = []
+        for mode in ("default image", "--user 10001", "--cap-drop ALL"):
+            block = [f"container mode: {mode}", self.LINES[0], self.LINES[1]]
+            msgs += block
+            expected += block
+        raw = ["container\t" + step + "\t" + stamp + m + "\n" for m in msgs]
+        kept = ci_excerpt.excerpt(raw, "1", "abc")[3:]
+        self.assertEqual([k.split(" | ", 2)[2] for k in kept], expected)
+        self.assertTrue(all(k.startswith(f"container | {step} | ") for k in kept))
+
+    def test_every_container_redteam_run_is_labelled_in_the_workflow(self):
+        text = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "check.yml").read_text(encoding="utf-8")
+        lines = [ln.strip() for ln in text.splitlines()]
+        runs = [i for i, ln in enumerate(lines) if ln.startswith("docker run") and "auditgym.redteam --parent" in ln]
+        self.assertEqual(len(runs), 3)
+        for i in runs:
+            self.assertTrue(lines[i - 1].startswith('echo "container mode: '), lines[i])
 
     def probe(self, error: OSError) -> dict:
         space = {"__name__": "peek"}
