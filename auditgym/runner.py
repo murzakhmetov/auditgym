@@ -14,7 +14,10 @@ episode has finished, so no agent process can read them during the run.
 
 from __future__ import annotations
 
+import contextlib
+import sys
 import time
+from pathlib import Path
 
 from .diagnostics import run_diagnostics
 from .env import AuditEnv
@@ -72,6 +75,21 @@ def analyse(grade: dict, truth: dict, submission: list | None, seen_by_step: lis
     return out
 
 
+@contextlib.contextmanager
+def _import_path(path: str | None):
+    """Put `path` first on sys.path while an in-process policy module is imported (--policy-path)."""
+    if not path:
+        yield
+        return
+    entry = str(Path(path).resolve())
+    sys.path.insert(0, entry)
+    try:
+        yield
+    finally:
+        with contextlib.suppress(ValueError):
+            sys.path.remove(entry)
+
+
 def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", isolated: bool = True,
             policy_seed: int = 0, max_steps: int = 100, time_limit_s: float = 60.0, policy_path: str | None = None):
     """Returns (trajectory records or None for the oracle, grade record)."""
@@ -95,19 +113,20 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
         agent_time = res["agent_time_s"]
         agent_error = res.get("agent_error")
     else:
-        pol = make_policy(policy, seed=policy_seed)
-        obs, info = env.reset(config={"episode": episode})
-        traj.append({"step": 0, "action": None, "observation": obs, "reward": 0.0, "terminated": False, "truncated": False})
-        reward, agent_time = 0.0, 0.0
-        while True:
-            t0 = time.monotonic()
-            action = pol.act(obs, reward, info)
-            agent_time += time.monotonic() - t0
-            obs, reward, terminated, truncated, info = env.step(action)
-            traj.append({"step": env.steps, "action": action, "observation": obs, "reward": reward,
-                         "terminated": terminated, "truncated": truncated})
-            if terminated or truncated:
-                break
+        with _import_path(policy_path):  # for the whole episode, as in the child: act() may import siblings
+            pol = make_policy(policy, seed=policy_seed)
+            obs, info = env.reset(config={"episode": episode})
+            traj.append({"step": 0, "action": None, "observation": obs, "reward": 0.0, "terminated": False, "truncated": False})
+            reward, agent_time = 0.0, 0.0
+            while True:
+                t0 = time.monotonic()
+                action = pol.act(obs, reward, info)
+                agent_time += time.monotonic() - t0
+                obs, reward, terminated, truncated, info = env.step(action)
+                traj.append({"step": env.steps, "action": action, "observation": obs, "reward": reward,
+                             "terminated": terminated, "truncated": truncated})
+                if terminated or truncated:
+                    break
     grade = env.grader_report()
     wall = time.monotonic() - t_start
     seen_by_step = None

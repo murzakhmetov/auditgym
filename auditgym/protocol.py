@@ -27,6 +27,14 @@ mode. The channel is bounded in every direction:
   * a line that is not a well-formed action message (bad JSON, too deep, too many nodes,
     too many digits, too large, unencodable text) -> a bounded `unknown_action` error
     that consumes a step; the trajectory keeps {"invalid_action": first 256 chars};
+    exception: when the line starts like a submit (looks_like_submit: the "action" key with the
+    value "submit" as the first member) the episode ends at once as invalid_submission, reward -1,
+    as it does in process for the limits listed here (numbers, depth, nodes, size, and text that
+    does not encode to UTF-8, which schemas.validate_submission rejects in process and in grade
+    too); the trajectory keeps {"action": "submit", "findings": null, "invalid_action": first 256
+    chars}. A replay matches in status, reward and observations, not in the grade's error text.
+    Residual: a malformed submit whose "action" key is not the first member is still an
+    unknown_action step;
   * any other JSON value as the action, null included, goes to env.step(), which
     returns a bounded error for anything that is not a valid action;
   * the processes the host tracks are killed when the run ends (process group on POSIX,
@@ -44,7 +52,8 @@ variable AUDITGYM_REQUIRE_AGENT_USER=1 that fallback is an error instead (AgentU
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
 guess the path of, and (outside a container) its parent's command line and environment, where
 --secret-env values live (on Windows through the parent's process memory; measured by
-`python -m auditgym.redteam --parent`). Only tracked
+`python -m auditgym.redteam --parent`; the command line `run` removes the --secret-env variable
+from its own environment block right after reading it, see __main__._secret_from_env). Only tracked
 processes are killed: a process that leaves the group or job (setsid, start_new_session,
 WMI Win32_Process.Create) survives and can edit files later; only a container or a separate
 OS user contains that. Outside the digest: examples/**/*.py (staged into later children),
@@ -218,6 +227,19 @@ def _shape_ok(value) -> bool:
         elif isinstance(item, list):
             stack.extend((v, depth + 1) for v in item)
     return True
+
+
+_SUBMIT_START = re.compile(
+    r'\s*\{\s*(?:"type"\s*:\s*"action"\s*,\s*"action"\s*:\s*\{\s*)?"action"\s*:\s*"submit"\s*[,}]')
+
+
+def looks_like_submit(echo) -> bool:
+    """True when a malformed line starts like a submit: optional whitespace, an opening brace, the "action" key
+    with the value "submit" as the first member (inside the {"type": "action", "action": ...} envelope the
+    first member of the inner object), whitespace tolerated. Only the echo (the first ECHO_CHARS characters)
+    is read. Residual: a malformed submit whose "action" key is not the first member, or that starts any other
+    way, is not recognised and stays an unknown_action step."""
+    return isinstance(echo, str) and _SUBMIT_START.match(echo) is not None
 
 
 def parse_agent_line(line) -> tuple:
@@ -739,6 +761,9 @@ def run_episode_isolated(env, reset_kwargs: dict, policy: str, policy_seed: int 
                 echo = action if isinstance(action, str) else ""
                 recorded = {"invalid_action": echo[:ECHO_CHARS]}
                 action = {"action": "__malformed__"}
+                if looks_like_submit(echo):  # same as in process: an invalid submit ends the episode (reward -1)
+                    action = {"action": "submit", "findings": None}
+                    recorded = {**action, "invalid_action": echo[:ECHO_CHARS]}  # same status, reward and observations on replay
             obs, reward, terminated, truncated, info = env.step(action)
             if on_step:
                 on_step({"step": env.steps, "action": recorded, "observation": obs, "reward": reward,

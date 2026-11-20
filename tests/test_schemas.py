@@ -50,6 +50,19 @@ class SchemaTests(unittest.TestCase):
             self.assertTrue(sf.validate(b, sf.SUBMISSION_JSON_SCHEMA))
             self.assertTrue(validate_submission(b, "ep_x"))
 
+    def test_text_that_is_not_utf8_is_invalid_everywhere(self):
+        # JSON Schema cannot say "encodes to UTF-8"; the validator does, so in process, the child and grade agree
+        lone = "x" + chr(0xDC00)
+        cases = [{"episode_id": "ep_x", "findings": [dict(GOOD[0], explanation=lone)]},
+                 {"episode_id": "ep_x", "findings": [dict(GOOD[0], affected_ids=[lone])]},
+                 {"episode_id": "ep_x", "findings": [dict(GOOD[0], evidence_ids=[lone])]},
+                 {"episode_id": lone, "findings": []}]
+        for c in cases:
+            errors = validate_submission(c, None)
+            self.assertTrue(any("UTF-8" in e for e in errors), errors)
+        fine = {"episode_id": "ep_x", "findings": [dict(GOOD[0], explanation="é中 \U0001F600")]}
+        self.assertEqual(validate_submission(fine, "ep_x"), [])
+
     def test_schema_files_are_written(self):
         import tempfile
 

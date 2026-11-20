@@ -1,6 +1,7 @@
 """Process isolation: the policy runs in a child process that sees observations only."""
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -113,6 +114,135 @@ class IsolationTests(unittest.TestCase):
             self.assertEqual(protocol.parse_agent_line(line)[0], kind, line[:40])
         self.assertEqual(protocol.parse_agent_line('{"type":"action","action":null}'), ("action", None))
         self.assertEqual(protocol.parse_agent_line(None), ("eof", None))
+
+
+SUBMIT_POLICY = """
+from examples.hostile.policies import _Base
+
+
+def finding(**kw):
+    f = {"type": "duplicate_invoice", "affected_ids": ["x"], "claimed_amount_minor": 1, "currency": "USD",
+         "evidence_ids": [], "explanation": "e"}
+    f.update(kw)
+    return f
+
+
+class _Submit(_Base):
+    def findings(self):
+        return [finding()]
+
+    def step(self, observation):
+        return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": self.findings()}}
+
+
+class Digits50(_Submit):
+    def findings(self):
+        return [finding(claimed_amount_minor=10 ** 49)]
+
+
+class NotANumber(_Submit):
+    def findings(self):
+        return [finding(claimed_amount_minor=float("nan"))]
+
+
+class Many(_Submit):
+    def findings(self):
+        return [finding()] * 20000
+
+
+class LoneSurrogate(_Submit):
+    def findings(self):
+        return [finding(explanation="x" + chr(0xD800) + "y")]
+
+
+class LateKey(_Base):
+    def step(self, observation):
+        return {"findings": {"episode_id": self.episode_id, "findings": [finding(claimed_amount_minor=10 ** 49)]},
+                "action": "submit"}
+
+
+class Maximal(_Submit):
+    def findings(self):
+        return [finding(type="wrong_period", affected_ids=["a" * 64] * 10, evidence_ids=["e" * 64] * 10,
+                        explanation="\u00e9\u4e2d" * 500) for _ in range(30)]
+"""
+
+
+class MalformedSubmit(unittest.TestCase):
+    """A structurally invalid submit ends the episode with reward -1 in process and in the child alike."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        os.chmod(cls._tmp.name, 0o755)  # traversable, so the agent user can reach its policy
+        Path(cls._tmp.name, "submit_variants_pol.py").write_text(SUBMIT_POLICY, encoding="utf-8")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def run_both(self, cls_name):
+        ep = episode()
+        name = f"submit_variants_pol:{cls_name}"
+        iso = run_one(ep, name, isolated=True, policy_path=self._tmp.name)
+        proc = run_one(ep, name, isolated=False, policy_path=self._tmp.name)
+        return ep, iso, proc
+
+    def test_structurally_invalid_submits_grade_alike(self):
+        for cls_name in ("Digits50", "NotANumber", "Many", "LoneSurrogate"):
+            with self.subTest(cls_name):
+                ep, (traj, g_iso), (_t, g_proc) = self.run_both(cls_name)
+                self.assertIsNone(g_iso["agent_error"])
+                self.assertEqual((g_iso["status"], g_iso["reward"]), ("invalid_submission", -1.0))
+                self.assertEqual((g_proc["status"], g_proc["reward"]), ("invalid_submission", -1.0))
+                last = traj[-1]
+                self.assertEqual(last["observation"]["error"]["code"], "invalid_submission")
+                self.assertTrue(last["terminated"])
+                self.assertEqual(last["action"]["action"], "submit")
+                self.assertIn("invalid_action", last["action"])
+                self.assertLessEqual(len(last["action"]["invalid_action"]), protocol.ECHO_CHARS)
+
+    def test_recorded_trajectory_replays_without_problems(self):
+        from auditgym.check_battery import replay_run
+
+        for cls_name in ("Digits50", "NotANumber", "Many", "LoneSurrogate"):
+            with self.subTest(cls_name):
+                ep, (traj, _g), _ = self.run_both(cls_name)
+                self.assertEqual(replay_run(traj, ep), [])
+
+    def test_a_submit_whose_action_key_is_not_first_stays_an_unknown_action(self):
+        ep = episode()
+        traj, g = run_one(ep, "submit_variants_pol:LateKey", isolated=True, policy_path=self._tmp.name)
+        self.assertEqual(traj[1]["observation"]["error"]["code"], "unknown_action")
+        self.assertEqual(set(traj[1]["action"]), {"invalid_action"})
+        self.assertNotEqual(g["status"], "invalid_submission")
+
+    def test_maximal_valid_submission_is_an_action_and_grades_normally(self):
+        ep = episode()
+        traj, g_iso = run_one(ep, "submit_variants_pol:Maximal", isolated=True, policy_path=self._tmp.name)
+        _t, g_proc = run_one(ep, "submit_variants_pol:Maximal", isolated=False, policy_path=self._tmp.name)
+        self.assertEqual((g_iso["status"], g_iso["valid"]), ("submitted", True))
+        self.assertEqual((g_iso["status"], g_iso["reward"]), (g_proc["status"], g_proc["reward"]))
+        self.assertNotIn("invalid_action", traj[-1]["action"])
+        self.assertEqual(len(traj[-1]["action"]["findings"]["findings"]), 30)
+        action = {"action": "submit", "findings": {"episode_id": ep.episode_id, "findings": [
+            {"type": "wrong_period", "affected_ids": ["a" * 64] * 10, "claimed_amount_minor": 10 ** 15, "currency": "USD",
+             "evidence_ids": ["e" * 64] * 10, "explanation": "\u00e9\u4e2d" * 500} for _ in range(30)]}}
+        line = json.dumps({"type": "action", "action": action}, ensure_ascii=True) + "\n"
+        self.assertEqual(protocol.parse_agent_line(line), ("action", action))
+
+    def test_submit_start_detection_is_anchored_and_whitespace_tolerant(self):
+        yes = ['{"type": "action", "action": {"action": "submit", "findings": NaN}}',
+               '  {"type":"action","action":{"action":"submit",',
+               '{ "type" : "action" , "action" : { "action" : "submit" }',
+               '{"action": "submit", "findings": 1e999999']
+        no = ['{"type": "action", "action": {"findings": NaN, "action": "submit"}}',
+              '{"type": "action", "action": {"action": "list_records", "note": "submit"}',
+              '{"type": "action", "action": {"action": "submitx"}', 'x{"action": "submit"}', "", None, 5]
+        for line in yes:
+            self.assertTrue(protocol.looks_like_submit(line), line)
+        for line in no:
+            self.assertFalse(protocol.looks_like_submit(line), line)
 
 
 class _FakeProc:

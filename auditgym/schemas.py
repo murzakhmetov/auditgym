@@ -70,6 +70,16 @@ def coerce_submission(obj):
     return out
 
 
+def _utf8(text: str) -> bool:
+    """False for text that cannot be written as UTF-8 (a lone surrogate). The isolated child's action line is
+    rejected for the same reason, so in process, in the child and in grade such a submission is invalid alike."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def _check_id_list(value, field: str, max_items: int, min_items: int, errors: list[str], prefix: str) -> None:
     if not isinstance(value, list):
         errors.append(f"{prefix}.{field} must be a list")
@@ -83,6 +93,8 @@ def _check_id_list(value, field: str, max_items: int, min_items: int, errors: li
             errors.append(f"{prefix}.{field}[{j}] must be a non-empty string")
         elif len(item) > MAX_ID_CHARS:
             errors.append(f"{prefix}.{field}[{j}] is longer than {MAX_ID_CHARS} characters")
+        elif not _utf8(item):
+            errors.append(f"{prefix}.{field}[{j}] is not valid UTF-8 text (a lone surrogate)")
 
 
 def validate_submission(obj, episode_id: str | None) -> list[str]:
@@ -95,6 +107,8 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
         errors.append(f"unknown top-level keys: {', '.join(extra)[:120]}")
     if "episode_id" not in obj or not isinstance(obj.get("episode_id"), str):
         errors.append("episode_id must be a string")
+    elif not _utf8(obj["episode_id"]):
+        errors.append("episode_id is not valid UTF-8 text (a lone surrogate)")
     elif episode_id is not None and obj["episode_id"] != episode_id:
         errors.append("episode_id does not match the current episode")
     findings = obj.get("findings")
@@ -134,6 +148,8 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
                 errors.append(f"{prefix}.explanation must be a string")
             elif len(exp) > MAX_EXPLANATION_CHARS:
                 errors.append(f"{prefix}.explanation is longer than {MAX_EXPLANATION_CHARS} characters")
+            elif not _utf8(exp):
+                errors.append(f"{prefix}.explanation is not valid UTF-8 text (a lone surrogate)")
     return errors
 
 

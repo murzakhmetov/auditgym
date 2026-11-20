@@ -276,5 +276,18 @@ class ParserBounds(unittest.TestCase):
         self.assertEqual((kind, len(echo)), ("malformed", protocol.ECHO_CHARS))
 
 
+class HostSecretHygiene(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows only: the run removes --secret-env from the process environment "
+                         "block; on Linux the start-up copy stays in /proc/<pid>/environ and only the image's "
+                         "separate policy uid protects it")
+    def test_secret_env_is_not_in_the_parent_environment_of_the_policy(self):
+        from auditgym.redteam import secret_env_probe
+
+        res = secret_env_probe("AUDITGYM_TEST_SOMEVAR")
+        self.assertTrue(res["readable"], "the probe could not read the parent's environment, so it proves nothing")
+        self.assertFalse(res["found_in_parent"])
+        self.assertFalse(res["in_own_environment"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -220,9 +220,15 @@ def parent_environment():
 
 class Probe:
     def __init__(self, seed=0):
-        pass
+        self.episode_id = None
+        self.probed = False
 
     def act(self, observation, reward=0.0, info=None):
+        if isinstance(observation, dict) and isinstance(observation.get("manifest"), dict):
+            self.episode_id = observation["manifest"].get("episode_id")
+        if self.probed:  # a closed run needs an answer: the second action ends the episode
+            return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": []}}
+        self.probed = True
         text = parent_environment()
         return {"action": "probe", "readable": text is not None,
                 "found_in_parent": bool(text) and (NAME + "=") in text, "in_own_environment": NAME in os.environ}
@@ -242,6 +248,48 @@ try:
 finally:
     ap.close()
 """
+
+
+def peek_policy_source(name: str) -> str:
+    """PEEK_POLICY looking for the variable `name` instead of the default."""
+    return PEEK_POLICY.replace('NAME = "AUDITGYM_REDTEAM_SECRET"', f"NAME = {name!r}")
+
+
+def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float = 300.0) -> dict:
+    """Run `python -m auditgym run --seeds-file examples/closed_seeds_example.json --secret-env NAME` in a subprocess
+    that has NAME set, with a probe policy that looks for NAME in its parent's environment. Returns the probe's
+    first reported action (readable, found_in_parent, in_own_environment); raises RuntimeError if the run failed."""
+    import json
+
+    with tempfile.TemporaryDirectory(prefix="auditgym_secret_probe_") as tmp:
+        Path(tmp, "peekparent.py").write_text(peek_policy_source(name), encoding="utf-8")
+        out = Path(tmp, "out")
+        cmd = [sys.executable, "-m", "auditgym", "run", "--seeds-file",
+               str(protocol.PROJECT_ROOT / "examples" / "closed_seeds_example.json"), "--secret-env", name,
+               "--policies", "peekparent:Probe", "--policy-path", tmp, "--out", str(out)]
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(protocol.PROJECT_ROOT),
+                           env=dict(os.environ, **{name: "redteam-marker-not-a-secret"}))
+        try:
+            lines = Path(out, "trajectories.jsonl").read_text(encoding="utf-8").splitlines()
+        except OSError:
+            lines = []
+        for line in lines:
+            action = json.loads(line).get("action")
+            if isinstance(action, dict) and action.get("action") == "probe":
+                return action
+    raise RuntimeError(f"run exited {p.returncode} without a probe result: {p.stderr.strip()[-300:]}")
+
+
+def secret_env_visibility() -> str:
+    """Can a policy child find the --secret-env variable in its parent's environment after `run` read it?"""
+    try:
+        res = secret_env_probe()
+    except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
+        return f"--secret-env probe failed: {exc}"
+    if not res.get("readable"):
+        return "--secret-env: the parent's environment is not readable"
+    found = "found" if res.get("found_in_parent") else "not found"
+    return f"--secret-env: parent's environment readable, secret variable {found} there"
 
 
 def parent_secret_visibility() -> str:
@@ -274,6 +322,7 @@ def main(argv=None) -> int:
         print("parent process visibility from a policy child (limitation, not blocked):")
         print("  " + parent_visibility())
         print("  " + parent_secret_visibility())
+        print("  " + secret_env_visibility())
         return 0
     rows = _probes()
     width = max(len(r[0]) for r in rows)
@@ -284,6 +333,7 @@ def main(argv=None) -> int:
     print("parent process visibility from a policy child (limitation, not blocked):")
     print("  " + parent_visibility())
     print("  " + parent_secret_visibility())
+    print("  " + secret_env_visibility())
     print("PASS" if ok else "FAIL")
     return 0 if ok else 1
 

@@ -21,6 +21,13 @@ a check, an agent policy or the stress loop keeps its traceback and exits 1.
 Strict isolation (opt-in): with AUDITGYM_REQUIRE_AGENT_USER=1 a policy that cannot run as the separate agent
 user (not root, no AUDITGYM_AGENT_USER, dropped capabilities, Windows, macOS) is an error: check, run, demo, viewer
 and budget exit 2 with one `error:` line before the first episode and before any report is written.
+`run --in-process` with a custom module:Class policy is refused the same way (it would run foreign code in the
+host process); built-in policies in process stay allowed.
+
+--secret-env: run, generate and check read the variable once and remove it from this process's environment block,
+so a child reading the parent's environment block no longer finds it. The value itself stays in the host's memory,
+which a same-user child can read on Windows; Linux also keeps the start-up copy in /proc/<pid>/environ. Only the
+image's separate policy uid protects the secret.
 """
 
 from __future__ import annotations
@@ -61,9 +68,13 @@ def _input(broad: bool = False):
 
 
 def _secret_from_env(name: str | None) -> str | None:
+    """Read the host secret from the environment variable `name` and remove that one variable from this process's
+    environment block, so a child reading the parent's environment block no longer finds it. The value stays in the
+    host's memory, which a same-user child can read on Windows; Linux keeps the start-up copy in
+    /proc/<pid>/environ. Only the image's separate policy uid protects the secret."""
     if not name:
         return None
-    value = os.environ.get(name)
+    value = os.environ.pop(name, None)
     if not value:
         raise InputError(f"--secret-env {name}: the environment variable is not set or empty")
     return value
@@ -136,6 +147,29 @@ def _load_config(arg: str | None) -> dict:
     if not isinstance(cfg, dict):
         raise InputError("config must be a JSON object")
     return cfg
+
+
+def _custom_policy_guard(policies: list, args) -> None:
+    """Custom module:Class policies are foreign code. Strict mode refuses to run them in this process; when they
+    run as the host's user next to a seeds file or a host secret, one warning line says what they could read."""
+    from . import protocol
+    from .policies import is_external
+
+    custom = [p for p in policies if is_external(p)]
+    if not custom:
+        return
+    if args.in_process and protocol.require_agent_user():
+        raise InputError(f"{protocol.REQUIRE_ENV}=1 does not allow --in-process with a custom policy "
+                         f"({custom[0]}): it would run in the host process; drop --in-process")
+    if not (args.seeds_file or args.secret_env) or protocol.require_agent_user():
+        return  # strict mode either switches user or refuses later
+    if not args.in_process and aio.agent_identity() is not None and protocol._proc_listable():
+        return  # the child runs as the separate policy user
+    advice = ("drop --in-process" if args.in_process
+              else "run it in the official image (separate policy user)")
+    print(f"WARNING: custom policy {custom[0]} runs as the host's user while a seeds file or --secret-env is in use: "
+          f"it can read the seeds file and the host's environment; {advice} or with {protocol.REQUIRE_ENV}=1",
+          file=sys.stderr)
 
 
 def _require_agent_user() -> None:
@@ -245,6 +279,7 @@ def cmd_run(args) -> int:
         raise InputError("no episodes given (use --episodes or --seeds-file)")
     if not 1 <= args.max_steps <= MAX_STEPS:
         raise InputError(f"--max-steps must be between 1 and {MAX_STEPS}")
+    _custom_policy_guard(policies, args)
     if not args.in_process and any(p != "oracle" for p in policies):
         _require_agent_user()
     traj, grades = run_many(episodes, policies, mode=args.mode, isolated=not args.in_process,
@@ -268,10 +303,10 @@ def cmd_grade(args) -> int:
     from .grader import Grader
     from .schemas import validate_submission
 
+    if not 0 <= args.steps <= MAX_STEPS:
+        raise InputError(f"--steps must be between 0 and {MAX_STEPS}")
     with _input(broad=True):
         ep = load_episode(Path(args.episode))
-        if args.steps < 0:
-            raise ValueError("--steps must be 0 or more")
         text = Path(args.findings).read_text(encoding="utf-8-sig")  # tolerate a UTF-8 BOM
         try:
             sub = json.loads(text)

@@ -104,6 +104,19 @@ class BadInput(unittest.TestCase):
                     self.assertIn("--max-steps", line)
             self.assertFalse((Path(d) / "o").exists())
 
+    def test_grade_steps_out_of_range_is_an_error(self):
+        ep = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "f.json"
+            f.write_text("{}", encoding="utf-8")
+            for bad in ("101", "1000", "-1"):
+                with self.subTest(bad):
+                    line = self.assert_clean_error(cli("grade", "--episode", ep, "--findings", str(f), "--steps", bad))
+                    self.assertIn("--steps", line)
+            for good in ("0", "100"):
+                with self.subTest(good):
+                    self.assertEqual(cli("grade", "--episode", ep, "--findings", str(f), "--steps", good)[0], 0)
+
     def test_grade_with_a_huge_integer_is_an_invalid_submission(self):
         ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
         eid = load_episode(ep).episode_id
@@ -204,6 +217,24 @@ class StrictAgentUser(unittest.TestCase):
                     rc, _out, err = cli("run", "--episodes", ep, "--out", str(Path(d) / "o"), *extra, env_extra=self.ENV)
                     self.assertEqual(rc, 0, err)
 
+    def test_custom_policy_in_process_is_refused_but_built_in_is_not(self):
+        ep = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "o"
+            rc, stdout, err = cli("run", "--episodes", ep, "--policies", "random,examples.custom_policy:FirstPagePolicy",
+                                  "--in-process", "--out", str(out), env_extra=self.ENV)
+            self.assertEqual(rc, 2, err)
+            lines = [ln for ln in err.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, err)
+            self.assertTrue(lines[0].startswith("error: AUDITGYM_REQUIRE_AGENT_USER=1"), lines[0])
+            self.assertIn("--in-process", lines[0])
+            self.assertIn("examples.custom_policy:FirstPagePolicy", lines[0])
+            self.assertEqual(stdout, "")
+            self.assertFalse(out.exists())
+            rc, _o, err = cli("run", "--episodes", ep, "--policies", "random", "--in-process", "--out", str(out),
+                              env_extra=self.ENV)
+            self.assertEqual(rc, 0, err)
+
     def test_only_the_value_1_turns_strict_mode_on(self):
         for value, expected in (("1", True), (" 1 ", True), ("", False), ("0", False), ("true", False)):
             with self.subTest(value), mock.patch.dict(os.environ, {"AUDITGYM_REQUIRE_AGENT_USER": value}):
@@ -213,6 +244,55 @@ class StrictAgentUser(unittest.TestCase):
         with mock.patch.dict(os.environ, self.ENV), self.assertRaises(protocol.AgentUserRequired):
             protocol.AgentProcess("recon", 0)
         self.assertFalse(issubclass(protocol.AgentUserRequired, OSError))
+
+
+class CustomPolicyInProcess(unittest.TestCase):
+    """--policy-path reaches the in-process runner; a custom policy next to a seeds file or a secret is warned about."""
+
+    EP = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+
+    def test_policy_path_works_in_process(self):
+        with tempfile.TemporaryDirectory() as d:
+            source = ["class P:",
+                      "    def act(self, observation, reward=0.0, info=None):",
+                      "        return {'action': 'submit', 'findings': {'episode_id': 'x', 'findings': []}}"]
+            Path(d, "inproc_policy_mod.py").write_text("\n".join(source) + "\n", encoding="utf-8")
+            out = Path(d) / "o"
+            rc, _o, err = cli("run", "--episodes", self.EP, "--policies", "inproc_policy_mod:P", "--policy-path", d,
+                              "--in-process", "--out", str(out))
+            self.assertEqual(rc, 0, err)
+            self.assertNotIn("Traceback", err)
+            grades = [json.loads(ln) for ln in (out / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual([g["policy"] for g in grades], ["inproc_policy_mod:P"])
+        self.assertNotIn(str(Path(d).resolve()), sys.path)
+
+    def run_custom(self, d, *extra, env_extra=None):
+        return cli("run", "--policies", "examples.custom_policy:FirstPagePolicy", "--in-process", "--out",
+                   str(Path(d) / "o"), *extra, env_extra=env_extra)
+
+    def test_warning_with_a_seeds_file_or_a_secret(self):
+        seeds = str(ROOT / "examples" / "closed_seeds_example.json")
+        with tempfile.TemporaryDirectory() as d:
+            rc, _o, err = self.run_custom(d, "--seeds-file", seeds, "--secret-env", "AUDITGYM_TEST_SECRET_W",
+                                          env_extra={"AUDITGYM_TEST_SECRET_W": "warn-test-secret"})
+            self.assertEqual(rc, 0, err)
+            lines = [ln for ln in err.splitlines() if "custom policy" in ln]
+            self.assertEqual(len(lines), 1, err)
+            self.assertTrue(lines[0].startswith("WARNING:"), lines[0])
+            for word in ("host's user", "seeds file", "environment", "drop --in-process", "AUDITGYM_REQUIRE_AGENT_USER=1"):
+                self.assertIn(word, lines[0])
+            self.assertNotIn("warn-test-secret", err)
+
+    def test_no_warning_for_open_runs_and_built_in_policies(self):
+        seeds = str(ROOT / "examples" / "closed_seeds_example.json")
+        with tempfile.TemporaryDirectory() as d:
+            rc, _o, err = self.run_custom(d, "--episodes", self.EP)
+            self.assertEqual(rc, 0, err)
+            self.assertNotIn("custom policy", err)
+            rc, _o, err = cli("run", "--seeds-file", seeds, "--policies", "flag_all", "--in-process", "--out",
+                              str(Path(d) / "o2"))
+            self.assertEqual(rc, 0, err)
+            self.assertNotIn("custom policy", err)
 
 
 class ClosedRun(unittest.TestCase):
