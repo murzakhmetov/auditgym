@@ -5,18 +5,24 @@
                 entities) by a fresh opaque ID, consistently in records, answer
                 key and provenance;
 * ts_repr:      re-writes every timestamp as the same instant with another
-                offset ("utc", "local" company time, or "mixed").
+                offset ("utc", "local" company time, or "mixed");
+* rename_seed:  replaces the company name and every invoice line description
+                by fresh synthetic wording from a seeded injective mapping,
+                consistently in records and provenance. Reference tokens inside
+                a description (e.g. "SUB-2025-05-6014") are kept.
 
 The answer is unchanged up to the ID mapping, so the oracle's reward must not
 change. Available as AuditEnv.reset(config={"transform": {...}}) and as
-`python -m auditgym transform`.
+`python -m auditgym transform` (rename_seed: AuditEnv/Python only until the CLI flag lands).
 """
 
 from __future__ import annotations
 
 import copy
 import hashlib
+import re
 
+from . import catalog
 from .auditor import OffsetSchedule
 from .episode import Episode
 from .ids import STYLES, IdFactory
@@ -25,6 +31,81 @@ from .timeutil import format_ts, format_utc, parse_ts
 from .verify import reconstruct_clean, records_digest
 
 ALT_OFFSETS = (-420, -180, 0, 60, 345, 480, 660)
+
+
+_TOKEN_TAIL = re.compile(r"^(.*\S) ([A-Z]{2,4}-[0-9][0-9-]*)$")
+
+
+def _split_description(text: str) -> tuple:
+    """(wording, reference token or "") for a line description such as "Freight WB-12345"."""
+    m = _TOKEN_TAIL.match(text)
+    return (m.group(1), m.group(2)) if m else (text, "")
+
+
+def _walk(node, visit) -> None:
+    """Call visit(dict) on every dict nested in node."""
+    if isinstance(node, dict):
+        visit(node)
+        for v in node.values():
+            _walk(v, visit)
+    elif isinstance(node, list):
+        for v in node:
+            _walk(v, visit)
+
+
+def _name_map(ep: Episode, rename_seed: int) -> dict:
+    """Seeded injective maps for the company name and for description wordings."""
+    rng = Rng(f"rename:{rename_seed}:{ep.episode_id}")
+    old_company = (ep.manifest.get("company") or {}).get("name")
+    companies = {}
+    if isinstance(old_company, str):
+        new_company = old_company
+        while new_company == old_company:
+            new_company = catalog.company_name(rng, ep.manifest.get("timezone"))
+        companies[old_company] = new_company
+    wordings = set()
+
+    def collect(d):
+        if isinstance(d.get("description"), str):
+            wordings.add(_split_description(d["description"])[0])
+
+    for table in (ep.invoices, ep.payments, ep.ledger):
+        _walk(table, collect)
+    _walk(ep.provenance, collect)
+    used = set(wordings)
+    words = {}
+    for w in sorted(wordings):
+        new = w
+        while new in used:
+            new = f"{catalog.syllable_name(rng)} {catalog.syllable_name(rng)} item"
+        used.add(new)
+        words[w] = new
+    return {"company": companies, "words": words}
+
+
+def _new_description(text: str, names: dict) -> str:
+    wording, token = _split_description(text)
+    new = names["words"].get(wording, wording)
+    return f"{new} {token}" if token else new
+
+
+def _rename_deep(node, names: dict):
+    """Copy of node with every "description" value and the company name renamed."""
+    if isinstance(node, dict):
+        out = {}
+        for k, v in node.items():
+            if k == "description" and isinstance(v, str):
+                out[k] = _new_description(v, names)
+            elif k == "company" and isinstance(v, str):
+                out[k] = names["company"].get(v, v)
+            elif k == "name" and isinstance(v, str) and v in names["company"]:
+                out[k] = names["company"][v]
+            else:
+                out[k] = _rename_deep(v, names)
+        return out
+    if isinstance(node, list):
+        return [_rename_deep(v, names) for v in node]
+    return node
 
 
 def _id_map(ep: Episode, remap_seed: int) -> dict:
@@ -92,7 +173,7 @@ def _retime(rec: dict, fmt, key_field: str) -> dict:
     return out
 
 
-def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None) -> Episode:
+def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None, rename_seed=None) -> Episode:
     if ts_repr is not None and ts_repr not in ("utc", "local", "mixed"):
         raise ValueError("ts_repr must be utc, local or mixed")
     new = Episode(
@@ -129,6 +210,14 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
             inj["targets"] = {k: m.get(v, v) for k, v in inj.get("targets", {}).items()}
         for d in new.provenance.get("distractors", []):
             d["ids"] = [m.get(x, x) for x in d.get("ids", [])]
+    if rename_seed is not None:
+        names = _name_map(ep, int(rename_seed))
+        new.manifest = _rename_deep(new.manifest, names)
+        new.invoices = _rename_deep(new.invoices, names)
+        new.payments = _rename_deep(new.payments, names)
+        for key in ("ops", "injections", "distractors", "history"):
+            if key in new.provenance:
+                new.provenance[key] = _rename_deep(new.provenance[key], names)
     if ts_repr is not None:
         fmt = _ts_function(ep, ts_repr)
         new.ledger = [_retime(r, fmt, "row_id") for r in new.ledger]
@@ -145,13 +234,14 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
         for table in ("ledger", "invoices", "payments", "fx"):
             rows = new.table(table)
             rng.fork(table).shuffle(rows)
-    tag = f"{ep.episode_id}|{permute_seed}|{remap_seed}|{ts_repr}"
+    tag = f"{ep.episode_id}|{permute_seed}|{remap_seed}|{ts_repr}" + ("" if rename_seed is None else f"|{rename_seed}")
     new_id = "ep_" + hashlib.sha256(tag.encode("utf-8")).hexdigest()[:16]
     new.manifest["episode_id"] = new_id
     if new.truth:
         new.truth["episode_id"] = new_id
     new.provenance["transformed_from"] = {"episode_id": ep.episode_id, "permute_seed": permute_seed,
-                                          "remap_seed": remap_seed, "ts_repr": ts_repr}
+                                          "remap_seed": remap_seed, "ts_repr": ts_repr,
+                                          "rename_seed": rename_seed}
     # The clean-records digest comes from the SOURCE episode's reverted clean tables pushed through the same ID map and
     # timestamp rewrite, never from the transformed tables it will later be checked against.
     clean_src = reconstruct_clean(ep)
@@ -170,6 +260,8 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
         recs = list(clean_src[table].values())
         if remap_seed is not None:
             recs = [_map_record(r, m) for r in recs]
+        if rename_seed is not None:
+            recs = _rename_deep(recs, names)
         if ts_repr is not None:
             recs = [_retime(r, fmt, key_field) for r in recs]
         clean_new[table] = recs
