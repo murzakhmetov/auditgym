@@ -316,24 +316,28 @@ def parent_secret_visibility() -> str:
     return f"{who}: parent's environment readable, host variable {found} there ({own} in the child's own environment)"
 
 
+def print_parent_report() -> int:
+    """Print what a policy child can see of its parent, as measured here (Linux: after harden_host())."""
+    protocol.harden_host()
+    print("parent process visibility from a policy child (measured; blocked only where it says not readable):")
+    print("  host hardening: " + protocol.HARDEN_STATUS)
+    print("  " + parent_visibility())
+    print("  " + parent_secret_visibility())
+    print("  " + secret_env_visibility())
+    return 0
+
+
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if "--parent" in argv:  # only the parent-visibility measurement, a few seconds
-        print("parent process visibility from a policy child (limitation, not blocked):")
-        print("  " + parent_visibility())
-        print("  " + parent_secret_visibility())
-        print("  " + secret_env_visibility())
-        return 0
+        return print_parent_report()
     rows = _probes()
     width = max(len(r[0]) for r in rows)
     ok = True
     for name, passed, secs, detail in rows:
         ok &= passed
         print(f"[{'PASS' if passed else 'FAIL'}] {name.ljust(width)}  {secs:5.1f} s  {detail}")
-    print("parent process visibility from a policy child (limitation, not blocked):")
-    print("  " + parent_visibility())
-    print("  " + parent_secret_visibility())
-    print("  " + secret_env_visibility())
+    print_parent_report()
     print("PASS" if ok else "FAIL")
     return 0 if ok else 1
 

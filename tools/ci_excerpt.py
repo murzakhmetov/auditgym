@@ -14,9 +14,11 @@ import re
 import sys
 
 KEEP = re.compile(
-    r"(^summary: |^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|time docker|mkdir -p)"
+    r"(^summary: |^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|python -m auditgym\.redteam --parent|time docker|mkdir -p)"
     r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED"
-    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest: )"
+    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest:"
+    r"|^\s+(host hardening: |--secret-env: |(separate policy user|same user as the host): parent's environment"
+    r"|probe failed))"
 )
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 

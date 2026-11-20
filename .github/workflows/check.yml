@@ -29,6 +29,8 @@ jobs:
           python-version: "3.11"
       - name: Official check (offline, standard library only)
         run: python -m auditgym check
+      - name: What a same-user policy child can read of its parent (measured, not asserted; see the log)
+        run: python -m auditgym.redteam --parent
       - name: Committed episodes and schemas regenerate byte for byte
         shell: bash
         run: |
