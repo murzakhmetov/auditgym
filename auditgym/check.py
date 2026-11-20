@@ -387,7 +387,9 @@ def section_hidden_like(rep: Report, entries: list, label: str, secret: str | No
     else:
         rep.skip("C_reward", "ordering on error episodes only: auditor > silent", "the set has no error episodes")
     rep.add("C_reward", "every run finishes inside 100 steps and 60 s", all(g["inspection_steps"] <= 99 and g["elapsed_s"] < 60 for g in grades))
-    rep.add("C_reward", "no agent process failed", not any(g.get("agent_error") for g in grades))
+    agent_errors = [f"{g.get('policy')} on {g.get('episode_id')}: {g['agent_error']}" for g in grades if g.get("agent_error")]
+    rep.add("C_reward", "no agent process failed", not agent_errors,
+            "; ".join(" ".join(str(e).split())[:200] for e in agent_errors[:3]))
     for _s, _n, ep in eps:
         live_reward_properties(rep, ep)
     if not any(ep.truth["issues"] for _s, _n, ep in eps):
