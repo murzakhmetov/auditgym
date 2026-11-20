@@ -274,6 +274,7 @@ def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float
     import json
 
     with tempfile.TemporaryDirectory(prefix="auditgym_secret_probe_") as tmp:
+        os.chmod(tmp, 0o755)  # in the image the policy runs as another uid and must reach its module
         Path(tmp, "peekparent.py").write_text(peek_policy_source(name), encoding="utf-8")
         out = Path(tmp, "out")
         cmd = [sys.executable, "-m", "auditgym", "run", "--seeds-file",
@@ -312,6 +313,7 @@ def parent_secret_visibility(harden: bool = True) -> str:
     import json
 
     with tempfile.TemporaryDirectory(prefix="auditgym_peek_") as tmp:
+        os.chmod(tmp, 0o755)  # in the image the policy runs as another uid and must reach its module
         Path(tmp, "peekparent.py").write_text(PEEK_POLICY, encoding="utf-8")
         env = dict(os.environ, AUDITGYM_REDTEAM_SECRET="redteam-marker-not-a-secret")
         argv = [sys.executable, "-c", PEEK_HOST, tmp] + ([] if harden else ["plain"])
