@@ -1,4 +1,5 @@
-"""verify DIR checks what it names, and the evidence checker is independent of auditor.py and money.py."""
+"""verify DIR checks what it names; the evidence checker is independent of auditor.py and money.py, and the
+auditor is independent of money.py and the generator modules."""
 
 import ast
 import copy
@@ -12,9 +13,9 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
-from auditgym import evidence_check
+from auditgym import auditor, evidence_check
 from auditgym.episode import load_episode
-from auditgym.money import convert_minor
+from auditgym.money import convert_minor, proportional_minor
 from auditgym.transform import transform_episode
 from auditgym.verify import check_surface, verify_generated
 
@@ -213,6 +214,51 @@ class EvidenceCheckerTests(unittest.TestCase):
         broken = copy.deepcopy(ep)
         broken.policy["duplicate_rule"] = "Invoices are duplicates when they look alike."
         self.assertIsNone(evidence_check.derive_from_evidence(issue["type"], es, broken))
+
+
+class AuditorIndependenceTests(unittest.TestCase):
+    def test_auditor_imports_only_the_standard_library_and_timeutil(self):
+        tree = ast.parse(Path(auditor.__file__).read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for a in node.names:
+                    self.assertIn(a.name.split(".")[0], {"re", "datetime"}, f"import {a.name}")
+            elif isinstance(node, ast.ImportFrom):
+                if node.level == 0:
+                    self.assertIn((node.module or "").split(".")[0], {"datetime", "__future__"}, node.module)
+                else:
+                    self.assertEqual(node.module, "timeutil", f"forbidden relative import .{node.module}")
+
+    def test_integer_conversion_matches_money(self):
+        rng = random.Random(20251120)
+        for _ in range(10000):
+            amount = rng.randint(-10 ** 6, 10 ** rng.randint(1, 12))
+            rate = format(Decimal(rng.randint(1, 10 ** 9)) / Decimal(10 ** rng.randint(0, 9)), "f")
+            src, dst = rng.choice((0, 2, 3)), rng.choice((0, 2, 3))
+            mode = rng.choice(("half_even", "half_up"))
+            self.assertEqual(auditor._convert_minor(amount, rate, src, dst, mode),
+                             convert_minor(amount, rate, src, dst, mode), (amount, rate, src, dst, mode))
+
+    def test_integer_proportion_matches_money(self):
+        rng = random.Random(7)
+        for _ in range(10000):
+            whole = rng.randint(1, 10 ** 9)
+            part, total = rng.randint(0, whole), rng.randint(-10 ** 6, 10 ** 9)
+            mode = rng.choice(("half_even", "half_up"))
+            self.assertEqual(auditor._proportional_minor(total, part, whole, mode),
+                             proportional_minor(total, part, whole, mode), (total, part, whole, mode))
+
+    def test_exact_halves_and_bad_input(self):
+        self.assertEqual(auditor._convert_minor(5, "0.5", 2, 2, "half_even"), 2)
+        self.assertEqual(auditor._convert_minor(5, "0.5", 2, 2, "half_up"), 3)
+        self.assertEqual(auditor._convert_minor(-5, "0.5", 2, 2, "half_up"), -3)
+        self.assertEqual(auditor._convert_minor(7, "0.5", 2, 2, "half_even"), 4)
+        self.assertEqual(auditor._convert_minor(3, "2E-1", 0, 2, "half_even"), 60)
+        for bad in ("", ".", "1.2.3", "abc", "1,5"):
+            with self.assertRaises(ValueError):
+                auditor._ratio(bad)
+        with self.assertRaises(ValueError):
+            auditor._convert_minor(1, "1", 2, 2, "floor")
 
 
 if __name__ == "__main__":

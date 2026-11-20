@@ -2,11 +2,14 @@
 
 Recomputes every expected posting from the public records and policy.json
 alone and reports discrepancies of the four finding types plus "anomalies"
-(inconsistencies that are not a finding type). It deliberately imports only
-money and time-parsing primitives, never the generator modules (history,
-books, inject, render), so it is a second, independent implementation of the
-published rules. verify.py requires it to reproduce the answer key exactly on
-erroneous books and to find nothing on the clean twin.
+(inconsistencies that are not a finding type). It imports only the standard
+library and the timestamp parser (timeutil), never the generator modules
+(history, books, inject, render) and not money.py, whose conversion the
+generator uses: FX conversion and proportional relief are its own integer
+arithmetic (_convert_minor, _proportional_minor). So it is a second,
+independent implementation of the published rules. verify.py requires it to
+reproduce the answer key exactly on erroneous books and to find nothing on the
+clean twin.
 
 The strong scripted `auditor` policy runs the same code on records it fetched
 through the tool interface.
@@ -14,10 +17,57 @@ through the tool interface.
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta
 
-from .money import convert_minor, proportional_minor
 from .timeutil import parse_ts
+
+_DECIMAL = re.compile(r"([+-]?)([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?")
+
+
+def _ratio(text) -> tuple:
+    """A decimal string as an exact pair of integers (numerator, denominator > 0): "1.25" -> (125, 100)."""
+    m = _DECIMAL.fullmatch(str(text).strip())
+    if m is None or not (m.group(2) or m.group(3)):
+        raise ValueError(f"not a decimal number: {text!r}")
+    sign, whole, frac, exp = m.group(1), m.group(2) or "0", m.group(3) or "", int(m.group(4) or 0)
+    num, den = int(whole + frac), 10 ** len(frac)
+    if exp >= 0:
+        num *= 10 ** exp
+    else:
+        den *= 10 ** -exp
+    return (-num if sign == "-" else num), den
+
+
+def _round_ratio(num: int, den: int, rounding: str) -> int:
+    """num / den rounded to an integer: half_even (ties to even) or half_up (ties away from zero)."""
+    if rounding not in ("half_even", "half_up"):
+        raise ValueError(f"unknown rounding mode {rounding!r}")
+    if den == 0:
+        raise ZeroDivisionError("denominator must be non-zero")
+    if den < 0:
+        num, den = -num, -den
+    q, r = divmod(abs(num), den)
+    if 2 * r > den or (2 * r == den and (rounding == "half_up" or q % 2 == 1)):
+        q += 1
+    return -q if num < 0 else q
+
+
+def _convert_minor(amount_minor: int, rate, src_exp: int, dst_exp: int, rounding: str) -> int:
+    """amount_minor * rate * 10^(dst_exp - src_exp), rounded per the policy."""
+    num, den = _ratio(rate)
+    num *= int(amount_minor)
+    shift = int(dst_exp) - int(src_exp)
+    if shift >= 0:
+        num *= 10 ** shift
+    else:
+        den *= 10 ** -shift
+    return _round_ratio(num, den, rounding)
+
+
+def _proportional_minor(total_minor: int, part: int, whole: int, rounding: str) -> int:
+    """total_minor * part / whole, rounded per the policy."""
+    return _round_ratio(int(total_minor) * int(part), int(whole), rounding)
 
 
 def parse_offset(text: str) -> int:
@@ -137,7 +187,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
         if rate is None:
             anomalies.append(f"invoice {iid} has no FX rate")
             continue
-        expected = convert_minor(doc["total_minor"], rate, exps[ccy], exps[base], rounding)
+        expected = _convert_minor(doc["total_minor"], rate, exps[ccy], exps[base], rounding)
         rows = [r for _, r in journals.get(("I", iid), [])]
         primary_acct, counter_acct = ("1100", "4000") if doc["kind"] == "sales" else ("2000", "5000")
         if issued < p0:
@@ -221,7 +271,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
         if rate is None:
             anomalies.append(f"payment {pid} has no FX rate")
             continue
-        expected_bank = convert_minor(doc["amount_minor"], rate, exps[ccy], exps[base], rounding)
+        expected_bank = _convert_minor(doc["amount_minor"], rate, exps[ccy], exps[base], rounding)
         bank_rows = [r for r in rows if r["account"] == "1000"]
         if len(bank_rows) != 1:
             anomalies.append(f"payment {pid} lacks a single bank row")
@@ -265,7 +315,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
                 remaining -= a
             expected_unalloc_doc = remaining
             posted_unalloc = sum(r["credit_minor"] for r in rows if r["account"] == "2900")
-            expected_unalloc = convert_minor(expected_unalloc_doc, rate_used, exps[ccy], exps[base], rounding) if expected_unalloc_doc else 0
+            expected_unalloc = _convert_minor(expected_unalloc_doc, rate_used, exps[ccy], exps[base], rounding) if expected_unalloc_doc else 0
             shortfall = False
             if kind == "receipt" and posted_unalloc > expected_unalloc and expected_allocs:
                 shortfall = True
@@ -287,7 +337,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
             total_relief = 0
             for ref, a in expected_allocs:
                 item = booked[ref]
-                exp_relief = item["carry"] if a == item["open_doc"] else proportional_minor(item["carry"], a, item["open_doc"], rounding)
+                exp_relief = item["carry"] if a == item["open_doc"] else _proportional_minor(item["carry"], a, item["open_doc"], rounding)
                 row = reliefs.get(ref)
                 posted_relief = _amt(row) if row else 0
                 if not shortfall and posted_relief != exp_relief:
@@ -312,7 +362,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
             if c is None or c[0] < doc["amount_minor"] or len(relief_rows) != 1:
                 anomalies.append(f"refund {pid} exceeds the customer's credit")
                 continue
-            exp_relief = c[1] if doc["amount_minor"] == c[0] else proportional_minor(c[1], doc["amount_minor"], c[0], rounding)
+            exp_relief = c[1] if doc["amount_minor"] == c[0] else _proportional_minor(c[1], doc["amount_minor"], c[0], rounding)
             if _amt(relief_rows[0]) != exp_relief:
                 anomalies.append(f"refund {pid} relieves a different credit amount")
             c[0] -= doc["amount_minor"]
