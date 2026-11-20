@@ -128,7 +128,7 @@ purchases, and a policy could learn to search for duplicates there alone. No sal
 Guards: injected monetary differences are at least 100 minor units (50 times the tolerance); FX targets fall
 on dates with a published rate; unallocated targets are single-reference receipts with no other receipt on the
 invoice and no legitimate excess; (type, affected_ids) is unique per episode; at most 12 errors per episode
-(`MAX_ERRORS`). Unallocated receipts carry an evidence assumption: see section 10.
+(`MAX_ERRORS`). The cited evidence of an unallocated receipt does not show alone that no other receipt settled the invoice; `verify` checks it on all public records (sections 7 and 10).
 
 ## 4. Environment contract
 
@@ -167,7 +167,7 @@ out-of-range results and empty or malformed expressions; a non-string or longer-
 `bad_args`.
 
 Submission limits (published in the task as `limits`): at most 30 findings, 10 evidence IDs, and 1,000 explanation
-characters per finding. Every ID must be a non-blank string of at most `max_id_chars` (64) characters. An ID that
+characters per finding, and a currency of at most `max_currency_chars` (8) characters. Every ID must be a non-blank string of at most `max_id_chars` (64) characters. An ID that
 breaks this rule makes the whole submission invalid (reward −1), including an extra evidence ID; well-formed unknown
 extra IDs are ignored. `claimed_amount_minor` must be an integer; an integral float such as `106965.0` is coerced to an
 integer by the environment and by the `grade` command alike. Text that is not valid UTF-8 (a lone surrogate) in an
@@ -184,7 +184,9 @@ The host process holds the episode, the answer key and the grader. The policy ru
 in a child process. The child gets:
 
 - a temporary working directory whose only content is a staged copy of the agent-side code (`code/`, on the child's
-  import path);
+  import path). On Windows the child's working directory is the empty `work/` subdirectory, which carries a Low
+  integrity label (TEMP and TMP point there), and `code/` is read-only for the child (the integrity level is described
+  below);
 - a minimal environment: no seed, no secret, no episode or grader path;
 - an import path that holds a staged copy of the agent-side modules only (`STAGED_MODULES` in `protocol.py`), plus
   the repository's `examples/` policies. The oracle, grader, generator and episode code are not importable there.
@@ -213,9 +215,10 @@ The channel is bounded in every direction (constants in `protocol.py`):
   submission (reward −1, `closed` false, status `agent_exited`), never as an empty answer, and `run` exits 3.
   Only the time limit and the step limit give empty answers.
 
-Size is an exception to the parity described above. A submit line over `MAX_LINE` is invalid in the child, while
-the same submission can be scored in process. A valid submission reaches that size only by whitespace padding around the
-currency code, because `currency` has no length limit (the schema pattern allows any whitespace on both sides).
+Size is at parity too. A finding's `currency` is at most 8 characters (`MAX_CURRENCY_CHARS` in `schemas.py`: the
+three-letter code plus whitespace around it), in `validate_submission` and in the published JSON schema. With that cap
+every valid submission is below 830,000 bytes as `agent.py` serializes it (the bound is 828,755 bytes), far under
+`MAX_LINE`. So a submit line over `MAX_LINE` is never a valid submission in process either.
 
 The host hashes every file under `auditgym/` (bytecode included), `configs/*.json` and `schemas/*.json` before and
 after each agent run. A change is an agent error (`agent_error`), and changed bytecode is deleted. The processes the
@@ -237,8 +240,25 @@ environment, where `--secret-env` values live, is handled per platform. On Linux
 child, so a same-user child cannot read `/proc/<ppid>/environ`. CI
 measured this on ubuntu-latest with Python 3.11, 3.12 and 3.13: `python -m auditgym.redteam --parent` prints "same user
 as the host: the parent's environment is not readable" while its control with hardening off reads the variable, and
-`tests/test_linux_hardening.py` asserts the same with a positive control. The kernel also refuses `/proc/<ppid>/mem` and ptrace to such a child; no test or CI step measures those two. On Windows a same-user child reads the
-parent's environment from process memory (measured in CI on windows-latest and locally). On macOS there is no
+`tests/test_linux_hardening.py` asserts the same with a positive control. The kernel also refuses `/proc/<ppid>/mem` and ptrace to such a child; no test or CI step measures those two. On Windows the policy child lowers its own
+token to Low integrity (S-1-16-4096) at the start of `agent.main()`, before any policy code loads (`agent._lower_integrity`;
+it first relabels its own process object Low, which keeps `os.getppid()` working). Mandatory integrity control then refuses
+`PROCESS_VM_READ` on the Medium host, so the child cannot read the host's environment block or memory. `python -m
+auditgym.redteam --parent` prints "same user as the host: child at Low integrity, the parent's environment is not
+readable (OpenProcess(PROCESS_VM_READ) error 5)", and its control with the lowering off still reads the host variable, so
+the probe is not blind (measured in CI run 44738848801 on windows-latest and locally). The `--policy-path` directory joins
+`sys.path` only after the lowering, so no code in it runs at the host's level (`tests/test_windows_hardening.py` plants
+`sitecustomize.py`, `argparse.py` and `ctypes.py` shadows). In a Windows venv the child starts from
+`sys._base_executable` with `__PYVENV_LAUNCHER__` set, so its parent is the host and not the venv launcher.
+`AUDITGYM_NO_LOW_INTEGRITY=1` in the host's environment turns the lowering off: the child prints one stderr warning and
+the `host hardening:` line of the probe shows the switch. If labelling the work directory fails, the child is not lowered
+and prints "auditgym: integrity level not lowered (label failed: ...): the policy can read the host's memory". The price of
+Low integrity: the policy can write only in its working directory and in TEMP/TMP. Its `--policy-path` directory, the
+repository and default-labelled directories of the user profile (`%LOCALAPPDATA%`, caches with absolute paths) are
+read-only, and a write there raises `PermissionError`, which is graded as an agent error (`agent_exited`, reward −1).
+Reads of default-labelled files, subprocesses, `multiprocessing` and localhost sockets work. Residuals on Windows:
+interpreter start-up (`site`, the standard library, user site, `usercustomize`) runs at Medium before the lowering; files
+with a default label stay readable; and outside a container the child is still the same OS user. On macOS there is no
 `/proc`: the probe reports "not measured on this platform (no /proc)" and nothing is hardened. Residuals on Linux: a
 child with CAP_SYS_PTRACE is not blocked, and the negative assertions are skipped for a root test process;
 `/proc/<pid>/cmdline` stays readable, so paths on the command line are visible; interpreter start-up runs before
@@ -321,16 +341,39 @@ the stored digests instead of the twin.
 |---|---|
 | records_schema, ids_unique | published fields and types; IDs unique across tables |
 | clean_equalities | clean books rebuilt from provenance: every journal and the trial balance balance; the independent auditor finds no discrepancy and no anomaly |
-| provenance_roundtrip | revert-and-reapply reproduces the published tables; the reverted tables hash to `clean_records_digest`; `public_digest()` equals `final_digest`; every declared issue has an op that touches its records; injection and distractor IDs name existing invoices or payments in their role (the payment role needs a payment ID), truth issues and injections match one to one by (issue_id, type), targets are non-empty, every distractor has an ID list, and malformed injections and distractors give a FAIL line, not a traceback; an overflow during replay (for example a `1e400` amount) is a FAIL line too; a `provenance.json` that is not an object, or `ops` that is not a list, an op that is not an object or lacks a known table, ID, record or field, and a non-string issue ID give FAIL lines of this check (the replay and clean-books steps are then skipped), not a traceback. At generation time the reverted tables are also compared with the clean twin. Not caught by `verify DIR` alone: a changed seed, a removed or shortened distractor list, or a variant or distractor kind swapped for another known one; `check` catches those on the committed episodes by regenerating them and comparing bytes |
+| provenance_roundtrip | revert-and-reapply reproduces the published tables; the reverted tables hash to `clean_records_digest`; `public_digest()` equals `final_digest`; every declared issue has an op that touches its records; injection and distractor IDs name existing invoices or payments in their role (the payment role needs a payment ID), truth issues and injections match one to one by (issue_id, type), targets are non-empty, every distractor has an ID list, and malformed injections and distractors give a FAIL line, not a traceback; an overflow during replay (for example a `1e400` amount) is a FAIL line too; a `provenance.json` that is not an object, or `ops` that is not a list, an op that is not an object or lacks a known table, ID, record or field, and a non-string issue ID give FAIL lines of this check (the replay and clean-books steps are then skipped), not a traceback. At generation time the reverted tables are also compared with the clean twin. It also cross-checks every `provenance.injections[].change` against the public records and the ops; an unknown, missing or malformed key of a known type is a FAIL line (details below). Not caught by `verify DIR` alone: see the list below the table |
 | declared_discrepancies | the independent auditor (`auditor.py`, which imports only the standard library and `timeutil`: no generator module and not `money.py`; its FX conversion and proportional relief are its own integer arithmetic, tested against `money.py` on 10 000 random cases each in `tests/test_verify.py`) reproduces exactly the answer key: types, IDs, amounts, evidence sets; truth `id_aliases` equals `{doc_id: invoice_id or payment_id}` for every public invoice and payment (nothing missing or extra), and every issue variant is a known variant of its type |
-| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it (test). For `unallocated_payment` the set cannot show that no other receipt settled the invoice; that rests on a generator guarantee (section 10) |
+| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it (test). For every `unallocated_payment` issue it also checks, on all public records, that no other receipt settled the invoice (the cited three-record set does not show that alone; section 10) |
 | budget_feasible | reading every page of every table plus the submit fits in 100 steps |
 | no_surface_tells | every injected or modified row has an untouched row with the same account and null pattern; in directory mode it fails when issues are declared but no ledger op exists |
 | no_leaks | no answer-key markers or seed in public files |
 
-`verify DIR` does not catch, on its own, a changed `provenance.seed`, a removed or shortened distractor list, or a variant or distractor kind in provenance swapped for another known one. An injection whose target values differ from the `affected_ids` of its truth issue fails `provenance_roundtrip`, so a
-retarget to another existing invoice is caught. `check` catches the accepted edits on the committed episodes only by
-regenerating them and comparing bytes.
+The change cross-check of `provenance_roundtrip` (`verify.py`, `_ChangeIndex`, `CHANGE_KEYS`) works per injection type:
+
+- `duplicate_invoice`: `change` is empty.
+- `wrong_period`: `posting_ts` is the timestamp that the ledger ops record for the target's booking rows.
+- `wrong_fx_rate`: `correct_rate` and `correct_rate_date` are the `fx.csv` policy rate (the latest rate on or before the
+  document's local date). `wrong_rate` and `wrong_rate_date` are the `fx.csv` rate of the date that the variant names
+  (`utc_date`: the UTC date; `posting_date`: the local date of `posting_ts`; `stale_rate`: the day before the period). For
+  `transposed` they are two adjacent digits of `correct_rate` swapped (at least 0.2 % apart, no date). The touched
+  booking row (invoice 1100 or 2000, payment 1000) equals the amount at `wrong_rate`.
+- `unallocated_payment`: `alloc` fits the variant (missing 0, partial more), 2900 holds the converted amount minus
+  `alloc`, and the ledger relieves the invoice by the proportional carrying amount of `alloc`. `alloc` is checked only to
+  the resolution of the base-currency 2900 and relief amounts.
+
+Rates are checked against the `fx.csv` format (`RATE_SYNTAX`: digits, an optional decimal part, no exponent, sign or
+space) before any `Fraction()` call, so a value such as `1e99999999` cannot hang `verify`.
+
+The `evidence_sufficient` check for `unallocated_payment` reads all payments and ledger rows, not the cited records: no
+payment but the issue's own lists the invoice in `invoice_refs`, and no ledger row but the issue's own payment relieves it
+(a credit to 1100 for a sales invoice, a debit to 2000 for a purchase invoice). More than one payment or invoice
+document that carries the issue's IDs fails too.
+
+`verify DIR` does not catch, on its own: a changed `provenance.seed`, a removed or shortened distractor list, a distractor
+kind swapped for another known one, a `wrong_period` injection variant, an injection's scenario (`verify` never reads it)
+and any `truth.json` variant. An injection whose target values differ from the `affected_ids` of its truth issue fails
+`provenance_roundtrip`, so a retarget to another existing invoice is caught. `check` catches the seed, distractor and
+variant cases on the committed episodes by regenerating every episode from its seed and config and comparing bytes.
 
 `evidence_check.py` imports nothing from `auditor.py` or `money.py`. It reads UTC offsets from
 `policy.utc_offset_schedule`, uses a fixed duplicate-signature field list, derives nothing unless
@@ -347,7 +390,7 @@ twin's row order.
 `transform.py` permutes rows, remaps every ID consistently in records, answer key and provenance, rewrites
 timestamps as the same instants in another offset, and (`rename_seed`) replaces the company name and every invoice line
 description with synthetic wording from a seeded injective mapping, in records and provenance, keeping reference tokens
-such as `SUB-2025-05-6014`. Counterparties appear in the public records only as entity IDs, which the remap replaces. Issue numbering, affected-ID order and evidence order follow
+such as `SUB-2025-05-6014`. `shift_years` moves every calendar year by K, a nonzero multiple of 28: the Gregorian weekday and leap-year pattern repeats every 28 years while no non-leap century year (1900, 2100) lies between the two dates, so the shift keeps every weekday, every 29 February and every n-th-weekday DST rule date of `timeutil.TZ_RULES`. Both ends of every date must stay inside 1901-03-01 .. 2099-12-31 and the period year inside 2000 .. 2100 (what `config.py` accepts); the date patterns also see years 2100 .. 2199, so a date in 2100 is refused instead of being left behind. The range is checked again on the shifted values after any `ts_repr` rewrite, because a UTC or local rendering can sit on another day than the source text. The episode ID tag gains `|shift{K}` and `transformed_from` records `shift_years`. Counterparties appear in the public records only as entity IDs, which the remap replaces. Issue numbering, affected-ID order and evidence order follow
 content roles, not ID strings, so the oracle answer maps one to one.
 
 The official check (`python -m auditgym check`) groups its named checks in the five rubric groups of `RUBRIC` in
@@ -382,15 +425,13 @@ Sections:
   on the records of real issues. The baselines include `silent` (submits nothing at once); the check asserts
   auditor > silent.
 - `D_paired`: same seed and config regenerate identical records and answer key; the same actions reproduce identical
-  transitions (random explorer); isolated child and in-process runs agree; transforms (permutation, remap, timestamp
-  representation, renaming) keep the oracle answer and reward, and the auditor matches the same (issue, amount) pairs
-  (93 checks).
+  transitions (random explorer); isolated child and in-process runs agree; five transforms on every episode (permutation and ID remap; permutation, remap, mixed timestamps and renaming; remap and UTC timestamps; the 28-year shift; the shift combined with permutation, remap, local timestamps and renaming) and three single transforms (permutation, remap, renaming) on two error episodes keep the oracle answer and reward, and the auditor matches the same (issue, amount) pairs (133 checks on the public set). The shift uses +28; when the transform refuses +28 (a late period), it falls back to -28; when neither fits, the check is a SKIP with the reason "no 28-year shift keeps the dates inside 1901-03-01 .. 2099-12-31". On the public check set every episode takes +28. `python -m auditgym transform --in DIR --out DIR2 --shift-years 28` applies the shift, alone or with the other flags.
 - `A_unit_tests`: the whole unit suite (`unittest discover`), reported as one check with run, passed and skipped
   counts.
 
 Section counts list the checks that applied, and the skips in parentheses: `C_data 3/3 (1 skipped)` means three checks ran and one was skipped. The count appears in stdout, in `report.md` and in the viewer; `report.json` keeps `passed` and `total` and adds `applicable` and `applicable_passed`. The public check has no skips, so its lines did not change.
 
-Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` and `runs/sweep/summary.md` both carry `code 23e2b93445134423a3b446db6beb32160b13f308eb8228094ee56f7eb0479abc (60 files)`, which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (616 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
+Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` carries a stamp that starts with `182f7b41…` (60 files), which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (656 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
 
 Unit tests rerun generation under two `PYTHONHASHSEED` values (`tests/test_generator.py`), and the committed schema
 files must stay byte-equal to the generated ones (`tests/test_contract_fuzz.py`, test_committed_schema_files_equal_generated_ones).
@@ -403,11 +444,28 @@ contain the closed answer key. CI runs it in the image with the seeds
 file and the output directory mounted, `--network none` and strict mode. `python tools/organizer_sweep.py DIR 60
 --record` runs it over the stress mix plus one boundary configuration per edge value that `config.py` accepts
 (423 configurations, 401 feasible; 63-bit seeds, a host secret, chunks of 60: six chunks of 60 episodes and one of 41) and runs the contract battery in
-process on every feasible episode. On the code of `c9c7ab4` (code stamp `23e2b934…`, the same as the check report) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
-no feasible configuration failed to generate. A first rerun at that code failed one chunk on "no agent process failed" (the line had no detail then; it now names the failing runs). A package file had been edited while that chunk ran; the two reruns without edits passed. A sweep takes about 16 minutes on Windows 10 (one local run); the summary records no time. The 22 infeasible
+process on every feasible episode. On the code of `c536aee` (code stamp `182f7b41…`, the same as the check report's) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
+no feasible configuration failed to generate. Four date-shift checks were skipped, in chunk 5: the two shift transforms on the boundary configurations `bnd_period_last_supported` and `bnd_period_century_february`, whose dates no 28-year shift in either direction keeps inside 1901-03-01 .. 2099-12-31. In an earlier round a sweep failed one chunk on "no agent process failed" because a package file had been edited while that chunk ran; the line now names the failing runs, and a sweep is recorded only without edits. A sweep takes about 21 minutes on Windows 10 (one local run, with other jobs on the machine); the summary records no time. The 22 infeasible
 configurations each raise a ConfigError that names the reason; among them, invoice counts with a total of 1,651 or more are rejected at
 once because a full read would need more than 100 steps; section 1 gives the band below that (`config.min_read_pages`: one invoices row and two ledger
 rows per counted invoice, a lower bound that a unit test checks on every committed episode).
+
+### Mutation run
+
+`python tools/mutation_smoke.py OUT_DIR [--record] [--jobs N]` asks how strongly the unit tests pin the core. It holds
+108 hand-written one-line mutants of `matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`,
+`evidence_check.py`, `protocol.py`, `transform.py` and `agent.py`. Each mutant runs in a fresh temporary copy of the
+repository (the working tree is never touched), first against the unit-test modules listed for it and, only if those
+pass, against `tests/test_mutation_survivors.py`. That module was written for the mutants that the first run let survive.
+A timeout counts as a kill; the tool stops the whole process tree of a timed-out test.
+
+Result ([runs/mutation/summary.md](../runs/mutation/summary.md), recorded on Windows with Python 3.11): 108 of
+108 mutants are killed, none survived and none is equivalent. The existing tests kill 63 of them. The other
+45 are killed only by `tests/test_mutation_survivors.py`; the existing tests alone do not kill them. One mutant
+(policy-path-append) is killed only by a Windows-only test, so the tool runs it only on Windows and reports it as "not run
+here" elsewhere. The run takes about 7 minutes with `--jobs 4` on the local machine. `summary.json` records a
+sha256 of every test module the run used, and `tests/test_mutation_smoke.py` fails inside `check` when a test module
+changed after the recording or when the mutant list no longer matches the code.
 
 ### Run outputs and exit codes
 
@@ -482,13 +540,13 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 
 - **Platforms.** Local runs: Windows 10, Python 3.11.4. CI: ubuntu with Python 3.11, 3.12 and 3.13; macOS and Windows with Python 3.11 (the workflow
   pins only the minor version; the patch version is not in the committed CI excerpt), and the container. `pyproject.toml` sets `requires-python = ">=3.11,<3.14"` (CI runs 3.11, 3.12 and 3.13), so Python 3.14 is outside the range and was not tested. The POSIX process-tree branch
-  runs in CI, not locally. The Linux host hardening (section 5) is measured on ubuntu only; macOS is not measured.
+  runs in CI, not locally. The Linux host hardening (section 5) is measured on ubuntu only; the Windows Low-integrity lowering is measured on windows-latest and locally; macOS is not measured.
 - **Container.** Built and run in CI with `--network none --cpus 2 --memory 4g --pids-limit 512`. Inside the image
   the host runs as root and every policy child as uid 10002 (`agent`, section 5). Under `--user 10001` or
   `--cap-drop ALL` the policy falls back to the host's user with one warning line; under `--user 10001` the Linux
   hardening of section 5 still blocks the child's read of the host's environment (measured in CI); under
-  `--cap-drop ALL` the child runs as root without capabilities. The `--parent` probe in CI measured the same readings as under `--user 10001` (one ubuntu Docker host), but no unit test asserts them, because the negative assertions skip for a root test process. On Windows a same-user child can read the host's
-  environment block (measured outside a container). `--secret-env` is removed from that block after reading (measured), but its value stays in the host's memory, and a memory read is not measured. CI also runs the closed check in the image with a mounted seeds file and output directory, in strict
+  `--cap-drop ALL` the child runs as root without capabilities. The `--parent` probe in CI measured the same readings as under `--user 10001` (one ubuntu Docker host), but no unit test asserts them, because the negative assertions skip for a root test process. On Windows the child runs at Low integrity and cannot read the host's
+  environment block (measured outside a container; section 5); with the lowering off it can. `--secret-env` is removed from that block after reading (measured), but its value stays in the host's memory; the Low-integrity child cannot read that memory (the probe's `OpenProcess(PROCESS_VM_READ)` returns error 5). CI also runs the closed check in the image with a mounted seeds file and output directory, in strict
   mode.
 - **Isolation** is a process boundary, not a sandbox (section 5). Open train and dev answer keys sit in the repository
   by design, so a child running as the same OS user can read them.
@@ -501,21 +559,22 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
   uses `check --seeds-file`.
 - **Scripted auditor.** It shares `auditor.py` with the verifier. Its perfect F1 shows that every scenario is solvable
   through the tool interface within the budget, not that an agent would reason this way.
-- **Unallocated payment evidence.** The three-record evidence set relies on a generator guarantee: the receipt references
-  a single invoice, and no other receipt is booked against that invoice. The cited records cannot show this; an agent can
-  confirm it only by reading all payments.
+- **Unallocated payment evidence.** The cited three-record evidence set does not show alone that no other receipt settled
+  the invoice; an agent can confirm it only by reading all payments. `verify` checks this property on all public records
+  (section 7), and the generator picks single-reference receipts with no other receipt on the invoice (section 3).
 - **Shortcut tells** are measured only for the rules written down in `auditgym/tells.py` (section 3). A feature nobody
   listed may still leak.
 - **Evidence padding.** Extra evidence IDs up to the 10-ID cap are free (published superset rule); the battery checks
   that padding stays a true positive and does not penalize it.
-- **Paired transforms** cover row order, ID remap, timestamp representation and renaming. There is no date shift:
-  period boundaries, FX dates and time-zone rules would have to move together.
+- **Paired transforms** cover row order, ID remap, timestamp representation, renaming and a date shift in whole 28-year
+  steps (the weekday and leap-year cycle). A shift by another number of years would change weekdays and DST rule dates,
+  so it is refused; late periods cannot shift forward and use -28, and dates must stay inside 1901-03-01 .. 2099-12-31.
 - **Accounting model.** Deliberately small: base-currency ledger, payments in the invoice currency, no taxes, credit
   notes or cross-currency settlement, eleven built-in time zones instead of the IANA database.
 - **flag_all** is a format-level attack: it reads first pages and uses document amounts. Smarter attacks are covered by the reward battery in `check` (section 8).
 - **Duplicates are purchase-only.** `duplicate_invoice` is injected only into purchase invoices, and the legitimate repeats and the twin are purchase invoices too (section 3). A policy could learn to search for duplicates among purchases only.
 - **Invoice counts.** A total of 1,651 or more invoices is a ConfigError at once; counts from about 900 sales invoices up to that total pass validation and fail after 16 attempts with exit 2 (section 1).
-- **Directory verification.** `verify DIR` accepts some edited copies (a changed `provenance.seed`, a removed or shortened distractor list, a variant or distractor kind swapped for another known one); section 7 lists them.
+- **Directory verification.** `verify DIR` accepts some edited copies (a changed `provenance.seed`, a removed or shortened distractor list, a distractor kind swapped for another known one, a `wrong_period` variant, an injection's scenario, any `truth.json` variant); section 7 lists them.
 - **Noninterference** is measured by replay (section 5). Timing is not covered, because the time limit is part of the contract.
 - **boundary_fx_payment feasibility.** With a fixed period, 17 of the 36 months of 2025–2027 are infeasible (section 9).
 - **Evidence IDs and amounts.** A blank or over-long ID (more than 64 characters) makes the submission invalid, even as
@@ -523,7 +582,7 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
   are ignored. An
   integral float `claimed_amount_minor` (`106965.0`) is coerced to an integer by both the environment and `grade`. Text that is not valid UTF-8 (a lone surrogate) in an ID,
   in `episode_id` or in an explanation is invalid too. A malformed submit whose `action` key is not the first member is
-  one `unknown_action` step, and a submit over `MAX_LINE` is invalid in the child only (section 5).
+  one `unknown_action` step. A submit over `MAX_LINE` is never valid, in the child or in process (section 5).
 - **Explanations are not graded**; the reward depends on fields and evidence only. A judge for explanations is not
   implemented. Time-zone twin pairs for period errors are not implemented; only the duplicate twin pair t03/t10 exists.
 - **Experimental reward.** It is reported next to the common reward and never replaces it.
@@ -581,28 +640,28 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   the secret in `AUDITGYM_SECRET`; the step requires PASS and greps the output for answer-key issue IDs and the
   secret. The container logs and the closed-path output are uploaded as artifacts.
 
-Latest completed run at the time of writing: run 44712065782, commit `c9c7ab485111fcea7322967ef0e769dd862383e5`
-(subject: `check: the "no agent process failed" line names the failing runs; report regenerated with the final code stamp`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44712065782 --log`), which is not
+Latest completed run at the time of writing: run 44755780791, commit `c536aeef1608ebbd059768699a274989e9f13078`
+(subject: `Round 7 second review: venv parent, shift range after re-rendering, verify guards, mutation timeouts`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44755780791 --log`), which is not
 committed. The lines cited here are kept in
-[runs/ci/44712065782.txt](../runs/ci/44712065782.txt). The conclusion of every job and step is in [runs/ci/44712065782.jobs.json](../runs/ci/44712065782.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped); it shows that the byte-for-byte regeneration steps and every container step succeeded:
+[runs/ci/44755780791.txt](../runs/ci/44755780791.txt). The conclusion of every job and step is in [runs/ci/44755780791.jobs.json](../runs/ci/44755780791.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped); it shows that the byte-for-byte regeneration steps and every container step succeeded. The excerpt of the previous round's run, 44712065782 on commit `c9c7ab4`, stays in [runs/ci/44712065782.txt](../runs/ci/44712065782.txt).
 
 | Job | Result | Unit tests (run, passed, skipped) | Time reported by the job |
 |---|---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | 333, 324, 9 | `PASS in 63 s` |
-| check (ubuntu-latest, Python 3.12) | success | 333, 324, 9 | `PASS in 63 s` |
-| check (ubuntu-latest, Python 3.13) | success | 333, 324, 9 | `PASS in 56 s` |
-| check (windows-latest, Python 3.11) | success | 333, 322, 11 | `PASS in 53 s` |
-| check (macos-latest, Python 3.11) | success | 333, 321, 12 | `PASS in 72 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 235 MB | 333, 329, 4 | `PASS in 94 s`; `time` reports 95.6 s; the 9 tests in `tests/test_container.py` ran, none skipped |
-| container, `--user 10001` | success | 333, 323, 10 | `PASS in 92 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, `--cap-drop ALL` | success | 333, 321, 12 | `PASS in 91 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 333, 329, 4 | `PASS in 95 s`; the 9 container tests `OK` |
+| check (ubuntu-latest, Python 3.11) | success | 444, 422, 22 | `PASS in 91 s` |
+| check (ubuntu-latest, Python 3.12) | success | 444, 422, 22 | `PASS in 72 s` |
+| check (ubuntu-latest, Python 3.13) | success | 444, 422, 22 | `PASS in 84 s` |
+| check (windows-latest, Python 3.11) | success | 444, 433, 11 | `PASS in 90 s` |
+| check (macos-latest, Python 3.11) | success | 444, 419, 25 | `PASS in 68 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 235 MB | 444, 427, 17 | `PASS in 109 s`; `time` reports 111.3 s; the 9 tests in `tests/test_container.py` ran, none skipped |
+| container, `--user 10001` | success | 444, 421, 23 | `PASS in 107 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, `--cap-drop ALL` | success | 444, 419, 25 | `PASS in 106 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 444, 427, 17 | `PASS in 111 s`; the 9 container tests `OK` |
 | container, strict mode with `--cap-drop ALL` | success | not run | `exit code 2`, one `error:` line |
-| container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 4 s`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 16/16`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (93 named checks of 80 kinds) |
+| container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 3 s`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 20/20`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (97 named checks of 80 kinds) |
 
-Every skip is platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image; the Windows-only `HostSecretHygiene` test off Windows; the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 9 (the 8 container-only tests and the Windows-only test); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 12 (the 8, the 3 and the Windows-only test); the default image 4 (the Windows-only test, the workflow-label test and the 2 negative assertions under root); `--user 10001` 10 (the 8, the Windows-only test and the workflow-label test); `--cap-drop ALL` 12 (the 8, the Windows-only test, the workflow-label test and the 2 negative assertions under root).
+Every skip is platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image; 14 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 22 (the 8 container-only tests and the 14 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 25 (the 8, the 14 and the 3); the default image 17 (the 14, the workflow-label test and the 2 negative assertions under root); `--user 10001` 23 (the 8, the 14 and the workflow-label test); `--cap-drop ALL` 25 (the 8, the 14, the workflow-label test and the 2 negative assertions under root).
 
-The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: skipped: not Linux" and "same user as the host: parent's environment readable, host variable found there"; on macOS, "same user as the host: not measured on this platform (no /proc)". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
+The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity", "same user as the host: child at Low integrity, the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)" and "--secret-env: the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)", while the control with the lowering off reads the variable ("child at the host's integrity level (off: control run), parent's environment readable, host variable found there"); on macOS, "same user as the host: not measured on this platform (no /proc)". The same lines were printed in run 44738848801, on the commit that introduced the lowering; in run 44712065782 (before it) windows printed "same user as the host: parent's environment readable, host variable found there". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
 
 Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion covers their byte-for-byte regeneration steps (`git diff --exit-code`), which the excerpt does not print. The container job runs the image's default command, which is
 `python -m auditgym check`.
@@ -610,8 +669,8 @@ Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion cover
 ## 14. Open items at this version
 
 - Blank or over-long IDs make a submission invalid, as documented (section 4).
-- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `23e2b934…`; its timings differ from the CI logs.
-- Code gaps from the review of commit `849d0da` that are still open (submit size parity and currency length, the
+- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `182f7b41…`; its timings differ from the CI logs.
+- Code gaps from the review of commit `849d0da` that are still open (the
   invoice count band, the `resampled attempts stay rare` check (it still counts every rejection), the sweep's invoice counts, purchase-only duplicates, the closed-run kinds count, the `Maximal`
   submit test) are listed in [TASKS.md](TASKS.md).
 
