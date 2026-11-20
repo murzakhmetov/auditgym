@@ -32,7 +32,7 @@ Open items for the team:
   characters gives size parity (section 4); the mutation run with its recording `runs/mutation/summary.md` (section 8).
 - Evidence IDs: blank or over-long IDs make a submission invalid, as documented (DESIGN section 10). Integral float
   amounts are coerced by the environment and `grade` alike.
-- Team section of README.md: names and roles (`TODO: names and roles.`).
+- Team section of README.md: done (team porosyata: Alikhan, coder; Berdiali, speaker; Merey, presentation maker).
 - Not implemented: LLM-as-judge for explanations (idea 10); a time-zone twin pair for period errors (idea 1, second half).
 - Docs: the four screenshots in `docs/media` were re-shot on the current viewer; the static design mocks in `docs/design`
   may predate version 0.2.0.
@@ -53,4 +53,9 @@ Open items for the team:
   - `verify DIR` stops with a traceback (exit 1, no PASS/FAIL lines) when a public record lacks its ID field, for
     example a payment without `payment_id` (`check_ids` and `check_key_consistency` in `auditgym/verify.py`).
     Hand-edited copies only; the generator never writes such a record.
+  - `verify DIR` does not finish when a hand-edited `fx.csv` rate that an invoice or payment is converted at carries a
+    huge exponent (for example `1e99999999`): the auditor parses it with `_ratio` (`auditgym/auditor.py`), and the only
+    earlier check, `float()` in `records_schema`, accepts it. On any other row `verify DIR` finishes with a
+    `provenance_roundtrip` FAIL. The generator never writes such a rate; the cross-check of
+    `provenance.injections[].change` is guarded (`RATE_SYNTAX`).
   - The full CI log is not committed; `runs/ci/44755780791.txt` is an excerpt, and `runs/ci/44755780791.jobs.json` holds the conclusion of every job and step (DESIGN section 13).

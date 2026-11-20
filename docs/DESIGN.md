@@ -246,14 +246,19 @@ it first relabels its own process object Low, which keeps `os.getppid()` working
 `PROCESS_VM_READ` on the Medium host, so the child cannot read the host's environment block or memory. `python -m
 auditgym.redteam --parent` prints "same user as the host: child at Low integrity, the parent's environment is not
 readable (OpenProcess(PROCESS_VM_READ) error 5)", and its control with the lowering off still reads the host variable, so
-the probe is not blind (measured in CI run 44738848801 on windows-latest and locally). The `--policy-path` directory joins
+the probe is not blind (measured locally and in CI on windows-latest, run 44755780791: [runs/ci/44755780791.txt](../runs/ci/44755780791.txt)). The `--policy-path` directory joins
 `sys.path` only after the lowering, so no code in it runs at the host's level (`tests/test_windows_hardening.py` plants
 `sitecustomize.py`, `argparse.py` and `ctypes.py` shadows). In a Windows venv the child starts from
 `sys._base_executable` with `__PYVENV_LAUNCHER__` set, so its parent is the host and not the venv launcher.
-`AUDITGYM_NO_LOW_INTEGRITY=1` in the host's environment turns the lowering off: the child prints one stderr warning and
-the `host hardening:` line of the probe shows the switch. If labelling the work directory fails, the child is not lowered
-and prints "auditgym: integrity level not lowered (label failed: ...): the policy can read the host's memory". The price of
-Low integrity: the policy can write only in its working directory and in TEMP/TMP. Its `--policy-path` directory, the
+`AUDITGYM_NO_LOW_INTEGRITY=1` in the host's environment turns the lowering off, and the `host hardening:` line of the probe
+shows the switch. The child then writes one warning to its own stderr. The host keeps only a bounded tail of the child's
+stderr and shows none of it in a normal `run` or `check`; when the child exits before the episode ends, the agent-error
+message carries only the last line of that tail (at most 300 characters), so the warning, written before the policy
+loads, shows only if nothing reached stderr after it. If labelling the work
+directory fails, the child is not lowered and writes "auditgym: integrity level not lowered (label failed: ...): the
+policy can read the host's memory" to the same stderr. The price of Low integrity: the policy can write only in its
+working directory, in TEMP/TMP and in directories that carry a Low label; every profile has one,
+`%USERPROFILE%\AppData\LocalLow`, and files written there outlive the run. Its `--policy-path` directory, the
 repository and default-labelled directories of the user profile (`%LOCALAPPDATA%`, caches with absolute paths) are
 read-only, and a write there raises `PermissionError`, which is graded as an agent error (`agent_exited`, reward −1).
 Reads of default-labelled files, subprocesses, `multiprocessing` and localhost sockets work. Residuals on Windows:
@@ -352,17 +357,23 @@ The change cross-check of `provenance_roundtrip` (`verify.py`, `_ChangeIndex`, `
 
 - `duplicate_invoice`: `change` is empty.
 - `wrong_period`: `posting_ts` is the timestamp that the ledger ops record for the target's booking rows.
-- `wrong_fx_rate`: `correct_rate` and `correct_rate_date` are the `fx.csv` policy rate (the latest rate on or before the
-  document's local date). `wrong_rate` and `wrong_rate_date` are the `fx.csv` rate of the date that the variant names
-  (`utc_date`: the UTC date; `posting_date`: the local date of `posting_ts`; `stale_rate`: the day before the period). For
+- `wrong_fx_rate`: `correct_rate` and `correct_rate_date` are the `fx.csv` policy rate (the latest rate on the
+  document's local date or in the 14 days before it). `wrong_rate` and `wrong_rate_date` are the rate found by the same
+  rule for the date that the variant names (`utc_date`: the UTC date; `posting_date`: the local date of `posting_ts`;
+  `stale_rate`: the day before the period). For
   `transposed` they are two adjacent digits of `correct_rate` swapped (at least 0.2 % apart, no date). The touched
   booking row (invoice 1100 or 2000, payment 1000) equals the amount at `wrong_rate`.
 - `unallocated_payment`: `alloc` fits the variant (missing 0, partial more), 2900 holds the converted amount minus
   `alloc`, and the ledger relieves the invoice by the proportional carrying amount of `alloc`. `alloc` is checked only to
   the resolution of the base-currency 2900 and relief amounts.
 
-Rates are checked against the `fx.csv` format (`RATE_SYNTAX`: digits, an optional decimal part, no exponent, sign or
-space) before any `Fraction()` call, so a value such as `1e99999999` cannot hang `verify`.
+The rates in `provenance.injections[].change`, and the `fx.csv` rate the cross-check reads, are checked against the
+`fx.csv` format (`RATE_SYNTAX`: digits, an optional decimal part, no exponent, sign or space) before the cross-check
+converts with them, so such a value cannot hang that step. A malformed rate in `fx.csv` itself is not guarded:
+the auditor parses every rate that an invoice or payment is converted at, before the cross-check runs, so a
+hand-edited rate such as `1e99999999` on such a row keeps `verify DIR` from finishing; on a row that no document is
+converted at, `verify DIR` finishes with a `provenance_roundtrip` FAIL (`public_digest() differs from
+provenance.final_digest`) ([TASKS.md](TASKS.md)).
 
 The `evidence_sufficient` check for `unallocated_payment` reads all payments and ledger rows, not the cited records: no
 payment but the issue's own lists the invoice in `invoice_refs`, and no ledger row but the issue's own payment relieves it
@@ -371,7 +382,8 @@ document that carries the issue's IDs fails too.
 
 `verify DIR` does not catch, on its own: a changed `provenance.seed`, a removed or shortened distractor list, a distractor
 kind swapped for another known one, a `wrong_period` injection variant, an injection's scenario (`verify` never reads it)
-and any `truth.json` variant. An injection whose target values differ from the `affected_ids` of its truth issue fails
+and a `truth.json` variant swapped for another known variant of its type (an unknown one fails `declared_discrepancies`).
+An injection whose target values differ from the `affected_ids` of its truth issue fails
 `provenance_roundtrip`, so a retarget to another existing invoice is caught. `check` catches the seed, distractor and
 variant cases on the committed episodes by regenerating every episode from its seed and config and comparing bytes.
 
@@ -460,8 +472,11 @@ pass, against `tests/test_mutation_survivors.py`. That module was written for th
 A timeout counts as a kill; the tool stops the whole process tree of a timed-out test.
 
 Result ([runs/mutation/summary.md](../runs/mutation/summary.md), recorded on Windows with Python 3.11): 108 of
-108 mutants are killed, none survived and none is equivalent. The existing tests kill 63 of them. The other
-45 are killed only by `tests/test_mutation_survivors.py`; the existing tests alone do not kill them. One mutant
+108 mutants are killed, none survived and none is equivalent. The test modules listed for each mutant kill 63 of
+them. The other 45 pass their listed modules and are killed by `tests/test_mutation_survivors.py`; the remaining
+test modules were not run against them, and some of those kill a few of them too (for example `tests/test_contract_fuzz.py`
+kills `schemas-blank-id`, `schemas-coerce-int` and `env-submit-extra-keys`). The summary's phrase "only by" means
+"after the listed modules passed". One mutant
 (policy-path-append) is killed only by a Windows-only test, so the tool runs it only on Windows and reports it as "not run
 here" elsewhere. The run takes about 7 minutes with `--jobs 4` on the local machine. `summary.json` records a
 sha256 of every test module the run used, and `tests/test_mutation_smoke.py` fails inside `check` when a test module
@@ -574,7 +589,7 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 - **flag_all** is a format-level attack: it reads first pages and uses document amounts. Smarter attacks are covered by the reward battery in `check` (section 8).
 - **Duplicates are purchase-only.** `duplicate_invoice` is injected only into purchase invoices, and the legitimate repeats and the twin are purchase invoices too (section 3). A policy could learn to search for duplicates among purchases only.
 - **Invoice counts.** A total of 1,651 or more invoices is a ConfigError at once; counts from about 900 sales invoices up to that total pass validation and fail after 16 attempts with exit 2 (section 1).
-- **Directory verification.** `verify DIR` accepts some edited copies (a changed `provenance.seed`, a removed or shortened distractor list, a distractor kind swapped for another known one, a `wrong_period` variant, an injection's scenario, any `truth.json` variant); section 7 lists them.
+- **Directory verification.** `verify DIR` accepts some edited copies (a changed `provenance.seed`, a removed or shortened distractor list, a distractor kind swapped for another known one, a `wrong_period` variant, an injection's scenario, a `truth.json` variant swapped for another known one); section 7 lists them.
 - **Noninterference** is measured by replay (section 5). Timing is not covered, because the time limit is part of the contract.
 - **boundary_fx_payment feasibility.** With a fixed period, 17 of the 36 months of 2025–2027 are infeasible (section 9).
 - **Evidence IDs and amounts.** A blank or over-long ID (more than 64 characters) makes the submission invalid, even as
@@ -659,9 +674,9 @@ committed. The lines cited here are kept in
 | container, strict mode with `--cap-drop ALL` | success | not run | `exit code 2`, one `error:` line |
 | container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 3 s`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 20/20`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (97 named checks of 80 kinds) |
 
-Every skip is platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image; 14 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 22 (the 8 container-only tests and the 14 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 25 (the 8, the 14 and the 3); the default image 17 (the 14, the workflow-label test and the 2 negative assertions under root); `--user 10001` 23 (the 8, the 14 and the workflow-label test); `--cap-drop ALL` 25 (the 8, the 14, the workflow-label test and the 2 negative assertions under root).
+Every skip is platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image and under `--user 10001` and `--cap-drop ALL`; 14 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 22 (the 8 container-only tests and the 14 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 25 (the 8, the 14 and the 3); the default image 17 (the 14, the workflow-label test and the 2 negative assertions under root); `--user 10001` 23 (the 8, the 14 and the workflow-label test); `--cap-drop ALL` 25 (the 8, the 14, the workflow-label test and the 2 negative assertions under root).
 
-The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity", "same user as the host: child at Low integrity, the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)" and "--secret-env: the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)", while the control with the lowering off reads the variable ("child at the host's integrity level (off: control run), parent's environment readable, host variable found there"); on macOS, "same user as the host: not measured on this platform (no /proc)". The same lines were printed in run 44738848801, on the commit that introduced the lowering; in run 44712065782 (before it) windows printed "same user as the host: parent's environment readable, host variable found there". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
+The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity", "same user as the host: child at Low integrity, the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)" and "--secret-env: the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)", while the control with the lowering off reads the variable ("child at the host's integrity level (off: control run), parent's environment readable, host variable found there"); on macOS, "same user as the host: not measured on this platform (no /proc)". In run 44712065782 (commit `c9c7ab4`, before the lowering) windows printed "same user as the host: parent's environment readable, host variable found there". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
 
 Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion covers their byte-for-byte regeneration steps (`git diff --exit-code`), which the excerpt does not print. The container job runs the image's default command, which is
 `python -m auditgym check`.
@@ -671,7 +686,7 @@ Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion cover
 - Blank or over-long IDs make a submission invalid, as documented (section 4).
 - `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `182f7b41…`; its timings differ from the CI logs.
 - Code gaps from the review of commit `849d0da` that are still open (the
-  invoice count band, the `resampled attempts stay rare` check (it still counts every rejection), the sweep's invoice counts, purchase-only duplicates, the closed-run kinds count, the `Maximal`
-  submit test) are listed in [TASKS.md](TASKS.md).
+  invoice count band, the `resampled attempts stay rare` check (it still counts every rejection), the sweep's invoice counts, purchase-only duplicates, the closed-run kinds count, the unguarded
+  `fx.csv` rate in `verify DIR`) are listed in [TASKS.md](TASKS.md).
 
 Fixed earlier: the `journal_grouping` rule in `public/policy.json` now says the timestamps denote the same instant (commit `97c8f66`).
