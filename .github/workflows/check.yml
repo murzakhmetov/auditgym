@@ -90,8 +90,13 @@ jobs:
           docker run --rm --network none --cap-drop ALL auditgym python -m unittest tests.test_container -v
       - name: Strict mode in the default image (AUDITGYM_REQUIRE_AGENT_USER=1, the policy really runs as the agent user)
         run: |
-          docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee strict_default.log
-          test "${PIPESTATUS[0]}" -eq 0
+          set +e
+          docker run --name strict --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee strict_default.log
+          rc=${PIPESTATUS[0]}
+          docker cp strict:/app/runs/check/unittest.log strict_unittest.log
+          docker rm strict > /dev/null
+          if [ "$rc" -ne 0 ]; then grep -E -A 40 "^(FAIL|ERROR): " strict_unittest.log | head -200; exit "$rc"; fi
+          set -e
           grep -q "^PASS in" strict_default.log
           docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 auditgym python -m unittest tests.test_container -v 2>&1 | tee strict_container.log
           test "${PIPESTATUS[0]}" -eq 0
@@ -142,6 +147,7 @@ jobs:
             user10001.log
             capdrop.log
             strict_default.log
+            strict_unittest.log
             strict_container.log
             strict_capdrop.log
           if-no-files-found: warn

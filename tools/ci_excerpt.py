@@ -3,8 +3,9 @@
     gh run view RUN_ID --log | python tools/ci_excerpt.py RUN_ID COMMIT > runs/ci/RUN_ID.txt
 
 Input is the tab-separated output of `gh run view --log` (job, step, timestamp and message). Kept per job: the
-docker commands, the image size, every `summary:` and `PASS in` line of the check, `time` output, the fallback
-warning, and each container-test result line. Standard library only; it reads stdin and writes stdout.
+docker commands, the image size, every `summary:`, `unittest:` and `PASS in` line of the check (the closed-path step
+included), `time` output, the fallback warning, and each container-test result line. Standard library only; it reads
+stdin and writes stdout.
 """
 
 from __future__ import annotations
@@ -13,9 +14,9 @@ import re
 import sys
 
 KEEP = re.compile(
-    r"(summary: A_unit_tests|^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|time docker)"
+    r"(^summary: |^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|time docker|mkdir -p)"
     r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED"
-    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+)"
+    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest: )"
 )
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 

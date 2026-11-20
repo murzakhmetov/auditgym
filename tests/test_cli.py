@@ -247,9 +247,12 @@ class StrictAgentUser(unittest.TestCase):
 
 
 class CustomPolicyInProcess(unittest.TestCase):
-    """--policy-path reaches the in-process runner; a custom policy next to a seeds file or a secret is warned about."""
+    """--policy-path reaches the in-process runner; a custom policy next to a seeds file or a secret is warned about.
+    These are the non-strict behaviours: strict mode refuses a custom policy in process (StrictAgentUser), and CI runs
+    the whole suite once with AUDITGYM_REQUIRE_AGENT_USER=1 set, so every call here switches it off."""
 
     EP = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+    NONSTRICT = {"AUDITGYM_REQUIRE_AGENT_USER": ""}
 
     def test_policy_path_works_in_process(self):
         with tempfile.TemporaryDirectory() as d:
@@ -259,7 +262,7 @@ class CustomPolicyInProcess(unittest.TestCase):
             Path(d, "inproc_policy_mod.py").write_text("\n".join(source) + "\n", encoding="utf-8")
             out = Path(d) / "o"
             rc, _o, err = cli("run", "--episodes", self.EP, "--policies", "inproc_policy_mod:P", "--policy-path", d,
-                              "--in-process", "--out", str(out))
+                              "--in-process", "--out", str(out), env_extra=self.NONSTRICT)
             self.assertEqual(rc, 0, err)
             self.assertNotIn("Traceback", err)
             grades = [json.loads(ln) for ln in (out / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
@@ -268,7 +271,7 @@ class CustomPolicyInProcess(unittest.TestCase):
 
     def run_custom(self, d, *extra, env_extra=None):
         return cli("run", "--policies", "examples.custom_policy:FirstPagePolicy", "--in-process", "--out",
-                   str(Path(d) / "o"), *extra, env_extra=env_extra)
+                   str(Path(d) / "o"), *extra, env_extra={**self.NONSTRICT, **(env_extra or {})})
 
     def test_warning_with_a_seeds_file_or_a_secret(self):
         seeds = str(ROOT / "examples" / "closed_seeds_example.json")
@@ -290,7 +293,7 @@ class CustomPolicyInProcess(unittest.TestCase):
             self.assertEqual(rc, 0, err)
             self.assertNotIn("custom policy", err)
             rc, _o, err = cli("run", "--seeds-file", seeds, "--policies", "flag_all", "--in-process", "--out",
-                              str(Path(d) / "o2"))
+                              str(Path(d) / "o2"), env_extra=self.NONSTRICT)
             self.assertEqual(rc, 0, err)
             self.assertNotIn("custom policy", err)
 
