@@ -177,8 +177,11 @@ reading stdin, a flood of invalid UTF-8 that the agent never reads (host peak un
 process that must die with the agent.
 
 Limits: a child running as the same OS user is not a sandbox. Outside a container it can read files whose path it can
-guess, and its parent's command line (measured on Windows). On Linux it can also read its parent's environment, where
-`--secret-env` values live (expected, not measured here); inside the image the same holds while the uid is shared. A process that leaves the
+guess, and its parent's command line (measured on Windows). It can also read the host's environment, where
+`--secret-env` values live: on Windows from the parent's process memory (`python -m auditgym.redteam --parent` starts a
+policy through the harness and it finds a host variable there; measured locally), on Linux through
+`/proc/<ppid>/environ` (expected, not measured outside the image). Inside the image the separate policy uid blocks
+this (below); the `--user 10001` and `--cap-drop ALL` fallbacks do not. A process that leaves the
 tracked group or job (for example with `setsid`) survives the run. Only a container or a separate OS user contains
 that. The policy-adapter path (`module:Class`) follows the same rules: any class with `act(observation, reward, info)`
 runs as `module.path:ClassName` (`--policy-path DIR` for code outside the repository); names are validated before a
@@ -235,7 +238,7 @@ the stored digests instead of the twin.
 | clean_equalities | clean books rebuilt from provenance: every journal and the trial balance balance; the independent auditor finds no discrepancy and no anomaly |
 | provenance_roundtrip | revert-and-reapply reproduces the published tables; the reverted tables hash to `clean_records_digest`; `public_digest()` equals `final_digest`; every declared issue has an op that touches its records. At generation time the reverted tables are also compared with the clean twin |
 | declared_discrepancies | the independent auditor (`auditor.py`, which imports no generator module) reproduces exactly the answer key: types, IDs, amounts, evidence sets |
-| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it (test) |
+| evidence_sufficient | the separate evidence checker (`evidence_check.py`) re-derives type, IDs and amount from each evidence set alone, plus policy and manifest; dropping any record from a set breaks it (test). For `unallocated_payment` the set cannot show that no other receipt settled the invoice; that rests on a generator guarantee (section 10) |
 | budget_feasible | reading every page of every table plus the submit fits in 100 steps |
 | no_surface_tells | every injected or modified row has an untouched row with the same account and null pattern; in directory mode it fails when issues are declared but no ledger op exists |
 | no_leaks | no answer-key markers or seed in public files |
@@ -331,9 +334,11 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 - **Platforms.** Local runs: Windows 10, Python 3.11.4. CI: ubuntu, macOS and Windows with Python 3.11 (the Windows
   runner set up CPython 3.11.9), and the container. Python 3.12 and 3.13 were not tested. The POSIX process-tree branch
   runs in CI, not locally.
-- **Container.** Built and run in CI with `--network none --cpus 2 --memory 4g`. Inside the image, the policy and the
-  grader share one user (uid 10001) until the separate-user change lands (section 5). On Linux, a same-user child can also read its parent's environment, where
-`--secret-env` values live (expected, not measured here).
+- **Container.** Built and run in CI with `--network none --cpus 2 --memory 4g --pids-limit 512`. Inside the image
+  the host runs as root and every policy child as uid 10002 (`agent`, section 5). Under `--user 10001` or
+  `--cap-drop ALL` the policy falls back to the host's user with one warning line; a same-user child can then read
+  the host's environment, where `--secret-env` values live (measured on Windows outside a container; expected on
+  Linux).
 - **Isolation** is a process boundary, not a sandbox (section 5). Open train and dev answer keys sit in the repository
   by design, so a child running as the same OS user can read them.
 - **Seeds.** The generator is open source. With no host secret and a guessed config, a small seed can be recovered from
@@ -400,17 +405,20 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   `schemas`; then a replay of the open splits, followed by `git diff` on `runs/train_dev/trajectories.jsonl`. The
   check report is uploaded as an artifact.
 - Job `docker` on `ubuntu-latest`: `docker build -t auditgym .` (base `python:3.11.10-slim-bookworm`), `docker image ls`,
-  then `time docker run --rm --network none --cpus 2 --memory 4g auditgym`.
+  then `time docker run --rm --network none --cpus 2 --memory 4g --pids-limit 512 auditgym`; then
+  `tests.test_container` and `tests.test_redteam` inside the image, failing if any container test is skipped; then the
+  check and `tests.test_container` again with `--user 10001` and with `--cap-drop ALL` (fallback to the host user).
 
-Latest completed run on `main` at the time of writing: run 44635100396, commit `a94d9b961f4e7193c6534687778c4a0358997aae`
-(`Data without shortcuts (P10): version 0.2.0, all episodes and logs regenerated`), conclusion success:
+Latest completed run on `main` at the time of writing: run 44642027342, commit `99b7b6632a9d8b89a224c3b8ddf1756ad18463d5`
+(`Docs honesty pass (P2), container text after P9, grade coerces integral floats`), conclusion success. The lines
+cited here are kept in [runs/ci/44642027342.txt](../runs/ci/44642027342.txt):
 
 | Job | Result | Time reported by the job |
 |---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | `PASS in 34 s` |
-| check (windows-latest, Python 3.11) | success | `PASS in 34 s` |
-| check (macos-latest, Python 3.11) | success | `PASS in 31 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 221 MB | `PASS in 53 s`; `time` reports 54.6 s |
+| check (ubuntu-latest, Python 3.11) | success | `PASS in 43 s` |
+| check (windows-latest, Python 3.11) | success | `PASS in 58 s` |
+| check (macos-latest, Python 3.11) | success | `PASS in 37 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 233 MB | `PASS in 38 s`; `time` reports 39.5 s; container tests: 8 ran, none skipped; `--user 10001` and `--cap-drop ALL`: `PASS in 37 s` and `PASS in 38 s`, `OK (skipped=7)` |
 
 No CI run has been executed on Python 3.12 or 3.13. The container job runs the image's default command, which is
 `python -m auditgym check`.

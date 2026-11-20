@@ -41,7 +41,9 @@ directories (written with umask 077), and cannot write to the root-owned package
 possible (Windows, not root, no CAP_SETUID/CAP_CHOWN) the child runs as the host's user and one warning
 line is printed to stderr, once per process; nothing crashes.
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
-guess the path of, and (outside a container) its parent's command line. Only tracked
+guess the path of, and (outside a container) its parent's command line and environment, where
+--secret-env values live (on Windows through the parent's process memory; measured by
+`python -m auditgym.redteam --parent`). Only tracked
 processes are killed: a process that leaves the group or job (setsid, start_new_session,
 WMI Win32_Process.Create) survives and can edit files later; only a container or a separate
 OS user contains that. Outside the digest: examples/**/*.py (staged into later children),

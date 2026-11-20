@@ -24,7 +24,7 @@ shared reward. Offline, standard library only, Python 3.11.
 | "At least four independently configurable types" | `errors: {duplicate_invoice, unallocated_payment, wrong_fx_rate, wrong_period}`, each with variants; each type can be requested alone | [config.py](auditgym/config.py) |
 | "Interacting errors. Two scenarios" | `boundary_fx_payment` (partial foreign receipt at the period boundary, booked by UTC date: period + FX), `fx_invoice_partial_allocation` (wrong-rate invoice + partly unallocated receipt; always the `partial` variant) | [inject.py](auditgym/inject.py) |
 | "Clean companies and plausible correct distractors" | Legitimate repeats, recurring amounts, split and multi-invoice payments, underpayments, overpayment + refund, unreferenced receipts, boundary and weekend FX documents; twin option with opposite answers | [history.py](auditgym/history.py), [splits.json](configs/splits.json) |
-| "The answer key must describe the real discrepancy and the available evidence" | An independent auditor (imports no generator module) reproduces the key exactly; a separate evidence checker re-derives type, IDs and amount from each evidence set alone, with `Fraction` arithmetic and no import from `auditor.py` or `money.py` | [auditor.py](auditgym/auditor.py), [evidence_check.py](auditgym/evidence_check.py), [verify.py](auditgym/verify.py) |
+| "The answer key must describe the real discrepancy and the available evidence" | An independent auditor (imports no generator module) reproduces the key exactly; a separate evidence checker re-derives type, IDs and amount from each evidence set alone, with `Fraction` arithmetic and no import from `auditor.py` or `money.py`; for `unallocated_payment` the set cannot show that no other receipt settled the invoice, which rests on a generator guarantee (see Limitations) | [auditor.py](auditgym/auditor.py), [evidence_check.py](auditgym/evidence_check.py), [verify.py](auditgym/verify.py) |
 | "The answer key must not be guessable from surface features" | `tests/test_tells.py` measures one-feature and episode-level shortcut rules on the open episodes; no measured rule is both selective and useful (the limits are in its docstring) | [test_tells.py](tests/test_tells.py), [splits.py](auditgym/splits.py) |
 | "reset(seed, config) … step(action)", five actions, 50-row pages, 100 steps | Gymnasium-style JSON contract; observations carry only result, error and remaining steps; the schemas are kept in agreement with the environment by a fuzzer | [env.py](auditgym/env.py), [schemas/](schemas), [test_contract_fuzz.py](tests/test_contract_fuzz.py) |
 | "The grader runs outside the agent's process" | Policy in a child process over JSON lines, with a staged copy of the agent-side modules, an empty temporary working directory and no seed, secret or episode path in its environment; the grader, oracle and generator are not importable there; bounded channel; code digest checked after each run | [protocol.py](auditgym/protocol.py), [agent.py](auditgym/agent.py) |
@@ -44,10 +44,11 @@ python -m auditgym check
 ```
 
 `check` prints one line per named check and writes [runs/check/report.md](runs/check/report.md). It exits 0 only
-if every check passes. At commit `a94d9b9` it runs **412 named checks**, one of which runs the **181 unit tests**. About 90 s on
-Windows 10 with Python 3.11.4 (82 s and 93 s in two local runs; the committed report records 93 s). CI: green on
-ubuntu, windows and macOS (Python 3.11, 31–34 s each) and in the container (53 s), run 44635100396 on commit
-a94d9b9.
+if every check passes. At commit `99b7b66` it runs **412 named checks**, one of which runs the **189 unit tests** (outside the image, 7
+container-only tests report as skipped). About 90 s on Windows 10 with Python 3.11.4 (the committed report records
+93 s). CI run 44642027342 on that commit is green: ubuntu 43 s, windows 58 s, macOS 37 s (Python 3.11) and the
+container 38 s, where the 8 container-only tests ran with none skipped. The cited lines are kept in
+[runs/ci/44642027342.txt](runs/ci/44642027342.txt) (made with [tools/ci_excerpt.py](tools/ci_excerpt.py)).
 
 ```bash
 python -m auditgym demo
@@ -162,11 +163,15 @@ seeds file, a grader directory the host wrote, or anything under `/app`, cannot 
 of its uid is killed at the end of each episode. Mount seeds files and episode folders under `/app` (for example
 `-v $PWD/closed.json:/app/secrets/closed.json:ro`) and keep `--out` under `/app/runs`; a bind mount elsewhere keeps the
 host's modes. With `--user 10001` or `--cap-drop ALL` the image falls back to running the policy as the host user, prints
-one warning line, and still passes the check (both runs are in CI). Outside the container, on Linux, a child running as
-the same user can read its parent's environment (expected, not measured here).
+one warning line, and still passes the check (both runs are in CI). Outside the container the policy runs as the
+host's user and can read the host's environment, where `--secret-env` values live: on Windows 10,
+`python -m auditgym.redteam --parent` starts a policy through the harness and it finds a host variable in its
+parent's process memory (measured locally). On Linux the same read goes through `/proc/<ppid>/environ` (expected;
+not measured outside the image).
 
-The container has been built and run in CI (`docker build` and `docker run --rm --network none --cpus 2 --memory 4g`).
-Mounting closed seeds or an output directory into the container was not run.
+The container has been built and run in CI (`docker build`, then `docker run --rm --network none --cpus 2 --memory 4g
+--pids-limit 512`, again with `--user 10001` and with `--cap-drop ALL`). Mounting closed seeds or an output directory
+into the container was not run.
 
 ## Architecture
 
@@ -347,16 +352,19 @@ payments or personal data are used.
 - **Platforms.** Local runs were on Windows 10 with Python 3.11.4. CI runs the same check on ubuntu, windows and
   macOS with Python 3.11 (the Windows runner set up CPython 3.11.9) and regenerates the committed episodes, schemas
   and trajectories byte for byte. Python 3.12 and 3.13 were not tested.
-- **Container.** The image is built and run in CI with `--network none --cpus 2 --memory 4g` (CI run 44635100396).
-  The policy and the grader share one user inside the image; a separate unprivileged policy user is not in this
-  version (see For organizers).
+- **Container.** The image is built and run in CI with `--network none --cpus 2 --memory 4g --pids-limit 512` (run
+  44642027342). Inside the image the host runs as root and every policy child as uid 10002 (`agent`). Under
+  `--user 10001` or `--cap-drop ALL` the policy falls back to the host's user with one warning line, and the
+  same-user limits below apply.
 - **Isolation is a process boundary, not a sandbox.** The policy runs in a separate process with a staged copy of
   the agent-side modules, an empty working directory and a stripped environment. The host hashes the agent-side
   code, configs and schemas before and after each run and fails the run on change; this detects tampering, it does
   not prevent it. Processes that leave the tracked group or job survive the run. Outside a container, a child
   running as the same OS user can read files whose paths it can guess and, on Windows, its parent's command line
-  (measured locally). On Linux it can also read its parent's environment, where `--secret-env` values live (expected,
-  not measured here); inside the image the same holds while the uid is shared. Open train and dev answer keys sit in the repository by design.
+  (measured locally). It can also read the host's environment, where `--secret-env` values live: on Windows from the
+  parent's process memory (`python -m auditgym.redteam --parent`, measured locally), on Linux through
+  `/proc/<ppid>/environ` (expected, not measured outside the image). Inside the image the separate policy uid blocks
+  this (CI); the two fallbacks do not. Open train and dev answer keys sit in the repository by design.
 - **Noninterference** is measured by replay (five policies, in process and in the child, on episodes whose answer
   key is shuffled, replaced or emptied): observations, rewards and info are byte-identical. Timing is not covered,
   because the time limit is part of the contract.

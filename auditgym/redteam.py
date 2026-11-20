@@ -157,15 +157,133 @@ def parent_visibility() -> str:
     return p.stdout.strip() or p.stderr.strip()[-300:]
 
 
+# A policy that looks for a host variable in its parent's environment: on Windows by reading the parent's
+# process memory (PEB -> RTL_USER_PROCESS_PARAMETERS.Environment, 64-bit offsets), elsewhere through
+# /proc/<ppid>/environ. It reports booleans only, never the value.
+PEEK_POLICY = r'''
+import os
+
+NAME = "AUDITGYM_REDTEAM_SECRET"
+
+
+def _windows_parent_env(pid):
+    import ctypes
+    from ctypes import wintypes
+    if ctypes.sizeof(ctypes.c_void_p) != 8:
+        return None
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    ntdll = ctypes.WinDLL("ntdll")
+    k32.OpenProcess.restype = wintypes.HANDLE
+    k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    k32.ReadProcessMemory.argtypes = [wintypes.HANDLE, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t,
+                                      ctypes.POINTER(ctypes.c_size_t)]
+    k32.CloseHandle.argtypes = [wintypes.HANDLE]
+    handle = k32.OpenProcess(0x0400 | 0x0010, False, pid)  # PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
+    if not handle:
+        return None
+    try:
+        class PBI(ctypes.Structure):
+            _fields_ = [("ExitStatus", ctypes.c_long), ("PebBaseAddress", ctypes.c_void_p),
+                        ("AffinityMask", ctypes.c_void_p), ("BasePriority", ctypes.c_long),
+                        ("UniqueProcessId", ctypes.c_void_p), ("InheritedFrom", ctypes.c_void_p)]
+        pbi = PBI()
+        if ntdll.NtQueryInformationProcess(handle, 0, ctypes.byref(pbi), ctypes.sizeof(pbi), None) != 0:
+            return None
+
+        def read(addr, n):
+            buf = ctypes.create_string_buffer(n)
+            got = ctypes.c_size_t()
+            ok = k32.ReadProcessMemory(handle, ctypes.c_void_p(addr), buf, n, ctypes.byref(got))
+            return buf.raw[: got.value] if ok else b""
+
+        params = int.from_bytes(read(pbi.PebBaseAddress + 0x20, 8), "little")
+        env_addr = int.from_bytes(read(params + 0x80, 8), "little")
+        env_size = int.from_bytes(read(params + 0x3F0, 8), "little")
+        return read(env_addr, min(env_size or 32768, 1 << 20)).decode("utf-16-le", "replace")
+    finally:
+        k32.CloseHandle(handle)
+
+
+def parent_environment():
+    ppid = os.getppid()
+    if os.name == "nt":
+        try:
+            return _windows_parent_env(ppid)
+        except Exception:
+            return None
+    try:
+        with open("/proc/%d/environ" % ppid, "rb") as fh:
+            return fh.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+
+
+class Probe:
+    def __init__(self, seed=0):
+        pass
+
+    def act(self, observation, reward=0.0, info=None):
+        text = parent_environment()
+        return {"action": "probe", "readable": text is not None,
+                "found_in_parent": bool(text) and (NAME + "=") in text, "in_own_environment": NAME in os.environ}
+'''
+
+# The host side: a separate process whose environment holds the variable from its start (as a shell would set
+# AUDITGYM_SECRET before `--secret-env`), which starts the policy through the real harness (protocol.AgentProcess).
+PEEK_HOST = r"""
+import json, sys
+from auditgym import protocol
+ap = protocol.AgentProcess("peekparent:Probe", 0, policy_path=sys.argv[1])
+try:
+    ap.send({"type": "observation", "observation": {}, "reward": 0.0, "terminated": False, "truncated": False,
+             "info": {}})
+    kind, res = ap.receive(60)
+    print(json.dumps({"kind": kind, "result": res, "separate_user": ap._agent_uid is not None}))
+finally:
+    ap.close()
+"""
+
+
+def parent_secret_visibility() -> str:
+    """Can a policy child started by the harness find a variable of the host's environment?"""
+    import json
+
+    with tempfile.TemporaryDirectory(prefix="auditgym_peek_") as tmp:
+        Path(tmp, "peekparent.py").write_text(PEEK_POLICY, encoding="utf-8")
+        env = dict(os.environ, AUDITGYM_REDTEAM_SECRET="redteam-marker-not-a-secret")
+        p = subprocess.run([sys.executable, "-c", PEEK_HOST, tmp], capture_output=True, text=True, timeout=120,
+                           cwd=str(protocol.PROJECT_ROOT), env=env)
+    try:
+        out = json.loads(p.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return "probe failed: " + (p.stderr.strip()[-300:] or p.stdout.strip()[-300:])
+    res = out.get("result") or {}
+    if not isinstance(res, dict) or out.get("kind") != "action":
+        return f"probe failed: {out}"
+    who = "separate policy user" if out.get("separate_user") else "same user as the host"
+    if not res.get("readable"):
+        return f"{who}: the parent's environment is not readable"
+    found = "found" if res.get("found_in_parent") else "not found"
+    own = "present" if res.get("in_own_environment") else "absent"
+    return f"{who}: parent's environment readable, host variable {found} there ({own} in the child's own environment)"
+
+
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if "--parent" in argv:  # only the parent-visibility measurement, a few seconds
+        print("parent process visibility from a policy child (limitation, not blocked):")
+        print("  " + parent_visibility())
+        print("  " + parent_secret_visibility())
+        return 0
     rows = _probes()
     width = max(len(r[0]) for r in rows)
     ok = True
     for name, passed, secs, detail in rows:
         ok &= passed
         print(f"[{'PASS' if passed else 'FAIL'}] {name.ljust(width)}  {secs:5.1f} s  {detail}")
-    print("parent process visibility from a child of the same user (limitation, not blocked):")
+    print("parent process visibility from a policy child (limitation, not blocked):")
     print("  " + parent_visibility())
+    print("  " + parent_secret_visibility())
     print("PASS" if ok else "FAIL")
     return 0 if ok else 1
 
