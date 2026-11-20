@@ -58,7 +58,16 @@ jobs:
       - name: Image size
         run: docker image ls auditgym --format '{{.Repository}}:{{.Tag}} {{.Size}}'
       - name: Official check in the container
-        run: time docker run --rm --network none --cpus 2 --memory 4g --pids-limit 512 auditgym
+        shell: bash
+        run: |
+          set +e
+          time docker run --name official --network none --cpus 2 --memory 4g --pids-limit 512 auditgym
+          rc=$?
+          docker cp official:/app/runs/check/unittest.log official_unittest.log
+          docker cp official:/app/runs/check/report.md official_report.md
+          docker rm official > /dev/null
+          if [ "$rc" -ne 0 ]; then grep -E -A 40 "^(FAIL|ERROR): " official_unittest.log | head -200; fi
+          exit "$rc"
       - name: Container-only isolation tests (root host, separate policy user, must not skip)
         run: |
           docker run --rm --network none --cpus 2 --memory 4g --pids-limit 512 auditgym python -m unittest tests.test_container -v 2>&1 | tee container_tests.log
@@ -103,6 +112,8 @@ jobs:
         with:
           name: container-logs
           path: |
+            official_unittest.log
+            official_report.md
             container_tests.log
             user10001.log
             capdrop.log
