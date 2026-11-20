@@ -216,5 +216,29 @@ class CheckMainEntry(unittest.TestCase):
         self.assertEqual(seen, {"secret": "host-secret-xyz", "in_env": False})
 
 
+class SweepCodeStamp(unittest.TestCase):
+    def test_summary_files_carry_the_same_stamp_on_two_writes(self):
+        import importlib.util
+        import json
+        import tempfile
+
+        from auditgym.check import code_stamp, stamp_line
+
+        spec = importlib.util.spec_from_file_location("organizer_sweep_under_test", ROOT / "tools" / "organizer_sweep.py")
+        sweep = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sweep)
+        texts = []
+        for _ in range(2):
+            with tempfile.TemporaryDirectory() as tmp:
+                sweep._write_summaries(Path(tmp), [], [], [], [], 50)
+                texts.append(((Path(tmp) / "summary.json").read_text(encoding="utf-8"),
+                              (Path(tmp) / "summary.md").read_text(encoding="utf-8")))
+        self.assertEqual(texts[0], texts[1])
+        stamp = json.loads(texts[0][0])["code"]
+        self.assertEqual(stamp, code_stamp())
+        self.assertIn("- code: " + stamp_line(stamp), texts[0][1])
+        self.assertEqual(set(stamp), {"code_sha256", "code_files", "python", "platform"})
+
+
 if __name__ == "__main__":
     unittest.main()

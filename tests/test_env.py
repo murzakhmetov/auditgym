@@ -95,6 +95,33 @@ class ResetContract(unittest.TestCase):
         self.assertEqual(t1, t2)
 
 
+class ResetConfigTypes(unittest.TestCase):
+    def test_episode_must_be_an_episode(self):
+        for bad in (None, {}, "ep", 5, episode().manifest):
+            with self.subTest(bad=type(bad).__name__):
+                with self.assertRaises(TypeError) as cm:
+                    AuditEnv().reset(seed=1, config={"episode": bad})
+                self.assertIn('"episode"', str(cm.exception))
+                self.assertIn("Episode", str(cm.exception))
+
+    def test_generator_must_be_a_dict(self):
+        for bad in (None, [], "small", 3):
+            with self.subTest(bad=type(bad).__name__):
+                with self.assertRaises(TypeError) as cm:
+                    AuditEnv().reset(seed=1, config={"generator": bad})
+                self.assertIn('"generator"', str(cm.exception))
+
+    def test_valid_forms_keep_working(self):
+        obs, _ = AuditEnv().reset(config={"episode": episode()})
+        self.assertIn("episode_id", obs["manifest"])
+        obs, _ = AuditEnv().reset(seed=3, config={"size": "small"})
+        self.assertIn("episode_id", obs["manifest"])
+        obs, _ = AuditEnv().reset(seed=3, config={"generator": {"size": "small"}})
+        self.assertIn("episode_id", obs["manifest"])
+        obs, _ = AuditEnv().reset(seed=3, config={"generator": {}})
+        self.assertIn("episode_id", obs["manifest"])
+
+
 class StepContract(unittest.TestCase):
     def test_step_tuple_and_observation_fields(self):
         env, _, _ = fresh()

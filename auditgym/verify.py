@@ -19,7 +19,9 @@ Named checks, each independent of the generator's internal state:
                          provenance.json that is not an object, ops that are not a list, or a malformed op is a FAIL
                          line of this check (the replay and the clean-books check are then skipped), not a traceback
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
-                         evidence sets) and reports no anomaly
+                         evidence sets) and reports no anomaly; truth id_aliases equal {doc_id: invoice_id or
+                         payment_id} of the public records (nothing missing or extra) and every issue variant is one
+                         of config.VARIANTS[type]
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
                          IDs and amount, using evidence_check.py (independent of auditor.py and money.py)
   budget_feasible        reading every page of every table plus submit fits in 100 steps
@@ -48,7 +50,7 @@ from .render import apply_ops
 from .timeutil import parse_ts
 
 OP_KEYS = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
-REPLAY_ERRORS = (KeyError, TypeError, AttributeError, ValueError, IndexError)
+REPLAY_ERRORS = (KeyError, TypeError, AttributeError, ValueError, IndexError, ArithmeticError)  # ArithmeticError: OverflowError on a 1e400 amount
 INVOICE_FIELDS = ("doc_id", "invoice_id", "kind", "entity_id", "issued_at", "due_at", "currency", "total_minor", "line_items")
 PAYMENT_FIELDS = ("doc_id", "payment_id", "kind", "entity_id", "timestamp", "currency", "amount_minor", "invoice_refs", "bank_ref")
 # the twin episode (inject.py) adds one distractor kind that the config cannot ask for
@@ -120,6 +122,26 @@ def check_ids(ep: Episode) -> list[str]:
         add(d["doc_id"], "doc")
         add(d["payment_id"], "payment")
     return errs[:20]
+
+
+def check_key_consistency(ep: Episode) -> list[str]:
+    """Answer-key rules the auditor does not exercise: id_aliases is exactly {doc_id: invoice_id or payment_id}
+    over the public invoices and payments, and every issue variant is one the config knows for its type."""
+    errs = []
+    want = {d["doc_id"]: d["invoice_id"] for d in ep.invoices}
+    want.update({d["doc_id"]: d["payment_id"] for d in ep.payments})
+    got = ep.truth.get("id_aliases", {})
+    for k in sorted(set(want) - set(got))[:5]:
+        errs.append(f"id_aliases missing {k}")
+    for k in sorted(set(got) - set(want))[:5]:
+        errs.append(f"id_aliases has extra {k}")
+    for k in sorted(set(want) & set(got)):
+        if want[k] != got[k] and len(errs) < 10:
+            errs.append(f"id_aliases maps {k} to {got[k]}, public record says {want[k]}")
+    for t in ep.truth.get("issues", []):
+        if t.get("variant") not in VARIANTS.get(t.get("type"), ()):
+            errs.append(f"issue {t.get('issue_id')}: variant {t.get('variant')!r} is not a known variant of {t.get('type')}")
+    return errs
 
 
 def _issue_key(t: str, ids) -> tuple:
@@ -435,7 +457,7 @@ def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks["clean_equalities"] = _clean_book_errors(ep, clean)
     checks["provenance_roundtrip"] = check_roundtrip(ep, clean)
     found = audit(ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx)
-    checks["declared_discrepancies"] = compare_with_truth(found, ep.truth)
+    checks["declared_discrepancies"] = compare_with_truth(found, ep.truth) + check_key_consistency(ep)
     checks["evidence_sufficient"] = check_evidence(ep)
     checks["budget_feasible"] = check_budget(ep)
     checks["no_surface_tells"] = (["provenance is malformed, so the surface cannot be checked"]

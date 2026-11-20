@@ -142,13 +142,87 @@ class SkipsAndRejections(unittest.TestCase):
         with mock.patch("builtins.print"):
             rep.add("C_data", "a verifies", True)
             rep.skip("C_data", "rate stays rare", "too few episodes")
-        self.assertEqual(check.section_header("C_data", rep.sections["C_data"]), "#### C_data (2/2) (1 skipped)\n")
-        self.assertTrue(check.summary_line(rep).startswith("summary: C_data 2/2 (1 skipped) ("))
+        self.assertEqual(check.section_header("C_data", rep.sections["C_data"]), "#### C_data (1/1) (1 skipped)\n")
+        self.assertTrue(check.summary_line(rep).startswith("summary: C_data 1/1 (1 skipped) ("))
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(check, "isolation_line", return_value="x"), \
                 mock.patch.object(check, "markdown_table", return_value=""), mock.patch.object(check, "miss_table", return_value=""):
             check._write_report(Path(tmp), rep, {}, [], [], 1.0, "src", "dev", 1, keep_runs=False)
             text = (Path(tmp) / "report.md").read_text(encoding="utf-8")
-        self.assertIn("#### C_data (2/2) (1 skipped)", text)
+        self.assertIn("#### C_data (1/1) (1 skipped)", text)
+        self.assertEqual(rep.counts()["C_data"], {"passed": 2, "total": 2, "skipped": 1, "applicable": 1, "applicable_passed": 1})
+
+    def test_a_failed_check_is_not_hidden_by_a_skip(self):
+        from auditgym import check
+
+        rep = check.Report()
+        with mock.patch("builtins.print"):
+            rep.add("C_data", "a", True)
+            rep.add("C_data", "b", False)
+            rep.skip("C_data", "c", "n/a")
+        self.assertTrue(check.summary_line(rep).startswith("summary: C_data 1/2 (1 skipped) ("))
+
+    def test_a_section_without_skips_reads_as_before(self):
+        from auditgym import check
+
+        rep = check.Report()
+        with mock.patch("builtins.print"):
+            rep.add("A", "x", True)
+            rep.add("A", "y", True)
+        self.assertTrue(check.summary_line(rep).startswith("summary: A 2/2 ("))
+        self.assertEqual(check.section_header("A", rep.sections["A"]), "#### A (2/2)\n")
+
+    def test_report_carries_a_code_stamp_equal_across_two_writes(self):
+        import json
+        import platform
+        import tempfile
+        from pathlib import Path
+
+        from auditgym import check
+
+        rep = check.Report()
+        with mock.patch("builtins.print"):
+            rep.add("A", "x", True)
+        docs = []
+        for _ in range(2):
+            with tempfile.TemporaryDirectory() as tmp, mock.patch.object(check, "isolation_line", return_value="x"), \
+                    mock.patch.object(check, "markdown_table", return_value=""), mock.patch.object(check, "miss_table", return_value=""):
+                check._write_report(Path(tmp), rep, {}, [], [], 1.0, "src", "dev", 1, keep_runs=False)
+                docs.append((json.loads((Path(tmp) / "report.json").read_text(encoding="utf-8")),
+                             (Path(tmp) / "report.md").read_text(encoding="utf-8")))
+        code = docs[0][0]["code"]
+        self.assertEqual(code, docs[1][0]["code"])
+        self.assertRegex(code["code_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual((code["python"], code["platform"]), (platform.python_version(), platform.platform()))
+        self.assertIn(f"Code: {check.stamp_line(code)}.", docs[0][1])
+        self.assertEqual(docs[0][1], docs[1][1])
+
+    def test_code_stamp_ignores_bytecode_but_not_sources(self):
+        from auditgym import check, protocol
+
+        real = protocol.code_digest()
+        base = check.code_stamp()
+        with_bytecode = dict(real, **{"auditgym/__pycache__/x.cpython-311.pyc": "a" * 64, "auditgym/x.pyo": "b" * 64,
+                                      "auditgym/y.pyc": "c" * 64})
+        with mock.patch.object(protocol, "code_digest", return_value=with_bytecode):
+            self.assertEqual(check.code_stamp(), base)
+        some_source = next(k for k in real if k.endswith(".py"))
+        changed = dict(real, **{some_source: "0" * 64})
+        with mock.patch.object(protocol, "code_digest", return_value=changed):
+            self.assertNotEqual(check.code_stamp()["code_sha256"], base["code_sha256"])
+
+    def test_check_main_maps_a_broken_episode_to_one_error_line_and_exit_2(self):
+        import contextlib
+        import io
+
+        from auditgym import check
+        from auditgym.episode import EpisodeFormatError
+
+        err = io.StringIO()
+        with mock.patch.object(check, "_main", side_effect=EpisodeFormatError("x/grader/truth.json is not valid JSON")), \
+                contextlib.redirect_stderr(err):
+            rc = check.main([])
+        self.assertEqual(rc, 2)
+        self.assertEqual(err.getvalue(), "error: x/grader/truth.json is not valid JSON\n")
 
     def test_correctness_rejection_check_verdict_and_label(self):
         from auditgym.check import correctness_rejection_check

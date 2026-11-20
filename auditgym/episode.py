@@ -90,12 +90,24 @@ class EpisodeFormatError(ValueError):
     """An episode directory holds a file that breaks its published format."""
 
 
+def _read_json_file(path: Path):
+    """aio.read_json that names the file on bad JSON (a deeply nested file is bad JSON too)."""
+    try:
+        return aio.read_json(path)
+    except (ValueError, RecursionError) as exc:
+        raise EpisodeFormatError(f"{path} is not valid JSON: {exc}") from exc
+
+
+def _read_jsonl_file(path: Path) -> list:
+    try:
+        return aio.read_jsonl(path)
+    except (ValueError, RecursionError) as exc:
+        raise EpisodeFormatError(f"{path} is not valid JSON lines: {exc}") from exc
+
+
 def _checked_truth(path: Path):
     """Read grader/truth.json and check it against the published schema; name the file and the first errors."""
-    try:
-        truth = aio.read_json(path)
-    except ValueError as exc:
-        raise EpisodeFormatError(f"{path} is not valid JSON: {exc}") from exc
+    truth = _read_json_file(path)
     errors = schema_files.validate(truth, schema_files.TRUTH)
     if errors:
         more = f" (+{len(errors) - 3} more)" if len(errors) > 3 else ""
@@ -109,12 +121,15 @@ def _checked_truth(path: Path):
 def load_episode(directory: Path, with_grader: bool = True) -> Episode:
     directory = Path(directory)
     pub = directory / "public"
+    manifest = _read_json_file(pub / "manifest.json")
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("episode_id"), str):
+        raise EpisodeFormatError(f"{pub / 'manifest.json'} must be a JSON object with a string episode_id")
     ep = Episode(
-        manifest=aio.read_json(pub / "manifest.json"),
-        policy=aio.read_json(pub / "policy.json"),
+        manifest=manifest,
+        policy=_read_json_file(pub / "policy.json"),
         ledger=aio.parse_ledger_csv(aio.read_text(pub / "ledger.csv")),
-        invoices=aio.read_jsonl(pub / "invoices.jsonl"),
-        payments=aio.read_jsonl(pub / "payments.jsonl"),
+        invoices=_read_jsonl_file(pub / "invoices.jsonl"),
+        payments=_read_jsonl_file(pub / "payments.jsonl"),
         fx=aio.parse_fx_csv(aio.read_text(pub / "fx.csv")),
     )
     if with_grader:
@@ -123,5 +138,5 @@ def load_episode(directory: Path, with_grader: bool = True) -> Episode:
         if ep.truth["episode_id"] != ep.manifest["episode_id"]:
             raise EpisodeFormatError(f"{grader / 'truth.json'} belongs to episode {ep.truth['episode_id']}, "
                                      f"not {ep.manifest['episode_id']}")
-        ep.provenance = aio.read_json(grader / "provenance.json") if (grader / "provenance.json").exists() else {}
+        ep.provenance = _read_json_file(grader / "provenance.json") if (grader / "provenance.json").exists() else {}
     return ep

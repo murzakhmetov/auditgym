@@ -49,6 +49,8 @@ def _generator_config(config: dict) -> dict:
     stray = sorted(map(str, set(config) - RESET_KEYS))
     if stray:
         raise ValueError("config has keys outside the reset keys next to \"generator\": " + ", ".join(stray))
+    if not isinstance(config["generator"], dict):
+        raise TypeError(f"config key \"generator\" must be a dict, got {type(config['generator']).__name__}")
     return config["generator"]
 
 
@@ -95,7 +97,9 @@ class AuditEnv:
         config = dict(config or {})
         if "episode_dir" in config:
             episode = load_episode(Path(config["episode_dir"]))
-        elif isinstance(config.get("episode"), Episode):
+        elif "episode" in config:
+            if not isinstance(config["episode"], Episode):
+                raise TypeError(f"config key \"episode\" must be an Episode, got {type(config['episode']).__name__}")
             episode = config["episode"]
         else:
             if seed is None:

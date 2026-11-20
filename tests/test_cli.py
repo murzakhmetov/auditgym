@@ -418,6 +418,60 @@ class BrokenAnswerKey(unittest.TestCase):
             self.assertEqual(load_episode(ep, with_grader=False).truth, {})
 
 
+class BrokenPublicOrGraderFiles(unittest.TestCase):
+    """A bad manifest or bad JSON is one error line naming the file and exit 2 on every loader."""
+    SRC = ROOT / "episodes" / "dev" / "d08_both_interacting_kzt"
+
+    def check_all_loaders(self, d, ep, name):
+        f = Path(d) / "f.json"
+        f.write_text('{"episode_id": "x", "findings": []}', encoding="utf-8")
+        runs = [cli("verify", str(ep)),
+                cli("run", "--episodes", str(ep), "--policies", "silent", "--in-process", "--out", str(Path(d) / "out")),
+                cli("grade", "--episode", str(ep), "--findings", str(f)),
+                cli("transform", "--in", str(ep), "--out", str(Path(d) / "t"))]
+        for rc, out, err in runs:
+            self.assertEqual(rc, 2, (out, err))
+            lines = [ln for ln in err.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, err)
+            self.assertTrue(lines[0].startswith("error:"), lines[0])
+            self.assertIn(name, lines[0])
+
+    def test_manifest_without_episode_id_or_not_an_object(self):
+        for label, text in {"no episode_id": '{"schema_version": "1"}', "list": "[]", "non-string id": '{"episode_id": 5}'}.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as d:
+                ep = Path(d) / "ep"
+                shutil.copytree(self.SRC, ep)
+                (ep / "public" / "manifest.json").write_text(text, encoding="utf-8")
+                self.check_all_loaders(d, ep, "manifest.json")
+
+    def test_invalid_json_names_the_file(self):
+        for rel in ("grader/provenance.json", "public/policy.json", "public/manifest.json"):
+            with self.subTest(rel), tempfile.TemporaryDirectory() as d:
+                ep = Path(d) / "ep"
+                shutil.copytree(self.SRC, ep)
+                (ep / rel).write_text("{not json", encoding="utf-8")
+                self.check_all_loaders(d, ep, Path(rel).name)
+
+    def test_invalid_jsonl_names_the_file(self):
+        for name in ("invoices.jsonl", "payments.jsonl"):
+            for label, text in {"bad line": "{not json\n", "deep nesting": "[" * 200000}.items():
+                with self.subTest(name=name, case=label), tempfile.TemporaryDirectory() as d:
+                    ep = Path(d) / "ep"
+                    shutil.copytree(self.SRC, ep)
+                    (ep / "public" / name).write_text(text, encoding="utf-8")
+                    self.check_all_loaders(d, ep, name)
+
+    def test_deeply_nested_truth_is_a_format_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            ep = Path(d) / "ep"
+            shutil.copytree(self.SRC, ep)
+            (ep / "grader" / "truth.json").write_text("[" * 200000, encoding="utf-8")
+            with self.assertRaises(EpisodeFormatError) as cm:
+                load_episode(ep)
+            self.assertIn("truth.json", str(cm.exception))
+            self.check_all_loaders(d, ep, "truth.json")
+
+
 class RandomPolicySeeding(unittest.TestCase):
     def test_one_stream_per_episode(self):
         eps = load_split_episodes(("dev",))

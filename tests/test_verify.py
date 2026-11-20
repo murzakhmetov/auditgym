@@ -477,5 +477,79 @@ class JournalGroupingTests(unittest.TestCase):
         self.assertTrue(unbalanced, "the committed data should need instant comparison")
 
 
+class AnswerKeyCrossChecks(unittest.TestCase):
+    """verify DIR checks truth id_aliases and issue variants against the public records and the config."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name) / "ep"
+        shutil.copytree(D08, self.dir)
+        self.truth_path = self.dir / "grader" / "truth.json"
+        self.truth = json.loads(self.truth_path.read_text(encoding="utf-8"))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def save(self):
+        self.truth_path.write_text(json.dumps(self.truth, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    def assert_fails_declared(self, needle):
+        self.save()
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn("FAIL  declared_discrepancies", r.stdout)
+        self.assertIn(needle, r.stdout)
+        self.assertEqual(r.stdout.count("PASS  "), 8)
+
+    def test_untouched_copy_exits_zero(self):
+        r = run_verify(self.dir)
+        self.assertEqual((r.returncode, r.stdout.count("PASS  ")), (0, 9), r.stdout)
+
+    def test_wrong_alias_fails(self):
+        a = self.truth["id_aliases"]
+        k1, k2 = sorted(a)[:2]
+        a[k1], a[k2] = a[k2], a[k1]
+        self.assert_fails_declared("id_aliases maps")
+
+    def test_missing_alias_fails(self):
+        del self.truth["id_aliases"][sorted(self.truth["id_aliases"])[0]]
+        self.assert_fails_declared("id_aliases missing")
+
+    def test_extra_alias_fails(self):
+        self.truth["id_aliases"]["D/2026/000000"] = "SI/2026/000000"
+        self.assert_fails_declared("id_aliases has extra")
+
+    def test_unknown_variant_fails(self):
+        self.truth["issues"][0]["variant"] = "no_such_variant"
+        self.assert_fails_declared("not a known variant")
+
+    def test_variant_of_another_type_fails(self):
+        issue = self.truth["issues"][0]
+        issue["variant"] = "same_day_copy" if issue["type"] != "duplicate_invoice" else "utc_date"
+        self.assert_fails_declared("not a known variant")
+
+    def test_overflowing_amount_in_an_op_is_a_fail_line_not_a_traceback(self):
+        prov_path = self.dir / "grader" / "provenance.json"
+        prov = json.loads(prov_path.read_text(encoding="utf-8"))
+        doc = json.loads((self.dir / "public" / "invoices.jsonl").read_text(encoding="utf-8").splitlines()[0])
+        prov["ops"].insert(0, {"table": "invoices", "op": "set", "id": doc["doc_id"], "field": "total_minor",
+                               "before": float("inf"), "after": doc["total_minor"]})
+        prov_path.write_text(json.dumps(prov, indent=2) + "\n", encoding="utf-8")
+        r = run_verify(self.dir)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("FAIL  provenance_roundtrip", r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+
+    def test_committed_and_hidden_like_episodes_and_transforms_keep_passing(self):
+        for split in ("train", "dev"):
+            for d in sorted((ROOT / "episodes" / split).iterdir()):
+                ep = load_episode(d)
+                for tf in ({}, {"permute_seed": 3}, {"remap_seed": 4}, {"ts_repr": "utc"}, {"rename_seed": 5}):
+                    with self.subTest(episode=d.name, transform=tf):
+                        self.assertTrue(verify_generated(transform_episode(ep, **tf) if tf else ep)["ok"])
+
+
 if __name__ == "__main__":
     unittest.main()

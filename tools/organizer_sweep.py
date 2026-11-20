@@ -11,7 +11,7 @@ Each gets a 63-bit seed derived from its name; infeasible ones (ConfigError, for
 the 100-step budget) are skipped and listed with the reason. The contract battery runs in-process on every feasible
 episode (the check itself runs it on one episode per seeds file). One seeds file per chunk of CHUNK episodes
 (default 50) is checked with a host secret. OUT_DIR/sweep_summary.json keeps the exit codes, timings, FAIL lines and
-tracebacks; OUT_DIR/summary.md and OUT_DIR/summary.json are deterministic (no timings), and --record also copies them
+tracebacks; OUT_DIR/summary.md and OUT_DIR/summary.json are deterministic (no timings; a "code" stamp gives the code sha256, Python version and platform), and --record also copies them
 to runs/sweep/. Exit code 0 only if every chunk passes, every contract battery passes and no feasible configuration
 fails to generate. Standard library only; about 15 minutes on Windows 10 with chunks of 60.
 """
@@ -29,6 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.getcwd())
 from auditgym import FINDING_TYPES  # noqa: E402
+from auditgym.check import code_stamp, stamp_line  # noqa: E402
 from auditgym.contract_battery import contract_battery  # noqa: E402
 from auditgym.config import DISTRACTORS, INTERACTING, MAX_ERRORS, ROUNDINGS, ROW_ORDERS, SIZES, TS_REPRS, VARIANTS  # noqa: E402
 from auditgym.config import ConfigError  # noqa: E402
@@ -128,7 +129,8 @@ def _write_summaries(out: Path, entries: list, skipped: list, gen_failed: list, 
     contract_failed = contract_failed or []
     chunks = [{"chunk": r["chunk"], "episodes": r["episodes"], "exit_code": r["rc"], "summary": r["summary_line"]}
               for r in results]
-    doc = {"chunk_size": chunk, "configurations": len(entries) + len(skipped) + len(gen_failed), "feasible": len(entries),
+    stamp = code_stamp()
+    doc = {"code": stamp, "chunk_size": chunk, "configurations": len(entries) + len(skipped) + len(gen_failed), "feasible": len(entries),
            "infeasible": [{"name": s["name"], "reason": s["reason"]} for s in skipped],
            "generation_failures": gen_failed, "contract_failures": contract_failed,
            "configs": [{"name": e["name"], "group": e["group"], "seed": e["seed"], "chunk": i // chunk,
@@ -140,6 +142,7 @@ def _write_summaries(out: Path, entries: list, skipped: list, gen_failed: list, 
           f"`python tools/organizer_sweep.py OUT_DIR {chunk}{' --record' if record else ''}`: the closed path (`check --seeds-file --secret-env`) over the "
           "stress mix and the boundary mix. The contract battery also ran in-process on every feasible episode "
           "(the check itself runs it on one episode per seeds file).", "",
+          f"- code: {stamp_line(stamp)}",
           f"- configurations: {doc['configurations']} ({len(entries)} feasible, {len(skipped)} infeasible, "
           f"{len(gen_failed)} generation failures)",
           f"- contract battery in-process: {len(entries) - len(contract_failed)} of {len(entries)} episodes pass",

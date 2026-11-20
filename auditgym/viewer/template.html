@@ -1014,9 +1014,14 @@ function statsFor(eps) {
   });
   return out;
 }
+function applicable(v) {
+  // passed out of the checks that applied; a SKIP is not a pass (older reports have no applicable fields)
+  return { pass: v.applicable_passed !== undefined ? v.applicable_passed : v.passed,
+           total: v.applicable !== undefined ? v.applicable : v.total, skip: v.skipped || 0 };
+}
 function checkTotals(c) {
   var total = 0, pass = 0;
-  Object.keys((c && c.counts) || {}).forEach(function (k) { total += c.counts[k].total; pass += c.counts[k].passed; });
+  Object.keys((c && c.counts) || {}).forEach(function (k) { var a = applicable(c.counts[k]); total += a.total; pass += a.pass; });
   return { total: total, pass: pass };
 }
 
@@ -1140,8 +1145,8 @@ function renderCheck(m) {
   m.appendChild(h('div', { class: 'kpis' }, kpi(t('k_check'), [String(ct.pass), '/ ' + ct.total], (c.ok ? t('pass') : t('fail')) + ' · ' + t('chk_time', { s: fmt(c.elapsed_s, 1) }), null, c.ok ? 'hero good' : 'hero bad', null, null, true)));
   var list = h('section', { class: 'card' });
   Object.keys(c.counts || {}).forEach(function (k) {
-    var v = c.counts[k], ok = v.passed === v.total;
-    list.appendChild(h('div', { class: 'crow' }, tick(ok ? 'ok' : 'bad'), h('span', { text: tOr('chk_' + k, k) }), h('span', { class: 'c' + (ok ? '' : ' c-bad'), text: v.passed + ' / ' + v.total })));
+    var v = c.counts[k], ok = v.passed === v.total, a = applicable(v);
+    list.appendChild(h('div', { class: 'crow' }, tick(ok ? 'ok' : 'bad'), h('span', { text: tOr('chk_' + k, k) }), h('span', { class: 'c' + (ok ? '' : ' c-bad'), text: a.pass + ' / ' + a.total + (a.skip ? ' · ' + t('skipped_n', { n: a.skip }) : '') })));
   });
   m.appendChild(list);
   var sum = c.summary || {}, keys = Object.keys(sum).sort();
@@ -1198,7 +1203,7 @@ function sectionBlock(c, key) {
   }
   var det = h('details', ok ? null : { open: 'open' },
     h('summary', null, icon('chev'), tick(ok ? (skips && skips === list.length ? 'warn' : 'ok') : 'bad'), h('span', { text: tOr('chk_' + key, key) }),
-      h('span', { class: 'c' + (ok ? '' : ' c-bad'), text: cnt.passed + ' / ' + cnt.total + (skips ? ' · ' + t('skipped_n', { n: skips }) : '') + (secs !== undefined && secs !== null ? ' · ' + fmt(secs, 1) + ' ' + t('sec') : '') })),
+      h('span', { class: 'c' + (ok ? '' : ' c-bad'), text: applicable(cnt).pass + ' / ' + applicable(cnt).total + (skips ? ' · ' + t('skipped_n', { n: skips }) : '') + (secs !== undefined && secs !== null ? ' · ' + fmt(secs, 1) + ' ' + t('sec') : '') })),
     body);
   return det;
 }

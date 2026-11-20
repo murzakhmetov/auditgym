@@ -14,7 +14,7 @@ Sections (each a list of named pass/fail checks, see report.md):
      the reward and the auditor's matched issues
   E. leak scan of every agent-visible observation
   F. in-process contract checks of the environment (contract_battery)
-Exit code 0 only if every check passes (SKIP counts as passed). No network, GPU or paid API is used.
+Exit code 0 only if every check passes (a SKIP does not fail it; counts read passed/applicable plus the skips). No network, GPU or paid API is used.
 
 Organizer seeds: `python -m auditgym.check --seeds-file FILE [--secret-env VAR] [--out DIR]`
 runs C, D, E, F (and the replay of its own runs) on the episodes of a seeds file
@@ -28,6 +28,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 import re
 import sys
 import time
@@ -40,7 +41,7 @@ from . import FINDING_TYPES
 from .contract_battery import contract_battery
 from .check_battery import clean_battery, matched_claims, replay_records, reward_battery
 from . import protocol
-from .episode import load_episode
+from .episode import EpisodeFormatError, load_episode
 from .config import ConfigError
 from .generator import GenerationError, generate_episode
 from .grader import Grader
@@ -95,7 +96,11 @@ class Report:
         return all(c["ok"] for cs in self.sections.values() for c in cs)
 
     def counts(self) -> dict:
-        return {s: {"passed": sum(c["ok"] for c in cs), "total": len(cs), "skipped": sum(1 for c in cs if c.get("skipped"))}
+        """Per section: passed and total count a SKIP as passed (kept as they were); applicable is the number of
+        checks that ran (total minus skipped) and applicable_passed those of them that passed."""
+        return {s: {"passed": sum(c["ok"] for c in cs), "total": len(cs), "skipped": sum(1 for c in cs if c.get("skipped")),
+                    "applicable": sum(1 for c in cs if not c.get("skipped")),
+                    "applicable_passed": sum(1 for c in cs if c["ok"] and not c.get("skipped"))}
                 for s, cs in self.sections.items()}
 
 
@@ -161,12 +166,28 @@ def correctness_rejection_check(rejected: int, classes: dict) -> tuple:
 
 def section_header(sec: str, cs: list) -> str:
     """The report.md header of one section, with the number of passed checks and the skip note."""
-    return f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)}){skip_note(cs)}\n"
+    ran = [c for c in cs if not c.get("skipped")]
+    return f"#### {sec} ({sum(c['ok'] for c in ran)}/{len(ran)}){skip_note(cs)}\n"
+
+
+def code_stamp() -> dict:
+    """Evidence stamp: which code and which interpreter produced a report. code_sha256 is the sha256 of the
+    canonical JSON of protocol.code_digest() without bytecode (__pycache__, .pyc, .pyo: they differ between
+    machines and Python versions, while the sources are what a reader can compare). No git commit: the commit
+    that holds the report cannot contain its own hash. Equal on two runs of the same code on the same machine."""
+    files = {k: v for k, v in protocol.code_digest().items()
+             if "/__pycache__/" not in k and not k.endswith((".pyc", ".pyo"))}
+    return {"code_sha256": _digest(files), "code_files": len(files), "python": platform.python_version(),
+            "platform": platform.platform()}
+
+
+def stamp_line(stamp: dict) -> str:
+    return f"code {stamp['code_sha256']} ({stamp['code_files']} files), Python {stamp['python']}, {stamp['platform']}"
 
 
 def summary_line(rep: "Report", names=()) -> str:
     """The one-line stdout summary of every section and the coverage."""
-    parts = ", ".join(f"{k} {v['passed']}/{v['total']}{skip_note(n=v['skipped'])}" for k, v in rep.counts().items())
+    parts = ", ".join(f"{k} {v['applicable_passed']}/{v['applicable']}{skip_note(n=v['skipped'])}" for k, v in rep.counts().items())
     return f"summary: {parts} ({kinds_line(rep, names)})"
 
 
@@ -527,11 +548,13 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
     if keep_runs:
         aio.write_jsonl(out_dir / "trajectories.jsonl", traj, ascii_only=True)
         aio.write_jsonl(out_dir / "grades.jsonl", grades, ascii_only=True)
+    stamp = code_stamp()
     report = {"version": __version__, "ok": rep.ok, "elapsed_s": round(elapsed, 1), "source": source, "counts": rep.counts(),
-              "section_seconds": {k: round(v, 1) for k, v in rep.seconds.items()}, "sections": rep.sections, "summary": summary}
+              "code": stamp, "section_seconds": {k: round(v, 1) for k, v in rep.seconds.items()}, "sections": rep.sections,
+              "summary": summary}
     aio.write_json(out_dir / "report.json", report)
     md = ["# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, version {__version__}.\n",
-          f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n",
+          f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n", f"Code: {stamp_line(stamp)}.\n",
           f"Coverage: {kinds_line(rep, names)} (a kind is one property; most run on every episode they apply to).\n",
           "## Checks (grouped by rubric criterion)\n"]
     for title, keys in RUBRIC:
@@ -542,7 +565,7 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
         md.append("Run time: " + ", ".join(f"{k} {rep.seconds[k]:.1f} s" for k in present if k in rep.seconds) + "\n")
         for sec in present:
             cs = rep.sections[sec]
-            md.append(f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)}){skip_note(cs)}\n")
+            md.append(section_header(sec, cs))
             for c in cs:
                 if c.get("skipped"):
                     md.append(f"- SKIP: {c['check']} ({c['detail']})")
@@ -568,6 +591,15 @@ def _preflight_agent_user() -> str | None:
 
 
 def main(argv=None) -> int:
+    """Entry point; an episode directory that breaks its published format is one error line and exit 2."""
+    try:
+        return _main(argv)
+    except EpisodeFormatError as exc:
+        print(f"error: {' '.join(str(exc).split())[:500]}", file=sys.stderr)
+        return 2
+
+
+def _main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, contract, leaks).")
     ap.add_argument("--seeds-file", help="run sections C, D, E, F on the episodes of this JSON file instead of the public master string")
     ap.add_argument("--secret-env", help="name of the environment variable that holds the host secret for the seeds file")
