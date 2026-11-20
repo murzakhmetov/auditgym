@@ -17,33 +17,53 @@ Named checks, each independent of the generator's internal state:
                          and truth issues and injections match one to one by (issue_id, type), and the target values of
                          each injection equal the affected_ids of the truth issue with the same issue_id. A
                          provenance.json that is not an object, ops that are not a list, or a malformed op is a FAIL
-                         line of this check (the replay and the clean-books check are then skipped), not a traceback
+                         line of this check (the replay and the clean-books check are then skipped), not a traceback.
+                         The semantic record provenance.injections[].change is cross-checked against the public records and
+                         the ops, and an unknown, missing or malformed key of a known type is a FAIL line. duplicate_invoice:
+                         change is empty. wrong_period: posting_ts is the timestamp that the ledger ops (set after, or added
+                         record) record for the target's booking rows. wrong_fx_rate: correct_rate and correct_rate_date are the
+                         fx.csv policy rate (latest rate on or before the document's local date); wrong_rate and wrong_rate_date
+                         are the fx.csv rate of the date the variant names (utc_date: the UTC date, posting_date: the local date
+                         of posting_ts, stale_rate: the day before the period), or for transposed two adjacent digits of
+                         correct_rate swapped (at least 0.2 % apart, no date); posting_date adds posting_ts as above; the
+                         touched booking row (invoice 1100 or 2000, payment 1000) equals the amount at wrong_rate.
+                         unallocated_payment: alloc fits the variant (missing 0, partial more), 2900 holds the converted
+                         amount - alloc, and the ledger relieves the invoice by the proportional carrying amount of alloc
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
                          evidence sets) and reports no anomaly; truth id_aliases equal {doc_id: invoice_id or
                          payment_id} of the public records (nothing missing or extra) and every issue variant is one
                          of config.VARIANTS[type]
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
-                         IDs and amount, using evidence_check.py (independent of auditor.py and money.py)
+                         IDs and amount, using evidence_check.py (independent of auditor.py and money.py); and for every
+                         unallocated_payment issue no other receipt settled the invoice, checked on all public records: no
+                         payment but the issue's lists the invoice in invoice_refs, and no ledger row but the issue's own
+                         payment relieves it (credit to 1100 for a sales invoice, debit to 2000 for a purchase invoice)
   budget_feasible        reading every page of every table plus submit fits in 100 steps
   no_surface_tells       every injected or modified ledger row has an untouched twin with the same account and
                          null pattern
   no_leaks               public files contain no answer-key markers
 
-verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, or a variant or
-distractor kind swapped for another known one (verify DIR does not compare them with truth.json's variant or with manifest.episode_id, which for hidden episodes needs the generation secret, and nothing records the distractor list). An injection
-retargeted to another record is caught by the targets-equal-affected_ids rule. "check" catches the three above by
-regenerating every committed episode from its seed and config and comparing the bytes.
+verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, a distractor
+kind swapped for another known one, a wrong_period injection variant, or any truth.json variant (injection variants of
+wrong_fx_rate and unallocated_payment are checked through change; verify DIR does not compare truth.json's variant or
+manifest.episode_id, which for hidden episodes needs the generation secret, and nothing records the distractor list).
+change.alloc is checked only to the resolution of the base-currency 2900 and relief amounts: when the document currency
+is finer than the base, several alloc values fit the same ledger and the public records cannot pin it further. An
+injection retargeted to another record is caught by the targets-equal-affected_ids rule. "check" catches the seed, distractor and
+variant cases above by regenerating every committed episode from its seed and config and comparing the bytes.
 """
 
 from __future__ import annotations
 
 import math
 import re
-from datetime import date
+from datetime import date, timedelta
+from fractions import Fraction
 
 from .auditor import audit
 from .config import DISTRACTORS, VARIANTS
 from .episode import Episode
+from .evidence_check import _local_date, _round_fraction, convert_fraction
 from .evidence_check import derive_from_evidence  # noqa: F401  (re-exported: check.py and tests import it from here)
 from .io import canonical_json, sha256_text
 from .render import apply_ops
@@ -60,6 +80,14 @@ LEAK_MARKERS = ("iss_", "duplicate_of", "provenance", "truth.json", "injected", 
 
 def _is_int(v) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
+
+
+RATE_SYNTAX = re.compile(r"[0-9]{1,12}(\.[0-9]{1,12})?")  # the fx.csv rate format: no exponent, sign or space reaches Fraction()
+
+
+def _is_rate(v) -> bool:
+    """A positive decimal string in the fx.csv format (checked before any Fraction() call, so 1e99999999 cannot hang)."""
+    return isinstance(v, str) and RATE_SYNTAX.fullmatch(v) is not None and Fraction(v) > 0
 
 
 def check_records_schema(ep: Episode) -> list[str]:
@@ -170,9 +198,32 @@ def compare_with_truth(found: dict, truth: dict) -> list[str]:
 # derive_from_evidence lives in evidence_check.py (independent implementation) and is re-exported here.
 
 
+def _sole_receipt_errors(ep: Episode, issue: dict) -> list[str]:
+    """unallocated_payment: the evidence cannot show that no other receipt settled the invoice, so check it on all
+    public records. No payment other than the issue's one lists the invoice in invoice_refs, and no ledger row other
+    than the issue's own payment relieves the invoice: a credit to 1100 (receivable of a sales invoice) or a debit to
+    2000 (payable of a purchase invoice) that carries the invoice ID. The invoice's own booking is a debit to 1100
+    (sales) or a credit to 2000 (purchase), so it never counts."""
+    ids = set(issue.get("affected_ids", []))
+    pays = [d for d in ep.payments if d["payment_id"] in ids]
+    invs = [d for d in ep.invoices if d["invoice_id"] in ids]
+    if len(pays) != 1 or len(invs) != 1:
+        return []  # the evidence check reports the malformed key
+    pid, inv = pays[0]["payment_id"], invs[0]
+    errs = [f"{issue['issue_id']}: payment {d['payment_id']} also lists invoice {inv['invoice_id']} in invoice_refs"
+            for d in ep.payments if d["payment_id"] != pid and inv["invoice_id"] in (d["invoice_refs"] or [])]
+    account, side = ("1100", "credit_minor") if inv["kind"] == "sales" else ("2000", "debit_minor")
+    errs += [f"{issue['issue_id']}: ledger row {r['row_id']} relieves invoice {inv['invoice_id']} ({account}) besides the issue's payment"
+             for r in ep.ledger if r["invoice_id"] == inv["invoice_id"] and r["account"] == account and r[side] > 0
+             and r["payment_id"] != pid]
+    return errs[:5]
+
+
 def check_evidence(ep: Episode) -> list[str]:
     errs = []
     for t in ep.truth.get("issues", []):
+        if t["type"] == "unallocated_payment":
+            errs += _sole_receipt_errors(ep, t)
         for es in t["evidence_sets"]:
             got = derive_from_evidence(t["type"], es, ep)
             want = (t["type"], frozenset(t["affected_ids"]), t["expected_amount_minor"])
@@ -354,6 +405,268 @@ def _retarget_errors(injections: list, issues) -> list[str]:
     return errs
 
 
+# ------------------------------------------------------------------ semantic record: injections[].change
+CHANGE_KEYS = {
+    "duplicate_invoice": frozenset(),
+    "unallocated_payment": frozenset({"alloc"}),
+    "wrong_fx_rate": frozenset({"correct_rate", "correct_rate_date", "wrong_rate", "wrong_rate_date"}),
+    "wrong_period": frozenset({"posting_ts"}),
+}
+POLICY_RATE_LOOKBACK_DAYS = 15  # the generator's rule: the latest published rate within 15 days before the date
+RATE_TRANSPOSE_MIN = Fraction(2, 1000)  # a transposed rate differs from the right one by at least 0.2 %
+
+
+class _ChangeIndex:
+    """Public records and ops indexed once for the change cross-checks."""
+
+    def __init__(self, ep: Episode):
+        pol = ep.policy
+        self.base = pol["base_currency"]
+        self.exps = pol["currency_exponents"]
+        self.mode = pol["rounding"]["mode"]
+        self.schedule = pol["utc_offset_schedule"]
+        self.p0 = parse_ts(pol["reporting_period"]["start"])
+        self.inv = {d["invoice_id"]: d for d in ep.invoices}
+        self.pay = {d["payment_id"]: d for d in ep.payments}
+        self.fx = {}
+        for r in ep.fx:
+            self.fx.setdefault((r["source_currency"], r["target_currency"]), {})[r["date"]] = r["rate"]
+        self.rows_by_inv, self.rows_by_pay, self.ops = {}, {}, {}
+        for r in ep.ledger:
+            if r["invoice_id"]:
+                self.rows_by_inv.setdefault(r["invoice_id"], []).append(r)
+            if r["payment_id"]:
+                self.rows_by_pay.setdefault(r["payment_id"], []).append(r)
+        for op in ep.provenance.get("ops", []):
+            if op["table"] == "ledger":
+                self.ops.setdefault(op["id"], []).append(op)
+        self.injections = [i for i in ep.provenance.get("injections", []) if isinstance(i, dict)]
+
+    def policy_rate(self, ccy: str, day: date):
+        """(rate, date text) of the latest published rate on or before day, within 15 days; None when there is none."""
+        if ccy == self.base:
+            return "1", day.isoformat()
+        table = self.fx.get((ccy, self.base), {})
+        for back in range(POLICY_RATE_LOOKBACK_DAYS):
+            text = (day - timedelta(days=back)).isoformat()
+            if text in table:
+                return table[text], text
+        return None
+
+    def local_date(self, inst) -> date:
+        return _local_date(inst, self.schedule)
+
+    def convert(self, amount: int, rate: str, ccy: str) -> int:
+        return convert_fraction(amount, rate, self.exps[ccy], self.exps[self.base], self.mode)
+
+
+def _is_transposition(correct: str, wrong: str) -> bool:
+    """wrong is correct with two adjacent different digits swapped, positive, and at least 0.2 % away."""
+    if len(correct) != len(wrong):
+        return False
+    diff = [k for k, (a, b) in enumerate(zip(correct, wrong)) if a != b]
+    if len(diff) != 2 or diff[1] != diff[0] + 1:
+        return False
+    i, j = diff
+    if not (correct[i].isdigit() and correct[j].isdigit() and correct[i] == wrong[j] and correct[j] == wrong[i]):
+        return False
+    if wrong.startswith("0") and not wrong.startswith("0."):
+        return False
+    return Fraction(wrong) > 0 and abs(Fraction(wrong) - Fraction(correct)) >= Fraction(correct) * RATE_TRANSPOSE_MIN
+
+
+def _timestamp_ops_errors(ix: _ChangeIndex, rows: list, posting_ts, name: str) -> list[str]:
+    """Every timestamp the ops record for these published rows (a set 'after' or an added record) equals posting_ts,
+    and the ops record at least one."""
+    seen, errs = 0, []
+    for row in rows:
+        for op in ix.ops.get(row["row_id"], []):
+            if op["op"] == "set" and op["field"] == "timestamp":
+                inst = parse_ts(op["after"])
+            elif op["op"] == "add":
+                inst = parse_ts(op["record"]["timestamp"])
+            else:
+                continue
+            seen += 1
+            if inst != posting_ts and len(errs) < 3:
+                errs.append(f"injection {name}: change.posting_ts differs from the timestamp {op.get('after') or op['record']['timestamp']} "
+                            f"that the ops record for row {row['row_id']}")
+    return errs if errs else ([] if seen else [f"injection {name}: no ledger op records the posting timestamp change.posting_ts"])
+
+
+def _target_of(ix: _ChangeIndex, inj: dict, name: str):
+    """(document, rows that belong to its own booking, error list): one invoice or one payment target."""
+    t = inj.get("targets")
+    if not isinstance(t, dict):
+        return None, [], [f"injection {name}: targets must be an object"]
+    inv, pay = t.get("invoice"), t.get("payment")
+    if isinstance(inv, str) and pay is None and inv in ix.inv:
+        return ix.inv[inv], [r for r in ix.rows_by_inv.get(inv, []) if r["payment_id"] is None], []
+    if isinstance(pay, str) and inv is None and pay in ix.pay:
+        return ix.pay[pay], list(ix.rows_by_pay.get(pay, [])), []
+    return None, [], [f"injection {name}: targets must name exactly one public invoice or one public payment"]
+
+
+def _wrong_period_errors(ix: _ChangeIndex, inj: dict, ch: dict, name: str) -> list[str]:
+    doc, rows, errs = _target_of(ix, inj, name)
+    if errs:
+        return errs
+    try:
+        posting = parse_ts(ch["posting_ts"])
+    except ValueError:
+        return [f"injection {name}: change.posting_ts is not a timestamp with an offset"]
+    return _timestamp_ops_errors(ix, rows, posting, name)
+
+
+def _wrong_fx_errors(ix: _ChangeIndex, inj: dict, ch: dict, name: str) -> list[str]:
+    doc, rows, errs = _target_of(ix, inj, name)
+    if errs:
+        return errs
+    is_invoice = "invoice_id" in doc
+    ccy = doc["currency"]
+    if ccy == ix.base:
+        return [f"injection {name}: the target is in the base currency, so no exchange rate applies"]
+    rates = {}
+    for key in ("correct_rate", "wrong_rate"):
+        try:
+            if not _is_rate(ch[key]):
+                raise ValueError
+            rates[key] = ch[key]
+        except (ValueError, ZeroDivisionError):
+            errs.append(f"injection {name}: change.{key} must be a positive decimal string")
+    dates = {}
+    for key in ("correct_rate_date", "wrong_rate_date"):
+        if ch[key] is None and key == "wrong_rate_date":
+            dates[key] = None
+            continue
+        try:
+            dates[key] = date.fromisoformat(ch[key]).isoformat()
+        except (TypeError, ValueError):
+            errs.append(f"injection {name}: change.{key} must be an ISO date" + (" or null" if key == "wrong_rate_date" else ""))
+    if errs:
+        return errs
+    inst = parse_ts(doc["issued_at"] if is_invoice else doc["timestamp"])
+    local_d = ix.local_date(inst)
+    want = ix.policy_rate(ccy, local_d)
+    if want != (rates["correct_rate"], dates["correct_rate_date"]):
+        errs.append(f"injection {name}: change.correct_rate {rates['correct_rate']} of {dates['correct_rate_date']} is not the fx.csv policy "
+                    f"rate {want} for {ccy} on the document's local date {local_d}")
+    if rates["wrong_rate"] == rates["correct_rate"]:
+        errs.append(f"injection {name}: change.wrong_rate equals change.correct_rate")
+    variant = inj.get("variant")
+    if variant == "transposed":
+        if dates["wrong_rate_date"] is not None:
+            errs.append(f"injection {name}: a transposed rate has no wrong_rate_date")
+        if not _is_transposition(rates["correct_rate"], rates["wrong_rate"]):
+            errs.append(f"injection {name}: change.wrong_rate is not change.correct_rate with two adjacent digits swapped (at least 0.2 % apart)")
+    elif variant in ("utc_date", "posting_date", "stale_rate"):
+        if variant == "utc_date":
+            day = inst.date()
+        elif variant == "posting_date":
+            try:
+                day = ix.local_date(parse_ts(ch["posting_ts"]))
+            except ValueError:
+                return errs + [f"injection {name}: change.posting_ts is not a timestamp with an offset"]
+        else:
+            day = ix.local_date(ix.p0) - timedelta(days=1)
+        if ix.policy_rate(ccy, day) != (rates["wrong_rate"], dates["wrong_rate_date"]):
+            errs.append(f"injection {name}: change.wrong_rate {rates['wrong_rate']} of {dates['wrong_rate_date']} is not the fx.csv rate "
+                        f"that the {variant} variant takes, {ix.policy_rate(ccy, day)} (day {day})")
+    if variant == "posting_date" and "posting_ts" in ch:
+        try:
+            errs += _timestamp_ops_errors(ix, rows, parse_ts(ch["posting_ts"]), name)
+        except ValueError:
+            errs.append(f"injection {name}: change.posting_ts is not a timestamp with an offset")
+    # the booking carries the wrong rate: every touched booking row equals the amount converted at wrong_rate
+    amount = doc["total_minor"] if is_invoice else doc["amount_minor"]
+    booked = ix.convert(amount, rates["wrong_rate"], ccy)
+    account = ("1100" if doc["kind"] == "sales" else "2000") if is_invoice else "1000"
+    touched = [r for r in rows if r["account"] == account and ix.ops.get(r["row_id"])]
+    if not touched:
+        errs.append(f"injection {name}: no ledger op touches the {account} row of the target")
+    for r in touched:
+        if (r["debit_minor"] or r["credit_minor"]) != booked and len(errs) < 6:
+            errs.append(f"injection {name}: row {r['row_id']} is booked at {r['debit_minor'] or r['credit_minor']}, "
+                        f"not {booked} (the amount at change.wrong_rate)")
+    return errs
+
+
+def _alloc_errors(ix: _ChangeIndex, inj: dict, ch: dict, name: str) -> list[str]:
+    t = inj.get("targets") or {}
+    pay, inv = ix.pay.get(t.get("payment")), ix.inv.get(t.get("invoice"))
+    if pay is None or inv is None:
+        return [f"injection {name}: targets must name a public payment and a public invoice"]
+    alloc = ch["alloc"]
+    if not _is_int(alloc) or not 0 <= alloc <= pay["amount_minor"]:
+        return [f"injection {name}: change.alloc must be an integer between 0 and the payment amount {pay['amount_minor']}"]
+    errs = []
+    variant = inj.get("variant")
+    if (variant == "missing") != (alloc == 0):
+        errs.append(f"injection {name}: change.alloc {alloc} does not fit variant {variant} (missing means 0, partial means more than 0)")
+    if inv["kind"] != "sales" or inv["currency"] != pay["currency"]:
+        return errs + [f"injection {name}: the invoice must be a sales invoice in the currency of the payment"]
+    ccy, unalloc = pay["currency"], pay["amount_minor"] - alloc
+    # the receipt leaves amount - alloc in 2900, converted at the payment-date rate (or the rate of a rate error on it)
+    rates = []
+    own = ix.policy_rate(ccy, ix.local_date(parse_ts(pay["timestamp"])))
+    if own:
+        rates.append(own[0])
+    rates += [i["change"]["wrong_rate"] for i in ix.injections if i.get("type") == "wrong_fx_rate" and isinstance(i.get("change"), dict)
+              and _is_rate(i["change"].get("wrong_rate")) and (i.get("targets") or {}).get("payment") == pay["payment_id"]]
+    credited = sum(r["credit_minor"] for r in ix.rows_by_pay.get(pay["payment_id"], []) if r["account"] == "2900")
+    try:
+        expected = {0} if unalloc == 0 else {ix.convert(unalloc, rate, ccy) for rate in rates}
+    except (ValueError, ZeroDivisionError):
+        expected = set()
+    if credited not in expected:
+        errs.append(f"injection {name}: 2900 holds {credited} of the receipt, but change.alloc {alloc} leaves {unalloc} unallocated "
+                    f"({sorted(expected)} at the payment-date rate)")
+    # the allocated part relieves the invoice's carrying amount in proportion
+    carrying = [r["debit_minor"] for r in ix.rows_by_inv.get(inv["invoice_id"], [])
+                if r["payment_id"] is None and r["account"] == "1100" and r["debit_minor"] > 0]
+    relieved = sum(r["credit_minor"] for r in ix.rows_by_inv.get(inv["invoice_id"], [])
+                   if r["payment_id"] == pay["payment_id"] and r["account"] == "1100")
+    if len(carrying) != 1:
+        errs.append(f"injection {name}: the invoice has {len(carrying)} receivable booking rows, so its carrying amount is unknown")
+    elif inv["total_minor"] > 0:
+        base = carrying[0]
+        want = base if alloc == inv["total_minor"] else _round_fraction(Fraction(base * alloc, inv["total_minor"]), ix.mode)
+        if relieved != want:
+            errs.append(f"injection {name}: the ledger relieves {relieved} of the invoice, change.alloc {alloc} relieves {want}")
+    return errs
+
+
+def _change_errors(ix: _ChangeIndex, inj: dict) -> list[str]:
+    """The recorded change of one injection, checked against the public records and the ops."""
+    name, kind = inj.get("issue_id"), inj.get("type")
+    if kind not in CHANGE_KEYS or inj.get("variant") not in VARIANTS.get(kind, ()):
+        return []  # reported by _injection_errors
+    ch = inj.get("change")
+    if not isinstance(ch, dict):
+        return [f"injection {name}: change must be an object"]
+    want = set(CHANGE_KEYS[kind]) | ({"posting_ts"} if kind == "wrong_fx_rate" and inj["variant"] == "posting_date" else set())
+    errs = [f"injection {name}: change lacks {k!r}" for k in sorted(want - set(ch))]
+    errs += [f"injection {name}: change has the unknown key {k!r}" for k in sorted(set(ch) - want, key=str)]
+    if errs:
+        return errs
+    if kind == "unallocated_payment":
+        return _alloc_errors(ix, inj, ch, name)
+    if kind == "wrong_fx_rate":
+        return _wrong_fx_errors(ix, inj, ch, name)
+    if kind == "wrong_period":
+        return _wrong_period_errors(ix, inj, ch, name)
+    return []
+
+
+def change_errors(ep: Episode, injections: list) -> list[str]:
+    """provenance.injections[].change against fx.csv, the ledger, the payments and the ops (see the module docstring)."""
+    try:
+        ix = _ChangeIndex(ep)
+        return [e for inj in injections if isinstance(inj, dict) for e in _change_errors(ix, inj)]
+    except REPLAY_ERRORS as exc:
+        return [f"injection change cannot be cross-checked: {type(exc).__name__}: {exc}"]
+
+
 def check_provenance_structure(ep: Episode) -> list[str]:
     """Provenance is replayable, injections and distractors are well formed, use known names, point at existing
     public invoices or payments, match the answer key one to one by (issue_id, type), and each injection's target
@@ -374,6 +687,7 @@ def check_provenance_structure(ep: Episode) -> list[str]:
     if injected != declared:
         errs.append(f"injections {injected} do not match truth issues {declared} by (issue_id, type)")
     errs += _retarget_errors(injections, ep.truth.get("issues", []))
+    errs += change_errors(ep, injections)
     return errs[:20]
 
 

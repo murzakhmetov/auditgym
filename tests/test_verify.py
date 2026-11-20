@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -549,6 +550,170 @@ class AnswerKeyCrossChecks(unittest.TestCase):
                 for tf in ({}, {"permute_seed": 3}, {"remap_seed": 4}, {"ts_repr": "utc"}, {"rename_seed": 5}):
                     with self.subTest(episode=d.name, transform=tf):
                         self.assertTrue(verify_generated(transform_episode(ep, **tf) if tf else ep)["ok"])
+
+
+T08 = ROOT / "episodes" / "train" / "t08_fx_partial_allocation"
+
+
+def _shifted(key, value):
+    """A plausible but wrong value for one change key."""
+    if value is None:
+        return "2026-01-02"
+    if isinstance(value, int):
+        return value + 1
+    if key == "posting_ts":
+        return (parse_ts(value) + timedelta(minutes=1)).isoformat()
+    if key.endswith("_date"):
+        return (date.fromisoformat(value) + timedelta(days=1)).isoformat()
+    return value + "1"  # a rate with one more digit
+
+
+class ChangeRecordTests(unittest.TestCase):
+    """provenance.injections[].change is checked against fx.csv, the ledger and the ops (check provenance_roundtrip)."""
+
+    def copy(self, src: Path) -> Path:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        dst = Path(tmp.name) / "ep"
+        shutil.copytree(src, dst)
+        return dst
+
+    def edit_provenance(self, directory: Path, edit):
+        path = directory / "grader" / "provenance.json"
+        prov = json.loads(path.read_text(encoding="utf-8"))
+        edit(prov)
+        path.write_text(json.dumps(prov, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    def assert_rejected(self, directory: Path, check: str, needle: str = ""):
+        r = run_verify(directory)
+        self.assertNotIn("Traceback", r.stderr, r.stderr)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn(f"FAIL  {check}", r.stdout)
+        self.assertIn(needle, r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+
+    def test_untouched_copies_exit_zero(self):
+        for src in (D08, T08):
+            r = run_verify(self.copy(src))
+            self.assertEqual(r.returncode, 0, r.stdout)
+            self.assertEqual(r.stdout.count("PASS  "), 9)
+
+    def test_every_tampered_change_key_fails(self):
+        seen = set()
+        for src in (D08, T08):
+            injections = json.loads((src / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
+            for n, inj in enumerate(injections):
+                for key in inj["change"]:
+                    seen.add((inj["type"], inj["variant"], key))
+                    with self.subTest(episode=src.name, issue=inj["issue_id"], key=key):
+                        d = self.copy(src)
+                        self.edit_provenance(d, lambda p, n=n, key=key: p["injections"][n]["change"].__setitem__(
+                            key, _shifted(key, p["injections"][n]["change"][key])))
+                        self.assert_rejected(d, "provenance_roundtrip", "injection iss_")
+        self.assertTrue({("wrong_fx_rate", "utc_date", "wrong_rate_date"), ("wrong_fx_rate", "transposed", "correct_rate"),
+                         ("wrong_fx_rate", "posting_date", "posting_ts"), ("wrong_period", "utc_wall_clock", "posting_ts"),
+                         ("unallocated_payment", "partial", "alloc")} <= seen)
+
+    def test_missing_unknown_and_malformed_change_fail(self):
+        injections = json.loads((D08 / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
+        fx = next(n for n, i in enumerate(injections) if i["type"] == "wrong_fx_rate" and "invoice" in i["targets"])
+        cases = {
+            "lacks": lambda p: p["injections"][fx]["change"].pop("wrong_rate"),
+            "unknown key": lambda p: p["injections"][fx]["change"].__setitem__("note", 1),
+            "not an object": lambda p: p["injections"][fx].__setitem__("change", [1, 2]),
+            "emptied": lambda p: p["injections"][fx].__setitem__("change", {}),
+            "null rate": lambda p: p["injections"][fx]["change"].__setitem__("wrong_rate", None),
+            "bool alloc": lambda p: next(i for i in p["injections"] if i["type"] == "unallocated_payment")["change"].__setitem__("alloc", True),
+        }
+        for label, edit in cases.items():
+            with self.subTest(label):
+                d = self.copy(D08)
+                self.edit_provenance(d, edit)
+                self.assert_rejected(d, "provenance_roundtrip", "injection iss_")
+
+    def test_rule_by_rule_tampers_fail(self):
+        d04 = ROOT / "episodes" / "dev" / "d04_unallocated_missing_eur"
+        by_id = lambda p, i: next(x for x in p["injections"] if x["issue_id"] == i)
+        cases = [
+            (D08, "another transposition of the rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "158.263")),
+            (D08, "a transposition with a trailing zero", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "581.2630")),
+            (D08, "exponent rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "1e99999999")),
+            (D08, "signed rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "+581.263")),
+            (d04, "alloc is a bool", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", False)),
+            (d04, "variant swapped to partial", lambda p: by_id(p, "iss_01").__setitem__("variant", "partial")),
+        ]
+        for src, label, edit in cases:
+            with self.subTest(label):
+                d = self.copy(src)
+                self.edit_provenance(d, edit)
+                self.assert_rejected(d, "provenance_roundtrip", "injection iss_")
+
+    def test_a_change_on_a_known_type_with_an_extra_key_fails_for_duplicates_too(self):
+        d = self.copy(next(p for p in (ROOT / "episodes" / "train").iterdir() if p.name.startswith("t03")))
+        self.edit_provenance(d, lambda p: p["injections"][0]["change"].__setitem__("alloc", 0))
+        self.assert_rejected(d, "provenance_roundtrip", "unknown key")
+
+
+class SoleReceiptTests(unittest.TestCase):
+    """unallocated_payment: no second receipt and no second relieving row for the invoice (check evidence_sufficient)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.dir = Path(tmp.name) / "ep"
+        shutil.copytree(D08, self.dir)
+        self.ep = load_episode(self.dir)
+        issue = next(t for t in self.ep.truth["issues"] if t["type"] == "unallocated_payment")
+        self.pay = next(d for d in self.ep.payments if d["payment_id"] in issue["affected_ids"])
+        self.inv = next(d for d in self.ep.invoices if d["invoice_id"] in issue["affected_ids"])
+
+    def save_and_reject(self, needle: str):
+        self.ep.manifest["record_counts"] = {t: len(self.ep.table(t)) for t in ("ledger", "invoices", "payments", "fx")}
+        self.ep.write(self.dir)
+        r = run_verify(self.dir)
+        self.assertNotIn("Traceback", r.stderr, r.stderr)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("FAIL  evidence_sufficient", r.stdout)
+        self.assertIn(needle, r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+
+    def test_untouched_copy_exits_zero(self):
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual(r.stdout.count("PASS  "), 9)
+
+    def test_second_receipt_referencing_the_invoice_fails(self):
+        other = copy.deepcopy(self.pay)
+        other.update({"doc_id": "D-ZZ-1", "payment_id": "RCPT-ZZ-1"})
+        self.ep.payments.append(other)
+        self.save_and_reject("also lists invoice")
+
+    def test_second_receipt_in_a_list_of_invoices_fails(self):
+        other = copy.deepcopy(self.pay)
+        other.update({"doc_id": "D-ZZ-1", "payment_id": "RCPT-ZZ-1", "invoice_refs": ["INV-OTHER", self.inv["invoice_id"]]})
+        self.ep.payments.append(other)
+        self.save_and_reject("also lists invoice")
+
+    def test_second_relieving_row_without_a_payment_fails(self):
+        row = copy.deepcopy(next(r for r in self.ep.ledger if r["account"] == "1000"))
+        row.update({"row_id": "ROW-ZZ-1", "account": "1100", "debit_minor": 0, "credit_minor": 5,
+                    "invoice_id": self.inv["invoice_id"], "payment_id": None})
+        self.ep.ledger.append(row)
+        self.save_and_reject("relieves invoice")
+
+    def test_second_relieving_row_of_another_payment_fails(self):
+        other = next(d for d in self.ep.payments if d["payment_id"] != self.pay["payment_id"])
+        row = copy.deepcopy(next(r for r in self.ep.ledger if r["account"] == "1000"))
+        row.update({"row_id": "ROW-ZZ-1", "account": "1100", "debit_minor": 0, "credit_minor": 5,
+                    "invoice_id": self.inv["invoice_id"], "payment_id": other["payment_id"]})
+        self.ep.ledger.append(row)
+        self.save_and_reject("relieves invoice")
+
+    def test_the_issue_payments_own_relief_and_the_invoice_booking_are_allowed(self):
+        rows = [r for r in self.ep.ledger if r["invoice_id"] == self.inv["invoice_id"]]
+        self.assertTrue(any(r["payment_id"] == self.pay["payment_id"] and r["credit_minor"] > 0 for r in rows))
+        self.assertTrue(any(r["payment_id"] is None and r["debit_minor"] > 0 for r in rows))
+        self.assertEqual(verify_generated(self.ep)["checks"]["evidence_sufficient"], "pass")
 
 
 if __name__ == "__main__":
