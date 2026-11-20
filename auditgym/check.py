@@ -28,6 +28,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -94,6 +95,21 @@ class Report:
     def counts(self) -> dict:
         return {s: {"passed": sum(c["ok"] for c in cs), "total": len(cs), "skipped": sum(1 for c in cs if c.get("skipped"))}
                 for s, cs in self.sections.items()}
+
+
+_EPISODE_PREFIX = re.compile(r"^((ep_[0-9a-f]{6,})|((train|dev)/[A-Za-z0-9_]+)|(h\d+[A-Za-z0-9_]*))(?=[: ])")
+
+
+def check_kind(label: str) -> str:
+    """The property a named check tests: its label without the episode name, with numbers and transform dicts
+    generalised. Most properties run once per episode they apply to."""
+    s = _EPISODE_PREFIX.sub("…", label)
+    return re.sub(r"\d+", "N", re.sub(r"\{[^}]*\}", "{…}", s))
+
+
+def kinds_line(rep: "Report") -> str:
+    checks = [c["check"] for cs in rep.sections.values() for c in cs]
+    return f"{len(checks)} named checks of {len({check_kind(c) for c in checks})} kinds"
 
 
 def _disp(label: str) -> str:
@@ -338,7 +354,7 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
             suffix = "" if pol == "auditor" else " (recon)"
             rep.add("D_paired", f"{name}: isolated child process and in-process runs are identical{suffix}",
                     _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
-    transforms = [{"permute_seed": 11, "remap_seed": 5}, {"permute_seed": 7, "remap_seed": 9, "ts_repr": "mixed"},
+    transforms = [{"permute_seed": 11, "remap_seed": 5}, {"permute_seed": 7, "remap_seed": 9, "ts_repr": "mixed", "rename_seed": 21},
                   {"remap_seed": 3, "ts_repr": "utc"}]
     base: dict = {}
     for _s, name, ep in eps:
@@ -364,7 +380,7 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
         for tf in transforms:
             paired(name, ep, tf)
     errs = [x for x in eps if x[2].truth["issues"]]
-    singles = [{"permute_seed": 13}, {"remap_seed": 17}]
+    singles = [{"permute_seed": 13}, {"remap_seed": 17}, {"rename_seed": 19}]
     if errs:
         single_eps = []
         for x in errs[:1] + errs[len(errs) // 2:][:1]:
@@ -458,7 +474,9 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
               "section_seconds": {k: round(v, 1) for k, v in rep.seconds.items()}, "sections": rep.sections, "summary": summary}
     aio.write_json(out_dir / "report.json", report)
     md = ["# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, version {__version__}.\n",
-          f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n", "## Checks (grouped by rubric criterion)\n"]
+          f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n",
+          f"Coverage: {kinds_line(rep)} (a kind is one property; most run on every episode they apply to).\n",
+          "## Checks (grouped by rubric criterion)\n"]
     for title, keys in RUBRIC:
         present = [k for k in keys if k in rep.sections]
         if not present:
@@ -554,7 +572,7 @@ def main(argv=None) -> int:
     elapsed = time.monotonic() - t0
     _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs)
     c = rep.counts()
-    print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), flush=True)
+    print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), f"({kinds_line(rep)})", flush=True)
     print(f"{'PASS' if rep.ok else 'FAIL'} in {elapsed:.0f} s; report: {_rel(out_dir)}/report.md", flush=True)
     return 0 if rep.ok else 1
 

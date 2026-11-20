@@ -96,6 +96,7 @@ def markdown_table(summary: dict) -> str:
     head += "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
     rows = []
     for v in summary.values():
+        v = {k: ("n/a" if x is None else x) for k, x in v.items()}  # e.g. micro P of a policy that never accuses
         rows.append(
             f"| {v['split']} | {v['policy']} | {v['episodes']} | {v['return']} | {v['return_experimental']} | "
             f"{v['precision']} | {v['recall']} | {v['micro_precision']} | {v['micro_recall']} | {v['f1']} | {v['soft_f1']} | "

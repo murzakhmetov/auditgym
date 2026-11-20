@@ -13,7 +13,8 @@
 
 The answer is unchanged up to the ID mapping, so the oracle's reward must not
 change. Available as AuditEnv.reset(config={"transform": {...}}) and as
-`python -m auditgym transform` (rename_seed: AuditEnv/Python only until the CLI flag lands).
+`python -m auditgym transform` (--permute-seed, --remap-seed, --ts-repr, --rename-seed).
+Counterparties appear in the public records only as entity IDs, which remap_seed replaces.
 """
 
 from __future__ import annotations

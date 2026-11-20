@@ -304,7 +304,8 @@ def cmd_transform(args) -> int:
 
     with _input(broad=True):
         ep = load_episode(Path(args.inp))
-    t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr)
+    t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr,
+                          rename_seed=args.rename_seed)
     t.write(Path(args.out))
     print(json.dumps({"from": ep.episode_id, "to": t.episode_id, "out": str(args.out)}))
     return 0
@@ -388,7 +389,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m auditgym", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     ck = sub.add_parser("check", help="the single offline check; --seeds-file runs it on organizer episodes")
-    ck.add_argument("--seeds-file", help='JSON {"split": "...", "episodes": [{"name", "seed", "config"}]}; sections C, D, E run on these episodes')
+    ck.add_argument("--seeds-file", help='JSON {"split": "...", "episodes": [{"name", "seed", "config"}]}; sections C, D, E, F run on these episodes')
     ck.add_argument("--secret-env", help="name of an environment variable holding the host secret (with --seeds-file)")
     ck.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
     ck.add_argument("--keep-runs", action="store_true", help="with --seeds-file: also write trajectories and grades (they contain the closed answer key)")
@@ -427,6 +428,7 @@ def main(argv=None) -> int:
     t.add_argument("--permute-seed", type=int)
     t.add_argument("--remap-seed", type=int)
     t.add_argument("--ts-repr", choices=["utc", "local", "mixed"])
+    t.add_argument("--rename-seed", type=int, help="rename the company and the invoice line wording (reference tokens are kept)")
     t.set_defaults(func=cmd_transform)
     d = sub.add_parser("demo")
     d.add_argument("--episode")

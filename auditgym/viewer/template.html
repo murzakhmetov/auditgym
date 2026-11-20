@@ -473,7 +473,7 @@ var L = {
     t_invoice: 'Invoices', t_payment: 'Payments', t_row: 'Ledger rows', t_fx: 'FX rates', t_entity: 'Entities', t_account: 'Accounts',
     chk_title: 'Offline check', chk_none: 'No check report in this bundle. Run python -m auditgym check, then python -m auditgym viewer.',
     chk_time: '{s} s, offline, no network', chk_sum: 'Policies on the hidden-like split', col_split: 'Split', col_closed_share: 'Closed',
-    chk_A_unit_tests: 'Unit tests', chk_B_committed_episodes: 'Committed episodes', chk_C_data: 'Data and answer key', chk_C_reward: 'Reward reliability', chk_D_paired: 'Reproducibility and paired checks', chk_E_leaks: 'Leak checks',
+    chk_A_unit_tests: 'Unit tests', chk_B_committed_episodes: 'Committed episodes', chk_C_data: 'Data and answer key', chk_C_reward: 'Reward reliability', chk_D_paired: 'Reproducibility and paired checks', chk_E_leaks: 'Leak checks', chk_F_contract: 'Contract checks',
     ret_soft: 'Soft return', micro_p: 'Micro P', micro_r: 'Micro R', macro_p: 'Macro P', macro_r: 'Macro R', unobs: 'Unobserved citations',
     diag_title: 'Diagnostics', diag_sub: 'soft return, pooled P and R, citation check', metric: 'Metric', cause: 'Cause', soft_title: 'The experimental reward', more_n: '+{n} more', shared_with: 'shared with {i}', removed_title: 'removed by the injector; not in the published ledger', set_to: 'set to', failing: 'Failing checks', skipped_n: '{n} skipped', fold_hint: 'raw names',
     unobs_title: 'How many of the IDs named in findings the run never observed. 0 is healthy.',
@@ -559,7 +559,7 @@ var L = {
     t_invoice: 'Инвойсы', t_payment: 'Платежи', t_row: 'Строки книги', t_fx: 'Курсы', t_entity: 'Контрагенты', t_account: 'Счета учёта',
     chk_title: 'Офлайн-проверка', chk_none: 'В сборке нет отчёта проверки. Запустите python -m auditgym check, затем python -m auditgym viewer.',
     chk_time: '{s} с, без сети', chk_sum: 'Политики на скрытом наборе', col_split: 'Набор', col_closed_share: 'Закрыто',
-    chk_A_unit_tests: 'Модульные тесты', chk_B_committed_episodes: 'Опубликованные эпизоды', chk_C_data: 'Данные и ключ ответов', chk_C_reward: 'Надёжность награды', chk_D_paired: 'Воспроизводимость и парные проверки', chk_E_leaks: 'Проверки утечек',
+    chk_A_unit_tests: 'Модульные тесты', chk_B_committed_episodes: 'Опубликованные эпизоды', chk_C_data: 'Данные и ключ ответов', chk_C_reward: 'Надёжность награды', chk_D_paired: 'Воспроизводимость и парные проверки', chk_E_leaks: 'Проверки утечек', chk_F_contract: 'Проверки контракта',
     ret_soft: 'Мягкая награда', micro_p: 'Микро P', micro_r: 'Микро R', macro_p: 'Макро P', macro_r: 'Макро R', unobs: 'Ссылки вне наблюдений',
     diag_title: 'Диагностика', diag_sub: 'мягкая награда, суммарные P и R, проверка ссылок', metric: 'Метрика', cause: 'Причина', soft_title: 'Экспериментальная награда', more_n: 'ещё {n}', shared_with: 'общая с {i}', removed_title: 'удалена инжектором; в опубликованной книге её нет', set_to: 'устанавливается', failing: 'Непройденные проверки', skipped_n: 'пропущено: {n}', fold_hint: 'исходные имена',
     unobs_title: 'Сколько ID из названных в находках прогон ни разу не наблюдал. 0 — норма.',
@@ -1162,6 +1162,7 @@ function renderCheck(m) {
 
 // ------------------------------------------------------------------ rubric map
 var RUB_CMDS = {
+  F_contract: [['rc_1a', 'python -m auditgym check'], ['rc_1b', 'python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom']],
   E_leaks: [['rc_1a', 'python -m auditgym check'], ['rc_1b', 'python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom']],
   B_committed_episodes: [['rc_2a', 'python -m auditgym verify episodes/dev/d08_both_interacting_kzt'], ['rc_2b', 'python -m auditgym check']],
   C_reward: [['rc_3a', 'python -m auditgym check --seeds-file examples/closed_seeds_example.json'], ['rc_3b', 'python -m auditgym run --episodes episodes/dev --policies random,recon,flag_all,oracle --out runs/dev']],

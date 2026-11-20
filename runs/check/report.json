@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "ok": true,
-  "elapsed_s": 93.0,
+  "elapsed_s": 101.3,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -25,34 +25,40 @@
       "skipped": 0
     },
     "C_reward": {
-      "passed": 248,
-      "total": 248,
+      "passed": 427,
+      "total": 427,
       "skipped": 0
     },
     "D_paired": {
-      "passed": 91,
-      "total": 91,
+      "passed": 93,
+      "total": 93,
       "skipped": 0
     },
     "E_leaks": {
       "passed": 3,
       "total": 3,
       "skipped": 0
+    },
+    "F_contract": {
+      "passed": 20,
+      "total": 20,
+      "skipped": 0
     }
   },
   "section_seconds": {
-    "A_unit_tests": 41.7,
-    "B_committed_episodes": 3.8,
-    "B_replay": 1.2,
+    "A_unit_tests": 44.1,
+    "B_committed_episodes": 4.0,
+    "B_replay": 1.3,
     "C_data": 4.5,
-    "C_reward": 23.4,
-    "D_paired": 17.8,
-    "E_leaks": 0.4
+    "C_reward": 29.5,
+    "D_paired": 17.5,
+    "E_leaks": 0.4,
+    "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 189 tests",
+        "check": "unittest: 228 run, 220 passed, 8 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -427,17 +433,22 @@
       {
         "check": "ordering: oracle > auditor > recon > flag_all",
         "ok": true,
-        "detail": "{\"auditor\": 0.936, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.6132, \"recon\": -0.5887}"
+        "detail": "{\"auditor\": 0.936, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.6132, \"recon\": -0.5887, \"silent\": -0.5}"
       },
       {
         "check": "ordering on error episodes only: auditor > recon >= flag_all",
         "ok": true,
-        "detail": "{\"random\": -1.0, \"recon\": -0.4515894413425888, \"flag_all\": -1.0, \"oracle\": 1.0, \"auditor\": 0.9302666666666668}"
+        "detail": "{\"random\": -1.0, \"recon\": -0.4515894413425888, \"flag_all\": -1.0, \"silent\": -1.0, \"oracle\": 1.0, \"auditor\": 0.9302666666666668}"
       },
       {
         "check": "random explorer stays far below the auditor",
         "ok": true,
         "detail": ""
+      },
+      {
+        "check": "ordering: auditor > silent",
+        "ok": true,
+        "detail": "{\"auditor\": 0.936, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.6132, \"recon\": -0.5887, \"silent\": -0.5}"
       },
       {
         "check": "every run finishes inside 100 steps and 60 s",
@@ -455,24 +466,54 @@
         "detail": ""
       },
       {
-        "check": "ep_d93b7e211400d9fa: a duplicate_invoice accusation citing a real document scores -1, below silence",
+        "check": "ep_d93b7e211400d9fa: 1 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d93b7e211400d9fa: a unallocated_payment accusation citing a real document scores -1, below silence",
+        "check": "ep_d93b7e211400d9fa: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d93b7e211400d9fa: a wrong_fx_rate accusation citing a real document scores -1, below silence",
+        "check": "ep_d93b7e211400d9fa: 1 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d93b7e211400d9fa: a wrong_period accusation citing a real document scores -1, below silence",
+        "check": "ep_d93b7e211400d9fa: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 1 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 6 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 2 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d93b7e211400d9fa: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
       },
       {
         "check": "ep_d93b7e211400d9fa: saving steps separates equal answers only slightly",
@@ -485,24 +526,49 @@
         "detail": ""
       },
       {
-        "check": "ep_8a932841ed8e0473: a duplicate_invoice accusation citing a real document scores -1, below silence",
+        "check": "ep_8a932841ed8e0473: 2 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_8a932841ed8e0473: a unallocated_payment accusation citing a real document scores -1, below silence",
+        "check": "ep_8a932841ed8e0473: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_8a932841ed8e0473: a wrong_fx_rate accusation citing a real document scores -1, below silence",
+        "check": "ep_8a932841ed8e0473: 2 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_8a932841ed8e0473: a wrong_period accusation citing a real document scores -1, below silence",
+        "check": "ep_8a932841ed8e0473: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_8a932841ed8e0473: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_8a932841ed8e0473: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_8a932841ed8e0473: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_8a932841ed8e0473: 4 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_8a932841ed8e0473: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
       },
       {
         "check": "ep_8a932841ed8e0473: saving steps separates equal answers only slightly",
@@ -515,24 +581,54 @@
         "detail": ""
       },
       {
-        "check": "ep_9c4a74074719b6c2: a duplicate_invoice accusation citing a real document scores -1, below silence",
+        "check": "ep_9c4a74074719b6c2: 3 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_9c4a74074719b6c2: a unallocated_payment accusation citing a real document scores -1, below silence",
+        "check": "ep_9c4a74074719b6c2: 3 recurring accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_9c4a74074719b6c2: a wrong_fx_rate accusation citing a real document scores -1, below silence",
+        "check": "ep_9c4a74074719b6c2: 3 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_9c4a74074719b6c2: a wrong_period accusation citing a real document scores -1, below silence",
+        "check": "ep_9c4a74074719b6c2: 2 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 3 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 2 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 7 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 4 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_9c4a74074719b6c2: 3 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
       },
       {
         "check": "ep_9c4a74074719b6c2: saving steps separates equal answers only slightly",
@@ -545,24 +641,54 @@
         "detail": ""
       },
       {
-        "check": "ep_d7fb0d8b2dcfc8aa: a duplicate_invoice accusation citing a real document scores -1, below silence",
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d7fb0d8b2dcfc8aa: a unallocated_payment accusation citing a real document scores -1, below silence",
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d7fb0d8b2dcfc8aa: a wrong_fx_rate accusation citing a real document scores -1, below silence",
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_d7fb0d8b2dcfc8aa: a wrong_period accusation citing a real document scores -1, below silence",
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 7 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 2 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_d7fb0d8b2dcfc8aa: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
       },
       {
         "check": "ep_d7fb0d8b2dcfc8aa: saving steps separates equal answers only slightly",
@@ -575,24 +701,54 @@
         "detail": ""
       },
       {
-        "check": "ep_df671bb159d0fae6: a duplicate_invoice accusation citing a real document scores -1, below silence",
+        "check": "ep_df671bb159d0fae6: 2 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_df671bb159d0fae6: a unallocated_payment accusation citing a real document scores -1, below silence",
+        "check": "ep_df671bb159d0fae6: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_df671bb159d0fae6: a wrong_fx_rate accusation citing a real document scores -1, below silence",
+        "check": "ep_df671bb159d0fae6: 2 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
       },
       {
-        "check": "ep_df671bb159d0fae6: a wrong_period accusation citing a real document scores -1, below silence",
+        "check": "ep_df671bb159d0fae6: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
-        "detail": "-1.0 vs 1.0"
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 8 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 3 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
+      },
+      {
+        "check": "ep_df671bb159d0fae6: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "ok": true,
+        "detail": "silence 1.0"
       },
       {
         "check": "ep_df671bb159d0fae6: saving steps separates equal answers only slightly",
@@ -665,6 +821,56 @@
         "detail": "tp=1 fp=1"
       },
       {
+        "check": "ep_99b4722e2dd40466: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 2 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "5 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_99b4722e2dd40466: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_99b4722e2dd40466: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -733,6 +939,56 @@
         "check": "ep_20f51b55f605db28: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=1 fp=1"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_20f51b55f605db28: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
       },
       {
         "check": "ep_20f51b55f605db28: saving steps separates equal answers only slightly",
@@ -805,6 +1061,56 @@
         "detail": "tp=3 fp=1"
       },
       {
+        "check": "ep_2283fdaf7538b5aa: 1 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "6 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 2 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2283fdaf7538b5aa: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_2283fdaf7538b5aa: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -873,6 +1179,56 @@
         "check": "ep_9a062e8ef70c2867: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=3 fp=1"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "7 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9a062e8ef70c2867: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
       },
       {
         "check": "ep_9a062e8ef70c2867: saving steps separates equal answers only slightly",
@@ -945,6 +1301,56 @@
         "detail": "tp=3 fp=1"
       },
       {
+        "check": "ep_2c65039c6d33d0d2: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_2c65039c6d33d0d2: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_2c65039c6d33d0d2: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1013,6 +1419,56 @@
         "check": "ep_8bd01b41a1157577: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=3 fp=1"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "6 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_8bd01b41a1157577: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
       },
       {
         "check": "ep_8bd01b41a1157577: saving steps separates equal answers only slightly",
@@ -1085,6 +1541,56 @@
         "detail": "tp=3 fp=1"
       },
       {
+        "check": "ep_f7db93a8c32a772c: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 2 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 3 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_f7db93a8c32a772c: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_f7db93a8c32a772c: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1153,6 +1659,56 @@
         "check": "ep_b1e37228bd7ef0a1: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=5 fp=1"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "6 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 2 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b1e37228bd7ef0a1: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
       },
       {
         "check": "ep_b1e37228bd7ef0a1: saving steps separates equal answers only slightly",
@@ -1225,6 +1781,56 @@
         "detail": "tp=2 fp=1"
       },
       {
+        "check": "ep_ee09d07dfa0f5602: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 2 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "1 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "6 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_ee09d07dfa0f5602: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_ee09d07dfa0f5602: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1293,6 +1899,56 @@
         "check": "ep_fa7ed03738cd200a: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=3 fp=1"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "7 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_fa7ed03738cd200a: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
       },
       {
         "check": "ep_fa7ed03738cd200a: saving steps separates equal answers only slightly",
@@ -1365,6 +2021,56 @@
         "detail": "tp=4 fp=1"
       },
       {
+        "check": "ep_7c5ece92fbe0fa8b: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "7 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_7c5ece92fbe0fa8b: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_7c5ece92fbe0fa8b: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1433,6 +2139,51 @@
         "check": "ep_b670bf113ecbdef0: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=1 fp=1"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "7 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_b670bf113ecbdef0: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
       },
       {
         "check": "ep_b670bf113ecbdef0: saving steps separates equal answers only slightly",
@@ -1505,6 +2256,56 @@
         "detail": "tp=2 fp=1"
       },
       {
+        "check": "ep_d9f41ef85b1239f6: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "5 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_d9f41ef85b1239f6: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_d9f41ef85b1239f6: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1575,6 +2376,56 @@
         "detail": "tp=3 fp=1"
       },
       {
+        "check": "ep_9f209e44c05ddb1a: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "5 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_9f209e44c05ddb1a: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
         "check": "ep_9f209e44c05ddb1a: saving steps separates equal answers only slightly",
         "ok": true,
         "detail": ""
@@ -1643,6 +2494,56 @@
         "check": "ep_3c13484c7cf31a46: right amount with the ID of an unrelated real invoice is not a true positive",
         "ok": true,
         "detail": "tp=4 fp=1"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 3 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "2 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "4 checked, answer alone 1.0"
+      },
+      {
+        "check": "ep_3c13484c7cf31a46: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "ok": true,
+        "detail": "3 checked, answer alone 1.0"
       },
       {
         "check": "ep_3c13484c7cf31a46: saving steps separates equal answers only slightly",
@@ -1792,7 +2693,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h01_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h01_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
@@ -1807,7 +2708,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h02_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h02_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
       },
@@ -1822,7 +2723,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.924->0.924 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h03_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h03_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.924->0.924 same matched issues+amounts=True verify=[]"
       },
@@ -1837,7 +2738,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h04_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h04_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
@@ -1852,7 +2753,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.954->0.954 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h05_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h05_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.954->0.954 same matched issues+amounts=True verify=[]"
       },
@@ -1867,7 +2768,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h06_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h06_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
@@ -1882,7 +2783,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.902->0.902 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h07_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h07_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.902->0.902 same matched issues+amounts=True verify=[]"
       },
@@ -1897,7 +2798,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h08_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h08_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
       },
@@ -1912,7 +2813,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h09_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h09_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
@@ -1927,7 +2828,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h10_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h10_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
@@ -1942,7 +2843,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h11_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h11_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
@@ -1957,7 +2858,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h12_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h12_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
@@ -1972,7 +2873,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h13_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h13_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
       },
@@ -1987,7 +2888,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h14_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h14_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
@@ -2002,7 +2903,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h15_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h15_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
@@ -2017,7 +2918,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h16_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h16_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
       },
@@ -2032,7 +2933,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h17_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h17_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
@@ -2047,7 +2948,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h18_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h18_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
@@ -2062,7 +2963,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h19_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h19_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
@@ -2077,7 +2978,7 @@
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
-        "check": "h20_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed'}: oracle answer and reward preserved",
+        "check": "h20_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
@@ -2097,6 +2998,11 @@
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h06_interacting {'rename_seed': 19}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h13_mixed {'permute_seed': 13}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
@@ -2105,11 +3011,16 @@
         "check": "h13_mixed {'remap_seed': 17}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h13_mixed {'rename_seed': 19}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
       }
     ],
     "E_leaks": [
       {
-        "check": "2179 observations contain only the allowed fields",
+        "check": "2219 observations contain only the allowed fields",
         "ok": true,
         "detail": "0 bad"
       },
@@ -2120,6 +3031,108 @@
       },
       {
         "check": "oracle trajectories are never published",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "F_contract": [
+      {
+        "check": "ep_99b4722e2dd40466: reset returns exactly task, manifest, policy and remaining_steps",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: every later observation has only result, error and remaining_steps",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: a page holds at most 50 rows and paging reaches every row once, in order (ledger)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the cursor is stable: the same cursor returns the same page, also in a fresh environment",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: a page limit above the maximum is refused with a bounded error",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: an unknown ID gives a bounded error and spends a step",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: an unknown action gives a bounded error and spends a step",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the calculator evaluates a valid expression",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the calculator rejects __import__('os')",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the calculator rejects 2**8",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the calculator rejects 1/0",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: after submit the episode is finished and further steps change nothing",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: at step 100 (not before) the episode truncates with an empty answer",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: the time limit on a frozen clock truncates with an empty answer",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: eval mode returns reward 0 on every step, including the last",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: info carries only episode_id in eval mode, also at the end",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: an invalid submission scores -1",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: a foreign episode_id scores -1",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: all 10 sampled observations validate against observation.schema.json",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "check": "ep_99b4722e2dd40466: seeded contract fuzz (300 actions, reset every episode end) has 0 invariant violations",
         "ok": true,
         "detail": ""
       }
@@ -2136,7 +3149,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.0,
-      "agent_time_s": 0.0179,
+      "agent_time_s": 0.0125,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -2176,7 +3189,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0031,
+      "agent_time_s": 0.0024,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -2270,7 +3283,7 @@
       "recall": 0.0,
       "f1": 0.2,
       "steps": 33.95,
-      "agent_time_s": 0.0031,
+      "agent_time_s": 0.0056,
       "closed_share": 0.2,
       "invalid": 0,
       "truncated": 0,
@@ -2321,7 +3334,7 @@
       "recall": 0.5425,
       "f1": 0.2307,
       "steps": 32.0,
-      "agent_time_s": 0.007,
+      "agent_time_s": 0.0125,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -2362,6 +3375,48 @@
       },
       "miss_reasons": {
         "not_flagged": 14
+      }
+    },
+    "hidden_like/silent": {
+      "split": "hidden_like",
+      "policy": "silent",
+      "episodes": 20,
+      "return": -0.5,
+      "return_experimental": -0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.25,
+      "steps": 0.0,
+      "agent_time_s": 0.0,
+      "closed_share": 0.25,
+      "invalid": 0,
+      "truncated": 0,
+      "return_clean": 1.0,
+      "return_with_errors": -1.0,
+      "return_interacting": -1.0,
+      "false_positives_on_clean": 0,
+      "soft_f1": 0.25,
+      "tp": 0,
+      "fp": 0,
+      "fn": 56,
+      "micro_precision": null,
+      "micro_recall": 0.0,
+      "n_cited": 0,
+      "n_cited_unobserved": 0,
+      "unobserved_citation_share": null,
+      "fp_causes": {},
+      "mean_first_full_evidence_step": null,
+      "issues_total": 56,
+      "issues_seen_not_flagged": 0,
+      "seen_not_flagged_share": 0.0,
+      "recall_by_type": {
+        "duplicate_invoice": 0.0,
+        "unallocated_payment": 0.0,
+        "wrong_fx_rate": 0.0,
+        "wrong_period": 0.0
+      },
+      "miss_reasons": {
+        "search": 56
       }
     }
   }
