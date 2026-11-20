@@ -49,7 +49,7 @@ from .policies.oracle import OraclePolicy
 from .report import markdown_table, miss_table, summarize
 from .runner import run_many, run_one
 from .splits import EPISODES_DIR, ROOT, check_set, split_entries
-from .transform import transform_episode
+from .transform import shift_direction, transform_episode
 from .verify import verify_generated
 
 OBS_KEYS_RESET = {"task", "manifest", "policy", "remaining_steps"}
@@ -435,7 +435,8 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
             rep.add("D_paired", f"{name}: isolated child process and in-process runs are identical{suffix}",
                     _digest(a) == _digest(b) and ga["reward"] == gb["reward"])
     transforms = [{"permute_seed": 11, "remap_seed": 5}, {"permute_seed": 7, "remap_seed": 9, "ts_repr": "mixed", "rename_seed": 21},
-                  {"remap_seed": 3, "ts_repr": "utc"}]
+                  {"remap_seed": 3, "ts_repr": "utc"}, {"shift_years": 28},
+                  {"shift_years": 28, "permute_seed": 4, "remap_seed": 6, "ts_repr": "local", "rename_seed": 8}]
     base: dict = {}
     for _s, name, ep in eps:
         _, g0 = run_one(ep, "oracle")
@@ -444,6 +445,13 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
 
     def paired(name, ep, tf):
         g0, a0, m0 = base[name]
+        if "shift_years" in tf:  # +28 when the episode's dates allow it (late periods cannot), else -28
+            k = shift_direction(ep, tf["shift_years"])
+            if k is None:
+                rep.skip("D_paired", f"{name} {tf}: oracle answer and reward preserved",
+                         "no 28-year shift keeps the dates inside 1901-03-01 .. 2099-12-31")
+                return
+            tf = {**tf, "shift_years": k}
         t = transform_episode(ep, **tf)
         _, g1 = run_one(t, "oracle")
         t1_, a1 = run_one(t, "auditor", isolated=False)
@@ -460,7 +468,7 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
         for tf in transforms:
             paired(name, ep, tf)
     errs = [x for x in eps if x[2].truth["issues"]]
-    singles = [{"permute_seed": 13}, {"remap_seed": 17}, {"rename_seed": 19}]
+    singles = [{"permute_seed": 13}, {"remap_seed": 17}, {"rename_seed": 19}, {"shift_years": 28}]
     if errs:
         single_eps = []
         for x in errs[:1] + errs[len(errs) // 2:][:1]:

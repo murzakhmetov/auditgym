@@ -6,7 +6,7 @@
   verify DIR                 named accounting and answer-key checks for one episode directory
   run                        run policies on episode directories or on seeds (closed run, in memory)
   grade                      grade a findings.json file against an episode directory
-  transform                  write a permuted / ID-remapped / re-timestamped copy of an episode
+  transform                  write a permuted / ID-remapped / re-timestamped / renamed / year-shifted copy of an episode
   demo                       scripted demo: the auditor and the recon baseline on one dev episode
   viewer                     build the offline HTML viewer (viewer/index.html)
   schemas                    write the published JSON schemas to schemas/
@@ -341,10 +341,16 @@ def cmd_transform(args) -> int:
     from .episode import load_episode
     from .transform import transform_episode
 
+    shift = None
+    if args.shift_years is not None:
+        try:
+            shift = int(args.shift_years)
+        except ValueError as exc:
+            raise InputError(f"--shift-years must be an integer, got {args.shift_years!r}") from exc
     with _input(broad=True):
         ep = load_episode(Path(args.inp))
-    t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr,
-                          rename_seed=args.rename_seed)
+        t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr,
+                              rename_seed=args.rename_seed, shift_years=shift)
     t.write(Path(args.out))
     print(json.dumps({"from": ep.episode_id, "to": t.episode_id, "out": str(args.out)}))
     return 0
@@ -471,6 +477,8 @@ def main(argv=None) -> int:
     t.add_argument("--remap-seed", type=int)
     t.add_argument("--ts-repr", choices=["utc", "local", "mixed"])
     t.add_argument("--rename-seed", type=int, help="rename the company and the invoice line wording (reference tokens are kept)")
+    t.add_argument("--shift-years", help="move every date by this many years: a nonzero multiple of 28 "
+                   "(keeps weekdays, leap days and DST rule dates), inside 1901-03-01 .. 2099-12-31")
     t.set_defaults(func=cmd_transform)
     d = sub.add_parser("demo")
     d.add_argument("--episode")

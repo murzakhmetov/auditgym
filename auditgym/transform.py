@@ -10,10 +10,11 @@
                 by fresh synthetic wording from a seeded injective mapping,
                 consistently in records and provenance. Reference tokens inside
                 a description (e.g. "SUB-2025-05-6014") are kept.
+* shift_years:  moves every calendar year by K years, K a nonzero multiple of 28 (see the SHIFT_* constants, _check_shift and _shift_deep).
 
 The answer is unchanged up to the ID mapping, so the oracle's reward must not
 change. Available as AuditEnv.reset(config={"transform": {...}}) and as
-`python -m auditgym transform` (--permute-seed, --remap-seed, --ts-repr, --rename-seed).
+`python -m auditgym transform` (--permute-seed, --remap-seed, --ts-repr, --rename-seed, --shift-years).
 Counterparties appear in the public records only as entity IDs, which remap_seed replaces.
 """
 
@@ -32,6 +33,18 @@ from .timeutil import format_ts, format_utc, parse_ts
 from .verify import reconstruct_clean, records_digest
 
 ALT_OFFSETS = (-420, -180, 0, 60, 345, 480, 660)
+
+# Year shift. The Gregorian weekday and leap-year pattern repeats every 28 years while no non-leap century year
+# (1900, 2100) lies between the two dates, so a shift by a multiple of 28 keeps every weekday, every 29 February and
+# every n-th-weekday DST rule date (timeutil.TZ_RULES). Both ends must stay inside 1901-03-01 .. 2099-12-31. The date
+# patterns below also see years 2100..2199, so a date in 2100 is refused instead of being left behind by a shift.
+SHIFT_CYCLE_YEARS = 28
+SHIFT_MIN_DATE = (1901, 3, 1)
+SHIFT_MAX_DATE = (2099, 12, 31)
+PERIOD_YEARS = (2000, 2100)  # the period years config.py accepts
+_YEAR_MONTH = re.compile(r"(?<![0-9])((?:19|20|21)[0-9]{2})(?=-(?:0[1-9]|1[0-2])(?![0-9]))")  # 2026-05-.., SUB-2026-05-.., "2026-05"
+_FULL_DATE = re.compile(r"(?<![0-9])((?:19|20|21)[0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])(?![0-9])")
+_SLASH_YEAR = re.compile(r"(?<=/)((?:19|20|21)[0-9]{2})(?=/)")  # "slashed" ID style: SI/2026/123456
 
 
 _TOKEN_TAIL = re.compile(r"^(.*\S) ([A-Z]{2,4}-[0-9][0-9-]*)$")
@@ -109,6 +122,71 @@ def _rename_deep(node, names: dict):
     return node
 
 
+def _shift_text(text: str, k: int) -> str:
+    def bump(m):
+        return f"{int(m.group(1)) + k:04d}"
+
+    return _SLASH_YEAR.sub(bump, _YEAR_MONTH.sub(bump, text))
+
+
+def _shift_deep(node, k: int):
+    """Copy of node with the year moved by k in every date, timestamp, FX record key, dated reference token and
+    year-bearing ID, in string values and dict keys alike. Numbers are never touched."""
+    if isinstance(node, dict):
+        return {(_shift_text(key, k) if isinstance(key, str) else key): _shift_deep(v, k) for key, v in node.items()}
+    if isinstance(node, list):
+        return [_shift_deep(v, k) for v in node]
+    if isinstance(node, str):
+        return _shift_text(node, k)
+    return node
+
+
+def _year_strings(node):
+    if isinstance(node, dict):
+        for key, v in node.items():
+            yield from _year_strings(key)
+            yield from _year_strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _year_strings(v)
+    elif isinstance(node, str):
+        yield node
+
+
+def _check_shift(ep: Episode, k: int) -> None:
+    """Refuse a shift that is not a nonzero multiple of 28 or that leaves the range where the 28-year cycle holds."""
+    if isinstance(k, bool) or not isinstance(k, int):
+        raise ValueError("shift_years must be an integer")
+    if k == 0 or k % SHIFT_CYCLE_YEARS:
+        raise ValueError(f"shift_years must be a nonzero multiple of {SHIFT_CYCLE_YEARS}, got {k}")
+    lo, hi = SHIFT_MIN_DATE, SHIFT_MAX_DATE
+    for part in (ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx, ep.truth, ep.provenance):
+        for text in _year_strings(part):
+            for m in _FULL_DATE.finditer(text):
+                old = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                new = (old[0] + k, old[1], old[2])
+                if not (lo <= old <= hi and lo <= new <= hi):
+                    raise ValueError(f"shift_years {k} moves {m.group(0)} outside "
+                                     f"{lo[0]}-{lo[1]:02d}-{lo[2]:02d} .. {hi[0]}-{hi[1]:02d}-{hi[2]:02d}")
+            for m in _YEAR_MONTH.finditer(text):
+                if not (lo[0] <= int(m.group(1)) <= hi[0] and lo[0] <= int(m.group(1)) + k <= hi[0]):
+                    raise ValueError(f"shift_years {k} moves year {m.group(1)} outside {lo[0]} .. {hi[0]}")
+    for text in (ep.manifest.get("period_start"), (ep.provenance.get("resolved_config") or {}).get("period")):
+        if isinstance(text, str) and not PERIOD_YEARS[0] <= int(text[:4]) + k <= PERIOD_YEARS[1]:
+            raise ValueError(f"shift_years {k} moves the period outside the accepted years {PERIOD_YEARS[0]}..{PERIOD_YEARS[1]}")
+
+
+def shift_direction(ep: Episode, k: int = SHIFT_CYCLE_YEARS):
+    """k when shifting the episode by k years is allowed, else -k when that is allowed, else None."""
+    for cand in (k, -k):
+        try:
+            _check_shift(ep, cand)
+        except ValueError:
+            continue
+        return cand
+    return None
+
+
 def _id_map(ep: Episode, remap_seed: int) -> dict:
     rng = Rng(f"remap:{remap_seed}:{ep.episode_id}")
     year = int(ep.manifest["period_start"][:4])
@@ -174,9 +252,12 @@ def _retime(rec: dict, fmt, key_field: str) -> dict:
     return out
 
 
-def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None, rename_seed=None) -> Episode:
+def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None, rename_seed=None,
+                      shift_years=None) -> Episode:
     if ts_repr is not None and ts_repr not in ("utc", "local", "mixed"):
         raise ValueError("ts_repr must be utc, local or mixed")
+    if shift_years is not None:
+        _check_shift(ep, shift_years)
     new = Episode(
         manifest=copy.deepcopy(ep.manifest),
         policy=copy.deepcopy(ep.policy),
@@ -230,19 +311,29 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
             if op.get("field") in ("timestamp", "issued_at", "due_at"):
                 op["before"] = fmt(op["before"], op["id"])
                 op["after"] = fmt(op["after"], op["id"])
+    if shift_years is not None:  # last of the value rewrites: ts_repr and remap read the source calendar
+        new.manifest = _shift_deep(new.manifest, shift_years)
+        new.policy = _shift_deep(new.policy, shift_years)
+        new.ledger = _shift_deep(new.ledger, shift_years)
+        new.invoices = _shift_deep(new.invoices, shift_years)
+        new.payments = _shift_deep(new.payments, shift_years)
+        new.fx = _shift_deep(new.fx, shift_years)
+        new.truth = _shift_deep(new.truth, shift_years)
+        new.provenance = _shift_deep(new.provenance, shift_years)
     if permute_seed is not None:
         rng = Rng(f"permute:{permute_seed}:{ep.episode_id}")
         for table in ("ledger", "invoices", "payments", "fx"):
             rows = new.table(table)
             rng.fork(table).shuffle(rows)
     tag = f"{ep.episode_id}|{permute_seed}|{remap_seed}|{ts_repr}" + ("" if rename_seed is None else f"|{rename_seed}")
+    tag += "" if shift_years is None else f"|shift{shift_years}"
     new_id = "ep_" + hashlib.sha256(tag.encode("utf-8")).hexdigest()[:16]
     new.manifest["episode_id"] = new_id
     if new.truth:
         new.truth["episode_id"] = new_id
     new.provenance["transformed_from"] = {"episode_id": ep.episode_id, "permute_seed": permute_seed,
                                           "remap_seed": remap_seed, "ts_repr": ts_repr,
-                                          "rename_seed": rename_seed}
+                                          "rename_seed": rename_seed, "shift_years": shift_years}
     # The clean-records digest comes from the SOURCE episode's reverted clean tables pushed through the same ID map and
     # timestamp rewrite, never from the transformed tables it will later be checked against.
     clean_src = reconstruct_clean(ep)
@@ -265,6 +356,8 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
             recs = _rename_deep(recs, names)
         if ts_repr is not None:
             recs = [_retime(r, fmt, key_field) for r in recs]
+        if shift_years is not None:
+            recs = _shift_deep(recs, shift_years)
         clean_new[table] = recs
     new.provenance["clean_records_digest"] = records_digest(clean_new["ledger"], clean_new["invoices"], clean_new["payments"])
     new.provenance["final_digest"] = new.public_digest()
