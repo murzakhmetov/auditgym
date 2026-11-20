@@ -28,8 +28,22 @@ def _text_files():
                 yield p
 
 
+def _stamp_inputs():
+    """The files the report's code stamp hashes byte for byte (auditgym.check.code_stamp): the package without the
+    viewer and bytecode, configs/*.json and schemas/*.json."""
+    pkg = ROOT / "auditgym"
+    for p in sorted(pkg.rglob("*")):
+        if p.is_file() and p.relative_to(pkg).parts[0] != "viewer" and "__pycache__" not in p.parts \
+                and p.suffix not in (".pyc", ".pyo"):
+            yield p
+    yield from sorted((ROOT / "configs").glob("*.json"))
+    yield from sorted((ROOT / "schemas").glob("*.json"))
+
+
 class Hygiene(unittest.TestCase):
     def test_no_control_characters_in_text_files(self):
+        """No control bytes anywhere, and LF only in the code-stamp inputs: .gitattributes checks them out with LF,
+        so a CR there means a local tool rewrote the file and the stamp would no longer match the committed one."""
         found = []
         n = 0
         for p in _text_files():
@@ -37,8 +51,10 @@ class Hygiene(unittest.TestCase):
             m = BAD.search(p.read_bytes())
             if m:
                 found.append(f"{p.relative_to(ROOT).as_posix()}: byte {m.start()} is {m.group()!r}")
+        crlf = [p.relative_to(ROOT).as_posix() for p in _stamp_inputs() if b"\r" in p.read_bytes()]
         self.assertGreater(n, 50)
         self.assertEqual(found, [])
+        self.assertEqual(crlf, [])
 
     def test_the_scan_catches_a_backspace(self):
         self.assertIsNotNone(BAD.search(b"r'%d" + bytes([8]) + b"'"))
