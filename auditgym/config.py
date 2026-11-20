@@ -153,6 +153,18 @@ def validate(config: dict) -> dict:
     return config
 
 
+STEP_BUDGET = 100  # env.DEFAULT_MAX_STEPS; the generator rejects an episode whose full read does not fit (verify budget_feasible)
+PAGE_ROWS = 50  # schemas.MAX_PAGE, the largest list_records page
+
+
+def min_read_pages(counts: dict) -> int:
+    """A lower bound on the list_records pages a full read needs, from the counts alone. Every prior, sales and
+    purchase invoice is one invoices row and books at least two ledger rows (a debit and a credit); injected errors
+    add or move rows, never remove them (tests/test_generator.py checks both on the committed episodes)."""
+    n = counts["prior_invoices"] + counts["sales_invoices"] + counts["purchase_invoices"]
+    return -(-n // PAGE_ROWS) + -(-2 * n // PAGE_ROWS)
+
+
 def resolve(config: dict, rng: Rng) -> dict:
     """Return a fully specified config. Raises ConfigError when infeasible."""
     validate(config)
@@ -207,6 +219,11 @@ def resolve(config: dict, rng: Rng) -> dict:
     counts = {}
     for k, (lo, hi) in SIZES[size].items():
         counts[k] = (config.get("counts") or {}).get(k, rng.randint(lo, hi))
+    floor = min_read_pages(counts)
+    if floor + 1 > STEP_BUDGET:
+        n = counts["prior_invoices"] + counts["sales_invoices"] + counts["purchase_invoices"]
+        raise ConfigError(f"counts too large for the {STEP_BUDGET}-step budget: {n} prior, sales and purchase invoices "
+                          f"need at least {floor} pages to read in full, plus the submit; lower those counts")
     distractors = dict(DEFAULT_DISTRACTORS[size])
     for k, (lo, hi) in DEFAULT_DISTRACTOR_RANGES[size].items():
         distractors[k] = rng.randint(lo, hi)

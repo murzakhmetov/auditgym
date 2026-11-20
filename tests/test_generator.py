@@ -66,6 +66,41 @@ class ConfigTests(unittest.TestCase):
             generate_episode(1, {"timezone": "Europe/London", "period": "2025-12", "interacting": ["boundary_fx_payment"]})
         self.assertIn("non-zero UTC offset", str(ctx.exception))
 
+    def test_counts_that_cannot_fit_the_step_budget_are_a_config_error_at_once(self):
+        import time
+
+        for key in ("sales_invoices", "purchase_invoices", "prior_invoices"):
+            with self.subTest(key=key):
+                t0 = time.monotonic()
+                with self.assertRaises(ConfigError) as ctx:
+                    generate_episode(7, {"counts": {key: 2000}})
+                self.assertLess(time.monotonic() - t0, 1.0)  # before any attempt is built
+                self.assertIn("100-step budget", str(ctx.exception))
+        gen = generate_episode(7, {"counts": {"sales_invoices": 500}})  # large but readable in 100 steps
+        self.assertTrue(gen.verification["ok"])
+
+    def test_the_page_floor_holds_on_every_committed_episode(self):
+        # the bound config.min_read_pages relies on: one invoices row per counted invoice, two ledger rows per invoice
+        from collections import Counter
+
+        from auditgym.config import PAGE_ROWS, min_read_pages
+        from auditgym.episode import load_episode
+        from auditgym.splits import EPISODES_DIR
+
+        dirs = sorted(d for d in EPISODES_DIR.glob("*/*") if (d / "public").exists())
+        self.assertEqual(len(dirs), 20)
+        for d in dirs:
+            with self.subTest(d.name):
+                ep = load_episode(d)
+                counts = ep.provenance["resolved_config"]["counts"]
+                n = counts["prior_invoices"] + counts["sales_invoices"] + counts["purchase_invoices"]
+                invoices, ledger = ep.table("invoices"), ep.table("ledger")
+                self.assertGreaterEqual(len(invoices), n)
+                per = Counter(r.get("invoice_id") for r in ledger if r.get("invoice_id"))
+                self.assertGreaterEqual(min(per.get(i["invoice_id"], 0) for i in invoices), 2)
+                pages = -(-len(invoices) // PAGE_ROWS) + -(-len(ledger) // PAGE_ROWS)
+                self.assertGreaterEqual(pages, min_read_pages(counts))
+
     def test_each_error_type_is_independently_configurable(self):
         for t in ("duplicate_invoice", "unallocated_payment", "wrong_fx_rate", "wrong_period"):
             ep = generate_episode(31, {"size": "small", "errors": {t: 2}}).episode
