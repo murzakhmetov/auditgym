@@ -62,10 +62,10 @@ def _fuzz_action(rng: Rng, ctx: dict):
     """A valid call, a call with one thing broken, or a value that is not an action at all."""
     if rng.randbelow(40) == 0:
         return _fuzz_submit(rng, ctx)
-    table = rng.choice(schemas.TABLES)
+    table = rng.choice([t for t in schemas.TABLES if ctx["ids"][t]] or schemas.TABLES)
     valid = [{"action": "list_records", "table": table, "limit": rng.randint(1, 50)},
-             {"action": "get_record", "table": table, "id": rng.choice(ctx["ids"][table])},
-             {"action": "get_document", "doc_id": rng.choice(ctx["docs"])},
+             {"action": "get_record", "table": table, "id": rng.choice(ctx["ids"][table] or ["no-such-id"])},
+             {"action": "get_document", "doc_id": rng.choice(ctx["docs"] or ["no-such-doc"])},
              {"action": "calculator", "expression": rng.choice(("1+2", "(1+2)*3/4", "7-9", "1/0", "2**8", ""))}]
     a = dict(rng.choice(valid))
     roll = rng.randbelow(8)
@@ -251,7 +251,8 @@ def contract_battery(ep) -> list:
 
     def schema(_ep, _add):
         errors = [e for o in observations for e in schema_files.validate(o, schema_files.OBSERVATION)]
-        add(f"all {len(observations)} sampled observations validate against observation.schema.json", not errors, "; ".join(errors[:2]))
+        add(f"all {len(observations)} sampled observations validate against observation.schema.json",
+            bool(observations) and not errors, "; ".join(errors[:2]) or "no observation was sampled")
 
     def fuzz(_ep, _add):
         bad, steps = _fuzz(ep)

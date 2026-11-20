@@ -350,7 +350,7 @@ def clean_battery(ep) -> list:
         out.append((f"{name}: {len(attacks)} {kind} accusation(s) each score -1, below silence, and satisfy no key but their own",
                     not bad, "; ".join(bad[:3]) or f"silence {silent}"))
     if not out:
-        out.append((f"{name}: distractor accusations", True, "no distractors in this episode"))
+        out.append((f"{name}: distractor accusations", True, "no distractors in this episode", True))
     return out
 
 

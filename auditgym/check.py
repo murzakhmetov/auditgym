@@ -39,6 +39,7 @@ from . import io as aio
 from . import FINDING_TYPES
 from .contract_battery import contract_battery
 from .check_battery import clean_battery, matched_claims, replay_records, reward_battery
+from . import protocol
 from .episode import load_episode
 from .config import ConfigError
 from .generator import GenerationError, generate_episode
@@ -254,8 +255,8 @@ def live_reward_properties(rep: Report, ep) -> None:
         some = {"type": "wrong_period", "affected_ids": [ep.invoices[0]["invoice_id"]], "claimed_amount_minor": 1,
                 "currency": ep.manifest["base_currency"], "evidence_ids": [ep.invoices[0]["doc_id"]], "explanation": "x"}
         rep.add("C_reward", f"{name}: silence beats a false accusation on a clean ledger", r([], 40) > r([some], 0))
-        for label, ok, detail in clean_battery(ep):
-            rep.add("C_reward", label, ok, detail)
+        for label, ok, detail, *skipped in clean_battery(ep):
+            (rep.skip("C_reward", label, detail) if skipped else rep.add("C_reward", label, ok, detail))
     rep.add("C_reward", f"{name}: saving steps separates equal answers only slightly",
             0 < r(oracle, 10) - r(oracle, 40) <= 0.061)
 
@@ -505,6 +506,17 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
     aio.write_text(out_dir / "report.md", "\n".join(md) + "\n")
 
 
+def _preflight_agent_user() -> str | None:
+    """In strict mode start and stop one policy child now; the error line when the host cannot run it, else None."""
+    if not protocol.require_agent_user():
+        return None
+    try:
+        protocol.AgentProcess("recon", 0).close()
+    except protocol.AgentUserRequired as exc:
+        return " ".join(str(exc).split())
+    return None
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, contract, leaks).")
     ap.add_argument("--seeds-file", help="run sections C, D, E, F on the episodes of this JSON file instead of the public master string")
@@ -513,6 +525,10 @@ def main(argv=None) -> int:
     ap.add_argument("--keep-runs", action="store_true",
                     help="with --seeds-file: also write trajectories.jsonl and grades.jsonl (they contain the answer key of the closed set)")
     args = ap.parse_args([] if argv is None else list(argv))
+    problem = _preflight_agent_user()
+    if problem:
+        print(f"error: {problem}", file=sys.stderr)
+        return 2
     closed = args.seeds_file is not None
     if closed and not args.seeds_file.strip():
         print("error: --seeds-file needs a path (is a shell variable unset?)", file=sys.stderr)
@@ -536,7 +552,7 @@ def main(argv=None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 2
         if args.secret_env:
-            secret = os.environ.get(args.secret_env)
+            secret = os.environ.pop(args.secret_env, None)  # a policy child started later must not inherit it
             if not secret:
                 print(f"error: environment variable {args.secret_env} is not set", file=sys.stderr)
                 return 2

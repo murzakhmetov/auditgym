@@ -1,7 +1,9 @@
 """The distractor attack battery: attacks follow the published rules, are true positives on real issues, and a
 matcher that is wrong in any one criterion is caught."""
 
+import contextlib
 import copy
+import io
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -103,13 +105,26 @@ class DistractorAttacks(unittest.TestCase):
             for label, ok, detail, *_ in _lines(ep):
                 self.assertTrue(ok, f"{label}: {detail}")
 
-    def test_an_episode_without_distractors_passes(self):
+    def test_an_episode_without_distractors_is_skipped_not_passed(self):
         ep = copy.copy(self.clean)
         ep.provenance = dict(ep.provenance, distractors=[])
         lines = cb.clean_battery(ep)
         self.assertEqual(len(lines), 1)
-        self.assertTrue(lines[0][1])
-        self.assertEqual(len(lines[0]), 3)
+        self.assertEqual(len(lines[0]), 4)
+        self.assertTrue(lines[0][1] and lines[0][3])
+
+    def test_the_check_reports_a_skipped_clean_line_as_skipped(self):
+        from auditgym import check
+
+        ep = copy.copy(self.clean)
+        ep.provenance = dict(ep.provenance, distractors=[])
+        rep = check.Report()
+        with mock.patch.object(check, "reward_battery", return_value=[]), contextlib.redirect_stdout(io.StringIO()):
+            check.live_reward_properties(rep, ep)
+        rows = [r for r in rep.sections["C_reward"] if r["check"].endswith(": distractor accusations")]
+        self.assertEqual(len(rows), 1, rep.sections["C_reward"])
+        self.assertIs(rows[0].get("skipped"), True)
+        self.assertTrue(rows[0]["ok"])
 
     def test_a_matcher_ignoring_one_criterion_fails_both_batteries(self):
         for criterion in CRITERIA:
@@ -126,6 +141,65 @@ class DistractorAttacks(unittest.TestCase):
             lines = [l for l in cb.reward_battery(self.dirty) if "accusation" in l[0]]
         self.assertTrue(lines)
         self.assertTrue(any(not l[1] and len(l) == 3 for l in lines))
+
+
+class CheckMainEntry(unittest.TestCase):
+    """python -m auditgym.check runs the same pre-flight and secret handling as the auditgym check command."""
+
+    def _seeds(self, d):
+        f = Path(d) / "seeds.json"
+        f.write_text('{"split": "t", "episodes": [{"name": "a", "seed": 6602239917354212077, "config": {}}]}', encoding="utf-8")
+        return str(f)
+
+    def test_strict_mode_without_an_agent_user_is_one_error_line_and_no_output_directory(self):
+        import io
+        import os
+        import tempfile
+        from contextlib import redirect_stderr
+
+        from auditgym import check, protocol
+
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "out"
+            err = io.StringIO()
+            refuse = mock.Mock(side_effect=protocol.AgentUserRequired("AUDITGYM_REQUIRE_AGENT_USER=1 but no agent user"))
+            with (mock.patch.dict(os.environ, {"AUDITGYM_REQUIRE_AGENT_USER": "1"}),
+                  mock.patch.object(protocol, "AgentProcess", refuse),
+                  mock.patch.object(check, "generate_episode") as gen,
+                  redirect_stderr(err)):
+                rc = check.main(["--seeds-file", self._seeds(d), "--out", str(out)])
+            self.assertEqual(rc, 2)
+            lines = [ln for ln in err.getvalue().splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, lines)
+            self.assertTrue(lines[0].startswith("error: AUDITGYM_REQUIRE_AGENT_USER=1"), lines)
+            gen.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_the_secret_leaves_the_environment_but_the_check_still_uses_it(self):
+        import os
+        import tempfile
+
+        from auditgym import check
+
+        class Stop(Exception):
+            pass
+
+        seen = {}
+        real = check.generate_episode
+
+        def spy(seed, cfg, secret=None):
+            seen["secret"], seen["in_env"] = secret, "AUDITGYM_TEST_SECRET" in os.environ
+            return real(seed, cfg, secret=secret)
+
+        with (tempfile.TemporaryDirectory() as d,
+              mock.patch.dict(os.environ, {"AUDITGYM_TEST_SECRET": "host-secret-xyz"}),
+              mock.patch.object(check, "generate_episode", spy),
+              mock.patch.object(check, "section_hidden_like", side_effect=Stop),
+              contextlib.redirect_stdout(io.StringIO())):
+            with self.assertRaises(Stop):
+                check.main(["--seeds-file", self._seeds(d), "--secret-env", "AUDITGYM_TEST_SECRET", "--out", str(Path(d) / "o")])
+            self.assertIsNone(os.environ.get("AUDITGYM_TEST_SECRET"))
+        self.assertEqual(seen, {"secret": "host-secret-xyz", "in_env": False})
 
 
 if __name__ == "__main__":

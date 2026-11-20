@@ -26,6 +26,20 @@ class ContractBattery(unittest.TestCase):
         self.assertEqual([r for r in results if not r[1]], [])
         self.assertEqual(len({label for label, _ok, _d in results}), len(results))
 
+    def test_an_episode_with_an_empty_table_passes_every_check(self):
+        from auditgym.generator import generate_episode
+
+        ep = generate_episode(6602239917354212077, {"foreign_currencies": []}).episode
+        self.assertEqual(ep.table("fx"), [])
+        results = contract_battery(ep)
+        self.assertEqual(len(results), 20)
+        self.assertEqual([r for r in results if not r[1]], [])
+
+    def test_an_empty_sample_of_observations_does_not_validate_vacuously(self):
+        with mock.patch("auditgym.contract_battery._observations", return_value=[]):
+            failed = [label for label, ok, _d in contract_battery(self.ep) if not ok]
+        self.assertTrue(any("sampled observations" in label for label in failed), failed)
+
     def test_a_broken_page_size_fails_a_named_check(self):
         def greedy(self, action):
             rows = self._episode.table(action["table"])

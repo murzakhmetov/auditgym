@@ -106,6 +106,30 @@ jobs:
           test "$(grep -c . strict_capdrop.log)" -eq 1
           grep -q "^error: AUDITGYM_REQUIRE_AGENT_USER=1" strict_capdrop.log
         shell: bash
+      - name: Closed path as organizers run it (seeds file and secret mounted, no network, strict agent user)
+        run: |
+          mkdir -p "$RUNNER_TEMP/closed_out"
+          chmod 777 "$RUNNER_TEMP/closed_out"
+          docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 -e AUDITGYM_SECRET=ci-secret \
+            -v "$PWD/examples/closed_seeds_example.json:/app/secrets/closed.json:ro" \
+            -v "$RUNNER_TEMP/closed_out:/app/runs/closed" \
+            auditgym python -m auditgym check --seeds-file /app/secrets/closed.json --secret-env AUDITGYM_SECRET --out /app/runs/closed 2>&1 | tee closed_path.log
+          test "${PIPESTATUS[0]}" -eq 0
+          test -f "$RUNNER_TEMP/closed_out/report.md"
+          grep -q "^Result: \*\*PASS\*\*" "$RUNNER_TEMP/closed_out/report.md"
+          grep -q "^PASS in" closed_path.log
+          if grep -rlE '\biss_[0-9]{2}\b' "$RUNNER_TEMP/closed_out" closed_path.log; then echo "an answer-key issue id leaked into the closed output"; exit 1; fi
+          if grep -rl "ci-secret" "$RUNNER_TEMP/closed_out" closed_path.log; then echo "the host secret leaked into the closed output"; exit 1; fi
+        shell: bash
+      - name: Upload the closed-path output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: closed-path-output
+          path: |
+            ${{ runner.temp }}/closed_out
+            closed_path.log
+          if-no-files-found: warn
       - name: Upload the container logs
         if: always()
         uses: actions/upload-artifact@v4
