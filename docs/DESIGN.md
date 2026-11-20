@@ -323,7 +323,9 @@ files must stay byte-equal to the generated ones (`tests/test_contract_fuzz.py`,
 Closed runs: `python -m auditgym check --seeds-file FILE --secret-env VAR --out DIR` runs sections C, D, E and F and
 the replay of its own runs on the organizer's episodes, and warns about seeds of 40 bits or fewer when no secret is
 set. Checks that need error or clean episodes missing from the file are
-reported as SKIP. It writes `runs/check_closed` by default, never `runs/check`.
+reported as SKIP. It writes `runs/check_closed` by default, never `runs/check`. `python tools/organizer_sweep.py DIR`
+runs it over the stress configuration mix (299 feasible configurations, 63-bit seeds, a host secret, chunks of 50); at
+commit `0d5f0b6` all six chunks passed with no FAIL and no traceback.
 
 ## 9. Measured results
 
@@ -387,7 +389,7 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
   by design, so a child running as the same OS user can read them.
 - **Seeds.** The generator is open source. With no host secret and a guessed config, a small seed can be recovered from
   the manifest's `episode_id` (`episode_id = sha256(seed | config | secret)`), and the answer key can then be
-  regenerated. Use 63-bit seeds and `--secret-env`. `run` warns about seeds of 40 bits or fewer when no secret is set. Public records allow brute-forcing small seeds in any case.
+  regenerated. Use 63-bit seeds and `--secret-env`. `run` and `check --seeds-file` warn about seeds of 40 bits or fewer when no secret is set. Public records allow brute-forcing small seeds in any case.
 - **Hidden-like set.** It comes from a public master string. It tests the pipeline, not secrecy; closed evaluation
   uses `check --seeds-file`.
 - **Scripted auditor.** It shares `auditor.py` with the verifier. Its perfect F1 shows that every scenario is solvable
@@ -462,16 +464,16 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   test may be skipped, and with `--cap-drop ALL`, where the run must exit 2 with exactly one `error:` line. The
   container logs are uploaded as artifacts.
 
-Latest completed run on `main` at the time of writing: run 44656432334, commit `af2fc47428dfbd9ebbee384c5b4c54d33ae95119`
-(`test_container: a regex word boundary, not a backspace byte`), conclusion success. The lines cited here are kept in
-[runs/ci/44656432334.txt](../runs/ci/44656432334.txt):
+Latest completed run on `main` at the time of writing: run 44663428884, commit `66cdc0db885dcd0e12235a053f57413e101d76a0`
+(`Coverage line ignores organizer episode names; hygiene test for control bytes`), conclusion success. The lines cited here are kept in
+[runs/ci/44663428884.txt](../runs/ci/44663428884.txt):
 
 | Job | Result | Time reported by the job |
 |---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | `PASS in 48 s` |
-| check (windows-latest, Python 3.11) | success | `PASS in 41 s` |
-| check (macos-latest, Python 3.11) | success | `PASS in 36 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 234 MB | `PASS in 67 s`; `time` reports 68.2 s; container tests: 9 ran, none skipped; `--user 10001` and `--cap-drop ALL`: `PASS in 63 s` and `PASS in 64 s`, `OK (skipped=8)`; strict mode: `PASS in 67 s` and 9 container tests `OK`; strict mode with `--cap-drop ALL`: `exit code 2`, one `error:` line |
+| check (ubuntu-latest, Python 3.11) | success | `PASS in 27 s` |
+| check (windows-latest, Python 3.11) | success | `PASS in 57 s` |
+| check (macos-latest, Python 3.11) | success | `PASS in 53 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 234 MB | `PASS in 66 s`; `time` reports 67.3 s; container tests: 9 ran, none skipped; `--user 10001` and `--cap-drop ALL`: `PASS in 63 s` and `PASS in 63 s`, `OK (skipped=8)`; strict mode: `PASS in 67 s` and 9 container tests `OK`; strict mode with `--cap-drop ALL`: `exit code 2`, one `error:` line |
 
 No CI run has been executed on Python 3.12 or 3.13. The container job runs the image's default command, which is
 `python -m auditgym check`.

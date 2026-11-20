@@ -44,12 +44,12 @@ python -m auditgym check
 ```
 
 `check` prints one line per named check and writes [runs/check/report.md](runs/check/report.md). It exits 0 only
-if every check passes. At commit `af2fc47` it runs **615 named checks of 78 kinds** (a kind is one property; most run
-on every episode they apply to), one of which runs the **228 unit tests** (outside the image, 8 container-only tests
-report as skipped). About 100 s on Windows 10 with Python 3.11.4 (the committed report records 101 s). CI run
-44656432334 on that commit is green: ubuntu 48 s, windows 41 s, macOS 36 s (Python 3.11) and the container 67 s, where
-the 9 container-only tests ran with none skipped, also in strict mode; strict mode with `--cap-drop ALL` exits 2 with
-one error line. The cited lines are kept in [runs/ci/44656432334.txt](runs/ci/44656432334.txt) (made with
+if every check passes. At commit `66cdc0d` it runs **615 named checks of 78 kinds** (a kind is one property; most run
+on every episode they apply to), one of which runs the **232 unit tests** (outside the image, 8 container-only tests
+report as skipped). About 100 s on Windows 10 with Python 3.11.4 (the committed report records 102 s). CI run
+44663428884 on that commit is green: ubuntu 27 s, windows 57 s, macOS 53 s (Python 3.11) and the container 66 s,
+where the 9 container-only tests ran with none skipped, also in strict mode; strict mode with `--cap-drop ALL` exits 2
+with one error line. The cited lines are kept in [runs/ci/44663428884.txt](runs/ci/44663428884.txt) (made with
 [tools/ci_excerpt.py](tools/ci_excerpt.py)).
 
 ```bash
@@ -138,6 +138,9 @@ python -m auditgym check --seeds-file FILE --secret-env AUDITGYM_SECRET --out DI
   one warning line. To require the separate user: `docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1
   auditgym`. CI runs this in the default image (the check passes and no container test is skipped) and with
   `--cap-drop ALL` (exit 2, one line).
+- `python tools/organizer_sweep.py DIR` runs this closed check over the stress configuration mix (the 299 feasible
+  configurations of `stress`: 282 random, 17 extreme) with 63-bit seeds and a host secret, in chunks of 50. At commit
+  `0d5f0b6` all six chunks passed, with no FAIL and no traceback (about 14 minutes on Windows 10).
 - Exit codes: 0 pass, 1 failed checks or verification, 2 bad input (one `error:` line), 3 a run finished but an
   agent failed.
 
