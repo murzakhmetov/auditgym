@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "ok": true,
-  "elapsed_s": 100.7,
+  "elapsed_s": 102.3,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -46,19 +46,19 @@
     }
   },
   "section_seconds": {
-    "A_unit_tests": 44.5,
+    "A_unit_tests": 45.1,
     "B_committed_episodes": 3.5,
-    "B_replay": 1.4,
-    "C_data": 4.1,
-    "C_reward": 29.5,
-    "D_paired": 17.3,
+    "B_replay": 1.2,
+    "C_data": 4.4,
+    "C_reward": 29.2,
+    "D_paired": 18.5,
     "E_leaks": 0.4,
     "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 228 run, 220 passed, 8 skipped",
+        "check": "unittest: 232 run, 224 passed, 8 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -3159,7 +3159,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.0,
-      "agent_time_s": 0.0188,
+      "agent_time_s": 0.0141,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3199,7 +3199,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0031,
+      "agent_time_s": 0.0015,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3293,7 +3293,7 @@
       "recall": 0.0,
       "f1": 0.2,
       "steps": 33.95,
-      "agent_time_s": 0.008,
+      "agent_time_s": 0.0046,
       "closed_share": 0.2,
       "invalid": 0,
       "truncated": 0,
@@ -3344,7 +3344,7 @@
       "recall": 0.5425,
       "f1": 0.2307,
       "steps": 32.0,
-      "agent_time_s": 0.0101,
+      "agent_time_s": 0.0125,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3397,7 +3397,7 @@
       "recall": 0.0,
       "f1": 0.25,
       "steps": 0.0,
-      "agent_time_s": 0.0,
+      "agent_time_s": 0.0008,
       "closed_share": 0.25,
       "invalid": 0,
       "truncated": 0,

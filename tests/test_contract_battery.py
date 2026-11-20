@@ -96,5 +96,27 @@ class SilentBaseline(unittest.TestCase):
         self.assertEqual(action, {"action": "submit", "findings": {"episode_id": "ep_x", "findings": []}})
 
 
+class CoverageLine(unittest.TestCase):
+    """The report's 'N named checks of K kinds' must not count an organizer's episode names as kinds."""
+
+    def test_episode_names_of_the_run_are_not_kinds(self):
+        from auditgym.check import check_kind
+
+        names = ["tz_Asia/Kathmandu", "tz_UTC", "large_twelve"]
+        labels = [f"{n} verifies (12 issues, 1 attempt(s))" for n in names]
+        labels += [f"{n}: same seed and config regenerate identical records and answer key" for n in names]
+        self.assertEqual(len({check_kind(x, names) for x in labels}), 2)
+        self.assertEqual(len({check_kind(x) for x in labels}), 6)  # without the names every episode looks new
+
+    def test_public_names_and_ids_are_generalised(self):
+        from auditgym.check import check_kind
+
+        self.assertEqual(check_kind("ep_99b4722e2dd40466: an unknown ID gives a bounded error"),
+                         check_kind("ep_0123456789abcdef: an unknown ID gives a bounded error"))
+        self.assertEqual(check_kind("h02_dupes {'permute_seed': 11}: oracle answer and reward preserved"),
+                         check_kind("h13_fx {'remap_seed': 3}: oracle answer and reward preserved"))
+        self.assertNotEqual(check_kind("x: amount ladder"), check_kind("x: type shotgun"))
+
+
 if __name__ == "__main__":
     unittest.main()

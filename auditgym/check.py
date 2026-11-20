@@ -100,16 +100,22 @@ class Report:
 _EPISODE_PREFIX = re.compile(r"^((ep_[0-9a-f]{6,})|((train|dev)/[A-Za-z0-9_]+)|(h\d+[A-Za-z0-9_]*))(?=[: ])")
 
 
-def check_kind(label: str) -> str:
-    """The property a named check tests: its label without the episode name, with numbers and transform dicts
-    generalised. Most properties run once per episode they apply to."""
-    s = _EPISODE_PREFIX.sub("…", label)
+def check_kind(label: str, names=()) -> str:
+    """The property a named check tests: its label without the episode name (one of `names`, the episode names of
+    this run, or a public name or episode ID), with numbers and transform dicts generalised. Most properties run once
+    per episode they apply to."""
+    s = label
+    for name in sorted((n for n in names if n), key=len, reverse=True):
+        if s.startswith(name) and s[len(name):len(name) + 1] in (":", " "):
+            s = "…" + s[len(name):]
+            break
+    s = _EPISODE_PREFIX.sub("…", s)
     return re.sub(r"\d+", "N", re.sub(r"\{[^}]*\}", "{…}", s))
 
 
-def kinds_line(rep: "Report") -> str:
+def kinds_line(rep: "Report", names=()) -> str:
     checks = [c["check"] for cs in rep.sections.values() for c in cs]
-    return f"{len(checks)} named checks of {len({check_kind(c) for c in checks})} kinds"
+    return f"{len(checks)} named checks of {len({check_kind(c, names) for c in checks})} kinds"
 
 
 def _disp(label: str) -> str:
@@ -466,7 +472,7 @@ def load_seeds_file(path: Path) -> tuple:
 
 
 def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades: list, elapsed: float, source: str, label: str, n: int,
-                  keep_runs: bool = True) -> None:
+                  keep_runs: bool = True, names=()) -> None:
     if keep_runs:
         aio.write_jsonl(out_dir / "trajectories.jsonl", traj, ascii_only=True)
         aio.write_jsonl(out_dir / "grades.jsonl", grades, ascii_only=True)
@@ -475,7 +481,7 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
     aio.write_json(out_dir / "report.json", report)
     md = ["# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, version {__version__}.\n",
           f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n",
-          f"Coverage: {kinds_line(rep)} (a kind is one property; most run on every episode they apply to).\n",
+          f"Coverage: {kinds_line(rep, names)} (a kind is one property; most run on every episode they apply to).\n",
           "## Checks (grouped by rubric criterion)\n"]
     for title, keys in RUBRIC:
         present = [k for k in keys if k in rep.sections]
@@ -570,9 +576,11 @@ def main(argv=None) -> int:
         _replay_checks(rep, replay_records(traj, {(s, ep.episode_id): ep for s, _n, ep in eps}), expected)
         rep.seconds["B_replay"] = time.monotonic() - t1
     elapsed = time.monotonic() - t0
-    _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs)
+    names = [n for _s, n, _ep in eps]
+    _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs,
+                  names=names)
     c = rep.counts()
-    print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), f"({kinds_line(rep)})", flush=True)
+    print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), f"({kinds_line(rep, names)})", flush=True)
     print(f"{'PASS' if rep.ok else 'FAIL'} in {elapsed:.0f} s; report: {_rel(out_dir)}/report.md", flush=True)
     return 0 if rep.ok else 1
 
