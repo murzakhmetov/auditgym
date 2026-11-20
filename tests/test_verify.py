@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from datetime import date, timedelta
 from decimal import Decimal
@@ -54,6 +55,21 @@ class DirectoryModeTests(unittest.TestCase):
         r = run_verify(self.dir)
         self.assertEqual(r.returncode, 0, r.stdout)
         self.assertEqual(r.stdout.count("PASS  "), 9)
+
+    def test_an_fx_rate_with_a_huge_exponent_fails_at_once_without_a_traceback(self):
+        # float() reads 1e99999999 as inf and 10 ** 99999999 would never finish: verify must report, not hang
+        fx = self.dir / "public" / "fx.csv"
+        lines = fx.read_text(encoding="utf-8").splitlines()
+        rows = [lines[0]] + [",".join(x.split(",")[:-1] + ["1e99999999"]) for x in lines[1:]]
+        fx.write_text("\n".join(rows) + "\n", encoding="utf-8")
+        t0 = time.monotonic()
+        r = run_verify(self.dir)
+        self.assertLess(time.monotonic() - t0, 60)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn("FAIL  records_schema", r.stdout)
+        self.assertIn("FAIL  declared_discrepancies: [\"the independent auditor cannot run: ValueError: exponent out of range",
+                      r.stdout)
 
     def test_deleted_op_fails_roundtrip(self):
         del self.prov["ops"][0]
@@ -328,6 +344,27 @@ class TransformedEpisodeTests(unittest.TestCase):
         self._tampered_transform_fails(Path("grader") / "provenance.json", edit)
 
 
+class RateExponentBoundTests(unittest.TestCase):
+    """Both rate parsers refuse an exponent above 64 at once instead of computing 10 ** exponent."""
+
+    def test_the_auditor_parser(self):
+        self.assertEqual(auditor._ratio("0.00607246"), (607246, 100000000))
+        self.assertEqual(auditor._ratio("1e64"), (10 ** 64, 1))
+        self.assertEqual(auditor._ratio("1e-64"), (1, 10 ** 64))
+        for bad in ("1e65", "1e-65", "1e99999999", "1e0001"):
+            with self.assertRaisesRegex(ValueError, "exponent out of range"):
+                auditor._ratio(bad)
+
+    def test_the_evidence_checker_parser(self):
+        from fractions import Fraction
+
+        self.assertEqual(evidence_check._rate_fraction("0.00607246"), Fraction("0.00607246"))
+        self.assertEqual(evidence_check._rate_fraction("1e64"), Fraction(10 ** 64))
+        for bad in ("1e65", "1E-65", "1e99999999", "1e0001"):
+            with self.assertRaisesRegex(ValueError, "exponent out of range"):
+                evidence_check._rate_fraction(bad)
+
+
 class EvidenceCheckerTests(unittest.TestCase):
     def test_evidence_check_imports_nothing_from_auditor_or_money(self):
         tree = ast.parse(Path(evidence_check.__file__).read_text(encoding="utf-8"))
@@ -337,7 +374,7 @@ class EvidenceCheckerTests(unittest.TestCase):
                 imported += [(0, a.name) for a in node.names]
             elif isinstance(node, ast.ImportFrom):
                 imported.append((node.level, node.module or ""))
-        stdlib = {"datetime", "fractions", "__future__"}
+        stdlib = {"datetime", "fractions", "re", "__future__"}
         for level, mod in imported:
             if level == 0:
                 self.assertIn(mod.split(".")[0], stdlib, f"non-stdlib import {mod}")

@@ -156,7 +156,7 @@ print(out)
 def parent_visibility() -> str:
     marker = "auditgym-redteam-marker"
     env = dict(os.environ, PYTHONIOENCODING="utf-8")  # the child writes stdout and stderr as UTF-8 on any console code page
-    p = subprocess.run([sys.executable, "-c", PARENT_PROBE, marker], capture_output=True, text=True,
+    p = subprocess.run([protocol.child_python(env), "-c", PARENT_PROBE, marker], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", env=env, timeout=60)
     out, err = p.stdout.strip(), p.stderr.strip()
     return out or err[-300:]
@@ -310,7 +310,8 @@ def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float
         out = Path(tmp, "out")
         cmd = [sys.executable, "-m", "auditgym", "run", "--seeds-file",
                str(protocol.PROJECT_ROOT / "examples" / "closed_seeds_example.json"), "--secret-env", name,
-               "--policies", "peekparent:Probe", "--policy-path", tmp, "--out", str(out)]
+               "--policies", "peekparent:Probe", "--policy-path", tmp, "--out", str(out),
+               "--allow-same-user"]  # the probe measures exactly the same-user case that run refuses by default
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(protocol.PROJECT_ROOT),
                            env=dict(os.environ, **{name: "redteam-marker-not-a-secret"},
                                     **({} if lower else {protocol.NO_LOWER_ENV: "control"})))
@@ -379,10 +380,9 @@ def print_parent_report() -> int:
     protocol.harden_host()
     print("parent process visibility from a policy child (measured):")
     if os.name == "nt":
-        print("  host hardening: Windows: no host-side hardening; " + (
-            "the policy child lowers its own token to Low integrity" if protocol.LOWER_INTEGRITY and
-            not os.environ.get(protocol.NO_LOWER_ENV) else
-            "lowering off (%s set in the environment)" % protocol.NO_LOWER_ENV))
+        print("  host hardening: Windows: no host-side hardening; " + (  # the same test as the switch itself
+            "the policy child lowers its own token to Low integrity" if protocol.LOWER_INTEGRITY else
+            "lowering off (%s=%s in the environment)" % (protocol.NO_LOWER_ENV, os.environ.get(protocol.NO_LOWER_ENV))))
     else:
         print("  host hardening: " + protocol.HARDEN_STATUS)
     print("  " + parent_visibility())

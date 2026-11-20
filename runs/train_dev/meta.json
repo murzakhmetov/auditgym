@@ -21,6 +21,8 @@
   "episodes": 20,
   "secret_used": false,
   "min_seed_bits": null,
+  "allow_same_user": false,
+  "refused_entries": [],
   "command": [
     "python",
     "-m",

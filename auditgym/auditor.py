@@ -23,6 +23,7 @@ from datetime import date, datetime, timedelta
 from .timeutil import parse_ts
 
 _DECIMAL = re.compile(r"([+-]?)([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?")
+MAX_DECIMAL_EXPONENT = 64  # far beyond any published amount or rate; 10 ** 99999999 would not finish
 
 
 def _ratio(text) -> tuple:
@@ -30,7 +31,10 @@ def _ratio(text) -> tuple:
     m = _DECIMAL.fullmatch(str(text).strip())
     if m is None or not (m.group(2) or m.group(3)):
         raise ValueError(f"not a decimal number: {text!r}")
-    sign, whole, frac, exp = m.group(1), m.group(2) or "0", m.group(3) or "", int(m.group(4) or 0)
+    sign, whole, frac = m.group(1), m.group(2) or "0", m.group(3) or ""
+    if m.group(4) and len(m.group(4).lstrip("+-")) > 3 or abs(int(m.group(4) or 0)) > MAX_DECIMAL_EXPONENT:
+        raise ValueError(f"exponent out of range in {str(text)[:40]!r}")
+    exp = int(m.group(4) or 0)
     num, den = int(whole + frac), 10 ** len(frac)
     if exp >= 0:
         num *= 10 ** exp

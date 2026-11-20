@@ -121,8 +121,10 @@ def check_records_schema(ep: Episode) -> list[str]:
     for r in ep.fx:
         try:
             date.fromisoformat(r["date"])
-            float(r["rate"])
-        except ValueError:
+            value = float(r["rate"])
+            if not (math.isfinite(value) and value > 0):  # 1e99999999 parses as inf
+                raise ValueError("not a positive finite rate")
+        except (ValueError, TypeError):
             errs.append(f"fx row {r} malformed")
     return errs[:20]
 
@@ -227,7 +229,11 @@ def check_evidence(ep: Episode) -> list[str]:
         if t["type"] == "unallocated_payment":
             errs += _sole_receipt_errors(ep, t)
         for es in t["evidence_sets"]:
-            got = derive_from_evidence(t["type"], es, ep)
+            try:
+                got = derive_from_evidence(t["type"], es, ep)
+            except REPLAY_ERRORS as exc:  # a hand-edited record (a rate such as 1e99999999) is a FAIL line, not a traceback
+                errs.append(f"{t['issue_id']}: evidence set {es} cannot be evaluated: {type(exc).__name__}: {exc}")
+                continue
             want = (t["type"], frozenset(t["affected_ids"]), t["expected_amount_minor"])
             if got != want:
                 errs.append(f"{t['issue_id']}: evidence set {es} derives {got}")
@@ -772,8 +778,12 @@ def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks["ids_unique"] = check_ids(ep)
     checks["clean_equalities"] = _clean_book_errors(ep, clean)
     checks["provenance_roundtrip"] = check_roundtrip(ep, clean)
-    found = audit(ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx)
-    checks["declared_discrepancies"] = compare_with_truth(found, ep.truth) + check_key_consistency(ep)
+    try:
+        found = audit(ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx)
+        declared = compare_with_truth(found, ep.truth)
+    except REPLAY_ERRORS as exc:  # the auditor cannot read a hand-edited record: a FAIL line, not a traceback
+        declared = [f"the independent auditor cannot run: {type(exc).__name__}: {exc}"]
+    checks["declared_discrepancies"] = declared + check_key_consistency(ep)
     checks["evidence_sufficient"] = check_evidence(ep)
     checks["budget_feasible"] = check_budget(ep)
     checks["no_surface_tells"] = (["provenance is malformed, so the surface cannot be checked"]

@@ -653,6 +653,7 @@ def _main(argv=None) -> int:
         return 2
     secret = None
     pregen: dict = {}
+    refused: list = []
     if closed:
         try:
             label, entries = load_seeds_file(Path(args.seeds_file))
@@ -668,13 +669,19 @@ def _main(argv=None) -> int:
         if secret is None and bits <= MIN_SEED_BITS:
             print(f"WARNING: no host secret and a seed of at most {MIN_SEED_BITS} bits ({bits}): small seeds can be "
                   f"recovered from public records; use 63-bit seeds and --secret-env for closed runs", file=sys.stderr)
-        source = f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no'})"
+        refused = []
         for e in entries:
-            try:
+            try:  # an entry the generator refuses is a named SKIP line below; the other entries are still checked
                 pregen[e["name"]] = generate_episode(e["seed"], e["config"], secret=secret)
             except (ConfigError, GenerationError) as exc:
-                print(f"error: episode {e['name']}: {exc}", file=sys.stderr)
-                return 2
+                refused.append((e["name"], f"{type(exc).__name__}: {exc}"))
+        if len(refused) == len(entries):
+            print(f"error: no entry of the seeds file can be generated; {refused[0][0]}: {refused[0][1]}", file=sys.stderr)
+            return 2
+        source = (f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no'})" if not refused else
+                  f"seeds file {label} ({len(entries)} entries: {len(entries) - len(refused)} generated, "
+                  f"{len(refused)} refused, secret: {'yes' if secret else 'no'})")
+        entries = [e for e in entries if e["name"] in pregen]
     else:
         label, entries = "hidden_like", check_set()
         source = HIDDEN_LIKE_SOURCE
@@ -682,6 +689,8 @@ def _main(argv=None) -> int:
     rep = Report()
     t0 = time.monotonic()
     print(f"auditgym {__version__} check (offline, Python {sys.version.split()[0]}); episodes: {source}", flush=True)
+    for name, why in (refused if closed else ()):
+        rep.skip("C_data", f"{name}: generated from its seed and config", f"refused, {why}")
     if not closed:
         section_unit_tests(rep, out_dir)
         committed = section_committed(rep)

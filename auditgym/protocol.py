@@ -57,10 +57,11 @@ guess the path of, and (outside a container) its parent's command line and envir
 loads (the --policy-path directory joins sys.path only after that, so nothing in it runs at the host's level),
 and mandatory integrity control then refuses PROCESS_VM_READ on the Medium host: see agent._lower_integrity;
 its working directory is a "work" subdirectory with a Low label and TEMP/TMP point there; a Low child still reads
-every file with a default label. At Low integrity the policy can write only in that working directory and TEMP/TMP:
-its --policy-path directory, the repository and the user profile (%LOCALAPPDATA%, caches with absolute paths) are
-read-only, a write there raises PermissionError and the episode is graded as an agent error (agent_exited, reward
--1). Reads, subprocesses, multiprocessing and localhost sockets work. os.getppid() works because the child relabels
+every file with a default label. At Low integrity the policy can write only in that working directory, TEMP/TMP and
+directories that carry a Low label (every profile has %USERPROFILE%/AppData/LocalLow, and files written there outlive
+the run): its --policy-path directory, the repository and default-labelled directories of the user profile
+(%LOCALAPPDATA%, caches with absolute paths) are read-only, a write there raises PermissionError and the episode is
+graded as an agent error (agent_exited, reward -1). Reads, subprocesses, multiprocessing and localhost sockets work. os.getppid() works because the child relabels
 its own process object Low before lowering (without that it fails with WinError 18); on Linux harden_host() makes
 the host non-dumpable, which blocks /proc/<pid>/environ and /proc/<pid>/mem for a child without
 CAP_SYS_PTRACE and not root, while /proc/<pid>/cmdline stays readable; measured by
@@ -345,6 +346,23 @@ LOWER_INTEGRITY = os.environ.get(NO_LOWER_ENV) not in ("1", "control")  # Window
 LOW_LABEL_STATUS = "not tried"  # outcome of the last _label_low() call, for diagnostics
 
 
+def _no_lower_reason() -> str:
+    """The child's AUDITGYM_NO_LOW_INTEGRITY when the host does not lower it: the user's switch (the value "1" in the
+    host's own environment) is reported as such; otherwise it is a control run ("1"), because any other value leaves
+    LOWER_INTEGRITY on."""
+    return f"{NO_LOWER_ENV}=1 in the host's environment" if os.environ.get(NO_LOWER_ENV) == "1" else "1"
+
+
+def child_python(env: dict) -> str:
+    """The interpreter that starts a child process. In a Windows venv sys.executable is a launcher that starts the
+    real interpreter as its own child: return the real one (as multiprocessing does), so the child's parent is this
+    process, and tell it its venv through __PYVENV_LAUNCHER__ in env, so sys.prefix and site-packages stay the venv's."""
+    if os.name == "nt" and getattr(sys, "_base_executable", sys.executable) != sys.executable:
+        env["__PYVENV_LAUNCHER__"] = sys.executable
+        return sys._base_executable
+    return sys.executable
+
+
 def _label_low(path: str) -> bool:
     """Windows: give directory `path` a Low mandatory label that its new children inherit (SDDL
     S:(ML;OICI;NW;;;LW)), so a child running at Low integrity can write there. Everything else the host
@@ -523,6 +541,20 @@ def _warn_same_user(reason: str) -> None:
           "the official image run as root with default capabilities uses a separate policy user", file=sys.stderr)
 
 
+_LOW_WARNED = False
+
+
+def _warn_not_lowered(reason: str) -> None:
+    """Warn once per process that a Windows policy child stays at the host's integrity level, for the user's switch or
+    a label failure. The redteam control run stays silent: it is a measurement, not a degraded run."""
+    global _LOW_WARNED
+    if _LOW_WARNED:
+        return
+    _LOW_WARNED = True
+    print(f"auditgym: warning: the policy child is not lowered to Low integrity ({reason}); "
+          "it can read this process's environment and memory", file=sys.stderr)
+
+
 def _proc_listable() -> bool:
     """True when /proc can be listed: without it kill_uid cannot see the agent's processes."""
     try:
@@ -618,20 +650,14 @@ class AgentProcess:
                 ident = None
         if ident is None:
             self._same_user(_no_switch_reason())
-        cmd = [sys.executable, "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         kw = {"start_new_session": True} if os.name == "posix" else {}
         cwd, env = self._tmp.name, _child_env(policy_path, stage=str(stage))
-        if os.name == "nt" and getattr(sys, "_base_executable", sys.executable) != sys.executable:
-            # In a venv sys.executable is a launcher that starts the real interpreter as a child: start the real
-            # one directly (as multiprocessing does) so the policy child's parent is this host, and tell it which
-            # venv it belongs to, so sys.prefix and site-packages stay the venv's.
-            cmd[0] = sys._base_executable
-            env["__PYVENV_LAUNCHER__"] = sys.executable
+        cmd = [child_python(env), "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         if os.name == "nt" and ident is None:
             if not LOWER_INTEGRITY:
-                # "1" = the redteam control run; a switch set in the host's own environment is reported as such
-                env[NO_LOWER_ENV] = ("1" if os.environ.get(NO_LOWER_ENV) in (None, "control")
-                                     else f"{NO_LOWER_ENV}=1 in the host's environment")
+                env[NO_LOWER_ENV] = _no_lower_reason()
+                if env[NO_LOWER_ENV] != "1":  # the user's own switch, not a control run
+                    _warn_not_lowered(env[NO_LOWER_ENV])
             else:
                 # The child lowers itself to Low integrity, which cannot write Medium objects: its working
                 # directory (a subdirectory, so the staged code stays read-only for it) gets a Low label, and
@@ -650,6 +676,7 @@ class AgentProcess:
                         env[POLICY_PATH_ENV] = str(Path(policy_path).resolve())
                 else:
                     env[NO_LOWER_ENV] = "label failed: " + LOW_LABEL_STATUS
+                    _warn_not_lowered(env[NO_LOWER_ENV])
         popen = dict(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, **kw)
         if ident is not None:
             try:

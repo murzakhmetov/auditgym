@@ -316,9 +316,13 @@ class ShiftClosedPathTest(unittest.TestCase):
 
         entries = check_set()
         self.assertEqual(len(entries), 20)
+        from auditgym.check import shifted_transform
+
+        combined = {"shift_years": 28, "permute_seed": 4, "remap_seed": 6, "ts_repr": "local", "rename_seed": 8}
         for e in entries:
             ep = generate_episode(e["seed"], e["config"]).episode
-            self.assertEqual(shift_direction(ep), 28, e["name"])  # None would make section D skip the shift check
+            for tf in ({"shift_years": 28}, combined):  # the two shift transforms of section D
+                self.assertEqual(shifted_transform(ep, tf)[1], 28, (e["name"], tf))  # None would make D skip it
 
 
 if __name__ == "__main__":

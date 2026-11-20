@@ -163,7 +163,12 @@ class LowIntegrityChild(unittest.TestCase):
         # if the working directory cannot be labelled Low the child must not be lowered (it would lose its cwd)
         from unittest import mock
 
-        with mock.patch.object(protocol, "_label_low", return_value=False):
+        import contextlib
+        import io
+
+        err = io.StringIO()
+        with mock.patch.object(protocol, "_label_low", return_value=False), \
+                mock.patch.object(protocol, "_LOW_WARNED", False), contextlib.redirect_stderr(err):
             with tempfile.TemporaryDirectory() as tmp:
                 Path(tmp, "writer.py").write_text(WRITE_POLICY, encoding="utf-8")
                 ap = protocol.AgentProcess("writer:Probe", 0, policy_path=tmp)
@@ -176,6 +181,24 @@ class LowIntegrityChild(unittest.TestCase):
         self.assertEqual(kind, "action")
         self.assertTrue(res["integrity"].startswith("off: label failed"), res["integrity"])
         self.assertTrue(res["cwd_write"])
+        # the host says so itself: the child's own warning stays in its stderr tail
+        self.assertIn("auditgym: warning: the policy child is not lowered to Low integrity (label failed", err.getvalue())
+
+    def test_the_host_warns_for_the_user_switch_but_not_for_a_control_run(self):
+        import contextlib
+        import io
+        from unittest import mock
+
+        for value, warns in (("1", True), (None, False)):
+            err = io.StringIO()
+            env = {k: v for k, v in os.environ.items() if k != protocol.NO_LOWER_ENV}
+            if value is not None:
+                env[protocol.NO_LOWER_ENV] = value
+            with mock.patch.dict(os.environ, env, clear=True), mock.patch.object(protocol, "LOWER_INTEGRITY", False), \
+                    mock.patch.object(protocol, "_LOW_WARNED", False), contextlib.redirect_stderr(err):
+                ap = protocol.AgentProcess("silent", 0)
+                ap.close()
+            self.assertEqual("not lowered to Low integrity" in err.getvalue(), warns, (value, err.getvalue()))
 
     def test_policy_path_code_does_not_run_before_the_token_is_lowered(self):
         # a sitecustomize.py and a module shadowing argparse (agent.py imports it first) in the policy directory
@@ -293,6 +316,40 @@ class ReportShape(unittest.TestCase):
         self.assertIn("lowers its own token to Low integrity", report())
         with mock.patch.object(protocol, "LOWER_INTEGRITY", False):
             self.assertIn("lowering off", report())
+        # the header uses the same test as the switch: a value other than "1" or "control" leaves the lowering on
+        with mock.patch.dict(os.environ, {protocol.NO_LOWER_ENV: "0"}):
+            self.assertIn("lowers its own token to Low integrity", report())
+        with mock.patch.dict(os.environ, {protocol.NO_LOWER_ENV: "1"}), mock.patch.object(protocol, "LOWER_INTEGRITY", False):
+            self.assertIn("lowering off (AUDITGYM_NO_LOW_INTEGRITY=1 in the environment)", report())
+
+
+class LoweringSwitch(unittest.TestCase):
+    """What the host tells the child when it does not lower it, and which interpreter starts a child (any platform)."""
+
+    def test_the_reason_names_only_the_user_switch(self):
+        from unittest import mock
+
+        for value, want in ((None, "1"), ("control", "1"), ("0", "1"),
+                            ("1", "AUDITGYM_NO_LOW_INTEGRITY=1 in the host's environment")):
+            env = {k: v for k, v in os.environ.items() if k != protocol.NO_LOWER_ENV}
+            if value is not None:
+                env[protocol.NO_LOWER_ENV] = value
+            with mock.patch.dict(os.environ, env, clear=True):
+                self.assertEqual(protocol._no_lower_reason(), want, value)
+
+    def test_child_python_skips_the_venv_launcher_on_windows(self):
+        from unittest import mock
+
+        env = {}
+        with mock.patch.object(sys, "_base_executable", "C:/base/python.exe", create=True), \
+                mock.patch.object(sys, "executable", "C:/venv/Scripts/python.exe"), \
+                mock.patch.object(protocol.os, "name", "nt"):
+            self.assertEqual(protocol.child_python(env), "C:/base/python.exe")
+        self.assertEqual(env, {"__PYVENV_LAUNCHER__": "C:/venv/Scripts/python.exe"})
+        env = {}
+        with mock.patch.object(sys, "_base_executable", sys.executable, create=True):
+            self.assertEqual(protocol.child_python(env), sys.executable)  # not a venv: nothing changes
+        self.assertEqual(env, {})
 
 
 @unittest.skipUnless(WINDOWS, "Windows only: process snapshot")

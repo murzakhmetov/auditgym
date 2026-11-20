@@ -4,8 +4,9 @@ Most of them close a gap the mutation run showed: the other unit tests let that 
 the other tests already killed (protocol-echo-length, protocol-nan, protocol-surrogate, schemas-evidence-count and,
 since the currency cap, schemas-findings-count, schemas-affected-count, schemas-id-length, schemas-explanation-length,
 schemas-amount-upper), but only indirectly. Each test names the mutant it was written for. Every one of them passes on the real code and fails
-on that mutant. The mutation tool runs these tests last, so the summary tells apart the mutants killed by the other
-tests from those killed only here.
+on that mutant. The mutation tool runs these tests last, after the modules listed for each mutant, so the summary tells
+apart the mutants killed by their listed modules from those that pass them and are killed here (the other test modules
+are not run against a mutant, and some of them kill a few of these too).
 """
 
 import copy

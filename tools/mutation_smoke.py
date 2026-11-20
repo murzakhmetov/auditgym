@@ -10,7 +10,8 @@ the package, and the code stamp covers it), checks that the snippet occurs exact
 compiles, applies the single replacement and runs "python -m unittest -f <modules>" there. Failing or crashing tests, or
 a timeout, mean the mutant is killed; a green run means it survived. Two phases per mutant: its listed modules first,
 then, only if those pass, tests.test_mutation_survivors (written for these very mutants). The summary records which
-phase killed it ("existing tests" or "survivor tests") and a sha256 of (file, snippet, replacement). A mutant that is listed as equivalent (the change
+phase killed it ("listed tests": the modules listed for the mutant, or "survivor tests") and a sha256 of (file,
+snippet, replacement); the other test modules are not run against a mutant. A mutant that is listed as equivalent (the change
 cannot alter any behavior) is run too, but reported apart: it counts neither as killed nor as survived. A mutant marked
 for one platform (its only killing test runs there, such as a Windows-only test) is not run elsewhere and is reported as
 "not run here", not counted. The summary names the platform it was recorded on.
@@ -306,6 +307,8 @@ MUTANTS = [
       "provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate"),
     M("shift-direction-order", "auditgym/transform.py", "for cand in (k, -k):", "for cand in (-k, k):", SHIFT,
       "shift_direction tries -28 before +28"),
+    M("check-shift-direction-order", "auditgym/check.py", "for k in (k0, -k0):", "for k in (-k0, k0):", SHIFT,
+      "D_paired tries the -28 shift before +28"),
     M("shift-period-lower", "auditgym/transform.py", "not PERIOD_YEARS[0] <= int(text[:4]) + k",
       "not PERIOD_YEARS[0] < int(text[:4]) + k", SHIFT, "shift: a period landing exactly on 2000 is refused"),
     M("policy-path-append", "auditgym/agent.py", "at = sys.path.index(staged) + 1 if staged in sys.path else len(sys.path)",
@@ -404,7 +407,7 @@ def run_mutant(m: Mutant, timeout: float) -> dict:
         target.write_bytes(text.replace(m.old, m.new, 1).encode("utf-8"))
         passed, why = run_tests(work, m.modules, timeout)
         if not passed:
-            return {"passed": False, "why": why, "killed_by": "existing tests"}
+            return {"passed": False, "why": why, "killed_by": "listed tests"}
         passed, why = run_tests(work, (SURV,), timeout)
     return {"passed": passed, "why": why, "killed_by": "" if passed else "survivor tests"}
 
@@ -458,7 +461,7 @@ def build_report(results: list[tuple[Mutant, dict]]) -> dict:
         })
     real = [r for r in rows if r["status"] not in ("equivalent", "not run here")]
     killed = sum(1 for r in real if r["status"] == "killed")
-    by_existing = sum(1 for r in real if r["killed_by"] == "existing tests")
+    by_existing = sum(1 for r in real if r["killed_by"] == "listed tests")
     not_run = sum(1 for r in rows if r["status"] == "not run here")
     return {"listed": len(rows), "counted": len(real), "killed": killed, "survived": len(real) - killed,
             "equivalent": len(rows) - len(real) - not_run, "not_run_here": not_run,
@@ -481,12 +484,12 @@ def render_markdown(report: dict) -> str:
         + ("".join(f" `{k}` is killed only by a test that runs on {v}, so it runs only there."
                    for k, v in report["platform_only"].items())),
         "",
-        f"{report['killed_by_existing']} of {report['counted']} are killed by the existing tests, "
-        f"{report['killed_by_survivor_tests']} more only by `tests/test_mutation_survivors.py`, "
-        "which was written for these mutants.",
+        f"{report['killed_by_existing']} of {report['counted']} are killed by the test modules listed for them. The other "
+        f"{report['killed_by_survivor_tests']} pass those modules and are killed by `tests/test_mutation_survivors.py`, "
+        "which was written for these mutants; the remaining test modules are not run against a mutant.",
         "",
         "Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, "
-        "`schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`), applied to a fresh copy of the "
+        "`schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`, `check.py`), applied to a fresh copy of the "
         "repository, which then runs the unit-test modules named in the last column, and, if those pass, "
         "`tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.",
         "",

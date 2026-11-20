@@ -12,6 +12,7 @@ Imports: the standard library, timeutil.parse_ts (ISO timestamp parsing) and the
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 from fractions import Fraction
 
@@ -54,9 +55,21 @@ def _round_fraction(value: Fraction, mode: str) -> int:
     raise ValueError(f"unknown rounding mode {mode!r}")
 
 
+_EXPONENT = re.compile(r"[eE]([+-]?[0-9]+)\s*$")
+
+
+def _rate_fraction(rate) -> Fraction:
+    """Fraction(str(rate)), refusing an exponent above 64 (Fraction("1e99999999") would not finish)."""
+    text = str(rate)
+    m = _EXPONENT.search(text)
+    if m and (len(m.group(1).lstrip("+-")) > 3 or abs(int(m.group(1))) > 64):
+        raise ValueError(f"exponent out of range in {text[:40]!r}")
+    return Fraction(text)
+
+
 def convert_fraction(amount_minor: int, rate, src_exp: int, dst_exp: int, mode: str) -> int:
     """round(amount_minor * rate * 10^(dst_exp - src_exp)) in exact rational arithmetic."""
-    value = Fraction(int(amount_minor)) * Fraction(str(rate)) * Fraction(10) ** (dst_exp - src_exp)
+    value = Fraction(int(amount_minor)) * _rate_fraction(rate) * Fraction(10) ** (dst_exp - src_exp)
     return _round_fraction(value, mode)
 
 

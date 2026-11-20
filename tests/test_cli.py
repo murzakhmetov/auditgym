@@ -274,18 +274,41 @@ class CustomPolicyInProcess(unittest.TestCase):
         return cli("run", "--policies", "examples.custom_policy:FirstPagePolicy", "--in-process", "--out",
                    str(Path(d) / "o"), *extra, env_extra={**self.NONSTRICT, **(env_extra or {})})
 
-    def test_warning_with_a_seeds_file_or_a_secret(self):
+    def test_closed_runs_refuse_a_same_user_custom_policy_unless_allowed(self):
         seeds = str(ROOT / "examples" / "closed_seeds_example.json")
+        secret = {"AUDITGYM_TEST_SECRET_W": "warn-test-secret"}
         with tempfile.TemporaryDirectory() as d:
             rc, _o, err = self.run_custom(d, "--seeds-file", seeds, "--secret-env", "AUDITGYM_TEST_SECRET_W",
-                                          env_extra={"AUDITGYM_TEST_SECRET_W": "warn-test-secret"})
+                                          env_extra=secret)
+            self.assertEqual(rc, 2, err)
+            lines = [ln for ln in err.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, err)
+            for word in ("error: custom policy", "host's user", "closed episodes", "drop --in-process", "--allow-same-user"):
+                self.assertIn(word, lines[0])
+            self.assertFalse((Path(d) / "o").exists(), "a refused run writes nothing")
+            rc, _o, err = self.run_custom(d, "--seeds-file", seeds, "--secret-env", "AUDITGYM_TEST_SECRET_W",
+                                          "--allow-same-user", env_extra=secret)
             self.assertEqual(rc, 0, err)
             lines = [ln for ln in err.splitlines() if "custom policy" in ln]
             self.assertEqual(len(lines), 1, err)
             self.assertTrue(lines[0].startswith("WARNING:"), lines[0])
-            for word in ("host's user", "seeds file", "environment", "drop --in-process", "AUDITGYM_REQUIRE_AGENT_USER=1"):
+            for word in ("host's user", "closed episodes", "--allow-same-user", "seeds file"):
                 self.assertIn(word, lines[0])
             self.assertNotIn("warn-test-secret", err)
+            meta = json.loads((Path(d) / "o" / "meta.json").read_text(encoding="utf-8"))
+            self.assertIs(meta["allow_same_user"], True)
+
+    def test_warning_next_to_answer_keys_outside_the_open_splits(self):
+        with tempfile.TemporaryDirectory() as d:
+            closed = Path(d) / "closed_ep"
+            shutil.copytree(self.EP, closed)
+            rc, _o, err = self.run_custom(d, "--episodes", str(closed))
+            self.assertEqual(rc, 0, err)
+            lines = [ln for ln in err.splitlines() if "custom policy" in ln]
+            self.assertEqual(len(lines), 1, err)
+            self.assertTrue(lines[0].startswith("WARNING:"), lines[0])
+            for word in ("host's user", "answer keys", "grader", "--seeds-file"):
+                self.assertIn(word, lines[0])
 
     def test_no_warning_for_open_runs_and_built_in_policies(self):
         seeds = str(ROOT / "examples" / "closed_seeds_example.json")
@@ -336,6 +359,53 @@ class ClosedRun(unittest.TestCase):
             meta = json.loads(text)
             self.assertIs(meta["secret_used"], True)
             self.assertGreaterEqual(meta["min_seed_bits"], 40)
+
+    # a period whose last day falls on a weekend cannot host boundary_fx_payment: the generator refuses that entry
+    INFEASIBLE = {"name": "c_refused", "seed": 6602239917354212077, "config": {"period": "2026-01", "interacting": ["boundary_fx_payment"]}}
+    FEASIBLE = {"name": "c_ok", "seed": 6602239917354212077, "config": {"size": "small", "period": "2026-05"}}
+
+    def seeds_file(self, d, entries):
+        f = Path(d) / "refuse.json"
+        f.write_text(json.dumps({"split": "t", "episodes": entries}), encoding="utf-8")
+        return str(f)
+
+    def test_run_skips_a_refused_entry_and_records_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "out"
+            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--policies",
+                              "flag_all", "--in-process", "--out", str(out))
+            self.assertEqual(rc, 0, err)
+            self.assertIn("WARNING: entry c_refused refused, ConfigError: boundary_fx_payment", err)
+            meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+            self.assertEqual(meta["episodes"], 1)
+            self.assertEqual([r["name"] for r in meta["refused_entries"]], ["c_refused"])
+            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--policies", "flag_all",
+                              "--in-process", "--out", str(Path(d) / "out2"))
+            self.assertEqual(rc, 2, err)
+            self.assertIn("error: no entry of the seeds file can be generated; c_refused: ConfigError", err)
+
+    def test_check_names_a_refused_entry_and_checks_the_rest(self):
+        from auditgym import check as check_mod
+
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "out"
+            o, e = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--out", str(out)])
+            self.assertEqual(rc, 0, o.getvalue()[-1500:] + e.getvalue())
+            text = o.getvalue()
+            self.assertIn("(2 entries: 1 generated, 1 refused, secret: no)", text)
+            self.assertIn("[SKIP] c_refused: generated from its seed and config - refused, ConfigError: boundary_fx_payment", text)
+            self.assertIn("C_data", [ln for ln in text.splitlines() if ln.startswith("summary:")][0])
+            self.assertTrue((out / "report.md").is_file())
+            self.assertIn("1 refused", (out / "report.md").read_text(encoding="utf-8"))
+            o, e = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--out", str(Path(d) / "o2")])
+            self.assertEqual(rc, 2)
+            lines = [ln for ln in e.getvalue().splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, lines)
+            self.assertTrue(lines[0].startswith("error: no entry of the seeds file can be generated; c_refused"), lines)
 
     def test_warning_boundary_is_two_to_the_40(self):
         warn = cli_mod._small_seed_warning

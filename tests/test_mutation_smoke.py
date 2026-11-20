@@ -58,7 +58,7 @@ class MutantListTests(unittest.TestCase):
 
 class WriterTests(unittest.TestCase):
     def results(self):
-        fake = {"passed": False, "why": "FAILED (failures=1) at 12:34:56 in 1.5 s", "killed_by": "existing tests"}
+        fake = {"passed": False, "why": "FAILED (failures=1) at 12:34:56 in 1.5 s", "killed_by": "listed tests"}
         late = dict(fake, killed_by="survivor tests")
         ok = {"passed": True, "why": "", "killed_by": ""}
         a, b, c, d = tool.MUTANTS[0], tool.MUTANTS[1], tool.MUTANTS[2], tool.MUTANTS[3]
@@ -72,7 +72,8 @@ class WriterTests(unittest.TestCase):
         self.assertEqual([r["status"] for r in report["mutants"]], ["killed", "survived", "killed", "equivalent"])
         self.assertEqual((report["killed_by_existing"], report["killed_by_survivor_tests"]), (1, 1))
         self.assertIn("2 of 3 listed mutants killed", tool.render_markdown(report))
-        self.assertIn("1 of 3 are killed by the existing tests, 1 more only by", tool.render_markdown(report))
+        self.assertIn("1 of 3 are killed by the test modules listed for them. The other 1 pass those modules and are "
+                      "killed by", tool.render_markdown(report))
         self.assertIn("## Survivors", tool.render_markdown(report))
         self.assertIn("## Equivalent mutants", tool.render_markdown(report))
 
@@ -112,7 +113,7 @@ class WriterTests(unittest.TestCase):
                            ("tests.test_matcher",), "a docstring word")
         self.assertFalse(tool.run_mutant(kill, 120)["passed"])
         self.assertTrue(tool.run_mutant(live, 120)["passed"])
-        self.assertEqual(tool.run_mutant(kill, 120)["killed_by"], "existing tests")
+        self.assertEqual(tool.run_mutant(kill, 120)["killed_by"], "listed tests")
         self.assertEqual(tool.occurrences(kill), 1)  # the working tree itself was not touched
 
 

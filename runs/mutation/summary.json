@@ -1,7 +1,7 @@
 {
-  "listed": 108,
-  "counted": 108,
-  "killed": 108,
+  "listed": 109,
+  "counted": 109,
+  "killed": 109,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,7 +9,7 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 63,
+  "killed_by_existing": 64,
   "killed_by_survivor_tests": 45,
   "test_modules_sha256": {
     "tests.test_contract_battery": "9b7627f78b0ec5767cdbcc764dc1ec59d44db6f5362fbdae278e8e66d5292e8a",
@@ -18,13 +18,13 @@
     "tests.test_generator": "37e100c3316cd75fd7a9c39421b9bde6d60b382ac977efa2a00219b72eaedb98",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
-    "tests.test_mutation_survivors": "c6fdbf4eab508a70bb17f6769b9448b01bb218e9aa7ca86e52c90e4279605509",
+    "tests.test_mutation_survivors": "3749488b41ff9c73612fe4be3a8e305f3e2f8a8e48d868188453a986c3ec2c37",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
-    "tests.test_transform_shift": "c41ac07824e5281074c9f23152f402254775d7b5850f7de8330deb5cb07d766f",
-    "tests.test_verify": "315c7a481dd5a25b685f037f195a65a886471b0488fe567dc531f294a5479c20",
-    "tests.test_windows_hardening": "c3c9601a1449f6230e43e1c42f20da7651173a15454f256d4328ea93224ac6a2"
+    "tests.test_transform_shift": "2260e3aa5fc688255335efe39c42951ea361803261adcd92ac0038f57526e934",
+    "tests.test_verify": "ebae23fadd58d59d38dae6dd00b21a68947b5a9e0828592b7c7de9d3b1dcfea6",
+    "tests.test_windows_hardening": "29247373d21201b452658db381426f447f3670f460c72b58e5b608dfd0129038"
   },
   "mutants": [
     {
@@ -32,7 +32,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion type: a finding of another type still matches",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -45,7 +45,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion affected_ids: a subset of the key's IDs matches",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -58,7 +58,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion currency: a wrong currency still matches",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -71,7 +71,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion amount: the tolerance boundary is exclusive",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -97,7 +97,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion amount: the per-issue tolerance is ignored",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -110,7 +110,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion evidence: a partial overlap with an evidence set is enough",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -123,7 +123,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "criterion evidence: every acceptable set must be cited, not one",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -136,7 +136,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "normalization: the finding's currency is no longer upper-cased",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -149,7 +149,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "normalization: IDs keep surrounding whitespace",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -188,7 +188,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "maximum matching: a later finding takes an issue from an earlier one, which is not re-matched",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -201,7 +201,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "one-to-one: every finding with a candidate issue is a true positive, so one issue can score several times",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -214,7 +214,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "maximum matching: greedy first-fit instead of augmenting paths",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -240,7 +240,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "false positives: an exact repeat of a matched finding is no longer counted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -253,7 +253,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "F1: false negatives dropped from the denominator",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -266,7 +266,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "F1: an empty answer on a clean ledger scores 0, not 1",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -279,7 +279,7 @@
       "file": "auditgym/matcher.py",
       "breaks": "precision with no findings is 1.0, not 0.0",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -292,7 +292,7 @@
       "file": "auditgym/reward.py",
       "breaks": "step cost is 0.003 per inspection step instead of 0.002",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -305,7 +305,7 @@
       "file": "auditgym/reward.py",
       "breaks": "step cost: inspection steps are free",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -318,7 +318,7 @@
       "file": "auditgym/reward.py",
       "breaks": "reward: F1 is not mapped to [-1, 1]",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -331,7 +331,7 @@
       "file": "auditgym/reward.py",
       "breaks": "clip: no lower bound, so many steps push the reward below -1",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -357,7 +357,7 @@
       "file": "auditgym/reward.py",
       "breaks": "an invalid submission is not rewarded -1",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -370,7 +370,7 @@
       "file": "auditgym/reward.py",
       "breaks": "experimental reward: extra findings no longer lower soft F1",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -396,7 +396,7 @@
       "file": "auditgym/reward.py",
       "breaks": "experimental reward: credit is not in quarters",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_reward",
         "tests.test_matcher",
@@ -474,7 +474,7 @@
       "file": "auditgym/grader.py",
       "breaks": "invalid submission: the grade's reward is not -1",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -487,7 +487,7 @@
       "file": "auditgym/grader.py",
       "breaks": "grade: the step cost is not applied",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_matcher",
         "tests.test_reward",
@@ -539,7 +539,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: 30 findings are already too many",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -553,7 +553,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: 11 evidence IDs are accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -567,7 +567,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: 11 affected IDs are accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -581,7 +581,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: an ID of exactly 64 characters is too long",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -595,7 +595,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: an explanation of exactly 1000 characters is too long",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -609,7 +609,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: the maximum amount itself is rejected",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -637,7 +637,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "lone surrogate in an ID is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -651,7 +651,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "lone surrogate in an explanation is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -665,7 +665,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "lone surrogate in the episode_id is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -679,7 +679,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "True is accepted as an integer amount",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -693,7 +693,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "an empty affected_ids list is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -735,7 +735,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "a submission for another episode is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -749,7 +749,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "unknown keys inside a finding are accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -777,7 +777,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "page size is 51 instead of 50",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -789,7 +789,7 @@
       "file": "auditgym/env.py",
       "breaks": "page size: limit 51 is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -813,7 +813,7 @@
       "file": "auditgym/env.py",
       "breaks": "step budget: one extra step is allowed before truncation",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -825,7 +825,7 @@
       "file": "auditgym/env.py",
       "breaks": "step budget: the default maximum of 100 is rejected",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -849,7 +849,7 @@
       "file": "auditgym/env.py",
       "breaks": "cursor: the last page announces another page",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -861,7 +861,7 @@
       "file": "auditgym/env.py",
       "breaks": "eval mode: the terminal reward reaches the policy",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -873,7 +873,7 @@
       "file": "auditgym/env.py",
       "breaks": "eval mode: TP/FP/FN and the reward reach the policy in info",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -885,7 +885,7 @@
       "file": "auditgym/env.py",
       "breaks": "step cost: the final submit counts as an inspection step",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -921,7 +921,7 @@
       "file": "auditgym/env.py",
       "breaks": "a finished episode accepts more actions",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -1005,7 +1005,7 @@
       "file": "auditgym/verify.py",
       "breaks": "declared_discrepancies: an unknown issue variant passes",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1053,7 +1053,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance_roundtrip: a public digest that differs from final_digest passes",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1065,7 +1065,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance_roundtrip: reverted tables with the wrong clean digest pass",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1077,7 +1077,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance_roundtrip: an issue with no op touching its records passes",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1089,7 +1089,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance_roundtrip: injections and truth issues may differ",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1101,7 +1101,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance_roundtrip: an injection retargeted to other records passes",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1161,7 +1161,7 @@
       "file": "auditgym/evidence_check.py",
       "breaks": "unallocated_payment: a payment equal to the invoice total is rejected",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1185,7 +1185,7 @@
       "file": "auditgym/evidence_check.py",
       "breaks": "wrong_fx_rate: a rate dated on the document's own day is rejected",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1221,7 +1221,7 @@
       "file": "auditgym/evidence_check.py",
       "breaks": "rounding: half_even always rounds the tie up",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1324,7 +1324,7 @@
       "file": "auditgym/protocol.py",
       "breaks": "NaN and Infinity are accepted as numbers",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_isolation",
         "tests.test_redteam",
@@ -1337,7 +1337,7 @@
       "file": "auditgym/protocol.py",
       "breaks": "echo: a malformed line is echoed 257 characters long",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_isolation",
         "tests.test_redteam",
@@ -1350,7 +1350,7 @@
       "file": "auditgym/protocol.py",
       "breaks": "a lone surrogate in an action is accepted",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_isolation",
         "tests.test_redteam",
@@ -1363,7 +1363,7 @@
       "file": "auditgym/verify.py",
       "breaks": "provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1375,18 +1375,29 @@
       "file": "auditgym/transform.py",
       "breaks": "shift_direction tries -28 before +28",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_transform_shift"
       ],
       "sha256": "a35961e7d61bfbf6ceb6c56e9f26efbcad735d7d406e2530d999f68db0e50b71"
     },
     {
+      "id": "check-shift-direction-order",
+      "file": "auditgym/check.py",
+      "breaks": "D_paired tries the -28 shift before +28",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_transform_shift"
+      ],
+      "sha256": "41fd380814a58288b61ce3d0c55812ef20fdf2ff7facd669fb180ab7af4d7a3f"
+    },
+    {
       "id": "shift-period-lower",
       "file": "auditgym/transform.py",
       "breaks": "shift: a period landing exactly on 2000 is refused",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_transform_shift"
       ],
@@ -1397,7 +1408,7 @@
       "file": "auditgym/agent.py",
       "breaks": "Windows child: the policy directory goes last on sys.path, not after the staged code",
       "status": "killed",
-      "killed_by": "existing tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_windows_hardening",
         "tests.test_redteam",
