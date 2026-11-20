@@ -1,6 +1,6 @@
 """Baseline policy adapters.
 
-Agent-side (may run in the isolated child process): random, recon, flag_all, auditor.
+Agent-side (may run in the isolated child process): random, recon, flag_all, auditor, silent.
 Grader-side only: oracle (reads the answer key; never runs in the agent process).
 
 External policies plug in as "module.path:ClassName": any class with
@@ -17,7 +17,7 @@ import sys
 from importlib.machinery import PathFinder
 from pathlib import Path
 
-AGENT_POLICIES = ("random", "recon", "flag_all", "auditor")
+AGENT_POLICIES = ("random", "recon", "flag_all", "auditor", "silent")
 GRADER_POLICIES = ("oracle",)
 BASELINES = ("random", "recon", "flag_all", "oracle")
 _EXTERNAL = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*$")
@@ -25,6 +25,20 @@ _EXTERNAL = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Z
 
 class PolicyError(ValueError):
     pass
+
+
+class SilentPolicy:
+    """Baseline that reports nothing: submits an empty findings list on its first action."""
+
+    name = "silent"
+
+    def __init__(self):
+        self.episode_id = None
+
+    def act(self, obs: dict, reward: float = 0.0, info: dict | None = None) -> dict:
+        if "manifest" in obs:
+            self.episode_id = obs["manifest"]["episode_id"]
+        return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": []}}
 
 
 def is_external(name: str) -> bool:
@@ -76,6 +90,8 @@ def make_policy(name: str, seed: int = 0, truth: dict | None = None):
         from .auditor_policy import AuditorPolicy
 
         return AuditorPolicy()
+    if name == "silent":
+        return SilentPolicy()
     if name == "oracle":
         if truth is None:
             raise PolicyError("the oracle needs the answer key and runs grader-side only")

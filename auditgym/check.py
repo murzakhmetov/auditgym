@@ -13,10 +13,11 @@ Sections (each a list of named pass/fail checks, see report.md):
      permutation, ID remapping and timestamp re-rendering preserve the oracle answer,
      the reward and the auditor's matched issues
   E. leak scan of every agent-visible observation
+  F. in-process contract checks of the environment (contract_battery)
 Exit code 0 only if every check passes (SKIP counts as passed). No network, GPU or paid API is used.
 
 Organizer seeds: `python -m auditgym.check --seeds-file FILE [--secret-env VAR] [--out DIR]`
-runs C, D, E (and the replay of its own runs) on the episodes of a seeds file
+runs C, D, E, F (and the replay of its own runs) on the episodes of a seeds file
 {"split": label, "episodes": [{"name", "seed", "config"}, ...]}. Output goes to
 runs/check_closed by default and never to runs/check.
 """
@@ -35,6 +36,7 @@ from pathlib import Path
 from . import __version__
 from . import io as aio
 from . import FINDING_TYPES
+from .contract_battery import contract_battery
 from .check_battery import clean_battery, matched_claims, replay_records, reward_battery
 from .episode import load_episode
 from .config import ConfigError
@@ -53,13 +55,14 @@ FORBIDDEN_IN_OBS = ("iss_", "evidence_sets", "expected_amount", "id_aliases", "p
                     "rejected_attempts", "truth.json", "grader/")
 
 
+MIN_SEED_BITS = 40  # same limit and wording as `run` (auditgym/__main__.py)
 HIDDEN_LIKE_SOURCE = "public master string auditgym-check-v1"
 CLOSED_OUT = ROOT / "runs" / "check_closed"
 DEFAULT_OUT = ROOT / "runs" / "check"
 
 # report.md groups the sections under the five rubric headings (section keys in report.json stay as they are).
 RUBRIC = (
-    ("1. Contract and isolation (25)", ("E_leaks",)),
+    ("1. Contract and isolation (25)", ("F_contract", "E_leaks")),
     ("2. Data and answer key (25)", ("B_committed_episodes", "C_data")),
     ("3. Reward reliability (25)", ("C_reward",)),
     ("4. Reproducibility (15)", ("B_replay", "D_paired")),
@@ -113,13 +116,21 @@ def _mean(xs):
     return sum(xs) / len(xs) if xs else None
 
 
+def _test_id(test) -> str:
+    """The id of the test method, also for a failed subTest."""
+    return getattr(test, "test_case", test).id()
+
+
 def section_unit_tests(rep: Report, out_dir: Path) -> None:
     print("A. unit tests", flush=True)
     t0 = time.monotonic()
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), top_level_dir=str(ROOT))
     with open(out_dir / "unittest.log", "w", encoding="utf-8", newline="\n") as log:
         result = unittest.TextTestRunner(stream=log, verbosity=2).run(suite)
-    rep.add("A_unit_tests", f"unittest: {result.testsRun} tests", result.wasSuccessful(),
+    failed = {_test_id(t) for t, _ in result.failures + result.errors}
+    skipped = len({_test_id(t) for t, _ in result.skipped} - failed)
+    passed = result.testsRun - len(failed) - skipped
+    rep.add("A_unit_tests", f"unittest: {result.testsRun} run, {passed} passed, {skipped} skipped", result.wasSuccessful(),
             f"failures={len(result.failures)} errors={len(result.errors)} (see {_rel(out_dir)}/unittest.log)")
     rep.seconds["A_unit_tests"] = time.monotonic() - t0
 
@@ -247,7 +258,7 @@ def section_hidden_like(rep: Report, entries: list, label: str, secret: str | No
     rep.seconds["C_data"] = gen_time
     t1 = time.monotonic()
     n = len(eps)
-    policies = ["random", "recon", "flag_all", "oracle", "auditor"]
+    policies = ["random", "recon", "flag_all", "silent", "oracle", "auditor"]
     traj, grades = run_many(eps, policies, mode="eval", isolated=True)
     summary = summarize(grades)
     s = {v["policy"]: v for v in summary.values()}
@@ -275,6 +286,12 @@ def section_hidden_like(rep: Report, entries: list, label: str, secret: str | No
         rep.add("C_reward", "random explorer stays far below the auditor", s["random"]["return"] < s["auditor"]["return"] - 0.5)
     else:
         rep.skip("C_reward", "random explorer stays far below the auditor", "the set has no error episodes")
+    if not closed:
+        rep.add("C_reward", "ordering: auditor > silent", s["auditor"]["return"] > s["silent"]["return"], returns)
+    elif has_err:
+        rep.add("C_reward", "ordering on error episodes only: auditor > silent", err["auditor"] > err["silent"], json.dumps(err))
+    else:
+        rep.skip("C_reward", "ordering on error episodes only: auditor > silent", "the set has no error episodes")
     rep.add("C_reward", "every run finishes inside 100 steps and 60 s", all(g["inspection_steps"] <= 99 and g["elapsed_s"] < 60 for g in grades))
     rep.add("C_reward", "no agent process failed", not any(g.get("agent_error") for g in grades))
     for _s, _n, ep in eps:
@@ -379,6 +396,35 @@ def section_leaks(rep: Report, traj: list) -> None:
     rep.seconds["E_leaks"] = time.monotonic() - t0
 
 
+def section_contract(rep: Report, eps: list) -> None:
+    print("F. in-process contract checks", flush=True)
+    t0 = time.monotonic()
+    pick = [x for x in eps if x[2].truth["issues"]][:1] or eps[:1]
+    for _s, _n, ep in pick:
+        for label, ok, detail in contract_battery(ep):
+            rep.add("F_contract", label, ok, detail)
+    rep.seconds["F_contract"] = time.monotonic() - t0
+
+
+def isolation_line() -> str:
+    """One report line: did the policy child run as a separate user or as the host's user."""
+    from . import protocol
+
+    ap = None
+    try:
+        ap = protocol.AgentProcess("recon", 0)
+        uid = ap._agent_uid
+        return f"separate user (uid {uid})" if uid is not None else "the host's user (no uid switch on this machine)"
+    except Exception as exc:
+        return f"unknown ({type(exc).__name__})"
+    finally:
+        if ap is not None:
+            try:
+                ap.close()
+            except Exception:
+                pass
+
+
 def load_seeds_file(path: Path) -> tuple:
     """Returns (label, entries). Raises ValueError with a readable message on a malformed file."""
     try:
@@ -412,7 +458,7 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
               "section_seconds": {k: round(v, 1) for k, v in rep.seconds.items()}, "sections": rep.sections, "summary": summary}
     aio.write_json(out_dir / "report.json", report)
     md = ["# auditgym check report\n", f"Result: **{'PASS' if rep.ok else 'FAIL'}** in {elapsed:.0f} s, version {__version__}.\n",
-          f"Episodes: {source}.\n", "## Checks (grouped by rubric criterion)\n"]
+          f"Episodes: {source}.\n", f"Policy isolation: {isolation_line()}.\n", "## Checks (grouped by rubric criterion)\n"]
     for title, keys in RUBRIC:
         present = [k for k in keys if k in rep.sections]
         if not present:
@@ -436,8 +482,8 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, leaks).")
-    ap.add_argument("--seeds-file", help="run sections C, D, E on the episodes of this JSON file instead of the public master string")
+    ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, contract, leaks).")
+    ap.add_argument("--seeds-file", help="run sections C, D, E, F on the episodes of this JSON file instead of the public master string")
     ap.add_argument("--secret-env", help="name of the environment variable that holds the host secret for the seeds file")
     ap.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
     ap.add_argument("--keep-runs", action="store_true",
@@ -470,6 +516,10 @@ def main(argv=None) -> int:
             if not secret:
                 print(f"error: environment variable {args.secret_env} is not set", file=sys.stderr)
                 return 2
+        bits = min(abs(e["seed"]).bit_length() for e in entries)
+        if secret is None and bits <= MIN_SEED_BITS:
+            print(f"WARNING: no host secret and a seed of at most {MIN_SEED_BITS} bits ({bits}): small seeds can be "
+                  f"recovered from public records; use 63-bit seeds and --secret-env for closed runs", file=sys.stderr)
         source = f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no'})"
         for e in entries:
             try:
@@ -491,6 +541,7 @@ def main(argv=None) -> int:
     eps, traj, grades, summary, _gen_time = section_hidden_like(rep, entries, label, secret, closed, pregen)
     section_paired(rep, eps, entries, secret)
     section_leaks(rep, traj)
+    section_contract(rep, eps)
     if closed:
         t1 = time.monotonic()
         print("B. replay of this run's recorded actions", flush=True)
