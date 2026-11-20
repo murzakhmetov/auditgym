@@ -665,10 +665,6 @@ def _main(argv=None) -> int:
             if not secret:
                 print(f"error: environment variable {args.secret_env} is not set", file=sys.stderr)
                 return 2
-        bits = min(abs(e["seed"]).bit_length() for e in entries)
-        if secret is None and bits <= MIN_SEED_BITS:
-            print(f"WARNING: no host secret and a seed of at most {MIN_SEED_BITS} bits ({bits}): small seeds can be "
-                  f"recovered from public records; use 63-bit seeds and --secret-env for closed runs", file=sys.stderr)
         refused = []
         for e in entries:
             try:  # an entry the generator refuses is a named SKIP line below; the other entries are still checked
@@ -682,6 +678,10 @@ def _main(argv=None) -> int:
                   f"seeds file {label} ({len(entries)} entries: {len(entries) - len(refused)} generated, "
                   f"{len(refused)} refused, secret: {'yes' if secret else 'no'})")
         entries = [e for e in entries if e["name"] in pregen]
+        bits = min(abs(e["seed"]).bit_length() for e in entries)  # generated entries only
+        if secret is None and bits <= MIN_SEED_BITS:
+            print(f"WARNING: no host secret and a seed of at most {MIN_SEED_BITS} bits ({bits}): small seeds can be "
+                  f"recovered from public records; use 63-bit seeds and --secret-env for closed runs", file=sys.stderr)
     else:
         label, entries = "hidden_like", check_set()
         source = HIDDEN_LIKE_SOURCE
@@ -709,7 +709,7 @@ def _main(argv=None) -> int:
         _replay_checks(rep, replay_records(traj, {(s, ep.episode_id): ep for s, _n, ep in eps}), expected)
         rep.seconds["B_replay"] = time.monotonic() - t1
     elapsed = time.monotonic() - t0
-    names = [n for _s, n, _ep in eps]
+    names = [n for _s, n, _ep in eps] + [n for n, _why in refused]
     _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs,
                   names=names)
     print(summary_line(rep, names), flush=True)

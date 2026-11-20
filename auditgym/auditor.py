@@ -32,6 +32,8 @@ def _ratio(text) -> tuple:
     if m is None or not (m.group(2) or m.group(3)):
         raise ValueError(f"not a decimal number: {text!r}")
     sign, whole, frac = m.group(1), m.group(2) or "0", m.group(3) or ""
+    if len(whole) > 30 or len(frac) > 30:  # a published amount or rate has far fewer digits
+        raise ValueError(f"too many digits in {str(text)[:40]!r}")
     if m.group(4) and len(m.group(4).lstrip("+-")) > 3 or abs(int(m.group(4) or 0)) > MAX_DECIMAL_EXPONENT:
         raise ValueError(f"exponent out of range in {str(text)[:40]!r}")
     exp = int(m.group(4) or 0)
@@ -328,10 +330,13 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
                 unalloc_rows = [r for r in rows if r["account"] == "2900"]
                 if len(refs_short) == 1 and len(unalloc_rows) == 1:
                     ref = refs_short[0]
+                    ref_acct = "1100" if inv_by_id[ref]["kind"] == "sales" else "2000"
+                    ref_rows = [r["row_id"] for r in ledger if r["invoice_id"] == ref and r["account"] == ref_acct]
+                    bank_rows = [r["row_id"] for r in rows if r["account"] == "1000"] if ccy != base else []
                     findings.append({
                         "type": "unallocated_payment", "affected_ids": [pid, ref],
                         "amount": posted_unalloc - expected_unalloc, "currency": base,
-                        "evidence_sets": [[doc["doc_id"], inv_by_id[ref]["doc_id"], unalloc_rows[0]["row_id"]]],
+                        "evidence_sets": [[doc["doc_id"], inv_by_id[ref]["doc_id"], unalloc_rows[0]["row_id"]] + bank_rows + ref_rows],
                     })
                 else:
                     anomalies.append(f"payment {pid} under-allocated across several invoices")

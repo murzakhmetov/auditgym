@@ -6,7 +6,9 @@ some distractor:
   * duplicates: same supplier, currency, total and calendar date (ignores line
     refs, so legitimate repeats become false positives);
   * unallocated: any 2900 credit of a receipt that carries invoice_refs
-    (overpayment excess is legitimate and becomes a false positive);
+    (overpayment excess is legitimate and becomes a false positive); it cites
+    the receipt, the first referenced invoice, the 2900 row, the receipt's bank
+    row when the invoice is in a foreign currency, and that invoice's 1100 rows;
   * FX: rate of the calendar date as written in the timestamp, exact date only
     (wrong when timestamps are written in UTC or another offset);
   * period: compares the year-month prefix of the timestamps as written
@@ -82,8 +84,10 @@ class ReconPolicy:
             for r in rows:
                 if r["account"] == "2900" and r["credit_minor"] > 0:
                     ref = p["invoice_refs"][0]
+                    ref_rows = [x["row_id"] for x in d["ledger"] if x["invoice_id"] == ref and x["account"] == "1100"]
+                    bank = [x["row_id"] for x in rows if x["account"] == "1000"] if ref in invs and invs[ref]["currency"] != base else []
                     add("unallocated_payment", [pid, ref], r["credit_minor"],
-                        [p["doc_id"], invs[ref]["doc_id"] if ref in invs else None, r["row_id"]])
+                        [p["doc_id"], invs[ref]["doc_id"] if ref in invs else None, r["row_id"]] + bank + ref_rows)
         for doc in d["invoices"]:
             rows = by_inv.get(doc["invoice_id"], [])
             prim = [r for r in rows if r["account"] in ("1100", "2000") and r["timestamp"] != self.manifest["period_start"]]

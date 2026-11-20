@@ -75,6 +75,8 @@ jobs:
           docker cp official:/app/runs/check/report.md official_report.md
           docker rm official > /dev/null
           if [ "$rc" -ne 0 ]; then grep -E -A 40 "^(FAIL|ERROR): " official_unittest.log | head -200; fi
+          grep -E "^Policy isolation: " official_report.md
+          grep -q "^Policy isolation: separate user (uid [0-9]*)" official_report.md || { echo "the report written in the image does not name a separate policy user"; exit 1; }
           exit "$rc"
       - name: Container-only isolation tests (root host, separate policy user, must not skip)
         run: |
@@ -112,10 +114,13 @@ jobs:
           docker run --name strict --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee strict_default.log
           rc=${PIPESTATUS[0]}
           docker cp strict:/app/runs/check/unittest.log strict_unittest.log
+          docker cp strict:/app/runs/check/report.md strict_report.md
           docker rm strict > /dev/null
           if [ "$rc" -ne 0 ]; then grep -E -A 40 "^(FAIL|ERROR): " strict_unittest.log | head -200; exit "$rc"; fi
           set -e
           grep -q "^PASS in" strict_default.log
+          grep -E "^Policy isolation: " strict_report.md
+          grep -q "^Policy isolation: separate user (uid [0-9]*)" strict_report.md
           docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 auditgym python -m unittest tests.test_container -v 2>&1 | tee strict_container.log
           test "${PIPESTATUS[0]}" -eq 0
           if grep -qi "skipped" strict_container.log; then echo "a container test was skipped"; exit 1; fi
@@ -140,6 +145,8 @@ jobs:
           test "${PIPESTATUS[0]}" -eq 0
           test -f "$RUNNER_TEMP/closed_out/report.md"
           grep -q "^Result: \*\*PASS\*\*" "$RUNNER_TEMP/closed_out/report.md"
+          grep -E "^Policy isolation: " "$RUNNER_TEMP/closed_out/report.md"
+          grep -q "^Policy isolation: separate user (uid [0-9]*)" "$RUNNER_TEMP/closed_out/report.md"
           grep -q "^PASS in" closed_path.log
           if grep -rlE '\biss_[0-9]{2}\b' "$RUNNER_TEMP/closed_out" closed_path.log; then echo "an answer-key issue id leaked into the closed output"; exit 1; fi
           if grep -rl "ci-secret" "$RUNNER_TEMP/closed_out" closed_path.log; then echo "the host secret leaked into the closed output"; exit 1; fi

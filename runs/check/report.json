@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "ok": true,
-  "elapsed_s": 225.1,
+  "elapsed_s": 231.7,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -62,25 +62,25 @@
     }
   },
   "code": {
-    "code_sha256": "2c8fb0c2f6bfe6ca92a8971e234bcfdb037860c0e63c1e2a136798bdebddc7c8",
+    "code_sha256": "5ca9203f885bcf6321afa9bd1b516b956599ddb08ee835ec6a79dcc5fc4f7134",
     "code_files": 60,
     "python": "3.11.4",
     "platform": "Windows-10-10.0.19045-SP0"
   },
   "section_seconds": {
-    "A_unit_tests": 147.7,
-    "B_committed_episodes": 3.7,
-    "B_replay": 1.4,
-    "C_data": 4.6,
-    "C_reward": 34.8,
-    "D_paired": 32.5,
-    "E_leaks": 0.4,
+    "A_unit_tests": 160.5,
+    "B_committed_episodes": 3.6,
+    "B_replay": 1.3,
+    "C_data": 4.5,
+    "C_reward": 29.4,
+    "D_paired": 31.9,
+    "E_leaks": 0.3,
     "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 453 run, 442 passed, 11 skipped",
+        "check": "unittest: 476 run, 465 passed, 11 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -3386,7 +3386,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.0,
-      "agent_time_s": 0.0172,
+      "agent_time_s": 0.0117,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3400,11 +3400,11 @@
       "fn": 0,
       "micro_precision": 1.0,
       "micro_recall": 1.0,
-      "n_cited": 222,
+      "n_cited": 242,
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {},
-      "mean_first_full_evidence_step": 21.0536,
+      "mean_first_full_evidence_step": 21.375,
       "issues_total": 56,
       "issues_seen_not_flagged": 0,
       "seen_not_flagged_share": 0.0,
@@ -3494,8 +3494,8 @@
       "fn": 0,
       "micro_precision": 1.0,
       "micro_recall": 1.0,
-      "n_cited": 222,
-      "n_cited_unobserved": 222,
+      "n_cited": 242,
+      "n_cited_unobserved": 242,
       "unobserved_citation_share": 1.0,
       "fp_causes": {},
       "mean_first_full_evidence_step": null,
@@ -3520,7 +3520,7 @@
       "recall": 0.0,
       "f1": 0.2,
       "steps": 33.95,
-      "agent_time_s": 0.0016,
+      "agent_time_s": 0.0063,
       "closed_share": 0.2,
       "invalid": 0,
       "truncated": 0,
@@ -3571,7 +3571,7 @@
       "recall": 0.5425,
       "f1": 0.2307,
       "steps": 32.0,
-      "agent_time_s": 0.0111,
+      "agent_time_s": 0.0124,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3585,7 +3585,7 @@
       "fn": 14,
       "micro_precision": 0.1634,
       "micro_recall": 0.75,
-      "n_cited": 1091,
+      "n_cited": 1187,
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {
@@ -3600,7 +3600,7 @@
         "underpayment": 6,
         "unrelated": 64
       },
-      "mean_first_full_evidence_step": 21.0536,
+      "mean_first_full_evidence_step": 21.375,
       "issues_total": 56,
       "issues_seen_not_flagged": 14,
       "seen_not_flagged_share": 0.25,

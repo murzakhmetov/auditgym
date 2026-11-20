@@ -213,6 +213,17 @@ class ReportLines(unittest.TestCase):
         kept = ci_excerpt.excerpt(raw, "1", "abc")[3:]
         self.assertEqual([k.split(" | ", 2)[2] for k in kept], self.LINES)
 
+    def test_excerpt_keeps_the_report_isolation_line(self):
+        """The container steps print the `Policy isolation:` line of the report written in the image; the excerpt keeps it,
+        so the committed excerpt shows which user the policy ran as."""
+        from tools import ci_excerpt
+
+        lines = ["Policy isolation: separate user (uid 10001).",
+                 "Policy isolation: the host's user (no uid switch on this machine)."]
+        raw = [f"container\tstep\t2026-01-01T00:00:00.0000000Z {line}\n" for line in lines]
+        kept = ci_excerpt.excerpt(raw, "1", "abc")[3:]
+        self.assertEqual([k.split(" | ", 2)[2] for k in kept], lines)
+
     def test_excerpt_labels_each_container_mode_block(self):
         """The real log shape of the step: one group line (`Run set -o pipefail`), the script lines in ANSI codes, then
         for each mode a label echoed by the script and the report. Only the label tells the three blocks apart."""

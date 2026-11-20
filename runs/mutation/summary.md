@@ -1,12 +1,12 @@
 # Mutation smoke
 
-**109 of 109 listed mutants killed** (0 survived, 0 equivalent, not counted).
+**122 of 122 listed mutants killed** (0 survived, 0 equivalent, not counted).
 
 Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-64 of 109 are killed by the test modules listed for them. The other 45 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
+78 of 122 are killed by the test modules listed for them. The other 44 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
 
-Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`, `check.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
+Each mutant is one hand-written change to the core (`auditgym/agent.py`, `auditgym/check.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
 Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 
@@ -86,7 +86,7 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 72 | `verify-duplicate-id` | `auditgym/verify.py` | ids_unique: one ID used in two tables is allowed | killed | survivor tests | test_verify, test_generator |
 | 73 | `verify-record-counts` | `auditgym/verify.py` | records_schema: a wrong manifest record count passes | killed | survivor tests | test_verify, test_generator |
 | 74 | `verify-amount-mismatch` | `auditgym/verify.py` | declared_discrepancies: an auditor/key amount mismatch passes | killed | survivor tests | test_verify, test_generator |
-| 75 | `verify-evidence-sets` | `auditgym/verify.py` | declared_discrepancies: differing evidence sets pass | killed | survivor tests | test_verify, test_generator |
+| 75 | `verify-evidence-sets` | `auditgym/verify.py` | declared_discrepancies: differing evidence sets pass | killed | listed tests | test_verify, test_generator |
 | 76 | `verify-unknown-variant` | `auditgym/verify.py` | declared_discrepancies: an unknown issue variant passes | killed | listed tests | test_verify, test_generator |
 | 77 | `verify-budget-bound` | `auditgym/verify.py` | budget_feasible: the submit step is not counted | killed | survivor tests | test_verify, test_generator |
 | 78 | `verify-surface-pattern` | `auditgym/verify.py` | no_surface_tells: a touched ledger row with a unique pattern passes | killed | survivor tests | test_verify, test_generator |
@@ -101,23 +101,36 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 87 | `evidence-duplicate-account` | `auditgym/evidence_check.py` | duplicate_invoice: rows in different accounts still support it | killed | survivor tests | test_verify, test_generator |
 | 88 | `evidence-duplicate-signature` | `auditgym/evidence_check.py` | duplicate_invoice: two different invoices still support it | killed | survivor tests | test_verify, test_generator |
 | 89 | `evidence-unallocated-total` | `auditgym/evidence_check.py` | unallocated_payment: a payment equal to the invoice total is rejected | killed | listed tests | test_verify, test_generator |
-| 90 | `evidence-unallocated-account` | `auditgym/evidence_check.py` | unallocated_payment: the row may sit in any account | killed | survivor tests | test_verify, test_generator |
-| 91 | `evidence-fx-future-date` | `auditgym/evidence_check.py` | wrong_fx_rate: a rate dated on the document's own day is rejected | killed | listed tests | test_verify, test_generator |
-| 92 | `evidence-period-boundary` | `auditgym/evidence_check.py` | wrong_period: the period end instant belongs to the period | killed | survivor tests | test_verify, test_generator |
-| 93 | `evidence-offset-start` | `auditgym/evidence_check.py` | local date: the UTC offset change takes effect one instant late | killed | survivor tests | test_verify, test_generator |
-| 94 | `evidence-half-even` | `auditgym/evidence_check.py` | rounding: half_even always rounds the tie up | killed | listed tests | test_verify, test_generator |
-| 95 | `protocol-max-line` | `auditgym/protocol.py` | bound: a line of exactly MAX_LINE characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 96 | `protocol-max-depth` | `auditgym/protocol.py` | bound: nesting of exactly MAX_DEPTH is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 97 | `protocol-max-nodes` | `auditgym/protocol.py` | bound: exactly MAX_NODES parsed nodes is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 98 | `protocol-separator-count` | `auditgym/protocol.py` | bound: commas are not counted against the node limit | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 99 | `protocol-max-digits` | `auditgym/protocol.py` | bound: an integer literal of exactly MAX_NUMBER_CHARS digits is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 100 | `protocol-max-float` | `auditgym/protocol.py` | bound: a float literal of exactly MAX_FLOAT_CHARS characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 101 | `protocol-nonsubmit-size` | `auditgym/protocol.py` | bound: a non-submit line of exactly 2048 characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 102 | `protocol-nan` | `auditgym/protocol.py` | NaN and Infinity are accepted as numbers | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 103 | `protocol-echo-length` | `auditgym/protocol.py` | echo: a malformed line is echoed 257 characters long | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 104 | `protocol-surrogate` | `auditgym/protocol.py` | a lone surrogate in an action is accepted | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 105 | `verify-stale-rate-variant` | `auditgym/verify.py` | provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate | killed | listed tests | test_verify, test_generator |
-| 106 | `shift-direction-order` | `auditgym/transform.py` | shift_direction tries -28 before +28 | killed | listed tests | test_transform_shift |
-| 107 | `check-shift-direction-order` | `auditgym/check.py` | D_paired tries the -28 shift before +28 | killed | listed tests | test_transform_shift |
-| 108 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | listed tests | test_transform_shift |
-| 109 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | listed tests | test_windows_hardening, test_redteam, test_isolation |
+| 90 | `evidence-unallocated-account` | `auditgym/evidence_check.py` | unallocated_payment: every cited row is taken for the 2900 row, so no true set derives | killed | listed tests | test_verify, test_generator |
+| 91 | `evidence-unallocated-booked-after` | `auditgym/evidence_check.py` | unallocated_payment: an invoice booked after the receipt still counts as open when the receipt arrived | killed | survivor tests | test_verify, test_generator |
+| 92 | `evidence-unallocated-other-relief` | `auditgym/evidence_check.py` | unallocated_payment: a relief by another receipt among the cited rows still supports it | killed | listed tests | test_verify, test_generator |
+| 93 | `evidence-unallocated-open-balance` | `auditgym/evidence_check.py` | unallocated_payment: an invoice the relief fully settled still counts as open | killed | listed tests | test_verify, test_generator |
+| 94 | `evidence-unallocated-relief-bound` | `auditgym/evidence_check.py` | unallocated_payment: the relief may exceed what the receipt paid | killed | listed tests | test_verify, test_generator |
+| 95 | `evidence-unallocated-base-identity` | `auditgym/evidence_check.py` | unallocated_payment: in the base currency the cited balance need not cover the receipt, nor equal relief plus 2900 | killed | listed tests | test_verify, test_generator |
+| 96 | `evidence-unallocated-base-cover` | `auditgym/evidence_check.py` | unallocated_payment: in the base currency a posting below the receipt still supports it | killed | listed tests | test_verify, test_generator |
+| 97 | `evidence-unallocated-bank-count` | `auditgym/evidence_check.py` | unallocated_payment: a foreign-currency set without its bank row (or a base set with one) still supports it | killed | listed tests | test_verify, test_generator |
+| 98 | `evidence-unallocated-bank-split` | `auditgym/evidence_check.py` | unallocated_payment: in a foreign currency the 2900 amount need not split the bank amount | killed | listed tests | test_verify, test_generator |
+| 99 | `verify-complete-evidence-set` | `auditgym/verify.py` | evidence_sufficient: an unallocated_payment set may omit a receivable row of the invoice | killed | listed tests | test_verify, test_generator |
+| 100 | `verify-complete-bank-row` | `auditgym/verify.py` | evidence_sufficient: a foreign-currency unallocated_payment set may omit the payment's bank row | killed | listed tests | test_verify, test_generator |
+| 101 | `evidence-fx-future-date` | `auditgym/evidence_check.py` | wrong_fx_rate: a rate dated on the document's own day is rejected | killed | listed tests | test_verify, test_generator |
+| 102 | `evidence-period-boundary` | `auditgym/evidence_check.py` | wrong_period: the period end instant belongs to the period | killed | survivor tests | test_verify, test_generator |
+| 103 | `evidence-offset-start` | `auditgym/evidence_check.py` | local date: the UTC offset change takes effect one instant late | killed | survivor tests | test_verify, test_generator |
+| 104 | `evidence-half-even` | `auditgym/evidence_check.py` | rounding: half_even always rounds the tie up | killed | listed tests | test_verify, test_generator |
+| 105 | `protocol-max-line` | `auditgym/protocol.py` | bound: a line of exactly MAX_LINE characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 106 | `protocol-max-depth` | `auditgym/protocol.py` | bound: nesting of exactly MAX_DEPTH is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 107 | `protocol-max-nodes` | `auditgym/protocol.py` | bound: exactly MAX_NODES parsed nodes is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 108 | `protocol-separator-count` | `auditgym/protocol.py` | bound: commas are not counted against the node limit | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 109 | `protocol-max-digits` | `auditgym/protocol.py` | bound: an integer literal of exactly MAX_NUMBER_CHARS digits is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 110 | `protocol-max-float` | `auditgym/protocol.py` | bound: a float literal of exactly MAX_FLOAT_CHARS characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 111 | `protocol-nonsubmit-size` | `auditgym/protocol.py` | bound: a non-submit line of exactly 2048 characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 112 | `protocol-nan` | `auditgym/protocol.py` | NaN and Infinity are accepted as numbers | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 113 | `protocol-echo-length` | `auditgym/protocol.py` | echo: a malformed line is echoed 257 characters long | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 114 | `protocol-surrogate` | `auditgym/protocol.py` | a lone surrogate in an action is accepted | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 115 | `verify-stale-rate-variant` | `auditgym/verify.py` | provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate | killed | listed tests | test_verify, test_generator |
+| 116 | `shift-direction-order` | `auditgym/transform.py` | shift_direction tries -28 before +28 | killed | listed tests | test_transform_shift |
+| 117 | `config-boundary-utc-date-positive` | `auditgym/config.py` | boundary_fx_payment: a positive offset takes utc_date even when the first day after the period is a weekend (both dates then take one rate and the error has no amount) | killed | listed tests | test_generator |
+| 118 | `inject-boundary-fallback` | `auditgym/inject.py` | boundary_fx_payment: a boundary that gives utc_date no amount still gets a utc_date error | killed | listed tests | test_generator |
+| 119 | `config-boundary-fallback-refusal` | `auditgym/config.py` | boundary_fx_payment: a fixed month without a utc_date amount is refused although stale_rate or transposed is allowed | killed | listed tests | test_generator |
+| 120 | `check-shift-direction-order` | `auditgym/check.py` | D_paired tries the -28 shift before +28 | killed | listed tests | test_transform_shift |
+| 121 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | listed tests | test_transform_shift |
+| 122 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | listed tests | test_windows_hardening, test_redteam, test_isolation |

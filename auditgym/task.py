@@ -22,7 +22,9 @@ FINDING_TYPE_RULES = {
                    "credited to 2900 instead of relieving the invoice.",
         "affected_ids": "payment_id and the referenced invoice_id",
         "amount": "base amount wrongly credited to 2900",
-        "evidence": "the payment document, the invoice document, and the payment's 2900 row",
+        "evidence": "the payment document, the invoice document, the payment's 2900 row, and every ledger row of "
+                    "the invoice on its receivable account 1100: its posting (or opening item) and any relief by this "
+                    "payment; for a foreign-currency invoice also the payment's bank (1000) row",
     },
     "wrong_fx_rate": {
         "meaning": "A foreign-currency document is converted with a rate other than the policy rate "

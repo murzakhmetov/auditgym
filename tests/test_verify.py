@@ -19,7 +19,8 @@ from auditgym import auditor, evidence_check
 from auditgym.episode import load_episode
 from auditgym.generator import generate_episode
 from auditgym.money import convert_minor, proportional_minor
-from auditgym.splits import check_set
+from auditgym.schemas import MAX_EVIDENCE_IDS
+from auditgym.splits import check_set, load_split_episodes
 from auditgym.timeutil import parse_ts
 from auditgym.transform import transform_episode
 from auditgym.verify import check_provenance_structure, check_surface, verify_generated
@@ -70,6 +71,21 @@ class DirectoryModeTests(unittest.TestCase):
         self.assertIn("FAIL  records_schema", r.stdout)
         self.assertIn("FAIL  declared_discrepancies: [\"the independent auditor cannot run: ValueError: exponent out of range",
                       r.stdout)
+
+    def test_crafted_rates_fail_at_once_without_a_traceback(self):
+        # "1e9999_9999" passes float() (inf) and would reach Fraction("1e9999_9999"); a 4299-digit rate gives amounts
+        # with more than 4300 digits, which an f-string refuses to print
+        fx = self.dir / "public" / "fx.csv"
+        original = fx.read_text(encoding="utf-8").splitlines()
+        for value in ("1e9999_9999", "9" * 4299):
+            rows = [original[0]] + [",".join(x.split(",")[:-1] + [value]) for x in original[1:]]
+            fx.write_text("\n".join(rows) + "\n", encoding="utf-8")
+            t0 = time.monotonic()
+            r = run_verify(self.dir)
+            self.assertLess(time.monotonic() - t0, 60, value[:12])
+            self.assertEqual(r.returncode, 1, (value[:12], r.stdout[-500:]))
+            self.assertNotIn("Traceback", r.stderr, value[:12])
+            self.assertIn("FAIL  records_schema", r.stdout, value[:12])
 
     def test_deleted_op_fails_roundtrip(self):
         del self.prov["ops"][0]
@@ -344,6 +360,62 @@ class TransformedEpisodeTests(unittest.TestCase):
         self._tampered_transform_fails(Path("grader") / "provenance.json", edit)
 
 
+class UnallocatedRecordsTests(unittest.TestCase):
+    """verify reads the unallocated_payment records defensively, and the key's set is the only subset that derives."""
+
+    def test_a_record_without_a_field_is_a_fail_line_not_a_traceback(self):
+        for name, edit in (("dev/d08_both_interacting_kzt", "manifest"), ("train/t04_unallocated", "invoice")):
+            with self.subTest(episode=name, edit=edit), tempfile.TemporaryDirectory() as tmp:
+                d = Path(tmp) / "ep"
+                shutil.copytree(ROOT / "episodes" / name, d)
+                if edit == "manifest":
+                    p = d / "public" / "manifest.json"
+                    m = json.loads(p.read_text(encoding="utf-8"))
+                    del m["base_currency"]
+                    p.write_text(json.dumps(m), encoding="utf-8")
+                else:
+                    truth = json.loads((d / "grader" / "truth.json").read_text(encoding="utf-8"))
+                    inv_id = next(t for t in truth["issues"] if t["type"] == "unallocated_payment")["affected_ids"]
+                    p = d / "public" / "invoices.jsonl"
+                    lines = [json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip()]
+                    for doc in lines:
+                        if doc["invoice_id"] in inv_id:
+                            del doc["currency"]
+                    p.write_text("".join(json.dumps(x) + "\n" for x in lines), encoding="utf-8")
+                r = run_verify(d)
+                self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+                self.assertNotIn("Traceback", r.stdout + r.stderr)
+                self.assertIn("FAIL", r.stdout)
+
+    def test_only_the_key_set_derives_among_the_records_of_the_issue(self):
+        from itertools import combinations
+
+        checked = 0
+        for split, name in (("train", "t04_unallocated"), ("train", "t08_fx_partial_allocation"),
+                            ("dev", "d04_unallocated_missing_eur"), ("dev", "d08_both_interacting_kzt"),
+                            ("dev", "d09_large_mixed"), ("dev", "d10_large_dense_quarter_hour")):
+            ep = load_episode(ROOT / "episodes" / split / name)
+            for t in (t for t in ep.truth["issues"] if t["type"] == "unallocated_payment"):
+                pay = next(i for i in t["affected_ids"] if any(p["payment_id"] == i for p in ep.payments))
+                inv = next(i for i in t["affected_ids"] if i != pay)
+                docs = [next(p["doc_id"] for p in ep.payments if p["payment_id"] == pay),
+                        next(d["doc_id"] for d in ep.invoices if d["invoice_id"] == inv)]
+                pool = sorted({r["row_id"] for r in ep.ledger if r["payment_id"] == pay or r["invoice_id"] == inv})
+                self.assertLessEqual(len(pool), 14)
+                want = (t["type"], frozenset(t["affected_ids"]), t["expected_amount_minor"])
+                key = sorted(t["evidence_sets"][0])
+                deriving = []
+                for k in range(len(pool) + 1):
+                    for rows in combinations(pool, k):
+                        got = evidence_check.derive_from_evidence(t["type"], docs + list(rows), ep)
+                        if got is not None:
+                            deriving.append((sorted(docs + list(rows)), got))
+                with self.subTest(episode=name, issue=t["issue_id"]):
+                    self.assertEqual(deriving, [(key, want)])
+                checked += 1
+        self.assertGreaterEqual(checked, 9)
+
+
 class RateExponentBoundTests(unittest.TestCase):
     """Both rate parsers refuse an exponent above 64 at once instead of computing 10 ** exponent."""
 
@@ -363,6 +435,18 @@ class RateExponentBoundTests(unittest.TestCase):
         for bad in ("1e65", "1E-65", "1e99999999", "1e0001"):
             with self.assertRaisesRegex(ValueError, "exponent out of range"):
                 evidence_check._rate_fraction(bad)
+        # Fraction() itself reads "_" separators and non-ASCII digits: only a plain ASCII decimal may reach it
+        for bad in ("1e9999_9999", "1e" + "٩" * 8, "1_000", "9" * 4299, "nan", "inf", "", "1/3", "0x10"):
+            with self.assertRaises(ValueError, msg=bad[:20]):
+                evidence_check._rate_fraction(bad)
+
+    def test_the_auditor_parser_bounds_the_digits(self):
+        self.assertEqual(auditor._ratio("1" * 30), (int("1" * 30), 1))
+        for bad in ("1" * 31, "0." + "1" * 31, "9" * 4299):
+            with self.assertRaisesRegex(ValueError, "too many digits"):
+                auditor._ratio(bad)
+        with self.assertRaises(ValueError):
+            auditor._ratio("1e9999_9999")
 
 
 class EvidenceCheckerTests(unittest.TestCase):
@@ -401,13 +485,20 @@ class EvidenceCheckerTests(unittest.TestCase):
         self.assertEqual(evidence_check.convert_fraction(7, "0.5", 2, 2, "half_even"), 4)
 
     def test_reduced_evidence_derives_nothing(self):
-        ep = load_episode(D08)
-        for issue in ep.truth["issues"]:
-            es = issue["evidence_sets"][0]
-            self.assertEqual(evidence_check.derive_from_evidence(issue["type"], es, ep),
-                             (issue["type"], frozenset(issue["affected_ids"]), issue["expected_amount_minor"]))
-            for i in range(len(es)):
-                self.assertIsNone(evidence_check.derive_from_evidence(issue["type"], es[:i] + es[i + 1:], ep))
+        """Dropping any one record from any committed acceptable set (every issue type, every train/dev episode) breaks
+        the derivation; there is no exception."""
+        n = 0
+        for _split, _name, ep in load_split_episodes():
+            for issue in ep.truth["issues"]:
+                for es in issue["evidence_sets"]:
+                    self.assertEqual(evidence_check.derive_from_evidence(issue["type"], es, ep),
+                                     (issue["type"], frozenset(issue["affected_ids"]), issue["expected_amount_minor"]))
+                    for i in range(len(es)):
+                        reduced = es[:i] + es[i + 1:]
+                        self.assertIsNone(evidence_check.derive_from_evidence(issue["type"], reduced, ep),
+                                          (ep.manifest.get("episode_id"), issue["issue_id"], es[i]))
+                        n += 1
+        self.assertGreater(n, 100)
 
     def test_duplicate_rule_must_name_the_fields(self):
         ep = load_episode(ROOT / "episodes" / "train" / "t03_duplicate")
@@ -759,6 +850,169 @@ class SoleReceiptTests(unittest.TestCase):
         self.assertTrue(any(r["payment_id"] == self.pay["payment_id"] and r["credit_minor"] > 0 for r in rows))
         self.assertTrue(any(r["payment_id"] is None and r["debit_minor"] > 0 for r in rows))
         self.assertEqual(verify_generated(self.ep)["checks"]["evidence_sufficient"], "pass")
+
+
+def _issue_parts(ep, issue):
+    pay = next(d for d in ep.payments if d["payment_id"] in issue["affected_ids"])
+    inv = next(d for d in ep.invoices if d["invoice_id"] in issue["affected_ids"])
+    return pay, inv
+
+
+class UnallocatedEvidenceSetTests(unittest.TestCase):
+    """The one acceptable set of an unallocated_payment issue: both documents, the payment's 2900 row and every
+    receivable row that carries the invoice ID, so the cited records alone show that the invoice was open."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.episodes = [ep for _s, _n, ep in load_split_episodes() if any(
+            t["type"] == "unallocated_payment" for t in ep.truth["issues"])]
+
+    def issues(self):
+        for ep in self.episodes:
+            for t in ep.truth["issues"]:
+                if t["type"] == "unallocated_payment":
+                    yield ep, t
+
+    def test_the_key_holds_one_set_of_documents_2900_row_and_every_receivable_row(self):
+        n = 0
+        for ep, t in self.issues():
+            pay, inv = _issue_parts(ep, t)
+            rows = [r["row_id"] for r in ep.ledger if r["account"] == "2900" and r["payment_id"] == pay["payment_id"]]
+            rows += [r["row_id"] for r in ep.ledger if r["account"] == "1100" and r["invoice_id"] == inv["invoice_id"]]
+            if inv["currency"] != ep.policy["base_currency"]:  # the whole receipt at the payment-date rate
+                rows += [r["row_id"] for r in ep.ledger if r["account"] == "1000" and r["payment_id"] == pay["payment_id"]]
+            self.assertEqual(len(t["evidence_sets"]), 1)
+            self.assertEqual(sorted(t["evidence_sets"][0]), sorted([pay["doc_id"], inv["doc_id"]] + rows))
+            self.assertGreaterEqual(len(rows), 2)
+            n += 1
+        self.assertGreaterEqual(n, 6)
+
+    def test_the_largest_generated_set_fits_the_evidence_cap(self):
+        biggest = 0
+        configs = [{"size": "large", "errors": {"unallocated_payment": 3}},
+                   {"size": "medium", "errors": {"unallocated_payment": 2}, "interacting": ["fx_invoice_partial_allocation"]},
+                   {"size": "small", "errors": {"unallocated_payment": 1}, "variants": {"unallocated_payment": ["partial"]}}]
+        for k, cfg in enumerate(configs):
+            ep = generate_episode(700 + k, cfg).episode
+            for t in ep.truth["issues"]:
+                if t["type"] == "unallocated_payment":
+                    biggest = max(biggest, len(t["evidence_sets"][0]))
+        for _ep, t in self.issues():
+            biggest = max(biggest, len(t["evidence_sets"][0]))
+        # 2 documents + the 2900 row + the invoice's posting (or opening) row + this receipt's relief row
+        # + the receipt's bank row for a foreign-currency invoice
+        self.assertEqual(biggest, 6)
+        self.assertLessEqual(biggest, MAX_EVIDENCE_IDS)
+
+    def test_the_open_balance_comes_from_the_rows_not_from_the_invoice_total(self):
+        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        pay, inv = _issue_parts(ep, t)
+        before, after = evidence_check.unallocated_open_balance(es, ep)
+        relief = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["credit_minor"] > 0)
+        self.assertEqual((before, after), (325690, 325690 - relief["credit_minor"]))
+        inv["total_minor"] += 1000  # the document total does not enter the balance
+        self.assertEqual(evidence_check.unallocated_open_balance(es, ep), (before, after))
+
+    def test_a_receipt_story_with_a_foreign_relief_or_a_bad_balance_derives_nothing(self):
+        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        pay, inv = _issue_parts(ep, t)
+
+        def derive(evidence):
+            return evidence_check.derive_from_evidence("unallocated_payment", evidence, ep)
+
+        self.assertIsNotNone(derive(es))
+        other_pay = next(d for d in ep.payments if d["payment_id"] != pay["payment_id"])
+        posting = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["debit_minor"] > 0)
+        relief = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["credit_minor"] > 0)
+        own = relief["credit_minor"]
+        relief["payment_id"] = other_pay["payment_id"]
+        self.assertIsNone(derive(es))  # relieved by another receipt: the invoice may have been settled there
+        relief["payment_id"] = pay["payment_id"]
+        relief["credit_minor"] = posting["debit_minor"]
+        self.assertIsNone(derive(es))  # nothing left open
+        relief["credit_minor"] = own - 1
+        self.assertIsNone(derive(es))  # base currency: the receipt is its relief plus the 2900 amount
+        relief["credit_minor"] = own
+        self.assertIsNotNone(derive(es))
+        self.assertIsNone(derive(es + [es[0]]))  # a repeated ID
+
+    def test_a_base_currency_balance_on_the_rows_must_cover_the_receipt(self):
+        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        pay, inv = _issue_parts(ep, t)
+        self.assertEqual(inv["currency"], ep.policy["base_currency"])
+        derive = lambda: evidence_check.derive_from_evidence("unallocated_payment", es, ep)  # noqa: E731
+        self.assertIsNotNone(derive())
+        posting = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["debit_minor"] > 0)
+        own = posting["debit_minor"]
+        # the invoice document still says it covers the receipt, the cited posting no longer does
+        posting["debit_minor"] = pay["amount_minor"] - 1
+        self.assertGreater(inv["total_minor"], posting["debit_minor"])
+        self.assertIsNone(derive())
+        posting["debit_minor"] = pay["amount_minor"]
+        self.assertIsNotNone(derive())
+        posting["debit_minor"] = own
+
+    def test_a_foreign_currency_story_needs_the_bank_row_to_split_the_receipt(self):
+        ep = load_episode(D08)
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        pay, inv = _issue_parts(ep, t)
+        derive = lambda e: evidence_check.derive_from_evidence("unallocated_payment", e, ep)  # noqa: E731
+        bank = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1000")
+        self.assertIsNotNone(derive(es))
+        self.assertIsNone(derive([e for e in es if e != bank["row_id"]]))
+        own = bank["debit_minor"]
+        unalloc = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "2900")
+        bank["debit_minor"] = unalloc["credit_minor"]  # a relief was booked, so 2900 must be less than the bank amount
+        self.assertIsNone(derive(es))
+        bank["debit_minor"] = own
+        self.assertIsNotNone(derive(es))
+        other = next(r for r in ep.ledger if r["account"] == "1000" and r["payment_id"] != pay["payment_id"])
+        self.assertIsNone(derive([e for e in es if e != bank["row_id"]] + [other["row_id"]]))  # another payment's bank row
+
+    def test_a_foreign_currency_story_needs_an_open_balance_and_a_relief_the_receipt_paid_for(self):
+        ep = load_episode(D08)
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        pay, inv = _issue_parts(ep, t)
+        self.assertNotEqual(inv["currency"], ep.policy["base_currency"])
+        derive = lambda: evidence_check.derive_from_evidence("unallocated_payment", es, ep)  # noqa: E731
+        self.assertIsNotNone(derive())
+        posting = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["debit_minor"] > 0)
+        relief = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["credit_minor"] > 0)
+        own = relief["credit_minor"]
+        relief["credit_minor"] = posting["debit_minor"]
+        self.assertIsNone(derive())  # the relief takes the whole balance: nothing is left for the 2900 amount
+        relief["credit_minor"] = own
+        pay["amount_minor"] = pay["amount_minor"] // 2
+        self.assertIsNone(derive())  # the relief is more than the receipt can have paid for
+
+    def test_a_set_without_every_receivable_row_fails_verify(self):
+        ep, t = next(self.issues())
+        ep = copy.deepcopy(ep)
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        pay, inv = _issue_parts(ep, t)
+        dropped = next(r["row_id"] for r in ep.ledger if r["invoice_id"] == inv["invoice_id"] and r["account"] == "1100"
+                       and r["row_id"] in t["evidence_sets"][0])
+        t["evidence_sets"][0].remove(dropped)
+        rep = verify_generated(ep)
+        self.assertTrue(any("lacks the 1100 rows" in f for f in rep["failures"]), rep["failures"])
+        self.assertNotEqual(rep["checks"]["declared_discrepancies"], "pass")
+
+    def test_a_foreign_currency_set_without_the_bank_row_fails_verify(self):
+        ep = copy.deepcopy(load_episode(D08))
+        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        es = t["evidence_sets"][0]
+        bank = next(r["row_id"] for r in ep.ledger if r["row_id"] in es and r["account"] == "1000")
+        es.remove(bank)
+        rep = verify_generated(ep)
+        self.assertTrue(any("lacks the payment's bank (1000) row" in f for f in rep["failures"]), rep["failures"])
 
 
 if __name__ == "__main__":

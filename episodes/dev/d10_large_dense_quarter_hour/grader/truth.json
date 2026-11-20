@@ -74,7 +74,9 @@
         [
           "doc_16a7faed",
           "doc_cbeb23ab",
-          "gl_fe2d7f53"
+          "gl_fe2d7f53",
+          "gl_d91ba9b9",
+          "gl_a57acdbf"
         ]
       ],
       "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."
@@ -95,7 +97,8 @@
         [
           "doc_fec0b9d3",
           "doc_6390b1af",
-          "gl_d9f67ab4"
+          "gl_d9f67ab4",
+          "gl_49ebeac0"
         ]
       ],
       "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."
@@ -212,7 +215,10 @@
         [
           "doc_02a68046",
           "doc_0f5c246f",
-          "gl_29c248d8"
+          "gl_29c248d8",
+          "gl_d2b46e82",
+          "gl_baa43345",
+          "gl_cbce4eba"
         ]
       ],
       "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."

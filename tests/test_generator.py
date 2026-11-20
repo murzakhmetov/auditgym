@@ -143,7 +143,8 @@ class VerificationTests(unittest.TestCase):
 
     def test_fixed_period_boundary_error_names_nearest_feasible_months(self):
         with self.assertRaises(ConfigError) as cm:
-            generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-02"})
+            generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-02",
+                                 "variants": {"wrong_fx_rate": ["utc_date"]}})
         self.assertIn("Nearest feasible periods: ", str(cm.exception))
 
     def test_clean_company_has_empty_key(self):
@@ -268,6 +269,109 @@ class TransformTests(unittest.TestCase):
         r = transform_episode(ep, remap_seed=2)
         old_ids = {x["row_id"] for x in ep.ledger}
         self.assertFalse(old_ids & {x["row_id"] for x in r.ledger})
+
+
+class BoundaryEveryMonthTests(unittest.TestCase):
+    """boundary_fx_payment can be generated for a fixed period in every month, not only where both days around the
+    period end are weekdays: where the utc_date error would have no amount the receipt carries another rate error."""
+
+    def test_every_month_of_2025_to_2027_hosts_the_scenario(self):
+        from auditgym.config import boundary_utc_date_ok
+        from auditgym.timeutil import month_bounds, offset_minutes
+
+        fallback_months = 0
+        for y in (2025, 2026, 2027):
+            for m in range(1, 13):
+                period = f"{y}-{m:02d}"
+                for tz in (None, "Asia/Almaty", "America/Sao_Paulo"):  # drawn, positive offset, negative offset
+                    cfg = {"period": period, "interacting": ["boundary_fx_payment"]}
+                    if tz:
+                        cfg["timezone"] = tz
+                    with self.subTest(period=period, tz=tz):
+                        ep = generate_episode(3, cfg).episode
+                        self.assertTrue(verify_generated(ep)["ok"], verify_generated(ep)["failures"][:2])
+                        by_type = {i["type"]: i for i in ep.truth["issues"]}
+                        self.assertEqual(sorted(by_type), ["wrong_fx_rate", "wrong_period"])
+                        self.assertTrue(all(i["expected_amount_minor"] > 0 for i in by_type.values()))
+                        self.assertEqual({i["scenario"] for i in by_type.values()}, {"boundary_fx_payment"})
+                        self.assertEqual(by_type["wrong_fx_rate"]["affected_ids"], by_type["wrong_period"]["affected_ids"])
+                        self.assertEqual(by_type["wrong_period"]["variant"], "utc_wall_clock")
+                        zone = ep.provenance["resolved_config"]["timezone"]
+                        off = offset_minutes(zone, month_bounds(zone, y, m)[1])
+                        if boundary_utc_date_ok(period, off):
+                            self.assertEqual(by_type["wrong_fx_rate"]["variant"], "utc_date")
+                        else:
+                            fallback_months += 1
+                            self.assertIn(by_type["wrong_fx_rate"]["variant"], ("stale_rate", "transposed"))
+                        _, g = run_one(ep, "oracle")
+                        self.assertEqual(g["reward"], 1.0)
+                        _, a = run_one(ep, "auditor", isolated=False)
+                        self.assertTrue(a["closed"] and a["tp"] == 2 and a["fp"] == 0, a["missed_issues"])
+        self.assertGreater(fallback_months, 15)
+
+    def test_a_dst_change_after_the_boundary_leaves_no_row_in_its_hour(self):
+        """America/New_York 2026-10: daylight time ends at 02:00 on Sunday 1 November, right after the boundary. The
+        receipt's UTC-wall-clock posting must stay out of the hour ordinary documents avoid (else a public tell) and keep
+        the receipt's UTC wall clock as its local wall clock."""
+        from datetime import timedelta, timezone
+
+        from auditgym.timeutil import in_ambiguous_hour, offset_minutes, parse_ts
+
+        def utc_wall(inst):
+            return inst.astimezone(timezone.utc).replace(tzinfo=None)
+
+        tz = "America/New_York"
+        for seed in range(1, 13):
+            with self.subTest(seed=seed):
+                ep = generate_episode(seed, {"period": "2026-10", "timezone": tz, "interacting": ["boundary_fx_payment"],
+                                             "ts_repr": "local"}).episode
+                self.assertTrue(verify_generated(ep)["ok"], verify_generated(ep)["failures"][:2])
+                self.assertEqual([r["row_id"] for r in ep.ledger if in_ambiguous_hour(tz, parse_ts(r["timestamp"]))], [])
+                pay = next(i for i in ep.truth["issues"] if i["type"] == "wrong_period")["affected_ids"][0]
+                receipt = parse_ts(next(p for p in ep.payments if p["payment_id"] == pay)["timestamp"])
+                rows = [r for r in ep.ledger if r["payment_id"] == pay]
+                self.assertTrue(rows)
+                for r in rows:  # booked by the receipt's UTC wall clock: the posting's local wall clock is that clock
+                    post = parse_ts(r["timestamp"])
+                    self.assertEqual(utc_wall(post) + timedelta(minutes=offset_minutes(tz, post)), utc_wall(receipt))
+
+    def test_both_scenarios_in_a_fallback_month_and_a_zero_offset_refusal(self):
+        for seed in (1, 2, 3):
+            with self.subTest(seed=seed):
+                ep = generate_episode(seed, {"period": "2025-10", "timezone": "Asia/Almaty",
+                                             "interacting": ["boundary_fx_payment", "fx_invoice_partial_allocation"]}).episode
+                self.assertTrue(verify_generated(ep)["ok"], verify_generated(ep)["failures"][:2])
+                self.assertEqual({i["scenario"] for i in ep.truth["issues"]},
+                                 {"boundary_fx_payment", "fx_invoice_partial_allocation"})
+                _, a = run_one(ep, "auditor", isolated=False)
+                self.assertTrue(a["closed"] and a["fp"] == 0 and a["tp"] == len(ep.truth["issues"]), a["missed_issues"])
+        with self.assertRaises(ConfigError) as cm:  # Europe/London has a zero offset at the end of January
+            generate_episode(1, {"period": "2026-01", "timezone": "Europe/London", "interacting": ["boundary_fx_payment"]})
+        self.assertIn("non-zero UTC offset", str(cm.exception))
+
+    def test_utc_date_amount_rule(self):
+        from auditgym.config import boundary_utc_date_ok
+
+        # 2025-10 ends on Friday, 2026-01 on Saturday, 2026-05 on Sunday, 2025-09 on Tuesday
+        self.assertFalse(boundary_utc_date_ok("2025-10", 300) or boundary_utc_date_ok("2025-10", -300))
+        self.assertFalse(boundary_utc_date_ok("2026-01", 300) or boundary_utc_date_ok("2026-01", -300))
+        self.assertTrue(boundary_utc_date_ok("2026-05", 300))
+        self.assertFalse(boundary_utc_date_ok("2026-05", -300))
+        self.assertTrue(boundary_utc_date_ok("2025-09", 300) and boundary_utc_date_ok("2025-09", -300))
+        self.assertFalse(boundary_utc_date_ok("2025-09", 0))
+
+    def test_limited_to_utc_date_a_degenerate_month_is_refused(self):
+        with self.assertRaises(ConfigError) as cm:
+            generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-10",
+                                 "variants": {"wrong_fx_rate": ["utc_date"]}})
+        self.assertIn("Nearest feasible periods: 2025-09, 2025-11", str(cm.exception))
+        with self.assertRaises(ConfigError) as cm:
+            generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-10", "timezone": "America/Sao_Paulo",
+                                 "variants": {"wrong_fx_rate": ["utc_date"]}})
+        self.assertIn("Nearest feasible periods: 2025-09, 2025-12", str(cm.exception))
+        ep = generate_episode(1, {"interacting": ["boundary_fx_payment"], "period": "2025-10",
+                                  "variants": {"wrong_fx_rate": ["transposed"]}}).episode
+        self.assertEqual([i["variant"] for i in ep.truth["issues"] if i["type"] == "wrong_fx_rate"], ["transposed"])
 
 
 if __name__ == "__main__":

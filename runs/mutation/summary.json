@@ -1,7 +1,7 @@
 {
-  "listed": 109,
-  "counted": 109,
-  "killed": 109,
+  "listed": 122,
+  "counted": 122,
+  "killed": 122,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,21 +9,21 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 64,
-  "killed_by_survivor_tests": 45,
+  "killed_by_existing": 78,
+  "killed_by_survivor_tests": 44,
   "test_modules_sha256": {
     "tests.test_contract_battery": "9b7627f78b0ec5767cdbcc764dc1ec59d44db6f5362fbdae278e8e66d5292e8a",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
     "tests.test_env": "1bd1fdab409c3fa6652940e05d45f539183975ec841779e6a22c7cb02d441e8f",
-    "tests.test_generator": "37e100c3316cd75fd7a9c39421b9bde6d60b382ac977efa2a00219b72eaedb98",
+    "tests.test_generator": "f12351b4595d38135a835be50dd776d749ead330be9ea69cec45acb169a53d4e",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
-    "tests.test_mutation_survivors": "3749488b41ff9c73612fe4be3a8e305f3e2f8a8e48d868188453a986c3ec2c37",
+    "tests.test_mutation_survivors": "fec1a3c7d2e611e02c0ae0f1ef280403ccfd52467d24cca230b6c9676138c35e",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
     "tests.test_transform_shift": "2260e3aa5fc688255335efe39c42951ea361803261adcd92ac0038f57526e934",
-    "tests.test_verify": "ebae23fadd58d59d38dae6dd00b21a68947b5a9e0828592b7c7de9d3b1dcfea6",
+    "tests.test_verify": "574ca4cbedd6216dff14b3f0bc23b7e45b2c13328e695078671546e75a5b012a",
     "tests.test_windows_hardening": "29247373d21201b452658db381426f447f3670f460c72b58e5b608dfd0129038"
   },
   "mutants": [
@@ -993,7 +993,7 @@
       "file": "auditgym/verify.py",
       "breaks": "declared_discrepancies: differing evidence sets pass",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
@@ -1171,14 +1171,134 @@
     {
       "id": "evidence-unallocated-account",
       "file": "auditgym/evidence_check.py",
-      "breaks": "unallocated_payment: the row may sit in any account",
+      "breaks": "unallocated_payment: every cited row is taken for the 2900 row, so no true set derives",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "b0250aa64d39a640181f158fbba07b5bf99240d4c6635fae8aa566954a3fd1de"
+    },
+    {
+      "id": "evidence-unallocated-booked-after",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: an invoice booked after the receipt still counts as open when the receipt arrived",
       "status": "killed",
       "killed_by": "survivor tests",
       "tests": [
         "tests.test_verify",
         "tests.test_generator"
       ],
-      "sha256": "b0250aa64d39a640181f158fbba07b5bf99240d4c6635fae8aa566954a3fd1de"
+      "sha256": "8ebbe2dde1ea307a2868f20ec5742c4c5c32615a21b4ded11d9db4cbd0e17428"
+    },
+    {
+      "id": "evidence-unallocated-other-relief",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: a relief by another receipt among the cited rows still supports it",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "aa8d317f840c4b01804fe7bb8c6806c05625698a24cccacd2b82fd2d563d8b37"
+    },
+    {
+      "id": "evidence-unallocated-open-balance",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: an invoice the relief fully settled still counts as open",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "c5127a2cf1052d314ac83370cd25ad68557ab7946647f24d34d102b1fc71daf0"
+    },
+    {
+      "id": "evidence-unallocated-relief-bound",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: the relief may exceed what the receipt paid",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "37dd295cd1935dac72a0b7337ee88e4ff04adb4a417c349ea58488a106cca008"
+    },
+    {
+      "id": "evidence-unallocated-base-identity",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: in the base currency the cited balance need not cover the receipt, nor equal relief plus 2900",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "66f3a7a417c80ec9fa18c2715f51dfeb7454c41a164f6b65167833f2906518d0"
+    },
+    {
+      "id": "evidence-unallocated-base-cover",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: in the base currency a posting below the receipt still supports it",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "9eabcc112794d85c6708e7b5c4578f27e154f4809b224cd73549db3774e0c0e5"
+    },
+    {
+      "id": "evidence-unallocated-bank-count",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: a foreign-currency set without its bank row (or a base set with one) still supports it",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "af271b31d7667ed66f57d14b3d1988ab2b85e0bead3fdd1eb84116fc6f1c422f"
+    },
+    {
+      "id": "evidence-unallocated-bank-split",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: in a foreign currency the 2900 amount need not split the bank amount",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "e7010f39f247a17de2db476ded9cdae41b9097e2c8e27aa73bc051584213dbc3"
+    },
+    {
+      "id": "verify-complete-evidence-set",
+      "file": "auditgym/verify.py",
+      "breaks": "evidence_sufficient: an unallocated_payment set may omit a receivable row of the invoice",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "54ca10a4cb654797d32cab7050dbccf4471467240d6138c99880192b321a3cf1"
+    },
+    {
+      "id": "verify-complete-bank-row",
+      "file": "auditgym/verify.py",
+      "breaks": "evidence_sufficient: a foreign-currency unallocated_payment set may omit the payment's bank row",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "d5ee5721ef0e77daadb86aaaede378e6a627d51d57e417a37c620c1a0ef7d793"
     },
     {
       "id": "evidence-fx-future-date",
@@ -1380,6 +1500,39 @@
         "tests.test_transform_shift"
       ],
       "sha256": "a35961e7d61bfbf6ceb6c56e9f26efbcad735d7d406e2530d999f68db0e50b71"
+    },
+    {
+      "id": "config-boundary-utc-date-positive",
+      "file": "auditgym/config.py",
+      "breaks": "boundary_fx_payment: a positive offset takes utc_date even when the first day after the period is a weekend (both dates then take one rate and the error has no amount)",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "811c8c5f6157d369a9174ff17f6d928c0daafc92103f6ae123507acd74a98a9d"
+    },
+    {
+      "id": "inject-boundary-fallback",
+      "file": "auditgym/inject.py",
+      "breaks": "boundary_fx_payment: a boundary that gives utc_date no amount still gets a utc_date error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "ceed720274ee73789e57fda81b851225a40e0be1ea1c3e977bedca9a3707766d"
+    },
+    {
+      "id": "config-boundary-fallback-refusal",
+      "file": "auditgym/config.py",
+      "breaks": "boundary_fx_payment: a fixed month without a utc_date amount is refused although stale_rate or transposed is allowed",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "2c41f77646220f095a70f0290f94c53394bde4230687ebe89360214d856861ad"
     },
     {
       "id": "check-shift-direction-order",

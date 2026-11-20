@@ -18,10 +18,10 @@ from datetime import date, datetime, timedelta
 
 from . import catalog
 from .books import Books, Overrides, policy_rate
-from .config import ConfigError, utc_date_days
+from .config import BOUNDARY_FX_FALLBACK, ConfigError, boundary_utc_date_ok, utc_date_days
 from .history import LARGE_PURCHASE_USD, LARGE_SALES_USD, HistoryBuilder, Invoice, SampleRetry
 from .money import convert_minor
-from .timeutil import offset_minutes
+from .timeutil import in_ambiguous_hour, local_datetime, offset_minutes
 
 MATERIALITY_MIN = 100
 TOLERANCE_MINOR = 2
@@ -55,6 +55,20 @@ def _minute_time(b: HistoryBuilder, d: date, m_lo: int, m_hi: int) -> datetime:
         return b.minute_time(d, m_lo, m_hi)
     except SampleRetry as exc:
         raise RetryAttempt(str(exc)) from None
+
+
+def _clear_of_dst(b: HistoryBuilder, d: date, m_lo: int, m_hi: int, off: int) -> int:
+    """The latest minute of day `d`, at most m_hi, at which a receipt's UTC-wall-clock posting (receipt minus `off`) stays
+    75 minutes clear of a DST change and still under the boundary's offset `off`. Ordinary documents never sit that close
+    to a change, so a posting there would be a public tell, and after the change its wall clock would no longer be the
+    receipt's UTC wall clock. No DST change near the boundary: m_hi itself, so the draw is unchanged."""
+    m = m_hi
+    while m >= m_lo:
+        posting = local_datetime(b.h.tz, d, m // 60, m % 60, 59) - timedelta(minutes=off)
+        if not in_ambiguous_hour(b.h.tz, posting) and offset_minutes(b.h.tz, posting) == off:
+            return m
+        m -= 1
+    raise RetryAttempt("no receipt minute keeps the boundary posting clear of a DST change")
 
 
 def _offset_on(b: HistoryBuilder, d: date) -> int:
@@ -235,7 +249,7 @@ def create_wrong_period(b: HistoryBuilder, plan: Plan, variant: str, scenario: s
     plan.items.append(Item("wrong_period", variant, scenario, {"invoice": inv.key}, {"posting_ts": posting}))
 
 
-def create_boundary_fx_payment(b: HistoryBuilder, plan: Plan) -> None:
+def create_boundary_fx_payment(b: HistoryBuilder, plan: Plan, fx_variants: list | None = None) -> None:
     h, rng = b.h, b.rng
     off = offset_minutes(h.tz, h.p1)
     if off == 0 or not h.foreign:
@@ -244,17 +258,29 @@ def create_boundary_fx_payment(b: HistoryBuilder, plan: Plan) -> None:
     inv = _new_invoice(b, "sales", b.local_time(d0), True, 5000)
     amount = int(inv.total * rng.uniform(0.4, 0.9))
     if off > 0:
-        ts = _minute_time(b, h.next_first_date, 5, off - 11)
+        ts = _minute_time(b, h.next_first_date, 5, _clear_of_dst(b, h.next_first_date, 5, off - 11, off))
     else:
-        ts = _minute_time(b, h.p_last_date, 1440 + off + 11, 1434)
+        ts = _minute_time(b, h.p_last_date, 1440 + off + 11, _clear_of_dst(b, h.p_last_date, 1440 + off + 11, 1434, off))
     posting = ts - timedelta(minutes=off)
+    if in_ambiguous_hour(h.tz, posting) or offset_minutes(h.tz, posting) != off:  # guard; _clear_of_dst keeps it unreachable
+        raise RetryAttempt("the boundary posting crosses a DST change")
     p = b.add_payment("receipt", inv.entity, inv.currency, ts, amount, [inv.key])
     local_d = b.h.local_date(ts)
     utc_d = ts.date()
     plan.protected_dates.update({local_d, utc_d})
     scen = "boundary_fx_payment"
     plan.items.append(Item("wrong_period", "utc_wall_clock", scen, {"payment": p.key}, {"posting_ts": posting}))
-    plan.items.append(Item("wrong_fx_rate", "utc_date", scen, {"payment": p.key}, {"wrong_rate_date": utc_d}))
+    if boundary_utc_date_ok(f"{h.year:04d}-{h.month:02d}", off):
+        plan.items.append(Item("wrong_fx_rate", "utc_date", scen, {"payment": p.key}, {"wrong_rate_date": utc_d}))
+        return
+    # utc_date needs a published rate on the receipt's local date and a different rate on its UTC date; this boundary
+    # lacks one of the two, so the same receipt carries another rate error instead (drawn only here, so every month that
+    # could host utc_date is unchanged).
+    allowed = BOUNDARY_FX_FALLBACK if fx_variants is None else [v for v in fx_variants if v in BOUNDARY_FX_FALLBACK]
+    variants = feasible_variants(b, "wrong_fx_rate", list(allowed))
+    if not variants:
+        raise ConfigError("boundary_fx_payment in this month needs the stale_rate or transposed variant of wrong_fx_rate")
+    plan.items.append(Item("wrong_fx_rate", rng.choice(variants), scen, {"payment": p.key}, {}))
 
 
 def create_fx_invoice_partial_allocation(b: HistoryBuilder, plan: Plan, fx_variants: list, alloc_variants: list) -> None:
@@ -292,7 +318,7 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
                 create_wrong_period(b, plan, v)
     for scen in cfg["interacting"]:
         if scen == "boundary_fx_payment":
-            create_boundary_fx_payment(b, plan)
+            create_boundary_fx_payment(b, plan, cfg["variants"]["wrong_fx_rate"])
         else:
             create_fx_invoice_partial_allocation(b, plan, cfg["variants"]["wrong_fx_rate"], cfg["variants"]["unallocated_payment"])
     return plan
@@ -388,9 +414,17 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
             amount = _line_amount(row)
             if amount < MATERIALITY_MIN:
                 raise RetryAttempt("unallocated amount below materiality")
+            acct = "1100" if books.invoices[i].kind == "sales" else "2000"
+            inv_rows = sorted((ln for ln in books.lines if ln.invoice == i and ln.account == acct), key=lambda ln: ln.order)
+            # a foreign-currency invoice also cites the receipt's bank row: it holds the whole receipt at the payment-date
+            # rate, the only public record that shows what part of it the 2900 amount is
+            bank_rows = [pay_row(p, "bank")] if books.invoices[i].currency != h.base else []
             issues.append({
                 "item": it, "affected": [("payment", p), ("invoice", i)], "amount": amount,
-                "evidence": [[("doc", p), ("doc", i), ("row", row.ident)]],
+                # both documents, the 2900 row (and the bank row in a foreign currency) and every receivable/payable row
+                # of the invoice (its posting and any relief): together they show that the invoice was open and that
+                # this payment alone relieved it
+                "evidence": [[("doc", p), ("doc", i), ("row", row.ident)] + [("row", ln.ident) for ln in bank_rows + inv_rows]],
                 "sort": (h.payments[p].ts, amount),
                 "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it "
                                "was left in 2900 unallocated receipts instead of relieving receivables.",

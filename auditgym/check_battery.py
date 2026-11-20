@@ -120,9 +120,12 @@ def duplicate_attack(ep, first: dict, second: dict, why: str = "two invoices, sa
 
 
 def unallocated_attack(ep, pay: dict, inv: dict, why: str = "receipt does not relieve the invoice") -> dict:
-    """Published unallocated_payment shape: payment and invoice, the 2900 amount, both documents and the 2900 row."""
+    """Published unallocated_payment shape: payment and invoice, the 2900 amount, both documents, the 2900 row, the bank row for a foreign-currency invoice and every receivable/payable row of the invoice."""
     row = _unallocated_row(ep, pay)
-    return _accusation(ep, "unallocated_payment", [pay, inv], _row_amount(row, _amount(pay)), _cite([pay, inv], [row]), why)
+    acct = "1100" if inv["kind"] == "sales" else "2000"
+    inv_rows = [r for r in ep.ledger if r["invoice_id"] == inv["invoice_id"] and r["account"] == acct]
+    bank = [r for r in _own_rows(ep, pay) if r["account"] == "1000"] if inv["currency"] != ep.manifest["base_currency"] else []
+    return _accusation(ep, "unallocated_payment", [pay, inv], _row_amount(row, _amount(pay)), _cite([pay, inv], [row] + bank + inv_rows), why)
 
 
 def period_attack(ep, doc: dict, why: str = "document sits at the period boundary") -> dict:

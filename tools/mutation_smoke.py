@@ -64,6 +64,7 @@ VERIFY = ("tests.test_verify", "tests.test_generator")
 SHIFT = ("tests.test_transform_shift",)
 WINHARD = ("tests.test_windows_hardening", "tests.test_redteam", "tests.test_isolation")
 PROTO = ("tests.test_isolation", "tests.test_redteam", "tests.test_contract_fuzz")
+GEN = ("tests.test_generator",)
 
 
 def M(id, file, old, new, modules, breaks, equivalent="", only_on=""):
@@ -271,7 +272,30 @@ MUTANTS = [
     M("evidence-unallocated-total", "auditgym/evidence_check.py", 'i["total_minor"] >= p["amount_minor"]',
       'i["total_minor"] > p["amount_minor"]', VERIFY, "unallocated_payment: a payment equal to the invoice total is rejected"),
     M("evidence-unallocated-account", "auditgym/evidence_check.py", 'r["account"] == "2900"', 'r["account"] != ""', VERIFY,
-      "unallocated_payment: the row may sit in any account"),
+      "unallocated_payment: every cited row is taken for the 2900 row, so no true set derives"),
+    M("evidence-unallocated-booked-after", "auditgym/evidence_check.py",
+      'if parse_ts(r["timestamp"]) > parse_ts(u["timestamp"]):', "if False:", VERIFY,
+      "unallocated_payment: an invoice booked after the receipt still counts as open when the receipt arrived"),
+    M("evidence-unallocated-other-relief", "auditgym/evidence_check.py", 'elif r["payment_id"] == p["payment_id"]:', "elif True:",
+      VERIFY, "unallocated_payment: a relief by another receipt among the cited rows still supports it"),
+    M("evidence-unallocated-open-balance", "auditgym/evidence_check.py", "if posted <= 0 or posted - relieved <= 0:",
+      "if posted <= 0:", VERIFY, "unallocated_payment: an invoice the relief fully settled still counts as open"),
+    M("evidence-unallocated-relief-bound", "auditgym/evidence_check.py",
+      'if 2 * relieved * i["total_minor"] > 2 * posted * p["amount_minor"] + i["total_minor"]:', "if False:", VERIFY,
+      "unallocated_payment: the relief may exceed what the receipt paid"),
+    M("evidence-unallocated-base-identity", "auditgym/evidence_check.py",
+      'if not foreign and (p["amount_minor"] > posted or relieved + u["credit_minor"] != p["amount_minor"]):', "if False:",
+      VERIFY, "unallocated_payment: in the base currency the cited balance need not cover the receipt, nor equal relief plus 2900"),
+    M("evidence-unallocated-base-cover", "auditgym/evidence_check.py", 'p["amount_minor"] > posted or relieved',
+      'False or relieved', VERIFY, "unallocated_payment: in the base currency a posting below the receipt still supports it"),
+    M("evidence-unallocated-bank-count", "auditgym/evidence_check.py", 'len(bank) != (1 if foreign else 0)', "False", VERIFY,
+      "unallocated_payment: a foreign-currency set without its bank row (or a base set with one) still supports it"),
+    M("evidence-unallocated-bank-split", "auditgym/evidence_check.py", "if foreign and (u[", "if False and (u[", VERIFY,
+      "unallocated_payment: in a foreign currency the 2900 amount need not split the bank amount"),
+    M("verify-complete-evidence-set", "auditgym/verify.py", "        if missing:\n", "        if False:\n", VERIFY,
+      "evidence_sufficient: an unallocated_payment set may omit a receivable row of the invoice"),
+    M("verify-complete-bank-row", "auditgym/verify.py", 'if not pays & set(es):', "if False:", VERIFY,
+      "evidence_sufficient: a foreign-currency unallocated_payment set may omit the payment's bank row"),
     M("evidence-fx-future-date", "auditgym/evidence_check.py", "if fx_d > local_d or", "if fx_d >= local_d or", VERIFY,
       "wrong_fx_rate: a rate dated on the document's own day is rejected"),
     M("evidence-period-boundary", "auditgym/evidence_check.py", "(p0 <= inst < p1) == (p0 <= post < p1)",
@@ -307,6 +331,17 @@ MUTANTS = [
       "provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate"),
     M("shift-direction-order", "auditgym/transform.py", "for cand in (k, -k):", "for cand in (-k, k):", SHIFT,
       "shift_direction tries -28 before +28"),
+    # ---------------------------------------------------------------- generator: boundary_fx_payment in every month
+    M("config-boundary-utc-date-positive", "auditgym/config.py",
+      "    if off > 0:\n        return first_next.weekday() < 5\n", "    if off > 0:\n        return True\n", GEN,
+      "boundary_fx_payment: a positive offset takes utc_date even when the first day after the period is a weekend "
+      "(both dates then take one rate and the error has no amount)"),
+    M("inject-boundary-fallback", "auditgym/inject.py", 'if boundary_utc_date_ok(f"{h.year:04d}-{h.month:02d}", off):',
+      "if True:", GEN, "boundary_fx_payment: a boundary that gives utc_date no amount still gets a utc_date error"),
+    M("config-boundary-fallback-refusal", "auditgym/config.py",
+      'needs["boundary_weekdays"] and not needs["boundary_fx_fallback"] and fixed_off != 0',
+      'needs["boundary_weekdays"] and fixed_off != 0', GEN,
+      "boundary_fx_payment: a fixed month without a utc_date amount is refused although stale_rate or transposed is allowed"),
     M("check-shift-direction-order", "auditgym/check.py", "for k in (k0, -k0):", "for k in (-k0, k0):", SHIFT,
       "D_paired tries the -28 shift before +28"),
     M("shift-period-lower", "auditgym/transform.py", "not PERIOD_YEARS[0] <= int(text[:4]) + k",
@@ -488,8 +523,8 @@ def render_markdown(report: dict) -> str:
         f"{report['killed_by_survivor_tests']} pass those modules and are killed by `tests/test_mutation_survivors.py`, "
         "which was written for these mutants; the remaining test modules are not run against a mutant.",
         "",
-        "Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, "
-        "`schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`, `check.py`), applied to a fresh copy of the "
+        "Each mutant is one hand-written change to the core ("
+        + ", ".join(f"`{f}`" for f in sorted({r["file"] for r in report["mutants"]})) + "), applied to a fresh copy of the "
         "repository, which then runs the unit-test modules named in the last column, and, if those pass, "
         "`tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.",
         "",

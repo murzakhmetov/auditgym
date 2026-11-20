@@ -18,7 +18,10 @@
         [
           "D/2026/826648",
           "D/2026/529937",
-          "J/2026/868823"
+          "J/2026/868823",
+          "J/2026/419224",
+          "J/2026/849710",
+          "J/2026/266051"
         ]
       ],
       "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."

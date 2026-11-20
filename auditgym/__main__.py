@@ -128,7 +128,7 @@ def _run_meta(args, secret: str | None, min_bits: int | None, n_episodes: int, r
         "episodes": n_episodes,
         "secret_used": bool(secret),
         "min_seed_bits": min_bits,
-        "allow_same_user": bool(getattr(args, "allow_same_user", False)),
+        "allow_same_user": bool(getattr(args, "same_user_accepted", False)),
         "refused_entries": [{"name": n, "reason": r} for n, r in refused],
         "command": cmd,
     }
@@ -171,9 +171,10 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
                          f"({custom[0]}): it would run in the host process; drop --in-process")
     if protocol.require_agent_user():
         return  # strict mode either switches user or refuses later
-    if not args.in_process and aio.agent_identity() is not None and protocol._proc_listable():
+    switch = aio.agent_identity() is not None and protocol._proc_listable()
+    if not args.in_process and switch:
         return  # the child runs as the separate policy user
-    advice = ("drop --in-process" if args.in_process
+    advice = ("drop --in-process" if switch  # this host can switch to the policy user once the policy leaves the process
               else "run it in the official image (separate policy user)")
     if args.seeds_file or args.secret_env:
         if not getattr(args, "allow_same_user", False):
@@ -182,10 +183,11 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
                              f"{advice}, or pass --allow-same-user to accept that (recorded in meta.json)")
         print(f"WARNING: custom policy {custom[0]} runs as the host's user on closed episodes (--allow-same-user): "
               f"it can read the seeds file and any file that user can read", file=sys.stderr)
+        args.same_user_accepted = True  # meta.json records the override only when it took effect
         return
-    open_splits = (protocol.PROJECT_ROOT / "episodes").resolve()  # train/dev: their answer keys are public by design
+    open_splits = [(protocol.PROJECT_ROOT / "episodes" / s).resolve() for s in ("train", "dev")]  # public by design
     keys = [str(d) for d in answer_key_dirs
-            if (Path(d) / "grader").exists() and not Path(d).resolve().is_relative_to(open_splits)]
+            if (Path(d) / "grader").exists() and not any(Path(d).resolve().is_relative_to(o) for o in open_splits)]
     if keys:
         print(f"WARNING: custom policy {custom[0]} runs as the host's user next to answer keys ({keys[0]}/grader"
               f"{' and %d more' % (len(keys) - 1) if len(keys) > 1 else ''}): it can read them; for closed episodes "
@@ -281,10 +283,6 @@ def cmd_run(args) -> int:
     min_bits = None
     if args.seeds_file:
         label, entries = _load_seeds_file(Path(args.seeds_file))
-        min_bits = min(_seed_bits(e["seed"]) for e in entries)
-        warning = _small_seed_warning(min_bits, secret)
-        if warning:
-            print(warning, file=sys.stderr)
         from .config import ConfigError
         from .generator import GenerationError
 
@@ -298,6 +296,11 @@ def cmd_run(args) -> int:
             episodes.append((label, e["name"], gen.episode))
         if refused and len(refused) == len(entries):
             raise InputError(f"no entry of the seeds file can be generated; {refused[0][0]}: {refused[0][1]}")
+        done = {n for n, _why in refused}
+        min_bits = min(_seed_bits(e["seed"]) for e in entries if e["name"] not in done)  # generated entries only
+        warning = _small_seed_warning(min_bits, secret)
+        if warning:
+            print(warning, file=sys.stderr)
     from .policies import PolicyError, validate_policy_name
 
     policies = [p.strip() for p in args.policies.split(",") if p.strip()]

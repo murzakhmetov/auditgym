@@ -4,7 +4,7 @@
 
 Input is the tab-separated output of `gh run view --log` (job, step, timestamp and message). Kept per job: the
 docker commands, the image size, every `summary:`, `unittest:` and `PASS in` line of the check (the closed-path step
-included), `time` output, the fallback warning, each container-test result line, and the report lines of
+included), the `Policy isolation:` line of each report a container step prints, `time` output, the fallback warning, each container-test result line, and the report lines of
 `python -m auditgym.redteam --parent` (host hardening, the hardening-off control, same or separate user,
 --secret-env, probe failed). Standard library only; it reads
 stdin and writes stdout.
@@ -16,7 +16,7 @@ import re
 import sys
 
 KEEP = re.compile(
-    r"(^summary: |^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|python -m auditgym\.redteam --parent|time docker|mkdir -p)"
+    r"(^summary: |^PASS in \d+ s|^Policy isolation: |^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|python -m auditgym\.redteam --parent|time docker|mkdir -p)"
     r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED"
     r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+|\[PASS\] unittest:|^container mode: "
     r"|^\s+(host hardening: |control with host hardening off: |--secret-env[: ]"

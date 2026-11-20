@@ -37,7 +37,9 @@ Named checks, each independent of the generator's internal state:
                          IDs and amount, using evidence_check.py (independent of auditor.py and money.py); and for every
                          unallocated_payment issue no other receipt settled the invoice, checked on all public records: no
                          payment but the issue's lists the invoice in invoice_refs, and no ledger row but the issue's own
-                         payment relieves it (credit to 1100 for a sales invoice, debit to 2000 for a purchase invoice)
+                         payment relieves it (credit to 1100 for a sales invoice, debit to 2000 for a purchase invoice); and the
+                         set holds every 1100 (sales) or 2000 (purchase) row that carries the invoice ID, read from
+                         all public rows, and for a foreign-currency invoice the payment's bank (1000) row
   budget_feasible        reading every page of every table plus submit fits in 100 steps
   no_surface_tells       every injected or modified ledger row has an untouched twin with the same account and
                          null pattern
@@ -223,11 +225,37 @@ def _sole_receipt_errors(ep: Episode, issue: dict) -> list[str]:
     return errs[:5]
 
 
+def _complete_set_errors(ep: Episode, issue: dict) -> list[str]:
+    """unallocated_payment: every acceptable evidence set holds every receivable (1100, sales) or payable (2000,
+    purchase) ledger row that carries the invoice ID, read from all public rows, so the cited records alone show
+    the invoice's posting and any relief."""
+    invs = [d for d in ep.invoices if d["invoice_id"] in set(issue.get("affected_ids", []))]
+    if len(invs) != 1:
+        return []  # reported by _sole_receipt_errors and the derivation
+    inv = invs[0]
+    account = "1100" if inv["kind"] == "sales" else "2000"
+    want = {r["row_id"] for r in ep.ledger if r["invoice_id"] == inv["invoice_id"] and r["account"] == account}
+    errs = []
+    for es in issue["evidence_sets"]:
+        missing = sorted(want - set(es))
+        if missing:
+            errs.append(f"{issue['issue_id']}: evidence set {es} lacks the {account} rows {missing} of invoice {inv['invoice_id']}")
+        if inv["currency"] != ep.policy["base_currency"]:
+            pays = {r["row_id"] for r in ep.ledger if r["account"] == "1000" and r["payment_id"] in set(issue.get("affected_ids", []))}
+            if not pays & set(es):
+                errs.append(f"{issue['issue_id']}: evidence set {es} lacks the payment's bank (1000) row for the {inv['currency']} invoice")
+    return errs[:5]
+
+
 def check_evidence(ep: Episode) -> list[str]:
     errs = []
     for t in ep.truth.get("issues", []):
         if t["type"] == "unallocated_payment":
-            errs += _sole_receipt_errors(ep, t)
+            try:
+                errs += _sole_receipt_errors(ep, t)
+                errs += _complete_set_errors(ep, t)
+            except REPLAY_ERRORS as exc:  # a hand-edited record without a field is a FAIL line, not a traceback
+                errs.append(f"{t['issue_id']}: the records of this unallocated_payment cannot be read: {type(exc).__name__}: {exc}")
         for es in t["evidence_sets"]:
             try:
                 got = derive_from_evidence(t["type"], es, ep)

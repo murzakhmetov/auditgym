@@ -18,7 +18,9 @@
         [
           "88204455",
           "82940194",
-          "95543606"
+          "95543606",
+          "97650791",
+          "91729053"
         ]
       ],
       "explanation": "Receipt references an open invoice whose balance covers it, but part or all of it was left in 2900 unallocated receipts instead of relieving receivables."

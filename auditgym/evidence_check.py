@@ -55,14 +55,18 @@ def _round_fraction(value: Fraction, mode: str) -> int:
     raise ValueError(f"unknown rounding mode {mode!r}")
 
 
-_EXPONENT = re.compile(r"[eE]([+-]?[0-9]+)\s*$")
+# A plain ASCII decimal with at most 30 digits on each side of the point and an optional exponent. Fraction() alone
+# also reads "_" separators and non-ASCII digits, so "1e9999_9999" would reach 10 ** 99999999 and never finish.
+_RATE_TEXT = re.compile(r"\s*[+-]?(?:[0-9]{1,30}(?:\.[0-9]{0,30})?|\.[0-9]{1,30})(?:[eE]([+-]?[0-9]+))?\s*", re.ASCII)
 
 
 def _rate_fraction(rate) -> Fraction:
-    """Fraction(str(rate)), refusing an exponent above 64 (Fraction("1e99999999") would not finish)."""
+    """Fraction(str(rate)) for a plain decimal, refusing an exponent above 64 and any other form."""
     text = str(rate)
-    m = _EXPONENT.search(text)
-    if m and (len(m.group(1).lstrip("+-")) > 3 or abs(int(m.group(1))) > 64):
+    m = _RATE_TEXT.fullmatch(text)
+    if m is None:
+        raise ValueError(f"not a decimal rate: {text[:40]!r}")
+    if m.group(1) and (len(m.group(1).lstrip("+-")) > 3 or abs(int(m.group(1))) > 64):
         raise ValueError(f"exponent out of range in {text[:40]!r}")
     return Fraction(text)
 
@@ -78,6 +82,75 @@ def _duplicate_signature(doc: dict, rule_text: str):
         return None  # the published rule does not name the fields this checker relies on
     head = tuple(parse_ts(doc[f]) if f == "issued_at" else doc[f] for f in DUPLICATE_FIELDS)
     return head + (tuple(tuple(li[f] for f in LINE_FIELDS) for li in doc["line_items"]),)
+
+
+def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_fx: list, base: str) -> tuple | None:
+    """unallocated_payment from the cited records only: the receipt, the sales invoice, the receipt's 2900 row, every
+    receivable (1100) row of the invoice and, for a foreign-currency invoice, the receipt's bank (1000) row. Returns
+    (payment, invoice, 2900 row, posted, relieved) or None. The invoice's open balance is derived from the 1100 rows
+    (debits minus credits, base currency) rather than from the document total, and the story must be closed: the only
+    relief among the cited rows is this receipt's and it does not exceed what the receipt paid. In the base currency the
+    balance posted on the cited rows covers the receipt and the receipt is exactly its relief plus the 2900 amount. In a
+    foreign currency the rows carry base amounts only and the 2900 amount carries the payment-date rate, so the bank row
+    (the whole receipt at that rate) is cited: with no relief the whole bank amount sits in 2900, with a relief 2900 holds
+    less than the bank amount. The covering test in a foreign currency stays on the document total."""
+    pays = [d for d in cited_docs if "payment_id" in d]
+    invs = [d for d in cited_docs if "invoice_id" in d]
+    if len(pays) != 1 or len(invs) != 1 or len(cited_rows) < 2 or cited_fx or len(set(evidence)) != len(evidence):
+        return None
+    p, i = pays[0], invs[0]
+    if not (p["kind"] == "receipt" and p["invoice_refs"] and i["invoice_id"] in p["invoice_refs"]
+            and i["kind"] == "sales" and i["currency"] == p["currency"] and i["total_minor"] >= p["amount_minor"]):
+        return None
+    foreign = i["currency"] != base
+    bank = [r for r in cited_rows if r["account"] == "1000"]
+    unalloc = [r for r in cited_rows if r["account"] == "2900"]
+    receivable = [r for r in cited_rows if r["account"] not in ("2900", "1000")]
+    if len(unalloc) != 1 or not receivable or len(bank) != (1 if foreign else 0):
+        return None
+    u = unalloc[0]
+    if u["credit_minor"] <= 0 or u["payment_id"] != p["payment_id"]:
+        return None
+    if bank and not (bank[0]["payment_id"] == p["payment_id"] and bank[0]["debit_minor"] > 0 and bank[0]["credit_minor"] == 0):
+        return None
+    posted = relieved = 0
+    for r in receivable:
+        if r["account"] != "1100" or r["invoice_id"] != i["invoice_id"]:
+            return None
+        if r["debit_minor"] > 0:
+            if r["payment_id"] is not None:
+                return None  # a debit tied to a payment is not the invoice's posting
+            if parse_ts(r["timestamp"]) > parse_ts(u["timestamp"]):
+                return None  # booked after the receipt: the receipt could not have found the balance open
+            posted += r["debit_minor"]
+        elif r["payment_id"] == p["payment_id"]:
+            relieved += r["credit_minor"]
+        else:
+            return None  # a credit from another payment (or from nowhere): the invoice may be settled elsewhere
+    if posted <= 0 or posted - relieved <= 0:
+        return None  # no booked balance, or nothing left open for the 2900 amount to belong to
+    if 2 * relieved * i["total_minor"] > 2 * posted * p["amount_minor"] + i["total_minor"]:
+        return None  # the receipt cannot have relieved more of the invoice than it paid (proportional carrying amount)
+    if not foreign and (p["amount_minor"] > posted or relieved + u["credit_minor"] != p["amount_minor"]):
+        return None  # base currency: the cited balance covers the receipt, which is exactly its relief plus the 2900 amount
+    if foreign and (u["credit_minor"] != bank[0]["debit_minor"] if relieved == 0 else u["credit_minor"] >= bank[0]["debit_minor"]):
+        return None  # foreign currency: all of the bank amount sits in 2900 when nothing was relieved, else part of it
+    return p, i, u, posted, relieved
+
+
+def unallocated_open_balance(evidence: list, ep: Episode) -> tuple | None:
+    """(balance before the receipt, balance after its relief) of the invoice, in base currency, derived from the cited
+    receivable rows of an unallocated_payment evidence set; None when the set does not support the story."""
+    rows = {r["row_id"]: r for r in ep.ledger}
+    docs = {d["doc_id"]: d for d in ep.invoices + ep.payments}
+    fxs = {f"{r['date']}:{r['source_currency']}:{r['target_currency']}" for r in ep.fx}
+    cited_rows = [rows[e] for e in evidence if e in rows]
+    cited_docs = [docs[e] for e in evidence if e in docs]
+    cited_fx = [e for e in evidence if e in fxs]
+    if any(e not in rows and e not in docs and e not in fxs for e in evidence):
+        return None
+    story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, ep.policy["base_currency"])
+    return None if story is None else (story[3], story[3] - story[4])
 
 
 def derive_from_evidence(issue_type: str, evidence: list, ep: Episode) -> tuple | None:
@@ -125,15 +198,10 @@ def derive_from_evidence(issue_type: str, evidence: list, ep: Episode) -> tuple 
             return None
         return issue_type, frozenset({a["invoice_id"], b["invoice_id"]}), amt
     if issue_type == "unallocated_payment":
-        pays = [d for d in cited_docs if "payment_id" in d]
-        invs = [d for d in cited_docs if "invoice_id" in d]
-        if len(pays) != 1 or len(invs) != 1 or len(cited_rows) != 1 or cited_fx:
+        story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, base)
+        if story is None:
             return None
-        p, i, r = pays[0], invs[0], cited_rows[0]
-        ok = (p["kind"] == "receipt" and p["invoice_refs"] and i["invoice_id"] in p["invoice_refs"]
-              and i["kind"] == "sales" and i["currency"] == p["currency"] and i["total_minor"] >= p["amount_minor"]
-              and r["account"] == "2900" and r["credit_minor"] > 0 and r["payment_id"] == p["payment_id"])
-        return (issue_type, frozenset({p["payment_id"], i["invoice_id"]}), r["credit_minor"]) if ok else None
+        return issue_type, frozenset({story[0]["payment_id"], story[1]["invoice_id"]}), story[2]["credit_minor"]
     if issue_type == "wrong_fx_rate":
         if len(cited_docs) != 1 or len(cited_rows) != 1 or len(cited_fx) != 1:
             return None

@@ -355,10 +355,30 @@ class EvidenceSurvivors(unittest.TestCase):
 
     def test_an_unallocated_payment_row_sits_in_account_2900(self):  # evidence-unallocated-account
         ep, type_, es = evidence_case("t04_unallocated")
-        row = next(r for r in ep.ledger if r["row_id"] in es)
-        self.assertEqual(row["account"], "2900")
+        self.assertIsNotNone(derive(ep, type_, es))
+        row = next(r for r in ep.ledger if r["row_id"] in es and r["payment_id"] is not None and r["account"] == "2900")
         row["account"] = "1000"
         self.assertIsNone(derive(ep, type_, es))
+
+    def test_an_invoice_booked_after_the_receipt_was_not_open(self):  # evidence-unallocated-booked-after
+        from datetime import timedelta
+
+        from auditgym.timeutil import parse_ts
+
+        for name in ("t04_unallocated", "t08_fx_partial_allocation"):  # base and foreign currency
+            ep = load(name)
+            for t in (t for t in ep.truth["issues"] if t["type"] == "unallocated_payment"):
+                case = copy.deepcopy(ep)
+                es = list(t["evidence_sets"][0])
+                self.assertIsNotNone(derive(case, t["type"], es))
+                rows = {r["row_id"]: r for r in case.ledger}
+                u = next(rows[e] for e in es if e in rows and rows[e]["account"] == "2900")
+                later = (parse_ts(u["timestamp"]) + timedelta(hours=5)).isoformat()
+                for e in es:  # move the invoice's posting (or opening item) five hours after the receipt
+                    if e in rows and rows[e]["account"] == "1100" and rows[e]["debit_minor"] > 0:
+                        rows[e]["timestamp"] = later
+                with self.subTest(episode=name, issue=t["issue_id"]):
+                    self.assertIsNone(derive(case, t["type"], es))
 
     def test_a_posting_at_the_period_end_instant_is_outside_the_period(self):  # evidence-period-boundary
         ep, type_, es = evidence_case("t06_period")

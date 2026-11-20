@@ -195,10 +195,15 @@ def resolve(config: dict, rng: Rng) -> dict:
     else:
         y, m = (int(p) for p in str(period).split("-"))
         period = f"{y:04d}-{m:02d}"
-        if needs["boundary_weekdays"] and not _boundary_ok(period):
-            near = _nearest_boundary_periods(period)
-            raise ConfigError("boundary_fx_payment needs the last day of the period and the first day after it to be weekdays; "
-                              f"period {period} fails that. Nearest feasible periods: {', '.join(near)}")
+        # a fixed zone's own offset decides; a fixed zero offset is left to the offset message below
+        fixed_off = offset_minutes(tz, month_bounds(tz, y, m)[1]) if tz_fixed else None
+        if (needs["boundary_weekdays"] and not needs["boundary_fx_fallback"] and fixed_off != 0
+                and not (boundary_utc_date_ok(period, fixed_off) if tz_fixed else _boundary_utc_date_possible(period))):
+            near = _nearest_boundary_periods(period, tz if tz_fixed else None)
+            raise ConfigError("boundary_fx_payment without the stale_rate or transposed variant of wrong_fx_rate needs the first "
+                              "day after the period to be a weekday (and the last day too, unless the UTC offset there is positive); "
+                              f"period {period} fails that. Nearest feasible periods: {', '.join(near)}. "
+                              "Allow the stale_rate or transposed variant of wrong_fx_rate to use any month")
     # Unspecified time zone or period are redrawn (on a side stream, so feasible draws stay unchanged)
     # until the requested errors can be placed; only a fully fixed infeasible request is an error.
     problems = feasibility_problems(tz, period, needs)
@@ -260,6 +265,8 @@ def _needs(config: dict, inter: list, variants: dict) -> dict:
     return {
         "boundary_offset": "boundary_fx_payment" in inter or (bool(errors.get("wrong_period")) and period_variants <= {"utc_wall_clock"}),
         "boundary_weekdays": "boundary_fx_payment" in inter,
+        # a month whose boundary gives the utc_date error no amount still hosts the scenario with one of these variants
+        "boundary_fx_fallback": bool(fx_variants & set(BOUNDARY_FX_FALLBACK)),
         "utc_date": bool(errors.get("wrong_fx_rate")) and fx_variants <= {"utc_date"},
     }
 
@@ -285,13 +292,40 @@ def feasibility_problems(tz: str, period: str, needs: dict) -> list:
     y, m = (int(p) for p in period.split("-"))
     _p0, p1 = month_bounds(tz, y, m)
     problems = []
-    if needs["boundary_offset"] and offset_minutes(tz, p1) == 0:
+    off = offset_minutes(tz, p1)
+    if needs["boundary_offset"] and off == 0:
         problems.append("a non-zero UTC offset at the period boundary")
-    if needs["boundary_weekdays"] and not _boundary_ok(period):
-        problems.append("weekdays on both sides of the period boundary")
+    if (needs["boundary_weekdays"] and not needs.get("boundary_fx_fallback") and off != 0
+            and not boundary_utc_date_ok(period, off)):
+        problems.append("a period boundary at which the utc_date rate error has an amount (the first day after the period a weekday, and the last day too unless the UTC offset is positive)")
     if needs["utc_date"] and not utc_date_days(tz, y, m, 2):
         problems.append("a weekday whose UTC date differs from the local date (utc_date)")
     return problems
+
+
+BOUNDARY_FX_FALLBACK = ("stale_rate", "transposed")
+
+
+def boundary_utc_date_ok(period: str, off: int) -> bool:
+    """True when the receipt at the period boundary can carry a utc_date rate error that has an amount.
+
+    Rates are published on weekdays only and a weekend date takes the latest earlier rate. A positive offset puts the
+    local date on the first day after the period and the UTC date on the last day: they differ in rate when that first
+    day is a weekday. A negative offset puts the local date on the last day, which must itself be a weekday (the
+    document's own date carries a published rate), and the UTC date on the first day after, a weekday so that its rate
+    differs from the local date's."""
+    import datetime as _dt
+
+    y, m = (int(p) for p in period.split("-"))
+    first_next = _dt.date(y + (m == 12), m % 12 + 1, 1)
+    last = first_next - _dt.timedelta(days=1)
+    if off > 0:
+        return first_next.weekday() < 5
+    return off < 0 and first_next.weekday() < 5 and last.weekday() < 5
+
+
+def _boundary_utc_date_possible(period: str) -> bool:
+    return boundary_utc_date_ok(period, 1) or boundary_utc_date_ok(period, -1)
 
 
 def _boundary_ok(period: str) -> bool:
@@ -303,8 +337,9 @@ def _boundary_ok(period: str) -> bool:
     return first_next.weekday() < 5 and last.weekday() < 5
 
 
-def _nearest_boundary_periods(period: str, count: int = 2) -> list[str]:
-    """The feasible months closest to `period` within 2000-2100, nearest first (earlier before later on a tie)."""
+def _nearest_boundary_periods(period: str, tz: str | None = None, count: int = 2) -> list[str]:
+    """The months closest to `period` within 2000-2100 that can carry a utc_date rate error at the boundary, nearest first
+    (earlier before later on a tie). With a fixed `tz` its own UTC offset decides; without one, any offset sign counts."""
     y, m = (int(p) for p in period.split("-"))
     idx = y * 12 + m - 1
     found = []
@@ -314,7 +349,11 @@ def _nearest_boundary_periods(period: str, count: int = 2) -> list[str]:
             if not 2000 <= cy <= 2100:
                 continue
             label = f"{cy:04d}-{cm + 1:02d}"
-            if _boundary_ok(label):
+            if tz:
+                ok = boundary_utc_date_ok(label, offset_minutes(tz, month_bounds(tz, cy, cm + 1)[1]))
+            else:
+                ok = _boundary_utc_date_possible(label)
+            if ok:
                 found.append(label)
         if len(found) >= count:
             break
