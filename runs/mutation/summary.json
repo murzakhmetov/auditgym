@@ -1,0 +1,1342 @@
+{
+  "listed": 104,
+  "counted": 104,
+  "killed": 104,
+  "survived": 0,
+  "equivalent": 0,
+  "killed_by_existing": 54,
+  "killed_by_survivor_tests": 50,
+  "mutants": [
+    {
+      "id": "matcher-type",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion type: a finding of another type still matches",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "5cd91c141981c844bd6e56564cfae43c65d5d589b68b94e6e641a8df5b6f9f24"
+    },
+    {
+      "id": "matcher-ids-subset",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion affected_ids: a subset of the key's IDs matches",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "74abd654b9ee0193e635bbe9bcce85d54694f28eec5c22acc64ae333a982a4a8"
+    },
+    {
+      "id": "matcher-currency",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion currency: a wrong currency still matches",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "5f1030bf41c9c5326dcb75408fed75d64ea57953c42328873edd7ffbb7b67a01"
+    },
+    {
+      "id": "matcher-amount-boundary",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion amount: the tolerance boundary is exclusive",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "8b59d79b8d08f2920fdb4932161e267379405e49964d4ea2e1f9fc10389b9d62"
+    },
+    {
+      "id": "matcher-amount-one-sided",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion amount: an under-claim of any size matches",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "9a6d866e3c8d930b95a0869ff030640d33fe8a843c6b87507e2872bb52ea8eca"
+    },
+    {
+      "id": "matcher-amount-no-tolerance",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion amount: the per-issue tolerance is ignored",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "6880c8ffb1a6a31cb2a80de6ca27238b7508d7523636ab9e9ce10f835de46d38"
+    },
+    {
+      "id": "matcher-evidence-overlap",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion evidence: a partial overlap with an evidence set is enough",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "6180bad332f6177084b8b11c6d01f7f5e951f92ab976109a8d0ec924930ef4b5"
+    },
+    {
+      "id": "matcher-evidence-all-sets",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion evidence: every acceptable set must be cited, not one",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "5432d0a9e3286b0adf3b776292517312de18e8da0a97a5c19c0f421d03d351d0"
+    },
+    {
+      "id": "matcher-currency-case",
+      "file": "auditgym/matcher.py",
+      "breaks": "normalization: the finding's currency is no longer upper-cased",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "db9eeb4bd0ed6b0ae04014ffe97166ef91ea311b9084b62e3054fbcda6467905"
+    },
+    {
+      "id": "matcher-id-strip",
+      "file": "auditgym/matcher.py",
+      "breaks": "normalization: IDs keep surrounding whitespace",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "bdca9acf4a80b09c824119ce50418705cbef4c7f1a7909919477ba5fc9b3270c"
+    },
+    {
+      "id": "matcher-alias-affected",
+      "file": "auditgym/matcher.py",
+      "breaks": "alias: a doc_id in affected_ids is no longer mapped to its invoice_id/payment_id",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "7c32785fdbe6417dcd93cc690589933303e02b2aacc64ed97d9e11fe64744c07"
+    },
+    {
+      "id": "matcher-alias-evidence",
+      "file": "auditgym/matcher.py",
+      "breaks": "alias: an invoice_id/payment_id in evidence_ids is no longer mapped to its doc_id",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "66385faabdf22ad2e80cd1b936944f5c5a9023e1acc290d01710ebffd574f64a"
+    },
+    {
+      "id": "matcher-one-to-one",
+      "file": "auditgym/matcher.py",
+      "breaks": "maximum matching: a later finding takes an issue from an earlier one, which is not re-matched",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "04c0d1051d66a7143bd918708ec0172a6515c446ae4654e09931c0cbe1c85aa7"
+    },
+    {
+      "id": "matcher-tp-counts-edges",
+      "file": "auditgym/matcher.py",
+      "breaks": "one-to-one: every finding with a candidate issue is a true positive, so one issue can score several times",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "55f369fe38ee35bbfd56325f274b8b3574050e51c0dccf1026db004e507cc2ce"
+    },
+    {
+      "id": "matcher-no-augmenting-path",
+      "file": "auditgym/matcher.py",
+      "breaks": "maximum matching: greedy first-fit instead of augmenting paths",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "8fd762c2f2b99310a7bc60b098ce3f8be86f7103a6db2529829d2c42f242a533"
+    },
+    {
+      "id": "matcher-tiebreak-order",
+      "file": "auditgym/matcher.py",
+      "breaks": "tie-break: issues are tried in descending issue_id order",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "bb70912a0011f345191d9d7064a7591b8eaa0ed8c0aed5260357976d1870c521"
+    },
+    {
+      "id": "matcher-repeat-not-fp",
+      "file": "auditgym/matcher.py",
+      "breaks": "false positives: an exact repeat of a matched finding is no longer counted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "43e7dd0076786f141e348585472bb72e0bbd0c1d066230df3b3148362c73abf5"
+    },
+    {
+      "id": "matcher-f1-formula",
+      "file": "auditgym/matcher.py",
+      "breaks": "F1: false negatives dropped from the denominator",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "1f466cb0ff39892c6d4ce1de2849999e838fdcd718f07be31cdaab0e969d9acf"
+    },
+    {
+      "id": "matcher-f1-empty",
+      "file": "auditgym/matcher.py",
+      "breaks": "F1: an empty answer on a clean ledger scores 0, not 1",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "05b691057ba84f9a97cc7493b6b01dcc9cca3e7299dae0171c8ff02d845cad10"
+    },
+    {
+      "id": "matcher-precision-empty",
+      "file": "auditgym/matcher.py",
+      "breaks": "precision with no findings is 1.0, not 0.0",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "a9bb61a7dc66c68636d7e13e4a18b8adec42d75e6d7a67b1bb0719961881de04"
+    },
+    {
+      "id": "reward-step-cost-value",
+      "file": "auditgym/reward.py",
+      "breaks": "step cost is 0.003 per inspection step instead of 0.002",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "3fe499152d62ac4bfd4b7338a90db1c9ac65267ade4cd41c829002f69d5587ef"
+    },
+    {
+      "id": "reward-step-cost-dropped",
+      "file": "auditgym/reward.py",
+      "breaks": "step cost: inspection steps are free",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "158569b9abb1cbdcd7aaefc8f2de90a84eb7f106ebd77cedde0349437e1aa0ef"
+    },
+    {
+      "id": "reward-f1-scale",
+      "file": "auditgym/reward.py",
+      "breaks": "reward: F1 is not mapped to [-1, 1]",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "262484f4f325e57ded0c929d46f69e54e66972f587ceb61a6bd7fa04d3d4631d"
+    },
+    {
+      "id": "reward-clip-lower",
+      "file": "auditgym/reward.py",
+      "breaks": "clip: no lower bound, so many steps push the reward below -1",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "6bea32fc8b1e299dbffa3e997a728f42511642cb3a9ab4166fb843ddbe111acc"
+    },
+    {
+      "id": "reward-clip-upper",
+      "file": "auditgym/reward.py",
+      "breaks": "clip helper: no upper bound (not reachable through the reward: every caller passes a value <= 1)",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "5df838ae8898c30feda18406f0fcb6ea71ec374b853101ac08fff05857fe009a"
+    },
+    {
+      "id": "reward-invalid-constant",
+      "file": "auditgym/reward.py",
+      "breaks": "an invalid submission is not rewarded -1",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "76c5d1eebae4a96b7055dfc0f4b26d8edacafeebbb74dfda21e99a7b04b3f3d2"
+    },
+    {
+      "id": "reward-soft-denominator",
+      "file": "auditgym/reward.py",
+      "breaks": "experimental reward: extra findings no longer lower soft F1",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "9a937cc500e75a9559a42e0530ee3b1421ddaa703f3d0e6e3879c195bb9658d1"
+    },
+    {
+      "id": "reward-soft-empty",
+      "file": "auditgym/reward.py",
+      "breaks": "experimental reward: an empty answer on a clean ledger scores 0, not 1",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "654edaab829a1fb1cdbca3eb4cf9f3a65686a583a00117bef66ea845e1d3386b"
+    },
+    {
+      "id": "reward-soft-credit-scale",
+      "file": "auditgym/reward.py",
+      "breaks": "experimental reward: credit is not in quarters",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "403423f39e3c23ed9438a1e76a901776da9d13821cb229ec12b3f13b5b89ffec"
+    },
+    {
+      "id": "reward-soft-amount-credit",
+      "file": "auditgym/reward.py",
+      "breaks": "experimental reward: amount credit needs only the currency or only the amount",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "a7b29614602c053b563be3b551c7507b6b10bfb4efa75672c2446fe403191771"
+    },
+    {
+      "id": "reward-soft-group-key",
+      "file": "auditgym/reward.py",
+      "breaks": "experimental reward: findings compete for issues of the same type with other IDs",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "8cbd7eb070de4fb8ff3f890e17e4bb6b78dd7ed270a4047bfeeb89fbf8ecd9e7"
+    },
+    {
+      "id": "reward-assignment-positive",
+      "file": "auditgym/reward.py",
+      "breaks": "assignment helper: zero-weight pairs are reported (not reachable through experimental_reward: weights are >= 2)",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_reward",
+        "tests.test_matcher",
+        "tests.test_env"
+      ],
+      "sha256": "f93aca86264baba9e01c3124ea0153d76e1c7360a5e23854a149839ecb65c8d0"
+    },
+    {
+      "id": "grader-closed",
+      "file": "auditgym/grader.py",
+      "breaks": "closed: a run with only false positives or only misses counts as closed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "7780ac1ad522f72586efcb9c405a38a24f9d63b758c1addb9a7a81b9efbcc640"
+    },
+    {
+      "id": "grader-invalid-fn",
+      "file": "auditgym/grader.py",
+      "breaks": "invalid submission: no issue counts as missed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "dea18e4dffbd5b1633cd882043a13720a2e16042d5b250cb2b668a3750226bb7"
+    },
+    {
+      "id": "grader-invalid-reward",
+      "file": "auditgym/grader.py",
+      "breaks": "invalid submission: the grade's reward is not -1",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "1db39bca18aae70f8a62a9ad99ffddbfe27e9d3591bdfdd5b207e52641343860"
+    },
+    {
+      "id": "grader-steps-in-reward",
+      "file": "auditgym/grader.py",
+      "breaks": "grade: the step cost is not applied",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "05f2a0356b0df8ded1cea4e7510397cbabae040fc0d31a23d688841c6a66ff68"
+    },
+    {
+      "id": "grader-aliases",
+      "file": "auditgym/grader.py",
+      "breaks": "grade: the answer key's id_aliases are not used",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "407dac9f6ecc9d717a71d6ca566fc67729689c9aeccc26cbdaac508b8e69ca1f"
+    },
+    {
+      "id": "grader-error-cap",
+      "file": "auditgym/grader.py",
+      "breaks": "invalid submission: the error list is capped at 21, not 20",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "821343433ab3212ce23f56a3548d43456391709ec4396463fb777ef6d129b063"
+    },
+    {
+      "id": "grader-missed-issues",
+      "file": "auditgym/grader.py",
+      "breaks": "grade: missed issues are not listed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "9ccf03884a4c537058034a2badf2c94e700f16307dc08d3ddc37596817f3943d"
+    },
+    {
+      "id": "schemas-findings-count",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: 30 findings are already too many",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "f4af1f5ed0baa596117473977e8ace5661ee96bfe7fc9b4729d00dbff1879435"
+    },
+    {
+      "id": "schemas-evidence-count",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: 11 evidence IDs are accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "3e68705e5b225f8c383a851a421f9067e42fe3c41d9a9d03745079da0fdd21dd"
+    },
+    {
+      "id": "schemas-affected-count",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: 11 affected IDs are accepted",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "3f5238efb7f306fffdc12a0e834afcaeae90155a60429608d56e26aa66de489e"
+    },
+    {
+      "id": "schemas-id-length",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: an ID of exactly 64 characters is too long",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "b146b985a9873493c8b3908f3ce5810cbbd05744983f338b62a6217fde62a0c3"
+    },
+    {
+      "id": "schemas-explanation-length",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: an explanation of exactly 1000 characters is too long",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "363247070b964b61f9d8de13b5c0caf61d3e60b67de325eef2fb88450ae4deaf"
+    },
+    {
+      "id": "schemas-amount-upper",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: the maximum amount itself is rejected",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "aa263242a7bcdf2316476de8061a504ed56ea465b6e58820dc8f4ad43a0a6f22"
+    },
+    {
+      "id": "schemas-amount-lower",
+      "file": "auditgym/schemas.py",
+      "breaks": "limit: an amount of 0 is rejected",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "0f4cbca92e89f1dd8ae8e3748b689a8cb8ef9fe6ebb97488183f306c5ec8489b"
+    },
+    {
+      "id": "schemas-surrogate-id",
+      "file": "auditgym/schemas.py",
+      "breaks": "lone surrogate in an ID is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "f3c86bb8e05d3375a5a57bf3253f2ed12cfe0cbf7e2f32749312260c5d889c7d"
+    },
+    {
+      "id": "schemas-surrogate-explanation",
+      "file": "auditgym/schemas.py",
+      "breaks": "lone surrogate in an explanation is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "e6418920fa6dc17ad2afb56547126d9f6038d6e55cb1c44730dee8d6acab795c"
+    },
+    {
+      "id": "schemas-surrogate-episode-id",
+      "file": "auditgym/schemas.py",
+      "breaks": "lone surrogate in the episode_id is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "9f1e94b62bdd8bdb85be833b084aa8c6f07169416a3847d9b3e1cabef5401c81"
+    },
+    {
+      "id": "schemas-bool-amount",
+      "file": "auditgym/schemas.py",
+      "breaks": "True is accepted as an integer amount",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "4507067af63f8ec9d413a3a47047bf716bfa01ddeef892216c73527a99aa5162"
+    },
+    {
+      "id": "schemas-affected-min",
+      "file": "auditgym/schemas.py",
+      "breaks": "an empty affected_ids list is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "9df2d0c52179fca725c84236183dc21165e54ebce0a46e92cfd40b83e662c00d"
+    },
+    {
+      "id": "schemas-blank-id",
+      "file": "auditgym/schemas.py",
+      "breaks": "a blank ID is accepted",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "3882046b4f2b77bfeb87f4c294aca0d3ce6461585b0e81ba2970b46a4d7e92d0"
+    },
+    {
+      "id": "schemas-currency-shape",
+      "file": "auditgym/schemas.py",
+      "breaks": "a 2-letter currency is accepted",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "16306a16a4dd72c030e6c1f5ad63689a1d30d518002f7e9bad8d9b47971997d0"
+    },
+    {
+      "id": "schemas-episode-mismatch",
+      "file": "auditgym/schemas.py",
+      "breaks": "a submission for another episode is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "5b82402dd039ef6f6dc20abdbfdddefb744393424d4c264150ed8370f8768a33"
+    },
+    {
+      "id": "schemas-unknown-finding-keys",
+      "file": "auditgym/schemas.py",
+      "breaks": "unknown keys inside a finding are accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "f79c727961b90219041c2a24f08bbafe9c025209d51614bebb3558d99bac4449"
+    },
+    {
+      "id": "schemas-coerce-int",
+      "file": "auditgym/schemas.py",
+      "breaks": "a fractional float amount is truncated to an integer",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_schemas",
+        "tests.test_contract_battery",
+        "tests.test_env",
+        "tests.test_matcher"
+      ],
+      "sha256": "f84c61423908ab2fe19616505ef807d2564a3f6fc19a5a92b3ff831595daf2c0"
+    },
+    {
+      "id": "schemas-page-size",
+      "file": "auditgym/schemas.py",
+      "breaks": "page size is 51 instead of 50",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "b2fc15efd8074d111775fda0f49dc7e9e94ab62370f89638180216a0a3e738ed"
+    },
+    {
+      "id": "env-page-limit",
+      "file": "auditgym/env.py",
+      "breaks": "page size: limit 51 is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "71f6b032ad8ba71a96754f2f45f962bc4a1ebb1f3d86a645fa947027a973912b"
+    },
+    {
+      "id": "env-page-default",
+      "file": "auditgym/env.py",
+      "breaks": "page size: the default page is 10 rows, not 50",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "763e03936c8c1c986272bc3d75402dda41aa4c9eecc7abffc804690ccbdc6173"
+    },
+    {
+      "id": "env-step-budget",
+      "file": "auditgym/env.py",
+      "breaks": "step budget: one extra step is allowed before truncation",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "448aa6e0ddf076ef0bed5d0a7424638a54bcb77f104c4f9441a8e1e592ee1a84"
+    },
+    {
+      "id": "env-max-steps-bound",
+      "file": "auditgym/env.py",
+      "breaks": "step budget: the default maximum of 100 is rejected",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "875f474efee5b0807bd436558d7907d381b606e9efa72d084797979b8806d5c1"
+    },
+    {
+      "id": "env-cursor-end",
+      "file": "auditgym/env.py",
+      "breaks": "cursor: the end-of-table offset is a bad cursor",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "77c7503624ed3d499d40257e6f249ad690bc7cd24ab86fd6391a0cb390e3961e"
+    },
+    {
+      "id": "env-next-cursor",
+      "file": "auditgym/env.py",
+      "breaks": "cursor: the last page announces another page",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "703958bca3754dfeeab84eb40dcce267adfacc168bb49424665be83a0fac72e9"
+    },
+    {
+      "id": "env-eval-hides-reward",
+      "file": "auditgym/env.py",
+      "breaks": "eval mode: the terminal reward reaches the policy",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "54a4329b12a553e85c1027acca32837231a54b272881b84175f6674d73217984"
+    },
+    {
+      "id": "env-eval-hides-info",
+      "file": "auditgym/env.py",
+      "breaks": "eval mode: TP/FP/FN and the reward reach the policy in info",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "3dab13a6ddf566d8c87e7ed524cb91d4e84928cd7d94669822a360516d4391f0"
+    },
+    {
+      "id": "env-inspection-steps",
+      "file": "auditgym/env.py",
+      "breaks": "step cost: the final submit counts as an inspection step",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "72085aba27ebfbec1ffb732674b0ae6026f3b777d2efcc526c9a4261b731a0f4"
+    },
+    {
+      "id": "env-rows-copy",
+      "file": "auditgym/env.py",
+      "breaks": "isolation: the policy receives the environment's own row objects",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "6888bab04db07d1cb770898cd54fdfb356c928f6d5a733036622ad886772b303"
+    },
+    {
+      "id": "env-time-limit",
+      "file": "auditgym/env.py",
+      "breaks": "time limit: the boundary instant already truncates",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "8ba5e578422b9a93b99793f339b3c2d82d8f83e44a1dfe865fb59a2faee945d8"
+    },
+    {
+      "id": "env-finished-noop",
+      "file": "auditgym/env.py",
+      "breaks": "a finished episode accepts more actions",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "0a34ee6a79085bc51278609864b1ff48a57891347c93d552c26d1411707a5d1a"
+    },
+    {
+      "id": "env-submit-extra-keys",
+      "file": "auditgym/env.py",
+      "breaks": "a submit with unknown action keys is accepted",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_env",
+        "tests.test_contract_battery"
+      ],
+      "sha256": "e9c8f265bc39bb11f84f040c95c9ab7d9055360d2abb1bda34c8817eb8f93eeb"
+    },
+    {
+      "id": "verify-colon-in-id",
+      "file": "auditgym/verify.py",
+      "breaks": "ids_unique: a ':' inside an ID is allowed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "c805ba4906e873a5619c20922f6797162ae650c7c842f031cc938adffe78ecaa"
+    },
+    {
+      "id": "verify-duplicate-id",
+      "file": "auditgym/verify.py",
+      "breaks": "ids_unique: one ID used in two tables is allowed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "c7d008d8a61b1b434fa38edefbdc0de9c938e75d9aa3b901d242afbb0298f1ec"
+    },
+    {
+      "id": "verify-record-counts",
+      "file": "auditgym/verify.py",
+      "breaks": "records_schema: a wrong manifest record count passes",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "83b84866aa1a814d9111ed8f8cd45f408c8fb2031101f026d4b6a2a34d889e54"
+    },
+    {
+      "id": "verify-amount-mismatch",
+      "file": "auditgym/verify.py",
+      "breaks": "declared_discrepancies: an auditor/key amount mismatch passes",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "79dc487bbbbc37098032e154c3039c4300f4452af2d3e6a708cda93ce1092ed5"
+    },
+    {
+      "id": "verify-evidence-sets",
+      "file": "auditgym/verify.py",
+      "breaks": "declared_discrepancies: differing evidence sets pass",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "f0f9103742b30538d63a87de2bec36f54f73112904dd00721965a6773dfe1a45"
+    },
+    {
+      "id": "verify-unknown-variant",
+      "file": "auditgym/verify.py",
+      "breaks": "declared_discrepancies: an unknown issue variant passes",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "fdd1637116d1fdfa0879c8510737dac732b3f35adfe767dbb8ee47017359bff8"
+    },
+    {
+      "id": "verify-budget-bound",
+      "file": "auditgym/verify.py",
+      "breaks": "budget_feasible: the submit step is not counted",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "0a1c221d7ebd1978a96d64b6b6924d648c2a8656ff11d3097a038ede79bd9da4"
+    },
+    {
+      "id": "verify-surface-pattern",
+      "file": "auditgym/verify.py",
+      "breaks": "no_surface_tells: a touched ledger row with a unique pattern passes",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "42eb0c12abcffa52831ada158867fd89deefc17e40231cde75a77ae76a6e0a73"
+    },
+    {
+      "id": "verify-leak-marker",
+      "file": "auditgym/verify.py",
+      "breaks": "no_leaks: the word provenance is no longer a leak marker",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "07d21c3751a0525783d945407f2a723b739340f05349d045588f0acaec44f452"
+    },
+    {
+      "id": "verify-final-digest",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance_roundtrip: a public digest that differs from final_digest passes",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "0f4dd0e40abdc33c8ebcf26f5699b6516de4735b836c406b02cc3c5dbe3bd360"
+    },
+    {
+      "id": "verify-clean-digest",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance_roundtrip: reverted tables with the wrong clean digest pass",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "a3ac4d79a60f0dd2346d33109deb7524c913def533f329b9484ff2784ffd3b12"
+    },
+    {
+      "id": "verify-op-touches",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance_roundtrip: an issue with no op touching its records passes",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "a2c3ab2d0e32e8eae526948b990bb8fd868ecc38d87a20a1fdf97b213c322d6b"
+    },
+    {
+      "id": "verify-injection-match",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance_roundtrip: injections and truth issues may differ",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "068af1fdd46f8138b9d1f8fe31c2c2e7482a4cb5819215e5c991fa06d6e7f770"
+    },
+    {
+      "id": "verify-retarget",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance_roundtrip: an injection retargeted to other records passes",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "8b13628295c65358cfcd55e47cecf9264eb2b786379e06841b44f125dbdd97b8"
+    },
+    {
+      "id": "evidence-fx-tolerance",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "wrong_fx_rate: a difference exactly at the tolerance counts as an error",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "9ceca0853f4a7e2c8687bdc7c4da9324f0ebea4bbec0303acb1fe77a5d7440be"
+    },
+    {
+      "id": "evidence-uncited-record",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "evidence IDs that name no record are ignored",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "7b482e2950f93b60fbcf18611ffc076678f8a5bb1145139ae3bb0892be2e6178"
+    },
+    {
+      "id": "evidence-duplicate-account",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: rows in different accounts still support it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "0d3d6d9792477e02a6d67620f9d93ead122fd16effc4273dd2c6a40e09a89662"
+    },
+    {
+      "id": "evidence-duplicate-signature",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: two different invoices still support it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "4e22a3e456bfe69d2e15eb1263c550d1e5476a9dfffa257904dba616567e1916"
+    },
+    {
+      "id": "evidence-unallocated-total",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: a payment equal to the invoice total is rejected",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "8451b3e537f56339cca58af4547f8045bac606427296801a783d9f066f6bc63a"
+    },
+    {
+      "id": "evidence-unallocated-account",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: the row may sit in any account",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "b0250aa64d39a640181f158fbba07b5bf99240d4c6635fae8aa566954a3fd1de"
+    },
+    {
+      "id": "evidence-fx-future-date",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "wrong_fx_rate: a rate dated on the document's own day is rejected",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "b5305593a55439618afc4dff92472b4931cef860a126de924ed239c1f25d6467"
+    },
+    {
+      "id": "evidence-period-boundary",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "wrong_period: the period end instant belongs to the period",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "52bf3c7702ab9fd38697371aed220520ca249253ca36b2038dd41985e9e18a7b"
+    },
+    {
+      "id": "evidence-offset-start",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "local date: the UTC offset change takes effect one instant late",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "c6754cbd6150ccd9849ef182d2d80030ae3d090163dc27ccc82d74bad4daaaea"
+    },
+    {
+      "id": "evidence-half-even",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "rounding: half_even always rounds the tie up",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "8c496ae88edc9811def883d3cb7fe7e4adee54fc38a39488344d84e92c81cbd4"
+    },
+    {
+      "id": "protocol-max-line",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: a line of exactly MAX_LINE characters is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "5718afedfef53a00acec16fdff966d3ac83aab758eeb481966ff6a50bc2d1bc6"
+    },
+    {
+      "id": "protocol-max-depth",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: nesting of exactly MAX_DEPTH is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "346322bb76b7eca8b152b21bca64ae9e2dd604a25907df0c04fb1df18bac6307"
+    },
+    {
+      "id": "protocol-max-nodes",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: exactly MAX_NODES parsed nodes is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "a37de0a70ecdfae5d691e96659cf2b4389388039caf368f0cac8b0e436ca6d0b"
+    },
+    {
+      "id": "protocol-separator-count",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: commas are not counted against the node limit",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "6df54d9ae796432c441d2d02cae8db0002656dd620e4ed14afbbec83872b96f2"
+    },
+    {
+      "id": "protocol-max-digits",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: an integer literal of exactly MAX_NUMBER_CHARS digits is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "93c169965847844d7717893936c1bf7404df4e269666613aabc7325e3c455e1c"
+    },
+    {
+      "id": "protocol-max-float",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: a float literal of exactly MAX_FLOAT_CHARS characters is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "7fc8b465458060f2754593b31be3514813b27b5914ec5075b873fdb90fc971fc"
+    },
+    {
+      "id": "protocol-nonsubmit-size",
+      "file": "auditgym/protocol.py",
+      "breaks": "bound: a non-submit line of exactly 2048 characters is malformed",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "9d934e2b3b4c98ad258725c1c15026099fd18f0cbd37faebc3e988e3b0f257a5"
+    },
+    {
+      "id": "protocol-nan",
+      "file": "auditgym/protocol.py",
+      "breaks": "NaN and Infinity are accepted as numbers",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "ade04def1d5a4ad7319e796b9ae241ab3d34dc6b9971302117c52fc5ece4884f"
+    },
+    {
+      "id": "protocol-echo-length",
+      "file": "auditgym/protocol.py",
+      "breaks": "echo: a malformed line is echoed 257 characters long",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "cc5c848248470c28fb50e3831152ac20e33e31e98d21f464194d6ca6b9bd643e"
+    },
+    {
+      "id": "protocol-surrogate",
+      "file": "auditgym/protocol.py",
+      "breaks": "a lone surrogate in an action is accepted",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_isolation",
+        "tests.test_redteam",
+        "tests.test_contract_fuzz"
+      ],
+      "sha256": "389502928dfaefefbf04eb544bb303a6b487d41adff85333e45685014729efdd"
+    }
+  ]
+}
