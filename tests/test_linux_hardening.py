@@ -234,8 +234,11 @@ class ReportLines(unittest.TestCase):
         self.assertEqual([k.split(" | ", 2)[2] for k in kept], expected)
         self.assertTrue(all(k.startswith(f"container | {step} | ") for k in kept))
 
+    WORKFLOW = Path(__file__).resolve().parent.parent / ".github" / "workflows" / "check.yml"
+
+    @unittest.skipUnless(WORKFLOW.is_file(), "the CI workflow is not in the image (.dockerignore excludes .github)")
     def test_every_container_redteam_run_is_labelled_in_the_workflow(self):
-        text = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "check.yml").read_text(encoding="utf-8")
+        text = self.WORKFLOW.read_text(encoding="utf-8")
         lines = [ln.strip() for ln in text.splitlines()]
         runs = [i for i, ln in enumerate(lines) if ln.startswith("docker run") and "auditgym.redteam --parent" in ln]
         self.assertEqual(len(runs), 3)
