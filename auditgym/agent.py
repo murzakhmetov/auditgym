@@ -32,7 +32,9 @@ def _lower_integrity() -> str:
     Medium process (the host, its shell) with PROCESS_VM_READ, so it cannot read the host's environment block
     or memory. A process may lower its own level and cannot raise it again; its children inherit the token.
     Never raises: returns a status string, "lowered ..." on success, "failed: ..." otherwise (the policy then
-    runs as before). The host gives the child's working directory a Low label so writes there keep working."""
+    runs as before). The host gives the child's working directory a Low label so writes there keep working. Nothing else is
+    writable at Low: the policy directory, the repository and default-labelled directories in the user profile
+    (%LOCALAPPDATA%, caches with absolute paths) raise PermissionError, and the episode is graded as an agent error."""
     if os.name != "nt":
         return "not applicable: not Windows"
     off = os.environ.get(NO_LOWER_ENV)

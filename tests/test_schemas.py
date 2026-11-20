@@ -53,7 +53,7 @@ class SchemaTests(unittest.TestCase):
         alias_extra = 10  # measured: {"action":"submit","args":{"findings":...}} against the plain form
         bound = size + float_extra * schemas.MAX_FINDINGS + alias_extra
         self.assertLess(bound, protocol.MAX_LINE)
-        self.assertLess(bound, 830000)  # the figure quoted in the docs: at most 828,755 bytes
+        self.assertLess(bound, 830000)  # the bound: 828,755 bytes as agent.py serializes it
         # the limit is what keeps it small: 8 characters are valid, 9 are not, in both validators
         for cur, ok in ((WORST_WHITESPACE * 5 + "USD", True), (WORST_WHITESPACE * 6 + "USD", False), (" " * 1000 + "USD", False)):
             case = json.loads(json.dumps(action["findings"]))

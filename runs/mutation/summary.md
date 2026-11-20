@@ -1,10 +1,12 @@
 # Mutation smoke
 
-**104 of 104 listed mutants killed** (0 survived, 0 equivalent, not counted).
+**108 of 108 listed mutants killed** (0 survived, 0 equivalent, not counted).
 
-54 of 104 are killed by the existing tests, 50 more only by `tests/test_mutation_survivors.py`, which was written for these mutants.
+Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
+63 of 108 are killed by the existing tests, 45 more only by `tests/test_mutation_survivors.py`, which was written for these mutants.
+
+Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, `schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
 Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 
@@ -49,12 +51,12 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 37 | `grader-aliases` | `auditgym/grader.py` | grade: the answer key's id_aliases are not used | killed | survivor tests | test_matcher, test_reward, test_env |
 | 38 | `grader-error-cap` | `auditgym/grader.py` | invalid submission: the error list is capped at 21, not 20 | killed | survivor tests | test_matcher, test_reward, test_env |
 | 39 | `grader-missed-issues` | `auditgym/grader.py` | grade: missed issues are not listed | killed | survivor tests | test_matcher, test_reward, test_env |
-| 40 | `schemas-findings-count` | `auditgym/schemas.py` | limit: 30 findings are already too many | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
+| 40 | `schemas-findings-count` | `auditgym/schemas.py` | limit: 30 findings are already too many | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
 | 41 | `schemas-evidence-count` | `auditgym/schemas.py` | limit: 11 evidence IDs are accepted | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
-| 42 | `schemas-affected-count` | `auditgym/schemas.py` | limit: 11 affected IDs are accepted | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
-| 43 | `schemas-id-length` | `auditgym/schemas.py` | limit: an ID of exactly 64 characters is too long | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
-| 44 | `schemas-explanation-length` | `auditgym/schemas.py` | limit: an explanation of exactly 1000 characters is too long | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
-| 45 | `schemas-amount-upper` | `auditgym/schemas.py` | limit: the maximum amount itself is rejected | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
+| 42 | `schemas-affected-count` | `auditgym/schemas.py` | limit: 11 affected IDs are accepted | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
+| 43 | `schemas-id-length` | `auditgym/schemas.py` | limit: an ID of exactly 64 characters is too long | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
+| 44 | `schemas-explanation-length` | `auditgym/schemas.py` | limit: an explanation of exactly 1000 characters is too long | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
+| 45 | `schemas-amount-upper` | `auditgym/schemas.py` | limit: the maximum amount itself is rejected | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
 | 46 | `schemas-amount-lower` | `auditgym/schemas.py` | limit: an amount of 0 is rejected | killed | survivor tests | test_schemas, test_contract_battery, test_env, test_matcher |
 | 47 | `schemas-surrogate-id` | `auditgym/schemas.py` | lone surrogate in an ID is accepted | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
 | 48 | `schemas-surrogate-explanation` | `auditgym/schemas.py` | lone surrogate in an explanation is accepted | killed | existing tests | test_schemas, test_contract_battery, test_env, test_matcher |
@@ -114,3 +116,7 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 102 | `protocol-nan` | `auditgym/protocol.py` | NaN and Infinity are accepted as numbers | killed | existing tests | test_isolation, test_redteam, test_contract_fuzz |
 | 103 | `protocol-echo-length` | `auditgym/protocol.py` | echo: a malformed line is echoed 257 characters long | killed | existing tests | test_isolation, test_redteam, test_contract_fuzz |
 | 104 | `protocol-surrogate` | `auditgym/protocol.py` | a lone surrogate in an action is accepted | killed | existing tests | test_isolation, test_redteam, test_contract_fuzz |
+| 105 | `verify-stale-rate-variant` | `auditgym/verify.py` | provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate | killed | existing tests | test_verify, test_generator |
+| 106 | `shift-direction-order` | `auditgym/transform.py` | shift_direction tries -28 before +28 | killed | existing tests | test_transform_shift |
+| 107 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | existing tests | test_transform_shift |
+| 108 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | existing tests | test_windows_hardening, test_redteam, test_isolation |

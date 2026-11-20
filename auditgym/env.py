@@ -88,7 +88,8 @@ class AuditEnv:
         config forms:
           {"generator": {...generator config...}}  (needs seed)  -- or the generator config itself
           {"episode_dir": "path/to/episode"}       load a pre-generated or transformed episode
-          optional "transform": {"permute_seed": int, "remap_seed": int, "ts_repr": "local|utc|mixed"}
+          optional "transform": {"permute_seed": int, "remap_seed": int, "ts_repr": "local|utc|mixed",
+                                 "rename_seed": int, "shift_years": nonzero multiple of 28}
         options: reset(options={"config": ...}) is the same as config=... when no config is given;
         every other option key is ignored (never an error).
         """

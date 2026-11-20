@@ -1,11 +1,31 @@
 {
-  "listed": 104,
-  "counted": 104,
-  "killed": 104,
+  "listed": 108,
+  "counted": 108,
+  "killed": 108,
   "survived": 0,
   "equivalent": 0,
-  "killed_by_existing": 54,
-  "killed_by_survivor_tests": 50,
+  "not_run_here": 0,
+  "recorded_on": "Windows, Python 3.11",
+  "platform_only": {
+    "policy-path-append": "Windows"
+  },
+  "killed_by_existing": 63,
+  "killed_by_survivor_tests": 45,
+  "test_modules_sha256": {
+    "tests.test_contract_battery": "9b7627f78b0ec5767cdbcc764dc1ec59d44db6f5362fbdae278e8e66d5292e8a",
+    "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
+    "tests.test_env": "1bd1fdab409c3fa6652940e05d45f539183975ec841779e6a22c7cb02d441e8f",
+    "tests.test_generator": "37e100c3316cd75fd7a9c39421b9bde6d60b382ac977efa2a00219b72eaedb98",
+    "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
+    "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
+    "tests.test_mutation_survivors": "c6fdbf4eab508a70bb17f6769b9448b01bb218e9aa7ca86e52c90e4279605509",
+    "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
+    "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
+    "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
+    "tests.test_transform_shift": "c41ac07824e5281074c9f23152f402254775d7b5850f7de8330deb5cb07d766f",
+    "tests.test_verify": "315c7a481dd5a25b685f037f195a65a886471b0488fe567dc531f294a5479c20",
+    "tests.test_windows_hardening": "c3c9601a1449f6230e43e1c42f20da7651173a15454f256d4328ea93224ac6a2"
+  },
   "mutants": [
     {
       "id": "matcher-type",
@@ -519,7 +539,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: 30 findings are already too many",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "existing tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -547,7 +567,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: 11 affected IDs are accepted",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "existing tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -561,7 +581,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: an ID of exactly 64 characters is too long",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "existing tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -575,7 +595,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: an explanation of exactly 1000 characters is too long",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "existing tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -589,7 +609,7 @@
       "file": "auditgym/schemas.py",
       "breaks": "limit: the maximum amount itself is rejected",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "existing tests",
       "tests": [
         "tests.test_schemas",
         "tests.test_contract_battery",
@@ -1337,6 +1357,53 @@
         "tests.test_contract_fuzz"
       ],
       "sha256": "389502928dfaefefbf04eb544bb303a6b487d41adff85333e45685014729efdd"
+    },
+    {
+      "id": "verify-stale-rate-variant",
+      "file": "auditgym/verify.py",
+      "breaks": "provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "8bb7aaeddbc4c30f6b0ed6ebb01766f362e6f9640cdaa258b5af8f940d57ed7f"
+    },
+    {
+      "id": "shift-direction-order",
+      "file": "auditgym/transform.py",
+      "breaks": "shift_direction tries -28 before +28",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_transform_shift"
+      ],
+      "sha256": "a35961e7d61bfbf6ceb6c56e9f26efbcad735d7d406e2530d999f68db0e50b71"
+    },
+    {
+      "id": "shift-period-lower",
+      "file": "auditgym/transform.py",
+      "breaks": "shift: a period landing exactly on 2000 is refused",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_transform_shift"
+      ],
+      "sha256": "148fe11c4601cb535797ec7451021083035e5144ab78e2151c28b821d63ac6e6"
+    },
+    {
+      "id": "policy-path-append",
+      "file": "auditgym/agent.py",
+      "breaks": "Windows child: the policy directory goes last on sys.path, not after the staged code",
+      "status": "killed",
+      "killed_by": "existing tests",
+      "tests": [
+        "tests.test_windows_hardening",
+        "tests.test_redteam",
+        "tests.test_isolation"
+      ],
+      "sha256": "d3bc190c9d0bc03f96db2628feee46bc72b2464738edea920ae58cd3f724fa8a"
     }
   ]
 }

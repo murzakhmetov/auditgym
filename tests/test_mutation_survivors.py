@@ -1,8 +1,9 @@
 """Boundary and rule tests written for the mutants of tools/mutation_smoke.py (recorded in runs/mutation/).
 
 Most of them close a gap the mutation run showed: the other unit tests let that mutant survive. A few pin a mutant that
-the other tests already killed (protocol-echo-length, protocol-nan, protocol-surrogate, schemas-evidence-count), but
-only indirectly. Each test names the mutant it was written for. Every one of them passes on the real code and fails
+the other tests already killed (protocol-echo-length, protocol-nan, protocol-surrogate, schemas-evidence-count and,
+since the currency cap, schemas-findings-count, schemas-affected-count, schemas-id-length, schemas-explanation-length,
+schemas-amount-upper), but only indirectly. Each test names the mutant it was written for. Every one of them passes on the real code and fails
 on that mutant. The mutation tool runs these tests last, so the summary tells apart the mutants killed by the other
 tests from those killed only here.
 """

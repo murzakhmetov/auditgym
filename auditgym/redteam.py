@@ -214,7 +214,7 @@ def _windows_parent_env(pid):
 def _ppid():
     try:
         return os.getppid()
-    except OSError:  # Windows at Low integrity: no process snapshot (WinError 18); ask the process itself instead
+    except OSError:  # no process snapshot (WinError 18; on Windows the child's own-process relabel normally prevents it)
         import ctypes
         ntdll = ctypes.WinDLL("ntdll")
         k32 = ctypes.WinDLL("kernel32")
@@ -313,7 +313,7 @@ def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float
                "--policies", "peekparent:Probe", "--policy-path", tmp, "--out", str(out)]
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(protocol.PROJECT_ROOT),
                            env=dict(os.environ, **{name: "redteam-marker-not-a-secret"},
-                                    **({} if lower else {protocol.NO_LOWER_ENV: "1"})))
+                                    **({} if lower else {protocol.NO_LOWER_ENV: "control"})))
         try:
             lines = Path(out, "trajectories.jsonl").read_text(encoding="utf-8").splitlines()
         except OSError:
@@ -379,7 +379,10 @@ def print_parent_report() -> int:
     protocol.harden_host()
     print("parent process visibility from a policy child (measured):")
     if os.name == "nt":
-        print("  host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity")
+        print("  host hardening: Windows: no host-side hardening; " + (
+            "the policy child lowers its own token to Low integrity" if protocol.LOWER_INTEGRITY and
+            not os.environ.get(protocol.NO_LOWER_ENV) else
+            "lowering off (%s set in the environment)" % protocol.NO_LOWER_ENV))
     else:
         print("  host hardening: " + protocol.HARDEN_STATUS)
     print("  " + parent_visibility())

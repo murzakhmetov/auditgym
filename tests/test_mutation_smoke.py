@@ -6,7 +6,9 @@ from the committed mutation run (runs/mutation/).
 
 import importlib.util
 import json
+import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -16,7 +18,8 @@ RECORDED = ROOT / "runs" / "mutation"
 
 CORE_FILES = {
     "auditgym/matcher.py", "auditgym/reward.py", "auditgym/grader.py", "auditgym/schemas.py", "auditgym/env.py",
-    "auditgym/verify.py", "auditgym/evidence_check.py", "auditgym/protocol.py",
+    "auditgym/verify.py", "auditgym/evidence_check.py", "auditgym/protocol.py", "auditgym/transform.py",
+    "auditgym/agent.py",
 }
 
 
@@ -87,6 +90,21 @@ class WriterTests(unittest.TestCase):
         report = json.loads(written[0]["summary.json"])
         self.assertEqual(set(report["mutants"][0]), {"id", "file", "breaks", "status", "killed_by", "tests", "sha256"})
 
+    def test_a_mutant_for_another_platform_is_not_run_and_not_counted(self):
+        other = "posix" if os.name == "nt" else "nt"
+        m = tool.MUTANTS[0]._replace(id="t-other-platform", only_on=other)
+        res = tool.run_mutant(m, 120)
+        self.assertIsNone(res["passed"])  # returned at once: no copy, no tests
+        report = tool.build_report(self.results() + [(m, res)])
+        self.assertEqual((report["listed"], report["counted"], report["not_run_here"], report["equivalent"]), (5, 3, 1, 1))
+        self.assertEqual(report["mutants"][-1]["status"], "not run here")
+        self.assertEqual(report["platform_only"], {"t-other-platform": tool.PLATFORM_NAMES[other]})
+        text = tool.render_markdown(report)
+        self.assertIn("1 not run on this platform", text)
+        self.assertIn("Recorded on " + report["recorded_on"] + ".", text)
+        self.assertEqual(set(report["mutants"][-1]), {"id", "file", "breaks", "status", "killed_by", "tests", "sha256"})
+        self.assertEqual([m.id for m in tool.MUTANTS if m.only_on], ["policy-path-append"])
+
     def test_a_killed_and_a_surviving_mutant_are_told_apart(self):
         kill = tool.Mutant("t-kill", "auditgym/matcher.py", "if nf.type != ni.type:", "if False:",
                            ("tests.test_matcher",), "type is not checked")
@@ -96,6 +114,34 @@ class WriterTests(unittest.TestCase):
         self.assertTrue(tool.run_mutant(live, 120)["passed"])
         self.assertEqual(tool.run_mutant(kill, 120)["killed_by"], "existing tests")
         self.assertEqual(tool.occurrences(kill), 1)  # the working tree itself was not touched
+
+
+# a test that starts a grandchild (like tests/test_verify.run_verify does) and then hangs
+SLOW_TEST = r'''
+import subprocess, sys, time, unittest
+
+BEAT = "import time\nwhile 1: open('beat.txt', 'a').write('x'); time.sleep(0.1)"
+
+
+class Slow(unittest.TestCase):
+    def test_it(self):
+        subprocess.Popen([sys.executable, "-c", BEAT])
+        time.sleep(600)
+'''
+
+
+class TimeoutTests(unittest.TestCase):
+    def test_a_timeout_stops_the_grandchild_too_and_counts_as_a_failure(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            Path(tmp, "slow_case.py").write_text(SLOW_TEST, encoding="utf-8")
+            passed, why = tool.run_tests(Path(tmp), ["slow_case"], 8)  # room for two interpreter starts under load
+            self.assertEqual((passed, why), (False, "timeout"))
+            beat = Path(tmp, "beat.txt")
+            self.assertTrue(beat.is_file(), "the grandchild never started; the test proves nothing")
+            time.sleep(0.5)
+            size = beat.stat().st_size
+            time.sleep(1.0)
+            self.assertEqual(beat.stat().st_size, size, "a grandchild is still running after the timeout")
 
 
 class RecordedRunTests(unittest.TestCase):
@@ -111,6 +157,8 @@ class RecordedRunTests(unittest.TestCase):
         self.assertEqual(report["survived"], 0)
         self.assertEqual(report["killed"], report["counted"])
         self.assertEqual(report["killed_by_existing"] + report["killed_by_survivor_tests"], report["killed"])
+        # a test module edited after the recording (or a recording made on another tree) is stale
+        self.assertEqual(report["test_modules_sha256"], tool.tests_hashes(), stale + " (a test module changed)")
         # summary.md is a pure function of summary.json, byte for byte
         text = (RECORDED / "summary.md").read_bytes().decode("utf-8")
         self.assertEqual(text, tool.render_markdown(report), stale)

@@ -44,7 +44,7 @@ Named checks, each independent of the generator's internal state:
   no_leaks               public files contain no answer-key markers
 
 verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, a distractor
-kind swapped for another known one, a wrong_period injection variant, or any truth.json variant (injection variants of
+kind swapped for another known one, a wrong_period injection variant, an injection's scenario (verify never reads it), or any truth.json variant (injection variants of
 wrong_fx_rate and unallocated_payment are checked through change; verify DIR does not compare truth.json's variant or
 manifest.episode_id, which for hidden episodes needs the generation secret, and nothing records the distractor list).
 change.alloc is checked only to the resolution of the base-currency 2900 and relief amounts: when the document currency
@@ -207,8 +207,10 @@ def _sole_receipt_errors(ep: Episode, issue: dict) -> list[str]:
     ids = set(issue.get("affected_ids", []))
     pays = [d for d in ep.payments if d["payment_id"] in ids]
     invs = [d for d in ep.invoices if d["invoice_id"] in ids]
-    if len(pays) != 1 or len(invs) != 1:
-        return []  # the evidence check reports the malformed key
+    if not pays or not invs:
+        return []  # the evidence check reports the missing record
+    if len(pays) > 1 or len(invs) > 1:
+        return [f"{issue['issue_id']}: {len(pays)} payment and {len(invs)} invoice documents carry the affected IDs"]
     pid, inv = pays[0]["payment_id"], invs[0]
     errs = [f"{issue['issue_id']}: payment {d['payment_id']} also lists invoice {inv['invoice_id']} in invoice_refs"
             for d in ep.payments if d["payment_id"] != pid and inv["invoice_id"] in (d["invoice_refs"] or [])]
@@ -609,7 +611,7 @@ def _alloc_errors(ix: _ChangeIndex, inj: dict, ch: dict, name: str) -> list[str]
     # the receipt leaves amount - alloc in 2900, converted at the payment-date rate (or the rate of a rate error on it)
     rates = []
     own = ix.policy_rate(ccy, ix.local_date(parse_ts(pay["timestamp"])))
-    if own:
+    if own and _is_rate(own[0]):
         rates.append(own[0])
     rates += [i["change"]["wrong_rate"] for i in ix.injections if i.get("type") == "wrong_fx_rate" and isinstance(i.get("change"), dict)
               and _is_rate(i["change"].get("wrong_rate")) and (i.get("targets") or {}).get("payment") == pay["payment_id"]]

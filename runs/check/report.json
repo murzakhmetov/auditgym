@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "ok": true,
-  "elapsed_s": 137.2,
+  "elapsed_s": 212.4,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -40,11 +40,11 @@
       "applicable_passed": 427
     },
     "D_paired": {
-      "passed": 93,
-      "total": 93,
+      "passed": 133,
+      "total": 133,
       "skipped": 0,
-      "applicable": 93,
-      "applicable_passed": 93
+      "applicable": 133,
+      "applicable_passed": 133
     },
     "E_leaks": {
       "passed": 3,
@@ -62,25 +62,25 @@
     }
   },
   "code": {
-    "code_sha256": "23e2b93445134423a3b446db6beb32160b13f308eb8228094ee56f7eb0479abc",
+    "code_sha256": "182f7b41b46e7fd6d6c7a29fdf9d55cda3143ce76fe77386b98d2948fedbeaf9",
     "code_files": 60,
     "python": "3.11.4",
     "platform": "Windows-10-10.0.19045-SP0"
   },
   "section_seconds": {
-    "A_unit_tests": 79.6,
+    "A_unit_tests": 135.4,
     "B_committed_episodes": 3.8,
-    "B_replay": 1.4,
-    "C_data": 4.5,
-    "C_reward": 29.1,
-    "D_paired": 18.4,
+    "B_replay": 1.2,
+    "C_data": 4.8,
+    "C_reward": 33.6,
+    "D_paired": 33.2,
     "E_leaks": 0.4,
     "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 333 run, 322 passed, 11 skipped",
+        "check": "unittest: 444 run, 433 passed, 11 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -2740,6 +2740,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h01_clean {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h01_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h02_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
@@ -2751,6 +2761,16 @@
       },
       {
         "check": "h02_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h02_clean {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h02_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.952->0.952 same matched issues+amounts=True verify=[]"
       },
@@ -2770,6 +2790,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.924->0.924 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h03_clean {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.924->0.924 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h03_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.924->0.924 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h04_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
@@ -2781,6 +2811,16 @@
       },
       {
         "check": "h04_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h04_clean {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h04_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.968->0.968 same matched issues+amounts=True verify=[]"
       },
@@ -2800,6 +2840,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.954->0.954 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h05_clean {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.954->0.954 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h05_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.954->0.954 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h06_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
@@ -2811,6 +2861,16 @@
       },
       {
         "check": "h06_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h06_interacting {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h06_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
@@ -2830,6 +2890,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.902->0.902 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h07_interacting {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.902->0.902 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h07_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.902->0.902 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h08_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
@@ -2841,6 +2911,16 @@
       },
       {
         "check": "h08_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h08_interacting {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h08_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.972->0.972 same matched issues+amounts=True verify=[]"
       },
@@ -2860,6 +2940,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h09_interacting {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h09_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h10_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
@@ -2871,6 +2961,16 @@
       },
       {
         "check": "h10_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h10_interacting {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h10_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
@@ -2890,6 +2990,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h11_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h11_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h12_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
@@ -2901,6 +3011,16 @@
       },
       {
         "check": "h12_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h12_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h12_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.948->0.948 same matched issues+amounts=True verify=[]"
       },
@@ -2920,6 +3040,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h13_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h13_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.966->0.966 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h14_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
@@ -2931,6 +3061,16 @@
       },
       {
         "check": "h14_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h14_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h14_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.956->0.956 same matched issues+amounts=True verify=[]"
       },
@@ -2950,6 +3090,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h15_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h15_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h16_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
@@ -2961,6 +3111,16 @@
       },
       {
         "check": "h16_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h16_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h16_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
       },
@@ -2980,6 +3140,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h17_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h17_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h18_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
@@ -2991,6 +3161,16 @@
       },
       {
         "check": "h18_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h18_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h18_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
@@ -3010,6 +3190,16 @@
         "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
       },
       {
+        "check": "h19_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h19_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+      },
+      {
         "check": "h20_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
@@ -3021,6 +3211,16 @@
       },
       {
         "check": "h20_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h20_mixed {'shift_years': 28}: oracle answer and reward preserved",
+        "ok": true,
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
+      },
+      {
+        "check": "h20_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
         "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
@@ -3186,7 +3386,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.0,
-      "agent_time_s": 0.0156,
+      "agent_time_s": 0.0102,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3320,7 +3520,7 @@
       "recall": 0.0,
       "f1": 0.2,
       "steps": 33.95,
-      "agent_time_s": 0.0039,
+      "agent_time_s": 0.0047,
       "closed_share": 0.2,
       "invalid": 0,
       "truncated": 0,
@@ -3424,7 +3624,7 @@
       "recall": 0.0,
       "f1": 0.25,
       "steps": 0.0,
-      "agent_time_s": 0.0008,
+      "agent_time_s": 0.0,
       "closed_share": 0.25,
       "invalid": 0,
       "truncated": 0,

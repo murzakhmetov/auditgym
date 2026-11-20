@@ -10,8 +10,8 @@ Sections (each a list of named pass/fail checks, see report.md):
      (per-episode properties, an attack battery on every error episode, false
      accusations on every clean one)
   D. paired checks: exact repetition, same actions, isolated vs in-process runs, row
-     permutation, ID remapping and timestamp re-rendering preserve the oracle answer,
-     the reward and the auditor's matched issues
+     permutation, ID remapping, timestamp re-rendering, renaming and a 28-year date shift
+     preserve the oracle answer, the reward and the auditor's matched issues
   E. leak scan of every agent-visible observation
   F. in-process contract checks of the environment (contract_battery)
 Exit code 0 only if every check passes (a SKIP does not fail it; counts read passed/applicable plus the skips). No network, GPU or paid API is used.
@@ -49,7 +49,7 @@ from .policies.oracle import OraclePolicy
 from .report import markdown_table, miss_table, summarize
 from .runner import run_many, run_one
 from .splits import EPISODES_DIR, ROOT, check_set, split_entries
-from .transform import shift_direction, transform_episode
+from .transform import transform_episode
 from .verify import verify_generated
 
 OBS_KEYS_RESET = {"task", "manifest", "policy", "remaining_steps"}
@@ -413,6 +413,20 @@ def _pick_reps(eps: list, preferred: tuple) -> list:
     return out
 
 
+def shifted_transform(ep, tf: dict):
+    """(transformed episode, shift used) for a transform with "shift_years": k, trying k, then -k; (None, None) when
+    neither keeps every date inside the range. The transform itself decides: it checks the range on the values it
+    shifts, after any ts_repr rewrite, and a local or UTC rendering can sit on another day than the source text."""
+    k0 = tf["shift_years"]
+    for k in (k0, -k0):
+        try:
+            return transform_episode(ep, **{**tf, "shift_years": k}), k
+        except ValueError as exc:
+            if not str(exc).startswith(f"shift_years {k} moves "):  # only a range refusal falls back
+                raise
+    return None, None
+
+
 def section_paired(rep: Report, eps: list, entries: list, secret: str | None) -> None:
     print("D. reproducibility and paired checks", flush=True)
     t0 = time.monotonic()
@@ -446,13 +460,14 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
     def paired(name, ep, tf):
         g0, a0, m0 = base[name]
         if "shift_years" in tf:  # +28 when the episode's dates allow it (late periods cannot), else -28
-            k = shift_direction(ep, tf["shift_years"])
-            if k is None:
+            t, k = shifted_transform(ep, tf)
+            if t is None:
                 rep.skip("D_paired", f"{name} {tf}: oracle answer and reward preserved",
                          "no 28-year shift keeps the dates inside 1901-03-01 .. 2099-12-31")
                 return
             tf = {**tf, "shift_years": k}
-        t = transform_episode(ep, **tf)
+        else:
+            t = transform_episode(ep, **tf)
         _, g1 = run_one(t, "oracle")
         t1_, a1 = run_one(t, "auditor", isolated=False)
         same_key = [(x["issue_id"], x["type"], x["expected_amount_minor"]) for x in ep.truth["issues"]] == \
@@ -468,7 +483,7 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
         for tf in transforms:
             paired(name, ep, tf)
     errs = [x for x in eps if x[2].truth["issues"]]
-    singles = [{"permute_seed": 13}, {"remap_seed": 17}, {"rename_seed": 19}, {"shift_years": 28}]
+    singles = [{"permute_seed": 13}, {"remap_seed": 17}, {"rename_seed": 19}]  # the shift runs on every episode in `transforms`
     if errs:
         single_eps = []
         for x in errs[:1] + errs[len(errs) // 2:][:1]:
@@ -478,7 +493,7 @@ def section_paired(rep: Report, eps: list, entries: list, secret: str | None) ->
             for tf in singles:
                 paired(name, ep, tf)
     else:
-        rep.skip("D_paired", "permute-only and remap-only transforms on error episodes", "the set has no error episodes")
+        rep.skip("D_paired", "single transforms on error episodes", "the set has no error episodes")
     rep.seconds["D_paired"] = time.monotonic() - t0
 
 

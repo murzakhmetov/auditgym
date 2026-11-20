@@ -17,7 +17,7 @@ from auditgym.episode import load_episode
 from auditgym.generator import generate_episode
 from auditgym.runner import run_one
 from auditgym.timeutil import TZ_RULES, dst_window_utc
-from auditgym.transform import _shift_text, shift_direction, transform_episode
+from auditgym.transform import _check_shift, _shift_text, shift_direction, transform_episode
 from auditgym.verify import verify_generated
 
 TRAIN = Path(__file__).resolve().parent.parent / "episodes" / "train"
@@ -105,6 +105,16 @@ class ShiftTransformTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "outside 1901-03-01"):  # 2082 + 28 = 2110
             transform_episode(far, shift_years=28)
 
+    def test_period_lower_bound_is_inclusive(self):
+        # 2028-03 - 28 lands exactly on 2000-03, the first accepted year; 2027-03 would land on 1999
+        ep = generate_episode(SEED, {"size": "small", "period": "2028-03"}).episode
+        back = transform_episode(ep, shift_years=-28)
+        self.assertEqual(back.provenance["resolved_config"]["period"], "2000-03")
+        self.assertTrue(verify_generated(back)["ok"])
+        early = generate_episode(SEED, {"size": "small", "period": "2027-03"}).episode
+        with self.assertRaisesRegex(ValueError, "accepted years"):
+            transform_episode(early, shift_years=-28)
+
     def test_date_range_rule_alone(self):
         # period 2071-12 + 28 = 2099-12 passes the period rule, but 2072-01-01 + 28 = 2100-01-01 is past 2099-12-31
         ep = generate_episode(SEED, {"size": "small", "period": "2071-12"}).episode
@@ -122,7 +132,39 @@ class ShiftTransformTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "outside 1901-03-01", msg=(period, k)):
                     transform_episode(ep, shift_years=k)
             self.assertIsNone(shift_direction(ep), period)
-        self.assertEqual(_shift_text("2100-01-01 2100-01", 0), "2100-01-01 2100-01")
+        self.assertEqual(_shift_text("2100-01-01 2100-01 SI/2100/123456", 28), "2128-01-01 2128-01 SI/2128/123456")
+
+    def test_year_month_token_alone_is_range_checked(self):
+        ep = generate_episode(SEED, {"size": "small", "period": "2026-05"}).episode
+        ep.invoices[0]["line_items"][0]["description"] = "Cloud hosting SUB-2100-01-1234"
+        with self.assertRaisesRegex(ValueError, "moves year 2100 outside 1901 .. 2099"):
+            _check_shift(ep, 28)
+        with self.assertRaisesRegex(ValueError, "moves year 2100 outside 1901 .. 2099"):
+            _check_shift(ep, -28)
+
+    def test_lower_date_bound_is_1901_03_01(self):
+        ep = generate_episode(SEED, {"size": "small", "period": "2026-05"}).episode
+        ep.invoices[0]["line_items"][0]["description"] = "Old contract 1901-02-28"
+        with self.assertRaisesRegex(ValueError, "outside 1901-03-01"):
+            _check_shift(ep, 28)
+        ep.invoices[0]["line_items"][0]["description"] = "Old contract 1901-03-01"
+        _check_shift(ep, 28)  # passes: 1901-03-01 is the first allowed day
+
+    def test_shift_direction_prefers_plus_and_honours_the_sign_asked(self):
+        ep = generate_episode(SEED, {"size": "small", "period": "2040-03"}).episode
+        self.assertEqual(shift_direction(ep), 28)
+        self.assertEqual(shift_direction(ep, -28), -28)
+        self.assertEqual(shift_direction(ep, 56), 56)
+
+    def test_range_is_checked_on_the_re_rendered_timestamps(self):
+        # a due date 2071-12-31T23:59:59-05:00 passes on the source text (+28 = 2099-12-31) but is 2072-01-01 in UTC
+        ep = generate_episode(SEED, {"size": "small", "period": "2071-10"}).episode
+        ep.invoices[0]["due_at"] = "2071-12-31T23:59:59-05:00"
+        self.assertEqual(shift_direction(ep, 28), 28)
+        with self.assertRaisesRegex(ValueError, "outside 1901-03-01"):
+            transform_episode(ep, shift_years=28, ts_repr="utc")
+        shifted = transform_episode(ep, shift_years=28)  # control: the source representation stays on 2099-12-31
+        self.assertEqual(shifted.invoices[0]["due_at"], "2099-12-31T23:59:59-05:00")
 
     def test_episode_id_carries_the_shift(self):
         ep = self.eps["t01_clean_small"]
@@ -190,6 +232,37 @@ class ShiftTransformTest(unittest.TestCase):
         self.assertTrue(verify_generated(t)["ok"])
 
 
+class PairedShiftTest(unittest.TestCase):
+    """check.shifted_transform: the direction D_paired uses comes from the real transform, ts_repr included."""
+
+    def test_a_local_rendering_past_2099_falls_back_to_minus_28(self):
+        # the source text passes +28 (2071-12-31 + 28 = 2099-12-31), but in company time (+05:00 or later) the
+        # same instant is 2072-01-01, which +28 would move to 2100; the combined D_paired transform renders local
+        from auditgym.check import shifted_transform
+
+        ep = generate_episode(SEED, {"size": "small", "period": "2071-10"}).episode
+        ep.invoices[0]["due_at"] = "2071-12-31T23:59:59-12:00"
+        tf = {"shift_years": 28, "permute_seed": 4, "remap_seed": 6, "ts_repr": "local", "rename_seed": 8}
+        self.assertEqual(shift_direction(ep, 28), 28)  # the source-text check alone would pick +28
+        with self.assertRaisesRegex(ValueError, "moves 2072-01-01 outside"):
+            transform_episode(ep, **tf)
+        t, k = shifted_transform(ep, tf)
+        self.assertEqual(k, -28)
+        self.assertEqual(t.provenance["resolved_config"]["period"], "2043-10")
+        self.assertEqual(shifted_transform(ep, {"shift_years": 28})[1], 28)  # the source rendering keeps +28
+
+    def test_no_direction_and_other_errors(self):
+        from auditgym.check import shifted_transform
+
+        late = generate_episode(SEED, {"size": "small", "period": "2099-12"}).episode
+        self.assertEqual(shifted_transform(late, {"shift_years": 28}), (None, None))
+        ep = generate_episode(SEED, {"size": "small", "period": "2026-05"}).episode
+        with self.assertRaisesRegex(ValueError, "nonzero multiple"):  # not a range refusal: raised, not skipped
+            shifted_transform(ep, {"shift_years": 27})
+        with self.assertRaises(ValueError):
+            shifted_transform(ep, {"shift_years": 28, "ts_repr": "bogus"})
+
+
 class ShiftCliTest(unittest.TestCase):
     def test_cli_writes_shifted_episode_and_rejects_invalid_shift(self):
         src = str(TRAIN / "t03_duplicate")
@@ -222,6 +295,30 @@ class ShiftClosedPathTest(unittest.TestCase):
                 rc = check_mod.main(["--seeds-file", str(f), "--out", str(Path(tmp) / "o")])
             self.assertEqual(rc, 0, out.getvalue()[-1500:] + err.getvalue())
             self.assertIn("'shift_years': -28", out.getvalue())
+
+    def test_check_skips_when_no_28_year_shift_fits(self):
+        seeds = {"split": "closed_skip", "episodes": [
+            {"name": "c01", "seed": SEED, "config": {"size": "small", "period": "2099-12"}}]}
+        from auditgym import check as check_mod
+
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "seeds.json"
+            f.write_text(json.dumps(seeds), encoding="utf-8")
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                rc = check_mod.main(["--seeds-file", str(f), "--out", str(Path(tmp) / "o")])
+            self.assertEqual(rc, 0, out.getvalue()[-1500:] + err.getvalue())
+            self.assertIn("[SKIP] c01 {'shift_years': 28}: oracle answer and reward preserved - "
+                          "no 28-year shift keeps the dates inside 1901-03-01 .. 2099-12-31", out.getvalue())
+
+    def test_public_check_set_never_skips_the_shift(self):
+        from auditgym.splits import check_set
+
+        entries = check_set()
+        self.assertEqual(len(entries), 20)
+        for e in entries:
+            ep = generate_episode(e["seed"], e["config"]).episode
+            self.assertEqual(shift_direction(ep), 28, e["name"])  # None would make section D skip the shift check
 
 
 if __name__ == "__main__":

@@ -61,7 +61,8 @@ class Probe:
                 tmp.write("x")
             out["tempfile"] = True
             same = lambda a, b: os.path.normcase(os.path.realpath(a)) == os.path.normcase(os.path.realpath(b))
-            out["temp_is_cwd"] = same(os.environ["TEMP"], os.getcwd()) and same(tempfile.gettempdir(), os.getcwd())
+            out["temp_is_cwd"] = (same(os.environ["TEMP"], os.getcwd()) and same(os.environ["TMP"], os.getcwd())
+                                  and same(tempfile.gettempdir(), os.getcwd()))
             r = subprocess.run([sys.executable, "-c", "print(40 + 2)"], capture_output=True, text=True, timeout=30)
             out["grandchild"] = r.stdout.strip()
         except Exception as exc:
@@ -104,8 +105,7 @@ class LowIntegrityChild(unittest.TestCase):
         self.assertFalse(res["readable"], res)
         self.assertFalse(res["found_in_parent"])
         self.assertIn("error 5", res["why"], "expected ERROR_ACCESS_DENIED from OpenProcess, not another failure")
-        if sys.prefix == sys.base_prefix:  # in a venv the launcher process sits between host and child
-            self.assertEqual(res["ppid"], res["host_pid"], "the probe must have targeted the host, not another process")
+        self.assertEqual(res["ppid"], res["host_pid"], "the probe must have targeted the host, not a launcher")
 
     def test_policy_still_writes_in_its_working_directory(self):
         res = run_policy(WRITE_POLICY, "writer", "harness")
@@ -200,6 +200,8 @@ class LowIntegrityChild(unittest.TestCase):
             Path(tmp, "sitecustomize.py").write_text("import builtins\nbuiltins.EARLY_RAN = 'sitecustomize'\n",
                                                      encoding="utf-8")
             Path(tmp, "argparse.py").write_text(shadow, encoding="utf-8")
+            # ctypes is imported by _lower_integrity itself: a shadow on the path before that runs at Medium
+            Path(tmp, "ctypes.py").write_text(shadow.replace("argparse", "ctypes"), encoding="utf-8")
             Path(tmp, "lateprobe.py").write_text(probe, encoding="utf-8")
             p = subprocess.run([sys.executable, "-c", HOST, tmp, "lateprobe:Probe", "harness"], capture_output=True,
                                text=True, timeout=120, cwd=str(ROOT))
@@ -208,6 +210,22 @@ class LowIntegrityChild(unittest.TestCase):
         self.assertTrue(res["integrity"].startswith("lowered"), out)
         self.assertEqual(res["early"], "None", "policy-directory code ran before the token was lowered")
         self.assertFalse(res["site"])
+
+    def test_policy_directory_follows_the_staged_code_on_sys_path(self):
+        # colorsys is a stdlib module agent.py has not imported: the policy's copy must win in the lowered child,
+        # as it does in process (the directory goes in right after the staged code, not at the end of sys.path)
+        probe = ("class Probe:\n"
+                 "    def __init__(self, seed=0): pass\n"
+                 "    def act(self, observation, reward=0.0, info=None):\n"
+                 "        import colorsys\n"
+                 "        return {'action': 'probe', 'mark': str(getattr(colorsys, 'MARK', 'stdlib colorsys'))}\n")
+        with tempfile.TemporaryDirectory(prefix="auditgym_winhard_") as tmp:
+            Path(tmp, "colorsys.py").write_text("MARK = 'policy-directory colorsys'\n", encoding="utf-8")
+            Path(tmp, "pathprobe.py").write_text(probe, encoding="utf-8")
+            p = subprocess.run([sys.executable, "-c", HOST, tmp, "pathprobe:Probe", "harness"], capture_output=True,
+                               text=True, timeout=120, cwd=str(ROOT))
+            out = json.loads(p.stdout.strip().splitlines()[-1])
+        self.assertEqual(out["result"]["mark"], "policy-directory colorsys", out)
 
     def test_multiprocessing_pool_works_in_the_low_integrity_child(self):
         # the child's own process object is relabelled Low too, so DuplicateHandle on itself still works
@@ -236,14 +254,58 @@ class ReportShape(unittest.TestCase):
     def test_ci_excerpt_keeps_the_windows_report_lines(self):
         from tools import ci_excerpt
 
-        lines = ["  host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity",
-                 "  " + redteam.parent_secret_visibility(),
-                 "  control with host hardening off: " + redteam.parent_secret_visibility(harden=False)]
+        import contextlib
+        import io
+        from unittest import mock
+
+        low = ("same user as the host: child at Low integrity, the parent's environment is not readable "
+               "(OpenProcess(PROCESS_VM_READ) error 5)")
+        plain = ("same user as the host: child at the host's integrity level (off: control run), "
+                 "parent's environment readable, host variable found there (absent in the child's own environment)")
+        buf = io.StringIO()
+        with mock.patch.object(redteam, "parent_visibility", return_value=low), \
+                mock.patch.object(redteam, "parent_secret_visibility",
+                                  side_effect=lambda harden=True: low if harden else plain), \
+                mock.patch.object(redteam, "secret_env_visibility", return_value="--secret-env: probe"), \
+                contextlib.redirect_stdout(buf):
+            redteam.print_parent_report()
+        lines = buf.getvalue().splitlines()
+        self.assertTrue(any(x.startswith("  host hardening: Windows") for x in lines), lines)
+        self.assertTrue(any(x.startswith("  control with host hardening off: ") for x in lines), lines)
         raw = [f"job\tstep\t2026-01-01T00:00:00.0000000Z {line}\n" for line in lines]
         kept = [k.split(" | ", 2)[2] for k in ci_excerpt.excerpt(raw, "1", "abc")[3:]]
-        self.assertEqual(kept, lines)
-        self.assertIn("child at Low integrity", lines[1])
-        self.assertIn("child at the host's integrity level", lines[2])
+        self.assertEqual(kept, lines[1:], "ci_excerpt dropped a printed report line")
+
+    def test_host_hardening_line_shows_the_switch(self):
+        import contextlib
+        import io
+        from unittest import mock
+
+        def report():
+            buf = io.StringIO()
+            with mock.patch.object(redteam, "parent_visibility", return_value="x"), \
+                    mock.patch.object(redteam, "parent_secret_visibility", return_value="x"), \
+                    mock.patch.object(redteam, "secret_env_visibility", return_value="x"), \
+                    contextlib.redirect_stdout(buf):
+                redteam.print_parent_report()
+            return buf.getvalue()
+
+        self.assertIn("lowers its own token to Low integrity", report())
+        with mock.patch.object(protocol, "LOWER_INTEGRITY", False):
+            self.assertIn("lowering off", report())
+
+
+@unittest.skipUnless(WINDOWS, "Windows only: process snapshot")
+class ParentPid(unittest.TestCase):
+    def test_ppid_fallback_asks_the_process_itself(self):
+        from unittest import mock
+
+        ns = {}
+        exec(compile(redteam.PEEK_POLICY, "peekparent.py", "exec"), ns)  # _ppid lives in the probe policy's source
+        expected = os.getppid()
+        self.assertEqual(ns["_ppid"](), expected)
+        with mock.patch("os.getppid", side_effect=FileNotFoundError(2, "WinError 18")):
+            self.assertEqual(ns["_ppid"](), expected)
 
 
 if __name__ == "__main__":

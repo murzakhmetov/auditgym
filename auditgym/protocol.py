@@ -33,10 +33,10 @@ mode. The channel is bounded in every direction:
     not encode to UTF-8, which schemas.validate_submission rejects in process and in grade too);
     the trajectory keeps {"action": "submit", "findings": null, "invalid_action": first 256
     chars}. A replay matches in status, reward and observations, not in the grade's error text.
-    Size is not at parity: a submit line over MAX_LINE also ends this way, while in process no
-    line limit applies (a valid submission gets that large only through whitespace around the
-    currency code). Residual: a malformed submit whose "action" key is not the first member is
-    still an unknown_action step;
+    Size is at parity too: a submit line over MAX_LINE also ends this way, and no valid submission
+    gets that large (the published limits, the 8-character currency cap included, bound it below
+    830,000 bytes as agent.py serializes it: tests/test_schemas.py). Residual: a malformed submit
+    whose "action" key is not the first member is still an unknown_action step;
   * any other JSON value as the action, null included, goes to env.step(), which
     returns a bounded error for anything that is not a valid action;
   * the processes the host tracks are killed when the run ends (process group on POSIX,
@@ -57,7 +57,11 @@ guess the path of, and (outside a container) its parent's command line and envir
 loads (the --policy-path directory joins sys.path only after that, so nothing in it runs at the host's level),
 and mandatory integrity control then refuses PROCESS_VM_READ on the Medium host: see agent._lower_integrity;
 its working directory is a "work" subdirectory with a Low label and TEMP/TMP point there; a Low child still reads
-every file with a default label, and os.getppid() fails for it; on Linux harden_host() makes
+every file with a default label. At Low integrity the policy can write only in that working directory and TEMP/TMP:
+its --policy-path directory, the repository and the user profile (%LOCALAPPDATA%, caches with absolute paths) are
+read-only, a write there raises PermissionError and the episode is graded as an agent error (agent_exited, reward
+-1). Reads, subprocesses, multiprocessing and localhost sockets work. os.getppid() works because the child relabels
+its own process object Low before lowering (without that it fails with WinError 18); on Linux harden_host() makes
 the host non-dumpable, which blocks /proc/<pid>/environ and /proc/<pid>/mem for a child without
 CAP_SYS_PTRACE and not root, while /proc/<pid>/cmdline stays readable; measured by
 `python -m auditgym.redteam --parent`; the command line `run` removes the --secret-env variable
@@ -334,9 +338,9 @@ def parse_agent_line(line) -> tuple:
 
 
 # --------------------------------------------------------- process-tree control
-NO_LOWER_ENV = "AUDITGYM_NO_LOW_INTEGRITY"  # agent.py reads it: "1" = control run, else the reason it cannot lower
+NO_LOWER_ENV = "AUDITGYM_NO_LOW_INTEGRITY"  # child side (agent.py): "1" = control run, else why it is off; host side: "control" = control run, "1" = user switch
 POLICY_PATH_ENV = "AUDITGYM_POLICY_PATH"  # agent.py adds this directory to sys.path after lowering (Windows)
-LOWER_INTEGRITY = os.environ.get(NO_LOWER_ENV) != "1"  # Windows: the child lowers its own token to Low integrity;
+LOWER_INTEGRITY = os.environ.get(NO_LOWER_ENV) not in ("1", "control")  # Windows: the child lowers its own token to Low integrity;
 # the host sets AUDITGYM_NO_LOW_INTEGRITY=1 (or this to False) only for the redteam control runs
 LOW_LABEL_STATUS = "not tried"  # outcome of the last _label_low() call, for diagnostics
 
@@ -617,9 +621,17 @@ class AgentProcess:
         cmd = [sys.executable, "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         kw = {"start_new_session": True} if os.name == "posix" else {}
         cwd, env = self._tmp.name, _child_env(policy_path, stage=str(stage))
+        if os.name == "nt" and getattr(sys, "_base_executable", sys.executable) != sys.executable:
+            # In a venv sys.executable is a launcher that starts the real interpreter as a child: start the real
+            # one directly (as multiprocessing does) so the policy child's parent is this host, and tell it which
+            # venv it belongs to, so sys.prefix and site-packages stay the venv's.
+            cmd[0] = sys._base_executable
+            env["__PYVENV_LAUNCHER__"] = sys.executable
         if os.name == "nt" and ident is None:
             if not LOWER_INTEGRITY:
-                env[NO_LOWER_ENV] = "1"
+                # "1" = the redteam control run; a switch set in the host's own environment is reported as such
+                env[NO_LOWER_ENV] = ("1" if os.environ.get(NO_LOWER_ENV) in (None, "control")
+                                     else f"{NO_LOWER_ENV}=1 in the host's environment")
             else:
                 # The child lowers itself to Low integrity, which cannot write Medium objects: its working
                 # directory (a subdirectory, so the staged code stays read-only for it) gets a Low label, and

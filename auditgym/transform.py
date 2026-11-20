@@ -312,6 +312,7 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
                 op["before"] = fmt(op["before"], op["id"])
                 op["after"] = fmt(op["after"], op["id"])
     if shift_years is not None:  # last of the value rewrites: ts_repr and remap read the source calendar
+        _check_shift(new, shift_years)  # the re-rendered values (ts_repr utc) can sit on another date than the source text
         new.manifest = _shift_deep(new.manifest, shift_years)
         new.policy = _shift_deep(new.policy, shift_years)
         new.ledger = _shift_deep(new.ledger, shift_years)

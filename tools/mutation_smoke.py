@@ -11,7 +11,9 @@ compiles, applies the single replacement and runs "python -m unittest -f <module
 a timeout, mean the mutant is killed; a green run means it survived. Two phases per mutant: its listed modules first,
 then, only if those pass, tests.test_mutation_survivors (written for these very mutants). The summary records which
 phase killed it ("existing tests" or "survivor tests") and a sha256 of (file, snippet, replacement). A mutant that is listed as equivalent (the change
-cannot alter any behavior) is run too, but reported apart: it counts neither as killed nor as survived.
+cannot alter any behavior) is run too, but reported apart: it counts neither as killed nor as survived. A mutant marked
+for one platform (its only killing test runs there, such as a Windows-only test) is not run elsewhere and is reported as
+"not run here", not counted. The summary names the platform it was recorded on.
 Before any mutant the unmutated copy runs all listed modules once; if that fails nothing is reported.
 
 The summary holds no timings, paths or test names, so two runs on the same tree write the same bytes. Standard library
@@ -25,6 +27,7 @@ import hashlib
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -47,6 +50,7 @@ class Mutant(NamedTuple):
     modules: tuple
     breaks: str
     equivalent: str = ""  # why the change cannot alter behavior; empty for a real mutant
+    only_on: str = ""  # os.name where the test that kills it runs ("nt": a Windows-only test); empty: every platform
 
 
 # The module with the tests written for these very mutants runs as a second phase, after the listed modules.
@@ -56,11 +60,13 @@ REWARD = ("tests.test_reward", "tests.test_matcher", "tests.test_env")
 SCHEMA = ("tests.test_schemas", "tests.test_contract_battery", "tests.test_env", "tests.test_matcher")
 ENV = ("tests.test_env", "tests.test_contract_battery")
 VERIFY = ("tests.test_verify", "tests.test_generator")
+SHIFT = ("tests.test_transform_shift",)
+WINHARD = ("tests.test_windows_hardening", "tests.test_redteam", "tests.test_isolation")
 PROTO = ("tests.test_isolation", "tests.test_redteam", "tests.test_contract_fuzz")
 
 
-def M(id, file, old, new, modules, breaks, equivalent=""):
-    return Mutant(id, file, old, new, tuple(modules), breaks, equivalent)
+def M(id, file, old, new, modules, breaks, equivalent="", only_on=""):
+    return Mutant(id, file, old, new, tuple(modules), breaks, equivalent, only_on)
 
 
 MUTANTS = [
@@ -294,6 +300,17 @@ MUTANTS = [
       "echo: a malformed line is echoed 257 characters long"),
     M("protocol-surrogate", "auditgym/protocol.py", 'json.dumps(action, ensure_ascii=False, allow_nan=False).encode("utf-8")',
       "json.dumps(action, ensure_ascii=False, allow_nan=False)", PROTO, "a lone surrogate in an action is accepted"),
+    # ---------------------------------------------------------------- round 7: verify, year shift, Windows child
+    M("verify-stale-rate-variant", "auditgym/verify.py", 'elif variant in ("utc_date", "posting_date", "stale_rate"):',
+      'elif variant in ("utc_date", "posting_date"):', VERIFY,
+      "provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate"),
+    M("shift-direction-order", "auditgym/transform.py", "for cand in (k, -k):", "for cand in (-k, k):", SHIFT,
+      "shift_direction tries -28 before +28"),
+    M("shift-period-lower", "auditgym/transform.py", "not PERIOD_YEARS[0] <= int(text[:4]) + k",
+      "not PERIOD_YEARS[0] < int(text[:4]) + k", SHIFT, "shift: a period landing exactly on 2000 is refused"),
+    M("policy-path-append", "auditgym/agent.py", "at = sys.path.index(staged) + 1 if staged in sys.path else len(sys.path)",
+      "at = len(sys.path)", WINHARD, "Windows child: the policy directory goes last on sys.path, not after the staged code",
+      only_on="nt"),
 ]
 
 
@@ -339,21 +356,45 @@ def make_copy(dst: Path) -> None:
             shutil.copytree(src, dst / rel, ignore=IGNORE)
 
 
+def kill_tree(proc: subprocess.Popen) -> None:
+    """Stop `proc` and everything it started (a grandchild such as `auditgym verify` would otherwise keep the
+    temporary copy busy and burn CPU)."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], stdin=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+    proc.kill()
+
+
 def run_tests(cwd: Path, modules, timeout: float) -> tuple[bool, str]:
-    """(passed, why). A timeout counts as a failure."""
+    """(passed, why). A timeout counts as a failure; the whole process tree is stopped."""
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
     cmd = [sys.executable, "-m", "unittest", "-f", *modules]
+    group = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
+             else {"start_new_session": True})
+    proc = subprocess.Popen(cmd, cwd=str(cwd), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace", **group)
     try:
-        proc = subprocess.run(cmd, cwd=str(cwd), env=env, stdin=subprocess.DEVNULL, capture_output=True,
-                              text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        _, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
+        kill_tree(proc)
+        try:
+            proc.communicate(timeout=30)
+        except subprocess.TimeoutExpired:
+            pass
         return False, "timeout"
-    tail = (proc.stderr or "").strip().splitlines()[-6:]
+    tail = (err or "").strip().splitlines()[-6:]
     return proc.returncode == 0, "\n".join(tail)
 
 
 def run_mutant(m: Mutant, timeout: float) -> dict:
-    with tempfile.TemporaryDirectory(prefix="auditgym-mut-") as tmp:
+    if m.only_on and m.only_on != os.name:
+        return {"passed": None, "why": f"runs only where os.name is {m.only_on!r}", "killed_by": ""}
+    with tempfile.TemporaryDirectory(prefix="auditgym-mut-", ignore_cleanup_errors=True) as tmp:
         work = Path(tmp)
         make_copy(work)
         target = work / m.file
@@ -370,7 +411,7 @@ def run_mutant(m: Mutant, timeout: float) -> dict:
 
 def baseline(timeout: float) -> None:
     modules = sorted({mod for m in MUTANTS for mod in m.modules} | {SURV})
-    with tempfile.TemporaryDirectory(prefix="auditgym-mut-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="auditgym-mut-", ignore_cleanup_errors=True) as tmp:
         work = Path(tmp)
         make_copy(work)
         passed, why = run_tests(work, modules, timeout * 3)
@@ -379,6 +420,8 @@ def baseline(timeout: float) -> None:
 
 
 def classify(m: Mutant, res: dict) -> str:
+    if res["passed"] is None:
+        return "not run here"
     if m.equivalent:
         return "equivalent"
     return "survived" if res["passed"] else "killed"
@@ -386,6 +429,17 @@ def classify(m: Mutant, res: dict) -> str:
 
 def snippet_hash(m: Mutant) -> str:
     return hashlib.sha256(json.dumps([m.file, m.old, m.new]).encode("utf-8")).hexdigest()
+
+
+def tests_hashes() -> dict:
+    """sha256 of every test module a run uses, so a test edit after recording shows up as a stale record."""
+    modules = sorted({mod for m in MUTANTS for mod in m.modules} | {SURV})
+    return {mod: hashlib.sha256(read_text(ROOT / (mod.replace(".", "/") + ".py")).replace("\r\n", "\n")
+                                .encode("utf-8")).hexdigest()
+            for mod in modules}
+
+
+PLATFORM_NAMES = {"nt": "Windows", "posix": "POSIX"}
 
 
 def build_report(results: list[tuple[Mutant, dict]]) -> dict:
@@ -400,14 +454,19 @@ def build_report(results: list[tuple[Mutant, dict]]) -> dict:
             "tests": list(m.modules),
             "sha256": snippet_hash(m),
             **({"equivalent_because": m.equivalent, "observed": "survived" if res["passed"] else "killed"}
-               if m.equivalent else {}),
+               if m.equivalent and res["passed"] is not None else {}),
         })
-    real = [r for r in rows if r["status"] != "equivalent"]
+    real = [r for r in rows if r["status"] not in ("equivalent", "not run here")]
     killed = sum(1 for r in real if r["status"] == "killed")
     by_existing = sum(1 for r in real if r["killed_by"] == "existing tests")
+    not_run = sum(1 for r in rows if r["status"] == "not run here")
     return {"listed": len(rows), "counted": len(real), "killed": killed, "survived": len(real) - killed,
-            "equivalent": len(rows) - len(real), "killed_by_existing": by_existing,
-            "killed_by_survivor_tests": killed - by_existing, "mutants": rows}
+            "equivalent": len(rows) - len(real) - not_run, "not_run_here": not_run,
+            "recorded_on": f"{PLATFORM_NAMES.get(os.name, os.name)}, Python {sys.version_info[0]}.{sys.version_info[1]}",
+            "platform_only": {m.id: PLATFORM_NAMES.get(m.only_on, m.only_on) for m, _ in results if m.only_on},
+            "killed_by_existing": by_existing,
+            "killed_by_survivor_tests": killed - by_existing, "test_modules_sha256": tests_hashes(),
+            "mutants": rows}
 
 
 def render_markdown(report: dict) -> str:
@@ -415,14 +474,19 @@ def render_markdown(report: dict) -> str:
         "# Mutation smoke",
         "",
         f"**{report['killed']} of {report['counted']} listed mutants killed** "
-        f"({report['survived']} survived, {report['equivalent']} equivalent, not counted).",
+        f"({report['survived']} survived, {report['equivalent']} equivalent, not counted"
+        + (f"; {report['not_run_here']} not run on this platform" if report["not_run_here"] else "") + ").",
+        "",
+        f"Recorded on {report['recorded_on']}."
+        + ("".join(f" `{k}` is killed only by a test that runs on {v}, so it runs only there."
+                   for k, v in report["platform_only"].items())),
         "",
         f"{report['killed_by_existing']} of {report['counted']} are killed by the existing tests, "
         f"{report['killed_by_survivor_tests']} more only by `tests/test_mutation_survivors.py`, "
         "which was written for these mutants.",
         "",
         "Each mutant is one hand-written change to the core (`auditgym/matcher.py`, `reward.py`, `grader.py`, "
-        "`schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`), applied to a fresh copy of the "
+        "`schemas.py`, `env.py`, `verify.py`, `evidence_check.py`, `protocol.py`, `transform.py`, `agent.py`), applied to a fresh copy of the "
         "repository, which then runs the unit-test modules named in the last column, and, if those pass, "
         "`tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.",
         "",
@@ -483,7 +547,8 @@ def main(argv=None) -> int:
     for r in report["mutants"]:
         print(f"{r['status']:10s} {r['id']}")
     print(f"{report['killed']} of {report['counted']} listed mutants killed; {report['survived']} survived; "
-          f"{report['equivalent']} equivalent")
+          f"{report['equivalent']} equivalent" + (f"; {report['not_run_here']} not run on this platform"
+                                                   if report["not_run_here"] else ""))
     if args.record:
         dest = ROOT / "runs" / "mutation"
         dest.mkdir(parents=True, exist_ok=True)

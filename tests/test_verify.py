@@ -29,7 +29,7 @@ D08 = ROOT / "episodes" / "dev" / "d08_both_interacting_kzt"
 
 def run_verify(directory: Path):
     return subprocess.run([sys.executable, "-m", "auditgym", "verify", str(directory)], cwd=str(ROOT),
-                          capture_output=True, text=True, encoding="utf-8")
+                          capture_output=True, text=True, encoding="utf-8", timeout=120)
 
 
 def verify_dir(directory: Path) -> dict:
@@ -553,6 +553,7 @@ class AnswerKeyCrossChecks(unittest.TestCase):
 
 
 T08 = ROOT / "episodes" / "train" / "t08_fx_partial_allocation"
+D05 = ROOT / "episodes" / "dev" / "d05_fx_utc_stale_mixed_ts"
 
 
 def _shifted(key, value):
@@ -600,7 +601,7 @@ class ChangeRecordTests(unittest.TestCase):
 
     def test_every_tampered_change_key_fails(self):
         seen = set()
-        for src in (D08, T08):
+        for src in (D08, T08, D05):
             injections = json.loads((src / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
             for n, inj in enumerate(injections):
                 for key in inj["change"]:
@@ -612,7 +613,7 @@ class ChangeRecordTests(unittest.TestCase):
                         self.assert_rejected(d, "provenance_roundtrip", "injection iss_")
         self.assertTrue({("wrong_fx_rate", "utc_date", "wrong_rate_date"), ("wrong_fx_rate", "transposed", "correct_rate"),
                          ("wrong_fx_rate", "posting_date", "posting_ts"), ("wrong_period", "utc_wall_clock", "posting_ts"),
-                         ("unallocated_payment", "partial", "alloc")} <= seen)
+                         ("unallocated_payment", "partial", "alloc"), ("wrong_fx_rate", "stale_rate", "wrong_rate_date")} <= seen)
 
     def test_missing_unknown_and_malformed_change_fail(self):
         injections = json.loads((D08 / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
@@ -641,12 +642,13 @@ class ChangeRecordTests(unittest.TestCase):
             (D08, "signed rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "+581.263")),
             (d04, "alloc is a bool", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", False)),
             (d04, "variant swapped to partial", lambda p: by_id(p, "iss_01").__setitem__("variant", "partial")),
+            (T08, "alloc one unit lower (2900 rule)", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", 577911)),
         ]
         for src, label, edit in cases:
             with self.subTest(label):
                 d = self.copy(src)
                 self.edit_provenance(d, edit)
-                self.assert_rejected(d, "provenance_roundtrip", "injection iss_")
+                self.assert_rejected(d, "provenance_roundtrip", "2900 holds" if "2900" in label else "injection iss_")
 
     def test_a_change_on_a_known_type_with_an_extra_key_fails_for_duplicates_too(self):
         d = self.copy(next(p for p in (ROOT / "episodes" / "train").iterdir() if p.name.startswith("t03")))
@@ -687,6 +689,12 @@ class SoleReceiptTests(unittest.TestCase):
         other.update({"doc_id": "D-ZZ-1", "payment_id": "RCPT-ZZ-1"})
         self.ep.payments.append(other)
         self.save_and_reject("also lists invoice")
+
+    def test_second_receipt_document_with_the_same_payment_id_fails(self):
+        other = copy.deepcopy(self.pay)
+        other.update({"doc_id": "D-ZZ-1"})
+        self.ep.payments.append(other)
+        self.save_and_reject("2 payment and 1 invoice documents carry the affected IDs")
 
     def test_second_receipt_in_a_list_of_invoices_fails(self):
         other = copy.deepcopy(self.pay)

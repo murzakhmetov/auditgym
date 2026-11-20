@@ -1,14 +1,14 @@
 # auditgym check report
 
-Result: **PASS** in 137 s, version 0.2.0.
+Result: **PASS** in 212 s, version 0.2.0.
 
 Episodes: public master string auditgym-check-v1.
 
 Policy isolation: the host's user (no uid switch on this machine).
 
-Code: code 23e2b93445134423a3b446db6beb32160b13f308eb8228094ee56f7eb0479abc (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
+Code: code 182f7b41b46e7fd6d6c7a29fdf9d55cda3143ce76fe77386b98d2948fedbeaf9 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
 
-Coverage: 616 named checks of 79 kinds (a kind is one property; most run on every episode they apply to).
+Coverage: 656 named checks of 79 kinds (a kind is one property; most run on every episode they apply to).
 
 ## Checks (grouped by rubric criterion)
 
@@ -47,7 +47,7 @@ Run time: F_contract 0.0 s, E_leaks 0.4 s
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 3.8 s, C_data 4.5 s
+Run time: B_committed_episodes 3.8 s, C_data 4.8 s
 
 #### B_committed_episodes (40/40)
 
@@ -119,7 +119,7 @@ Run time: B_committed_episodes 3.8 s, C_data 4.5 s
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 29.1 s
+Run time: C_reward 33.6 s
 
 #### C_reward (427/427)
 
@@ -553,7 +553,7 @@ Run time: C_reward 29.1 s
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.4 s, D_paired 18.4 s
+Run time: B_replay 1.2 s, D_paired 33.2 s
 
 #### B_replay (10/10)
 
@@ -568,7 +568,7 @@ Run time: B_replay 1.4 s, D_paired 18.4 s
 - PASS: train/recon: 10 recorded runs, each replays to identical observations and terminal reward
 - PASS: train/silent: 10 recorded runs, each replays to identical observations and terminal reward
 
-#### D_paired (93/93)
+#### D_paired (133/133)
 
 - PASS: h01_clean: same seed and config regenerate identical records and answer key
 - PASS: h02_clean: same seed and config regenerate identical records and answer key
@@ -600,63 +600,103 @@ Run time: B_replay 1.4 s, D_paired 18.4 s
 - PASS: h01_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h01_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h01_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h01_clean {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h01_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h02_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h02_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h02_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h02_clean {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h02_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h03_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h03_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h03_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h03_clean {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h03_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h04_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h04_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h04_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h04_clean {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h04_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h05_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h05_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h05_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h05_clean {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h05_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h06_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h06_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h06_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h06_interacting {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h06_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h07_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h07_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h07_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h07_interacting {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h07_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h08_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h08_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h08_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h08_interacting {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h08_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h09_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h09_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h09_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h09_interacting {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h09_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h10_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h10_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h10_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h10_interacting {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h10_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h11_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h11_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h11_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h11_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h11_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h12_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h12_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h12_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h12_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h12_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h13_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h13_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h13_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h13_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h13_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h14_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h14_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h14_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h14_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h14_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h15_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h15_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h15_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h15_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h15_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h16_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h16_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h16_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h16_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h16_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h17_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h17_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h17_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h17_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h17_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h18_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h18_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h18_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h18_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h18_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h19_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h19_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h19_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h19_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h19_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h20_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved
 - PASS: h20_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved
 - PASS: h20_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved
+- PASS: h20_mixed {'shift_years': 28}: oracle answer and reward preserved
+- PASS: h20_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved
 - PASS: h06_interacting {'permute_seed': 13}: oracle answer and reward preserved
 - PASS: h06_interacting {'remap_seed': 17}: oracle answer and reward preserved
 - PASS: h06_interacting {'rename_seed': 19}: oracle answer and reward preserved
@@ -666,22 +706,22 @@ Run time: B_replay 1.4 s, D_paired 18.4 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 79.6 s
+Run time: A_unit_tests 135.4 s
 
 #### A_unit_tests (1/1)
 
-- PASS: unittest: 333 run, 322 passed, 11 skipped
+- PASS: unittest: 444 run, 433 passed, 11 skipped
 
 ## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.936 | 0.936 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.0 | 0.0156 | 1.0 | 0.9532 | 0.9303 | 0 | 0.0 |
+| hidden_like | auditor | 20 | 0.936 | 0.936 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.0 | 0.0102 | 1.0 | 0.9532 | 0.9303 | 0 | 0.0 |
 | hidden_like | flag_all | 20 | -1.0 | -0.9946 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.003 | 3.0 | 0.0024 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.6132 | -0.6132 | 0.0 | 0.0 | 0.0 | 0.0 | 0.2 | 0.2 | 33.95 | 0.0039 | 0.2 | 0.5472 | -1.0 | 2 | 0.0 |
+| hidden_like | random | 20 | -0.6132 | -0.6132 | 0.0 | 0.0 | 0.0 | 0.0 | 0.2 | 0.2 | 33.95 | 0.0047 | 0.2 | 0.5472 | -1.0 | 2 | 0.0 |
 | hidden_like | recon | 20 | -0.5887 | -0.5887 | 0.1501 | 0.5425 | 0.1634 | 0.75 | 0.2307 | 0.2307 | 32.0 | 0.0071 | 0.0 | -1.0 | -0.4516 | 40 | 0.0 |
-| hidden_like | silent | 20 | -0.5 | -0.5 | 0.0 | 0.0 | n/a | 0.0 | 0.25 | 0.25 | 0.0 | 0.0008 | 0.25 | 1.0 | -1.0 | 0 | n/a |
+| hidden_like | silent | 20 | -0.5 | -0.5 | 0.0 | 0.0 | n/a | 0.0 | 0.25 | 0.25 | 0.0 | 0.0 | 0.25 | 1.0 | -1.0 | 0 | n/a |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
 
