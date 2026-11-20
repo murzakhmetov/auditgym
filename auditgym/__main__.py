@@ -17,6 +17,10 @@ Exit codes: 0 ok, 1 a check or verification failed, 2 bad input (one `error:` li
 syntax errors print the argparse usage first), 3 a run finished but an agent failed. Only the input stage of a
 command (config, seeds file, episode directories, secret variable, numbers) is turned into exit 2; a crash inside
 a check, an agent policy or the stress loop keeps its traceback and exits 1.
+
+Strict isolation (opt-in): with AUDITGYM_REQUIRE_AGENT_USER=1 a policy that cannot run as the separate agent
+user (not root, no AUDITGYM_AGENT_USER, dropped capabilities, Windows, macOS) is an error: check, run, demo, viewer
+and budget exit 2 with one `error:` line before the first episode and before any report is written.
 """
 
 from __future__ import annotations
@@ -32,6 +36,7 @@ from pathlib import Path
 from . import CONFIG_VERSION, SCHEMA_VERSION, __version__
 from . import io as aio
 
+MAX_STEPS = 100  # env.DEFAULT_MAX_STEPS: the largest action budget
 MIN_SEED_BITS = 40  # seeds below 2**40 (bit length <= 40) are guessable from public records; see README limitations
 
 
@@ -133,9 +138,23 @@ def _load_config(arg: str | None) -> dict:
     return cfg
 
 
+def _require_agent_user() -> None:
+    """In strict mode (AUDITGYM_REQUIRE_AGENT_USER=1) start and stop one policy child now, so a host that cannot
+    run the policy as the separate agent user fails before the first episode and before any report is written."""
+    from . import protocol
+
+    if not protocol.require_agent_user():
+        return
+    try:
+        protocol.AgentProcess("recon", 0).close()
+    except protocol.AgentUserRequired as exc:
+        raise InputError(str(exc)) from exc
+
+
 def cmd_check(args) -> int:
     from .check import main
 
+    _require_agent_user()
     argv = []
     for flag, value in (("--seeds-file", args.seeds_file), ("--secret-env", args.secret_env), ("--out", args.out)):
         if value is not None:
@@ -224,6 +243,10 @@ def cmd_run(args) -> int:
         raise InputError(str(exc)) from exc
     if not episodes:
         raise InputError("no episodes given (use --episodes or --seeds-file)")
+    if not 1 <= args.max_steps <= MAX_STEPS:
+        raise InputError(f"--max-steps must be between 1 and {MAX_STEPS}")
+    if not args.in_process and any(p != "oracle" for p in policies):
+        _require_agent_user()
     traj, grades = run_many(episodes, policies, mode=args.mode, isolated=not args.in_process,
                             max_steps=args.max_steps, policy_seed=args.policy_seed, policy_path=args.policy_path)
     out = Path(args.out)
@@ -249,11 +272,15 @@ def cmd_grade(args) -> int:
         ep = load_episode(Path(args.episode))
         if args.steps < 0:
             raise ValueError("--steps must be 0 or more")
+        text = Path(args.findings).read_text(encoding="utf-8-sig")  # tolerate a UTF-8 BOM
         try:
-            sub = json.loads(Path(args.findings).read_text(encoding="utf-8-sig"))  # tolerate a UTF-8 BOM
+            sub = json.loads(text)
         except json.JSONDecodeError as exc:
             sub = None
             errors = [f"{Path(args.findings).name} is not valid JSON: {exc.msg} (line {exc.lineno})"]
+        except (ValueError, RecursionError) as exc:  # e.g. a 4300-digit integer or deep nesting: a bad submission
+            sub = None
+            errors = [f"{Path(args.findings).name} is not valid JSON: {' '.join(str(exc).split())[:120]}"]
     if sub is None:
         rep = Grader(ep.truth, ep.episode_id).grade(None, args.steps, "invalid_submission", invalid_errors=errors)
         print(json.dumps(rep, indent=2))
@@ -291,6 +318,7 @@ def cmd_demo(args) -> int:
     d = Path(args.episode) if args.episode else EPISODES_DIR / "dev" / "d08_both_interacting_kzt"
     with _input(broad=True):
         ep = load_episode(d)
+    _require_agent_user()
     print(f"episode {ep.episode_id}: {ep.manifest['company']['name']}, base {ep.manifest['base_currency']}, "
           f"{ep.manifest['timezone']}, period {ep.manifest['period_start']} .. {ep.manifest['period_end']}")
     print(f"records: {ep.manifest['record_counts']}")
@@ -321,6 +349,7 @@ def cmd_demo(args) -> int:
 def cmd_viewer(args) -> int:
     from .viewer.build import build
 
+    _require_agent_user()
     out = build(Path(args.out))
     print(f"wrote {out}")
     return 0
@@ -349,8 +378,9 @@ def cmd_budget(args) -> int:
         budgets = [int(b) for b in args.budgets.split(",")]
     except ValueError as exc:
         raise InputError("--budgets must be comma-separated integers, e.g. 20,50,100") from exc
-    if any(b < 1 for b in budgets):
-        raise InputError("--budgets must be positive integers")
+    if any(not 1 <= b <= MAX_STEPS for b in budgets):
+        raise InputError(f"--budgets must be integers between 1 and {MAX_STEPS}")
+    _require_agent_user()
     return run_budget(budgets, Path(args.out))
 
 
@@ -365,7 +395,7 @@ def main(argv=None) -> int:
     ck.set_defaults(func=cmd_check)
     sub.add_parser("build-splits").set_defaults(func=cmd_build_splits)
     g = sub.add_parser("generate")
-    g.add_argument("--seed", required=True)
+    g.add_argument("--seed", required=True, type=int)
     g.add_argument("--config", help="JSON file or inline JSON")
     g.add_argument("--out", required=True)
     g.add_argument("--secret-env", help="name of an environment variable holding the host secret")

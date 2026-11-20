@@ -237,7 +237,7 @@ class ChildImportPath(unittest.TestCase):
 
 
 class ParserBounds(unittest.TestCase):
-    """Same answers on 3.11, 3.12, 3.13 and with PYTHONINTMAXSTRDIGITS=0."""
+    """Same answers with PYTHONINTMAXSTRDIGITS=0 (the integer-digit limit off). Tested on Python 3.11 only."""
 
     CASES = {
         "deep_1000": '{"type":"action","action":' + "[" * 1000 + "]" * 1000 + "}",

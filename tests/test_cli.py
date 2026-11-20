@@ -15,6 +15,7 @@ from unittest import mock
 
 from auditgym import __main__ as cli_mod
 from auditgym import config as cfgmod
+from auditgym import protocol
 from auditgym import stress
 from auditgym.episode import load_episode
 from auditgym.runner import run_one
@@ -91,6 +92,49 @@ class BadInput(unittest.TestCase):
         self.assert_clean_error(cli("stress", "--n", "-1"))
         self.assert_clean_error(cli("budget", "--budgets", "20,x"))
         self.assert_clean_error(cli("budget", "--budgets", "0"))
+        self.assert_clean_error(cli("budget", "--budgets", "1000"))
+
+    def test_max_steps_out_of_range_is_an_error(self):
+        ep = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+        with tempfile.TemporaryDirectory() as d:
+            for bad in ("0", "1000", "-5"):
+                with self.subTest(bad):
+                    line = self.assert_clean_error(cli("run", "--episodes", ep, "--policies", "random", "--max-steps", bad,
+                                                       "--out", str(Path(d) / "o")))
+                    self.assertIn("--max-steps", line)
+            self.assertFalse((Path(d) / "o").exists())
+
+    def test_grade_with_a_huge_integer_is_an_invalid_submission(self):
+        ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
+        eid = load_episode(ep).episode_id
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "f.json"
+            f.write_text('{"episode_id": "%s", "findings": [{"type": "duplicate_payment", "affected_ids": ["x"], '
+                         '"claimed_amount_minor": %s, "currency": "JPY"}]}' % (eid, "9" * 5000), encoding="utf-8")
+            rc, out, err = cli("grade", "--episode", str(ep), "--findings", str(f))
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(err, "")
+        rep = json.loads(out)
+        self.assertEqual(rep["reward"], -1)
+        self.assertNotEqual(rep["status"], "submitted")
+
+    def test_grade_with_deep_nesting_is_an_invalid_submission(self):
+        ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
+        eid = load_episode(ep).episode_id
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "f.json"
+            f.write_text('{"episode_id": "%s", "findings": %s%s}' % (eid, "[" * 100000, "]" * 100000), encoding="utf-8")
+            rc, out, err = cli("grade", "--episode", str(ep), "--findings", str(f))
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads(out)["reward"], -1)
+
+    def test_seed_must_be_an_integer(self):
+        err = io.StringIO()
+        with tempfile.TemporaryDirectory() as d, contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+            cli_mod.main(["generate", "--seed", "foo", "--out", str(Path(d) / "x")])
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("--seed", err.getvalue())
+        self.assertNotIn("Traceback", err.getvalue())
 
     def test_bad_seeds_files(self):
         cases = {"no seed": {"episodes": [{"name": "no seed"}]},
@@ -120,6 +164,55 @@ class BadInput(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cli("run", "--episodes", str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"), "--policies", "flag_all",
                     "--out", str(Path(d) / "o"))
+
+
+class StrictAgentUser(unittest.TestCase):
+    """AUDITGYM_REQUIRE_AGENT_USER=1 with no separate policy user possible (forced by an empty AUDITGYM_AGENT_USER,
+    so the result is the same on Windows, macOS, CI and inside the image)."""
+
+    ENV = {"AUDITGYM_REQUIRE_AGENT_USER": "1", "AUDITGYM_AGENT_USER": ""}
+
+    def assert_strict_error(self, rc, err):
+        self.assertEqual(rc, 2, err)
+        self.assertNotIn("Traceback", err)
+        lines = [ln for ln in err.splitlines() if ln.strip()]
+        self.assertEqual(len(lines), 1, err)
+        self.assertTrue(lines[0].startswith("error: AUDITGYM_REQUIRE_AGENT_USER=1"), lines[0])
+        self.assertIn("AUDITGYM_AGENT_USER is not set", lines[0])
+
+    def test_check_run_and_demo_exit_2_before_any_report(self):
+        ep = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "o"
+            cases = (["check", "--out", str(out)],
+                     ["run", "--episodes", ep, "--policies", "random,oracle", "--out", str(out)],
+                     ["demo"],
+                     ["budget", "--out", str(out)],
+                     ["viewer", "--out", str(out)])
+            for argv in cases:
+                with self.subTest(argv[0]):
+                    rc, stdout, err = cli(*argv, env_extra=self.ENV)
+                    self.assert_strict_error(rc, err)
+                    self.assertEqual(stdout, "")
+                    self.assertFalse(out.exists())
+
+    def test_in_process_and_oracle_runs_need_no_child(self):
+        ep = str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy")
+        with tempfile.TemporaryDirectory() as d:
+            for extra in (["--policies", "oracle"], ["--policies", "random", "--in-process"]):
+                with self.subTest(extra):
+                    rc, _out, err = cli("run", "--episodes", ep, "--out", str(Path(d) / "o"), *extra, env_extra=self.ENV)
+                    self.assertEqual(rc, 0, err)
+
+    def test_only_the_value_1_turns_strict_mode_on(self):
+        for value, expected in (("1", True), (" 1 ", True), ("", False), ("0", False), ("true", False)):
+            with self.subTest(value), mock.patch.dict(os.environ, {"AUDITGYM_REQUIRE_AGENT_USER": value}):
+                self.assertEqual(protocol.require_agent_user(), expected)
+
+    def test_agent_process_raises_a_dedicated_exception(self):
+        with mock.patch.dict(os.environ, self.ENV), self.assertRaises(protocol.AgentUserRequired):
+            protocol.AgentProcess("recon", 0)
+        self.assertFalse(issubclass(protocol.AgentUserRequired, OSError))
 
 
 class ClosedRun(unittest.TestCase):

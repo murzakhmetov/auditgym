@@ -79,3 +79,34 @@ jobs:
           test "${PIPESTATUS[0]}" -eq 0
           grep -q "^PASS in" capdrop.log
           docker run --rm --network none --cap-drop ALL auditgym python -m unittest tests.test_container -v
+      - name: Strict mode in the default image (AUDITGYM_REQUIRE_AGENT_USER=1, the policy really runs as the agent user)
+        run: |
+          docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee strict_default.log
+          test "${PIPESTATUS[0]}" -eq 0
+          grep -q "^PASS in" strict_default.log
+          docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1 auditgym python -m unittest tests.test_container -v 2>&1 | tee strict_container.log
+          test "${PIPESTATUS[0]}" -eq 0
+          if grep -qi "skipped" strict_container.log; then echo "a container test was skipped"; exit 1; fi
+        shell: bash
+      - name: Strict mode with --cap-drop ALL (must refuse with exit code 2 and one error line)
+        run: |
+          docker run --rm --network none --cap-drop ALL -e AUDITGYM_REQUIRE_AGENT_USER=1 auditgym > strict_capdrop.log 2>&1 && rc=0 || rc=$?
+          cat strict_capdrop.log
+          echo "exit code $rc"
+          test "$rc" -eq 2
+          test "$(grep -c . strict_capdrop.log)" -eq 1
+          grep -q "^error: AUDITGYM_REQUIRE_AGENT_USER=1" strict_capdrop.log
+        shell: bash
+      - name: Upload the container logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-logs
+          path: |
+            container_tests.log
+            user10001.log
+            capdrop.log
+            strict_default.log
+            strict_container.log
+            strict_capdrop.log
+          if-no-files-found: warn

@@ -15,6 +15,12 @@
 # be written by either root or 10001 (root is also in group auditor, so --cap-drop ALL still works).
 # /app/runs is 0770: the agent user (other) cannot enter it.
 # Mount volumes only for output (-v DIR:/app/runs).
+#
+# Strict isolation is opt-in and is NOT set in this image: a runner that drops capabilities or sets --user
+# must still pass the check, with the warning above. To refuse the fallback instead, add
+#   -e AUDITGYM_REQUIRE_AGENT_USER=1
+# check, run, demo, viewer and budget then exit 2 with one "error:" line before the first episode and before any
+# report is written, when the policy could not start as the agent user (for example with --cap-drop ALL).
 FROM python:3.11.10-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

@@ -4,7 +4,8 @@ They run inside the official image (root host, AUDITGYM_AGENT_USER=agent):
   docker run --rm --network none --cpus 2 --memory 4g auditgym python -m unittest tests.test_container -v
 Everywhere else (Windows, macOS, CI without the image, a non-root user, dropped capabilities) every
 test is SKIPPED, because the switch to the agent user is not possible there and the code falls back
-to the same user.
+to the same user. Strict mode (AUDITGYM_REQUIRE_AGENT_USER=1) turns that fallback into an error; its error
+path is tested in tests/test_cli.py, its success path here.
 """
 
 import json
@@ -14,7 +15,9 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from auditgym import __main__ as cli_mod
 from auditgym import io as aio
 from auditgym import protocol
 
@@ -160,6 +163,18 @@ class SeparateUser(unittest.TestCase):
 
     def test_agent_cannot_read_the_app_tree(self):
         self.assertFalse(self.probe()["app_read"])
+
+    def test_strict_mode_starts_the_child_as_the_agent_user(self):
+        """AUDITGYM_REQUIRE_AGENT_USER=1 changes nothing where the switch works: same user, no error."""
+        with mock.patch.dict(os.environ, {"AUDITGYM_REQUIRE_AGENT_USER": "1"}):
+            cli_mod._require_agent_user()  # the pre-flight of check, run, demo and budget
+            ap = protocol.AgentProcess("recon", 0)
+        try:
+            self.assertEqual(ap._agent_uid, IDENT[1])
+            status = Path("/proc", str(ap.proc.pid), "status").read_text(encoding="ascii")
+            self.assertRegex(status, r"(?m)^Uid:\s+%d\s+%d" % (IDENT[1], IDENT[1]))
+        finally:
+            ap.close()
 
     def test_close_kills_every_process_of_the_agent_uid(self):
         res = self.probe(spawn=True)

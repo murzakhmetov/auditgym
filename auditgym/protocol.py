@@ -39,7 +39,8 @@ supplementary groups, umask 077), its working directory belongs to it, and close
 of that uid. It then cannot read the host's /proc/<pid>/environ, root-owned 0600 files or the grader
 directories (written with umask 077), and cannot write to the root-owned package. If the switch is not
 possible (Windows, not root, no CAP_SETUID/CAP_CHOWN) the child runs as the host's user and one warning
-line is printed to stderr, once per process; nothing crashes.
+line is printed to stderr, once per process; nothing crashes. Strict mode (opt-in): with the environment
+variable AUDITGYM_REQUIRE_AGENT_USER=1 that fallback is an error instead (AgentUserRequired).
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
 guess the path of, and (outside a container) its parent's command line and environment, where
 --secret-env values live (on Windows through the parent's process memory; measured by
@@ -359,15 +360,51 @@ def kill_uid(uid: int, gid: int | None = None) -> bool:
 
 _SWITCHED = False  # a user switch has worked in this process: never fall back to the host user silently
 _WARNED = False
+REQUIRE_ENV = "AUDITGYM_REQUIRE_AGENT_USER"
+
+
+class AgentUserRequired(RuntimeError):
+    """Strict mode (AUDITGYM_REQUIRE_AGENT_USER=1) and the policy cannot run as the separate agent user.
+
+    Not an OSError on purpose: run_episode_isolated turns OSError into a graded agent error, and this must stop the run."""
+
+
+def require_agent_user() -> bool:
+    """True when AUDITGYM_REQUIRE_AGENT_USER is exactly 1: the fallback to the host user is then an error."""
+    return os.environ.get(REQUIRE_ENV, "").strip() == "1"
 
 
 def _warn_same_user(reason: str) -> None:
     global _WARNED
+    if require_agent_user():
+        raise AgentUserRequired(f"{REQUIRE_ENV}=1 but the policy cannot run as a separate user: {reason}")
     if _WARNED or not os.environ.get("AUDITGYM_AGENT_USER", "").strip():
         return  # nobody asked for a separate user: nothing to warn about
     _WARNED = True
     print(f"auditgym: warning: policy runs as the host user ({reason}); "
           "the official image run as root with default capabilities uses a separate policy user", file=sys.stderr)
+
+
+def _proc_listable() -> bool:
+    """True when /proc can be listed: without it kill_uid cannot see the agent's processes."""
+    try:
+        os.listdir("/proc")
+    except OSError:
+        return False
+    return True
+
+
+def _no_switch_reason() -> str:
+    """Why aio.agent_identity() found no account to switch to."""
+    if not os.environ.get("AUDITGYM_AGENT_USER", "").strip():
+        return "AUDITGYM_AGENT_USER is not set"
+    if os.name != "posix":
+        return "this platform cannot switch user"
+    if os.geteuid() != 0:
+        return "not running as root"
+    if aio.agent_identity() is not None:
+        return "/proc cannot be listed, so leftover agent processes could not be killed"
+    return "AUDITGYM_AGENT_USER names no existing non-root account"
 
 
 def _chown_tree(root: str, uid: int, gid: int) -> None:
@@ -398,7 +435,17 @@ def _kill_tree(proc, job) -> None:
 
 
 class AgentProcess:
-    """A policy running in a child process."""
+    """A policy running in a child process.
+
+    Raises AgentUserRequired instead of falling back to the host user when AUDITGYM_REQUIRE_AGENT_USER=1."""
+
+    def _same_user(self, reason: str) -> None:
+        """Warn once that the policy runs as the host user; in strict mode raise (and drop the temporary directory)."""
+        try:
+            _warn_same_user(reason)
+        except AgentUserRequired:
+            self._tmp.cleanup()
+            raise
 
     def __init__(self, policy: str, policy_seed: int = 0, policy_path: str | None = None):
         self._tmp = tempfile.TemporaryDirectory(prefix="auditgym_agent_", ignore_cleanup_errors=True)
@@ -409,9 +456,11 @@ class AgentProcess:
         global _SWITCHED
         self._agent_uid = self._agent_gid = None
         ident = aio.agent_identity()
+        if ident is not None and not _proc_listable():
+            ident = None
         if ident is not None:
             if not _SWITCHED and _uid_pids(ident[1]):
-                _warn_same_user(f"account {ident[0]} already has processes; use a dedicated account, one run per container")
+                self._same_user(f"account {ident[0]} already has processes; use a dedicated account, one run per container")
                 ident = None
             elif _SWITCHED and not kill_uid(ident[1], ident[2]):
                 self._tmp.cleanup()
@@ -423,10 +472,13 @@ class AgentProcess:
                 if not isinstance(exc, PermissionError) and exc.errno != errno.EINVAL:
                     self._tmp.cleanup()
                     raise
-                _warn_same_user(f"chown refused: {exc.strerror or exc}")
+                if _SWITCHED:
+                    self._tmp.cleanup()
+                    raise
+                self._same_user(f"chown refused: {exc.strerror or exc}")
                 ident = None
         if ident is None:
-            _warn_same_user("not root, or AUDITGYM_AGENT_USER unknown")
+            self._same_user(_no_switch_reason())
         cmd = [sys.executable, "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         kw = {"start_new_session": True} if os.name == "posix" else {}
         popen = dict(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self._tmp.name,
@@ -440,7 +492,7 @@ class AgentProcess:
                 if _SWITCHED:
                     self._tmp.cleanup()
                     raise
-                _warn_same_user(f"setuid refused: {exc.strerror or exc}")
+                self._same_user(f"setuid refused: {exc.strerror or exc}")
                 try:
                     _chown_tree(self._tmp.name, os.geteuid(), os.getegid())
                 except OSError:
