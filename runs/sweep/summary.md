@@ -11,13 +11,13 @@
 
 | chunk | episodes | exit code | summary |
 |---|---|---|---|
-| 0 | 60 | 0 | summary: C_data 61/61, C_reward 1444/1444, D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1784 named checks of 69 kinds) |
-| 1 | 60 | 0 | summary: C_data 61/61, C_reward 1428/1428, D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1770 named checks of 79 kinds) |
-| 2 | 60 | 0 | summary: C_data 61/61, C_reward 1438/1438, D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1778 named checks of 69 kinds) |
-| 3 | 60 | 0 | summary: C_data 61/61, C_reward 1445/1445, D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1785 named checks of 69 kinds) |
-| 4 | 60 | 0 | summary: C_data 61/61, C_reward 1430/1430, D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1772 named checks of 77 kinds) |
-| 5 | 60 | 0 | summary: C_data 61/61, C_reward 1158/1158, D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1500 named checks of 81 kinds) |
-| 6 | 41 | 0 | summary: C_data 42/42, C_reward 812/812, D_paired 177/177, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1059 named checks of 79 kinds) |
+| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1785 named checks of 70 kinds) |
+| 1 | 60 | 0 | summary: C_data 62/62, C_reward 1428/1428, D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1771 named checks of 80 kinds) |
+| 2 | 60 | 0 | summary: C_data 62/62, C_reward 1438/1438 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1779 named checks of 70 kinds) |
+| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1786 named checks of 70 kinds) |
+| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1430/1430, D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1773 named checks of 78 kinds) |
+| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1159/1159 (2 skipped), D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1502 named checks of 82 kinds) |
+| 6 | 41 | 0 | summary: C_data 43/43, C_reward 812/812, D_paired 177/177, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1060 named checks of 80 kinds) |
 
 ## Generation failures (accepted by config.py, GenerationError in the generator)
 

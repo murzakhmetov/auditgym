@@ -29,7 +29,7 @@ twin 0.75, 3 hits. At episode level the old data gave: any catalogue outlier 8 o
 boundary-day off-hours payment 3 of 3, a small ledger with 2 refunds 2 of 2 clean, with 3 null-ref receipts 2 of
 2 clean. The spec limit alone would not have flagged any document rule (recall below 0.3 for each), so the
 second limit (precision 0.8 with 3 hits) is what makes this test fail on that data: run on it, nine rules and the
-catalogue-range check fail. With the current generator the best document rule reaches precision 0.28 with 5 hits (a paid twin invoice)
+catalogue-range check fail. With the current generator the best document rule reaches precision 0.25 with 5 hits (a paid twin invoice)
 and the best recall among selective rules is 0.28 at precision 0.17 (an invoice with a twin), far from both
 limits; the episode-level rules flag nothing (clean labels, catalogue outliers) or reach only 0.75 to 0.78
 (error labels, whose base rate is 0.75). Run with -v/--verbose (or set AUDITGYM_TELLS_TABLE=1) to print the table.
