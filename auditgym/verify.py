@@ -10,7 +10,11 @@ Named checks, each independent of the generator's internal state:
                          them gives the published books. Directory mode (verify DIR, no twin): revert then
                          re-apply reproduces the published tables, the digest of the reverted tables equals
                          provenance.clean_records_digest (missing = FAIL), public_digest() equals final_digest,
-                         and every declared issue has an op touching its affected records
+                         and every declared issue has an op touching its affected records. In both modes the
+                         provenance structure is cross-checked: every injection type and variant is a known one,
+                         every injection has non-empty targets naming existing public invoices (payments for the payment
+                         role), every distractor has an ids list of existing invoice or payment IDs and a known kind,
+                         and truth issues and injections match one to one by (issue_id, type)
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
                          evidence sets) and reports no anomaly
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
@@ -19,6 +23,11 @@ Named checks, each independent of the generator's internal state:
   no_surface_tells       every injected or modified ledger row has an untouched twin with the same account and
                          null pattern
   no_leaks               public files contain no answer-key markers
+
+verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, a swapped
+variant or distractor kind, or an injection retargeted to another existing record of the right kind (nothing
+stored in the episode says what they should be). "check" catches those by regenerating every committed episode
+from its seed and config and comparing the bytes.
 """
 
 from __future__ import annotations
@@ -28,6 +37,7 @@ import re
 from datetime import date
 
 from .auditor import audit
+from .config import DISTRACTORS, VARIANTS
 from .episode import Episode
 from .evidence_check import derive_from_evidence  # noqa: F401  (re-exported: check.py and tests import it from here)
 from .io import canonical_json, sha256_text
@@ -36,6 +46,8 @@ from .timeutil import parse_ts
 
 INVOICE_FIELDS = ("doc_id", "invoice_id", "kind", "entity_id", "issued_at", "due_at", "currency", "total_minor", "line_items")
 PAYMENT_FIELDS = ("doc_id", "payment_id", "kind", "entity_id", "timestamp", "currency", "amount_minor", "invoice_refs", "bank_ref")
+# the twin episode (inject.py) adds one distractor kind that the config cannot ask for
+DISTRACTOR_KINDS = (*DISTRACTORS, "twin_legit_repeat")
 LEAK_MARKERS = ("iss_", "duplicate_of", "provenance", "truth.json", "injected", "expected_amount")
 
 
@@ -222,8 +234,78 @@ def _op_touches(ops: list, published: dict, reverted: dict) -> set:
     return ids
 
 
-def check_roundtrip(ep: Episode, clean: Episode | None) -> list[str]:
+def _document_ids(ep: Episode) -> tuple[set, set]:
+    """Invoice IDs and payment IDs of the public documents (entity, row and doc IDs are not document IDs)."""
+    return {d["invoice_id"] for d in ep.invoices}, {d["payment_id"] for d in ep.payments}
+
+
+def _id_list(value) -> list | None:
+    """A string as a one-item list, a list of strings as is, anything else None."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list) and all(isinstance(v, str) for v in value):
+        return value
+    return None
+
+
+def _injection_errors(inj, invoice_ids: set, payment_ids: set) -> list[str]:
+    """Problems with one injection: shape, known type and variant, non-empty targets of the right record kind."""
+    if not isinstance(inj, dict):
+        return ["injection must be an object"]
+    name, kind, variant, targets = inj.get("issue_id"), inj.get("type"), inj.get("variant"), inj.get("targets")
+    if not isinstance(kind, str) or not isinstance(variant, str):
+        return [f"injection {name}: type and variant must be strings"]
     errs = []
+    if kind not in VARIANTS:
+        errs.append(f"injection {name}: unknown type {kind!r}")
+    elif variant not in VARIANTS[kind]:
+        errs.append(f"injection {name}: unknown variant {variant!r} for {kind}")
+    if not isinstance(targets, dict) or not targets:
+        return errs + [f"injection {name}: targets must be a non-empty object"]
+    for role, ref in targets.items():
+        refs = _id_list(ref)
+        if refs is None or not refs:
+            errs.append(f"injection {name}: target {role} must be a record id or a list of them")
+            continue
+        known = payment_ids if role == "payment" else invoice_ids
+        errs += [f"injection {name}: target {role} {r!r} is not a public {'payment' if role == 'payment' else 'invoice'}"
+                 for r in refs if r not in known]
+    return errs
+
+
+def _distractor_errors(dis, document_ids: set) -> list[str]:
+    """Problems with one distractor: shape, known kind, an ids list of existing invoice or payment IDs."""
+    if not isinstance(dis, dict):
+        return ["distractor must be an object"]
+    kind, refs = dis.get("kind"), _id_list(dis.get("ids"))
+    if not isinstance(kind, str) or kind not in DISTRACTOR_KINDS:
+        return [f"distractor kind {kind!r} is not a known kind"]
+    if refs is None or not isinstance(dis.get("ids"), list):
+        return [f"distractor {kind}: ids must be a list of record ids"]
+    return [f"distractor {kind}: id {r!r} is not a public record" for r in refs if r not in document_ids]
+
+
+def check_provenance_structure(ep: Episode) -> list[str]:
+    """Injections and distractors are well formed, use known names, point at existing public invoices or payments
+    and match the answer key one to one by (issue_id, type)."""
+    injections, distractors = ep.provenance.get("injections", []), ep.provenance.get("distractors", [])
+    if not isinstance(injections, list) or not isinstance(distractors, list):
+        return ["injections and distractors must be lists"]
+    invoice_ids, payment_ids = _document_ids(ep)
+    errs = []
+    for inj in injections:
+        errs += _injection_errors(inj, invoice_ids, payment_ids)
+    for dis in distractors:
+        errs += _distractor_errors(dis, invoice_ids | payment_ids)
+    injected = sorted((str(i.get("issue_id")), str(i.get("type"))) for i in injections if isinstance(i, dict))
+    declared = sorted((str(t["issue_id"]), str(t["type"])) for t in ep.truth.get("issues", []))
+    if injected != declared:
+        errs.append(f"injections {injected} do not match truth issues {declared} by (issue_id, type)")
+    return errs[:20]
+
+
+def check_roundtrip(ep: Episode, clean: Episode | None) -> list[str]:
+    errs = check_provenance_structure(ep)
     keys = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
     ops = ep.provenance.get("ops", [])
     rec = reconstruct_clean(ep)

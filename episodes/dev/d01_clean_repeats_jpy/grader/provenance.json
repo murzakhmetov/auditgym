@@ -200,9 +200,9 @@
     }
   ],
   "ops": [],
-  "clean_digest": "8b8be91cea199d5e9f18e77b84ba97567d32e132a976fa4fb3827f5f8f7eba8f",
+  "clean_digest": "6a4e500c8019c235ec2eea47ef565d80fdb230b77f4ad70897b7ecb0562f245d",
   "clean_records_digest": "23f91dd48f2186429531f82f7627fdaf1d5873e23a11d82dfaabdd5e9c752daa",
-  "final_digest": "8b8be91cea199d5e9f18e77b84ba97567d32e132a976fa4fb3827f5f8f7eba8f",
+  "final_digest": "6a4e500c8019c235ec2eea47ef565d80fdb230b77f4ad70897b7ecb0562f245d",
   "rejected_attempts": [
     {
       "attempt": 0,

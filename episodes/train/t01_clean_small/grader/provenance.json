@@ -181,8 +181,8 @@
     }
   ],
   "ops": [],
-  "clean_digest": "11c9fdf0cf60b897f4185a0fcc05c6c5eb1aaaed650c03b78c595da4d9ff901b",
+  "clean_digest": "6a18d412012cc0b3bacd1215845b6e747a526ab4c6f261295d7bc39d15b52129",
   "clean_records_digest": "4110b48e6c52a79266b9218105f0f5392bc1bdfca4b2913f33a1bb1dd4482241",
-  "final_digest": "11c9fdf0cf60b897f4185a0fcc05c6c5eb1aaaed650c03b78c595da4d9ff901b",
+  "final_digest": "6a18d412012cc0b3bacd1215845b6e747a526ab4c6f261295d7bc39d15b52129",
   "rejected_attempts": []
 }

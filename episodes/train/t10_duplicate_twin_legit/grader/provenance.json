@@ -212,8 +212,8 @@
     }
   ],
   "ops": [],
-  "clean_digest": "c980ed3e2bcfc08d9274428e856cbf239f7c32d838668c1338afb3ccd8a795f5",
+  "clean_digest": "e476ecad2236b140230ac65e2356210612d54df27275aad87a2557aab738776d",
   "clean_records_digest": "f47a006eeeb5927036db8011040b1528e24796b49fc237d10bf08f4441e27b68",
-  "final_digest": "c980ed3e2bcfc08d9274428e856cbf239f7c32d838668c1338afb3ccd8a795f5",
+  "final_digest": "e476ecad2236b140230ac65e2356210612d54df27275aad87a2557aab738776d",
   "rejected_attempts": []
 }
