@@ -50,4 +50,7 @@ Open items for the team:
   - The closed-run summary line counts kinds with the `closed_example/<policy>` label, so a closed run shows 80 kinds where
     the full check shows 79 (`auditgym/check.py`, `_EPISODE_PREFIX`).
   - The `Maximal` submit test in `tests/test_isolation.py` does not reach the size limit, because `currency` is unbounded.
+  - `verify DIR` stops with a traceback (exit 1, no PASS/FAIL lines) when a public record lacks its ID field, for
+    example a payment without `payment_id` (`check_ids` and `check_key_consistency` in `auditgym/verify.py`).
+    Hand-edited copies only; the generator never writes such a record.
   - The full CI log is not committed; `runs/ci/44712065782.txt` is an excerpt, and `runs/ci/44712065782.jobs.json` holds the conclusion of every job and step (DESIGN section 13).

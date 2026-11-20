@@ -404,7 +404,7 @@ file and the output directory mounted, `--network none` and strict mode. `python
 --record` runs it over the stress mix plus one boundary configuration per edge value that `config.py` accepts
 (423 configurations, 401 feasible; 63-bit seeds, a host secret, chunks of 60: six chunks of 60 episodes and one of 41) and runs the contract battery in
 process on every feasible episode. On the code of `c9c7ab4` (code stamp `23e2b934…`, the same as the check report) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
-no feasible configuration failed to generate. A first rerun at that code failed one chunk on "no agent process failed": a package file was edited while the chunk ran, and the harness reported the changed code as an agent error, which is what its tamper check is for; the rerun without edits passed. A sweep takes about 16 minutes on Windows 10 (one local run); the summary records no time. The 22 infeasible
+no feasible configuration failed to generate. A first rerun at that code failed one chunk on "no agent process failed" (the line had no detail then; it now names the failing runs). A package file had been edited while that chunk ran; the two reruns without edits passed. A sweep takes about 16 minutes on Windows 10 (one local run); the summary records no time. The 22 infeasible
 configurations each raise a ConfigError that names the reason; among them, invoice counts with a total of 1,651 or more are rejected at
 once because a full read would need more than 100 steps; section 1 gives the band below that (`config.min_read_pages`: one invoices row and two ledger
 rows per counted invoice, a lower bound that a unit test checks on every committed episode).
