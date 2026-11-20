@@ -113,6 +113,20 @@ class DistractorAttacks(unittest.TestCase):
         self.assertEqual(len(lines[0]), 4)
         self.assertTrue(lines[0][1] and lines[0][3])
 
+    def test_an_error_episode_without_distractors_has_one_skipped_distractor_line(self):
+        from auditgym.config import DISTRACTORS
+        from auditgym.generator import generate_episode
+
+        config = {"errors": {"duplicate_invoice": 1, "unallocated_payment": 1, "wrong_fx_rate": 1, "wrong_period": 1},
+                  "distractors": {k: 0 for k in DISTRACTORS}}
+        ep = generate_episode(6602239917354212077, config).episode
+        self.assertTrue(ep.truth["issues"])
+        self.assertEqual(ep.provenance["distractors"], [])
+        rows = [r for r in cb.reward_battery(ep) if r[0].endswith(": distractor accusations")]
+        self.assertEqual(len(rows), 1, rows)
+        self.assertEqual(len(rows[0]), 4)
+        self.assertTrue(rows[0][1] and rows[0][3])
+
     def test_the_check_reports_a_skipped_clean_line_as_skipped(self):
         from auditgym import check
 

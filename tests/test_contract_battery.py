@@ -35,6 +35,27 @@ class ContractBattery(unittest.TestCase):
         self.assertEqual(len(results), 20)
         self.assertEqual([r for r in results if not r[1]], [])
 
+    def test_the_fuzz_calls_the_empty_fx_table(self):
+        from auditgym.generator import generate_episode
+
+        ep = generate_episode(6602239917354212077, {"foreign_currencies": []}).episode
+        sent = []
+        real = env_module.AuditEnv.step
+
+        def spy(self, action):
+            if isinstance(action, dict):
+                sent.append(action)
+            return real(self, action)
+
+        with mock.patch.object(env_module.AuditEnv, "step", spy):
+            results = contract_battery(ep)
+        self.assertEqual([r for r in results if not r[1]], [])
+        fuzz = [r for r in results if "contract fuzz" in r[0]]
+        self.assertEqual(len(fuzz), 1)
+        for kind in ("list_records", "get_record"):
+            hits = [a for a in sent if a.get("action") == kind and a.get("table") == "fx"]
+            self.assertGreater(len(hits), 3, f"fuzz never sent {kind} for the empty fx table")
+
     def test_an_empty_sample_of_observations_does_not_validate_vacuously(self):
         with mock.patch("auditgym.contract_battery._observations", return_value=[]):
             failed = [label for label, ok, _d in contract_battery(self.ep) if not ok]
@@ -100,6 +121,88 @@ class ContractBattery(unittest.TestCase):
         with mock.patch.object(env_module.AuditEnv, "step", early):
             failed = [label for label, ok, _d in contract_battery(self.ep) if not ok]
         self.assertTrue(any("(not before)" in label for label in failed), failed)
+
+
+class SkipsAndRejections(unittest.TestCase):
+    def test_skip_note_text(self):
+        from auditgym.check import skip_note
+
+        self.assertEqual(skip_note([{"ok": True}, {"ok": True, "skipped": True}, {"skipped": True}]), " (2 skipped)")
+        self.assertEqual(skip_note([{"ok": True}]), "")
+        self.assertEqual(skip_note(n=7), " (7 skipped)")
+        self.assertEqual(skip_note(n=0), "")
+
+    def test_section_header_and_summary_line_carry_the_skip_note(self):
+        import tempfile
+        from pathlib import Path
+
+        from auditgym import check
+
+        rep = check.Report()
+        with mock.patch("builtins.print"):
+            rep.add("C_data", "a verifies", True)
+            rep.skip("C_data", "rate stays rare", "too few episodes")
+        self.assertEqual(check.section_header("C_data", rep.sections["C_data"]), "#### C_data (2/2) (1 skipped)\n")
+        self.assertTrue(check.summary_line(rep).startswith("summary: C_data 2/2 (1 skipped) ("))
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(check, "isolation_line", return_value="x"), \
+                mock.patch.object(check, "markdown_table", return_value=""), mock.patch.object(check, "miss_table", return_value=""):
+            check._write_report(Path(tmp), rep, {}, [], [], 1.0, "src", "dev", 1, keep_runs=False)
+            text = (Path(tmp) / "report.md").read_text(encoding="utf-8")
+        self.assertIn("#### C_data (2/2) (1 skipped)", text)
+
+    def test_correctness_rejection_check_verdict_and_label(self):
+        from auditgym.check import correctness_rejection_check
+
+        none = {"exception": 0, "sampling_check": 0, "correctness": 0}
+        label, ok, _d = correctness_rejection_check(0, none)
+        self.assertEqual((label, ok), ("no candidate episode was rejected by a correctness check (0 resampled)", True))
+        label, ok, _d = correctness_rejection_check(2, {"exception": 1, "sampling_check": 1, "correctness": 0})
+        self.assertEqual((label, ok), ("no candidate episode was rejected by a correctness check (2 resampled, all for sampling reasons)", True))
+        label, ok, detail = correctness_rejection_check(3, {"exception": 1, "sampling_check": 1, "correctness": 1})
+        self.assertEqual((label, ok), ("no candidate episode was rejected by a correctness check (3 resampled, 1 by a correctness check)", False))
+        self.assertIn("2 sampling", detail)
+
+    def test_rejections_are_classified_by_check_name(self):
+        from types import SimpleNamespace as NS
+
+        from auditgym.check import rejection_classes
+
+        gens = [NS(rejected_checks=[{"attempt": 0, "failed_checks": []}, {"attempt": 1, "failed_checks": ["budget_feasible"]}]),
+                NS(rejected_checks=[{"attempt": 0, "failed_checks": ["no_surface_tells", "budget_feasible"]},
+                                    {"attempt": 1, "failed_checks": ["no_surface_tells", "evidence_sufficient"]},
+                                    {"attempt": 2, "failed_checks": ["declared_discrepancies"]}])]
+        self.assertEqual(rejection_classes(gens), {"exception": 1, "sampling_check": 2, "correctness": 2})
+
+    def test_generator_carries_the_failing_check_names_and_provenance_is_unchanged(self):
+        from auditgym import generator
+
+        calls = {"n": 0}
+        real = generator.build_once
+
+        def flaky(*a, **k):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise generator.SampleRetry("forced")
+            return real(*a, **k)
+
+        with mock.patch.object(generator, "build_once", flaky):
+            gen = generator.generate_episode(1, {})
+        self.assertEqual(gen.rejected_checks, [{"attempt": 0, "failed_checks": []}])
+        self.assertEqual(gen.episode.provenance["rejected_attempts"], [{"attempt": 0, "reason": "forced"}])
+
+        bad = {"ok": False, "failures": ["x: y"], "checks": {"no_leaks": ["y"], "budget_feasible": ["z"], "ids_unique": "pass"}}
+        from auditgym import verify
+
+        real_verify = verify.verify_generated
+        seen = {"n": 0}
+
+        def verdict(ep, clean=None):
+            seen["n"] += 1
+            return bad if seen["n"] == 1 else real_verify(ep, clean)
+
+        with mock.patch.object(verify, "verify_generated", verdict):
+            gen = generator.generate_episode(1, {})
+        self.assertEqual(gen.rejected_checks, [{"attempt": 0, "failed_checks": ["no_leaks", "budget_feasible"]}])
 
 
 class SilentBaseline(unittest.TestCase):

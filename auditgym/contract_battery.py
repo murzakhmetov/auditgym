@@ -62,7 +62,7 @@ def _fuzz_action(rng: Rng, ctx: dict):
     """A valid call, a call with one thing broken, or a value that is not an action at all."""
     if rng.randbelow(40) == 0:
         return _fuzz_submit(rng, ctx)
-    table = rng.choice([t for t in schemas.TABLES if ctx["ids"][t]] or schemas.TABLES)
+    table = rng.choice(schemas.TABLES)
     valid = [{"action": "list_records", "table": table, "limit": rng.randint(1, 50)},
              {"action": "get_record", "table": table, "id": rng.choice(ctx["ids"][table] or ["no-such-id"])},
              {"action": "get_document", "doc_id": rng.choice(ctx["docs"] or ["no-such-doc"])},

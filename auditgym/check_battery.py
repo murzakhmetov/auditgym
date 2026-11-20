@@ -269,6 +269,8 @@ def _distractor_lines(ep, oracle: list) -> list:
             out.append((label, True, "every accusation names the records of an injected error", True))
         else:
             out.append((label, not bad, "; ".join(bad[:3]) or f"{checked} checked, answer alone {alone}"))
+    if not out:
+        out.append((f"{name}: distractor accusations", True, "no distractors in this episode", True))
     return out
 
 

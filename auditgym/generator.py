@@ -39,6 +39,7 @@ class Generated:
     clean: Episode
     attempts: int
     rejected: list = field(default_factory=list)
+    rejected_checks: list = field(default_factory=list)  # [{"attempt": n, "failed_checks": [verify check names]}], not in provenance
     verification: dict | None = None
 
 
@@ -153,13 +154,14 @@ def generate_episode(seed, config: dict | None = None, secret: str | None = None
     config = dict(config or {})
     rng0 = Rng(_base_text(seed, config, secret))
     cfg = resolve(config, rng0.fork("config"))
-    rejected = []
+    rejected, rejected_checks = [], []
     for attempt in range(max_attempts):
         rng = rng0.fork(f"attempt:{attempt}")
         try:
             gen = build_once(seed, config, cfg, rng, attempt, secret)
         except (SampleRetry, BooksError) as exc:
             rejected.append({"attempt": attempt, "reason": str(exc)[:200]})
+            rejected_checks.append({"attempt": attempt, "failed_checks": []})
             continue
         if verify:
             from .verify import verify_generated
@@ -167,9 +169,11 @@ def generate_episode(seed, config: dict | None = None, secret: str | None = None
             report = verify_generated(gen.episode, gen.clean)
             if not report["ok"]:
                 rejected.append({"attempt": attempt, "reason": "verification failed: " + "; ".join(report["failures"][:3])[:300]})
+                rejected_checks.append({"attempt": attempt, "failed_checks": [n for n, v in report["checks"].items() if v != "pass"]})
                 continue
             gen.verification = report
         gen.rejected = rejected
+        gen.rejected_checks = rejected_checks
         gen.episode.provenance["rejected_attempts"] = rejected
         gen.episode.provenance["final_digest"] = gen.episode.public_digest()
         return gen

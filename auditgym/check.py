@@ -57,6 +57,7 @@ FORBIDDEN_IN_OBS = ("iss_", "evidence_sets", "expected_amount", "id_aliases", "p
                     "rejected_attempts", "truth.json", "grader/")
 
 
+SAMPLING_CHECKS = ("budget_feasible", "no_surface_tells")  # verify checks about the draw; all others are correctness checks
 MIN_SEED_BITS = 40  # same limit and wording as `run` (auditgym/__main__.py)
 HIDDEN_LIKE_SOURCE = "public master string auditgym-check-v1"
 CLOSED_OUT = ROOT / "runs" / "check_closed"
@@ -121,6 +122,52 @@ def kinds_line(rep: "Report", names=()) -> str:
 
 def _disp(label: str) -> str:
     return "hidden-like" if label == "hidden_like" else label
+
+
+def skip_note(cs=None, n=None) -> str:
+    """The text ' (N skipped)' when some checks of a section did not apply (pass the check list or the count), else nothing."""
+    n = sum(1 for c in cs if c.get("skipped")) if n is None else n
+    return f" ({n} skipped)" if n else ""
+
+
+def rejection_classes(gens: list) -> dict:
+    """Count the rejected candidate attempts of generated episodes by class: sampling by exception (SampleRetry or
+    BooksError), sampling by a verify check about the draw, or correctness (the auditor, evidence or integrity checks
+    disagreed with the answer key). Classified by check name, never by the reason text."""
+    out = {"exception": 0, "sampling_check": 0, "correctness": 0}
+    for gen in gens:
+        for att in gen.rejected_checks:
+            failed = att["failed_checks"]
+            if not failed:
+                out["exception"] += 1
+            elif all(n in SAMPLING_CHECKS for n in failed):
+                out["sampling_check"] += 1
+            else:
+                out["correctness"] += 1
+    return out
+
+
+def correctness_rejection_check(rejected: int, classes: dict) -> tuple:
+    """The C_data check that no candidate episode was rejected by a correctness check: (label, ok, detail)."""
+    sampling = classes["exception"] + classes["sampling_check"]
+    if classes["correctness"]:
+        outcome = f"{rejected} resampled, {classes['correctness']} by a correctness check"
+    else:
+        outcome = f"{rejected} resampled, all for sampling reasons" if rejected else "0 resampled"
+    detail = (f"{sampling} sampling (SampleRetry or BooksError {classes['exception']}, {' or '.join(SAMPLING_CHECKS)} "
+              f"{classes['sampling_check']}), {classes['correctness']} correctness")
+    return f"no candidate episode was rejected by a correctness check ({outcome})", not classes["correctness"], detail
+
+
+def section_header(sec: str, cs: list) -> str:
+    """The report.md header of one section, with the number of passed checks and the skip note."""
+    return f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)}){skip_note(cs)}\n"
+
+
+def summary_line(rep: "Report", names=()) -> str:
+    """The one-line stdout summary of every section and the coverage."""
+    parts = ", ".join(f"{k} {v['passed']}/{v['total']}{skip_note(n=v['skipped'])}" for k, v in rep.counts().items())
+    return f"summary: {parts} ({kinds_line(rep, names)})"
 
 
 def _digest(obj) -> str:
@@ -263,7 +310,7 @@ def live_reward_properties(rep: Report, ep) -> None:
 
 def section_hidden_like(rep: Report, entries: list, label: str, secret: str | None, closed: bool, pregen: dict | None = None):
     print(f"C. {_disp(label)} episodes and baselines", flush=True)
-    eps = []
+    eps, gens = [], []
     t0 = time.monotonic()
     for e in entries:
         gen = (pregen or {}).get(e["name"]) or generate_episode(e["seed"], e["config"], secret=secret)
@@ -271,12 +318,15 @@ def section_hidden_like(rep: Report, entries: list, label: str, secret: str | No
         rep.add("C_data", f"{e['name']} verifies ({len(gen.episode.truth['issues'])} issues, {gen.attempts} attempt(s))", v["ok"],
                 "; ".join(v["failures"][:3]))
         eps.append((label, e["name"], gen.episode))
+        gens.append(gen)
     rejected = sum(1 for _s, _n, ep in eps for _ in ep.provenance.get("rejected_attempts", []))
     if closed and len(eps) < 4:
         rep.skip("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)",
                  "too few episodes for a rate; measurement only")
     else:
         rep.add("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)", rejected <= len(eps) // 2)
+    classes = rejection_classes(gens)
+    rep.add("C_data", *correctness_rejection_check(rejected, classes))
     gen_time = time.monotonic() - t0
     rep.seconds["C_data"] = gen_time
     t1 = time.monotonic()
@@ -492,7 +542,7 @@ def _write_report(out_dir: Path, rep: Report, summary: dict, traj: list, grades:
         md.append("Run time: " + ", ".join(f"{k} {rep.seconds[k]:.1f} s" for k in present if k in rep.seconds) + "\n")
         for sec in present:
             cs = rep.sections[sec]
-            md.append(f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)})\n")
+            md.append(f"#### {sec} ({sum(c['ok'] for c in cs)}/{len(cs)}){skip_note(cs)}\n")
             for c in cs:
                 if c.get("skipped"):
                     md.append(f"- SKIP: {c['check']} ({c['detail']})")
@@ -525,6 +575,7 @@ def main(argv=None) -> int:
     ap.add_argument("--keep-runs", action="store_true",
                     help="with --seeds-file: also write trajectories.jsonl and grades.jsonl (they contain the answer key of the closed set)")
     args = ap.parse_args([] if argv is None else list(argv))
+    protocol.harden_host()  # Linux: non-dumpable before the secret is read (see protocol.harden_host)
     problem = _preflight_agent_user()
     if problem:
         print(f"error: {problem}", file=sys.stderr)
@@ -595,8 +646,7 @@ def main(argv=None) -> int:
     names = [n for _s, n, _ep in eps]
     _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs,
                   names=names)
-    c = rep.counts()
-    print("summary:", ", ".join(f"{k} {v['passed']}/{v['total']}" for k, v in c.items()), f"({kinds_line(rep, names)})", flush=True)
+    print(summary_line(rep, names), flush=True)
     print(f"{'PASS' if rep.ok else 'FAIL'} in {elapsed:.0f} s; report: {_rel(out_dir)}/report.md", flush=True)
     return 0 if rep.ok else 1
 
