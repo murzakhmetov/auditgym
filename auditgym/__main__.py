@@ -26,8 +26,9 @@ host process); built-in policies in process stay allowed.
 
 --secret-env: run, generate and check read the variable once and remove it from this process's environment block,
 so a child reading the parent's environment block no longer finds it. The value itself stays in the host's memory,
-which a same-user child can read on Windows; Linux also keeps the start-up copy in /proc/<pid>/environ. Only the
-image's separate policy uid protects the secret.
+which a same-user child can read on Windows. On Linux every command first makes the host non-dumpable
+(protocol.harden_host), so a same-user child without CAP_SYS_PTRACE cannot read /proc/<host>/environ, where the
+start-up copy stays, or the host's memory. Elsewhere only the image's separate policy uid protects the secret.
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ from pathlib import Path
 
 from . import CONFIG_VERSION, SCHEMA_VERSION, __version__
 from . import io as aio
+from .episode import EpisodeFormatError
 
 MAX_STEPS = 100  # env.DEFAULT_MAX_STEPS: the largest action budget
 MIN_SEED_BITS = 40  # seeds below 2**40 (bit length <= 40) are guessable from public records; see README limitations
@@ -421,6 +423,9 @@ def cmd_budget(args) -> int:
 
 
 def main(argv=None) -> int:
+    from . import protocol
+
+    protocol.harden_host()  # Linux: non-dumpable before any secret is read (see protocol.harden_host)
     ap = argparse.ArgumentParser(prog="python -m auditgym", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     ck = sub.add_parser("check", help="the single offline check; --seeds-file runs it on organizer episodes")
@@ -486,8 +491,8 @@ def main(argv=None) -> int:
     args.argv = list(sys.argv[1:] if argv is None else argv)
     try:
         return args.func(args)
-    except InputError as exc:
-        print(f"error: {str(exc)[:500]}", file=sys.stderr)
+    except (InputError, EpisodeFormatError) as exc:
+        print(f"error: {' '.join(str(exc).split())[:500]}", file=sys.stderr)
         return 2
 
 

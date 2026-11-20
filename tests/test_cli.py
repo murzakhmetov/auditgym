@@ -6,6 +6,7 @@ import contextlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -17,7 +18,7 @@ from auditgym import __main__ as cli_mod
 from auditgym import config as cfgmod
 from auditgym import protocol
 from auditgym import stress
-from auditgym.episode import load_episode
+from auditgym.episode import EpisodeFormatError, load_episode
 from auditgym.runner import run_one
 from auditgym.splits import load_split_episodes
 
@@ -342,6 +343,79 @@ class ClosedRun(unittest.TestCase):
         self.assertIsNone(warn(cli_mod._seed_bits(2 ** 40), None))
         self.assertIsNone(warn(cli_mod._seed_bits(2 ** 62 + 1), None))
         self.assertIsNone(warn(cli_mod._seed_bits(7), "a-secret"))  # a host secret makes small seeds safe
+
+
+class BrokenAnswerKey(unittest.TestCase):
+    SRC = ROOT / "episodes" / "dev" / "d08_both_interacting_kzt"
+
+    def broken_copy(self, d, truth_text):
+        dst = Path(d) / "ep"
+        shutil.copytree(self.SRC, dst)
+        (dst / "grader" / "truth.json").write_text(truth_text, encoding="utf-8")
+        return dst
+
+    def one_error_line(self, res, path):
+        rc, out, err = res
+        self.assertEqual(rc, 2, (out, err))
+        self.assertNotIn("Traceback", err)
+        lines = [ln for ln in err.splitlines() if ln.strip()]
+        self.assertEqual(len(lines), 1, err)
+        self.assertTrue(lines[0].startswith("error:"), lines[0])
+        self.assertIn("truth.json", lines[0])
+        self.assertIn(str(path), lines[0])
+
+    def test_bad_keys_exit_two_on_every_command(self):
+        truth = load_episode(self.SRC).truth
+        issue = dict(truth["issues"][0])
+        del issue["issue_id"]
+        bad = {"empty object": "{}", "issues not a list": '{"issues": "nope"}', "not an object": "[]",
+               "issue without issue_id": json.dumps({**truth, "issues": [issue]})}
+        for name, text in bad.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as d:
+                ep = self.broken_copy(d, text)
+                f = Path(d) / "f.json"
+                f.write_text('{"episode_id": "x", "findings": []}', encoding="utf-8")
+                out = str(Path(d) / "out")
+                self.one_error_line(cli("run", "--episodes", str(ep), "--policies", "silent", "--in-process", "--out", out), ep / "grader" / "truth.json")
+                self.one_error_line(cli("grade", "--episode", str(ep), "--findings", str(f)), ep / "grader" / "truth.json")
+                self.one_error_line(cli("verify", str(ep)), ep / "grader" / "truth.json")
+                self.one_error_line(cli("transform", "--in", str(ep), "--out", str(Path(d) / "t")), ep / "grader" / "truth.json")
+
+    def test_unreadable_or_foreign_or_odd_keys_exit_two(self):
+        truth = load_episode(self.SRC).truth
+        other = load_episode(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy").truth
+        bad = {"not json": "{not json", "other episode": json.dumps(other),
+               "list alias": json.dumps({**truth, "id_aliases": {"X1": ["a"]}}),
+               "empty alias": json.dumps({**truth, "id_aliases": {"X1": ""}})}
+        for name, text in bad.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as d:
+                ep = self.broken_copy(d, text)
+                self.one_error_line(cli("verify", str(ep)), ep / "grader" / "truth.json")
+
+    def test_viewer_and_budget_map_format_errors_to_exit_two(self):
+        def boom(_args):
+            raise EpisodeFormatError("x/grader/truth.json is not a valid answer key: $: missing issues")
+
+        for command in ("cmd_viewer", "cmd_budget"):
+            with self.subTest(command), mock.patch.object(cli_mod, command, boom):
+                err = io.StringIO()
+                with contextlib.redirect_stderr(err):
+                    rc = cli_mod.main(["viewer" if command == "cmd_viewer" else "budget"])
+                self.assertEqual(rc, 2)
+                self.assertEqual(err.getvalue().splitlines(), ["error: x/grader/truth.json is not a valid answer key: $: missing issues"])
+
+    def test_committed_episodes_load_and_verify(self):
+        from auditgym.verify import verify_generated
+
+        for split in ("train", "dev"):
+            for d in sorted((ROOT / "episodes" / split).iterdir()):
+                if (d / "public").exists():
+                    self.assertTrue(verify_generated(load_episode(d))["ok"], d.name)
+
+    def test_public_load_ignores_the_key(self):
+        with tempfile.TemporaryDirectory() as d:
+            ep = self.broken_copy(d, "{}")
+            self.assertEqual(load_episode(ep, with_grader=False).truth, {})
 
 
 class RandomPolicySeeding(unittest.TestCase):

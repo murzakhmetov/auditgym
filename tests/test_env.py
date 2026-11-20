@@ -44,6 +44,37 @@ class ResetContract(unittest.TestCase):
         ob, _ = b.reset(seed=77, config={"generator": {"size": "small"}})
         self.assertEqual(json.dumps(oa, sort_keys=True), json.dumps(ob, sort_keys=True))
 
+    def test_generated_seed_must_be_a_plain_int(self):
+        cfg = {"generator": {"size": "small"}}
+        for bad in ("1", 1.0, 1.5, True, False, "abc", [1], b"1"):
+            with self.subTest(seed=bad):
+                with self.assertRaises(TypeError) as cm:
+                    AuditEnv().reset(seed=bad, config=cfg)
+                self.assertIn(type(bad).__name__, str(cm.exception))
+
+    def test_negative_and_large_int_seeds_stay_valid(self):
+        for seed in (-5, 0, 2 ** 80):
+            obs, _ = AuditEnv().reset(seed=seed, config={"generator": {"size": "small"}})
+            self.assertIn("episode_id", obs["manifest"])
+
+    def test_seed_check_does_not_touch_loaded_episodes(self):
+        obs, _ = AuditEnv().reset(seed="ignored", config={"episode": episode()})
+        self.assertEqual(obs["manifest"]["episode_id"], episode().episode_id)
+
+    def test_stray_key_next_to_generator_is_rejected(self):
+        with self.assertRaises(ValueError) as cm:
+            AuditEnv().reset(seed=1, config={"generator": {"size": "small"}, "size": "large", "errors": {}})
+        self.assertIn("errors, size", str(cm.exception))
+
+    def test_generator_with_reset_keys_is_fine(self):
+        obs, _ = AuditEnv().reset(seed=3, config={"generator": {"size": "small"}, "transform": {"permute_seed": 1}})
+        self.assertIn("episode_id", obs["manifest"])
+
+    def test_flat_generator_config_still_works(self):
+        a, _ = AuditEnv().reset(seed=3, config={"size": "small"})
+        b, _ = AuditEnv().reset(seed=3, config={"generator": {"size": "small"}})
+        self.assertEqual(json.dumps(a, sort_keys=True), json.dumps(b, sort_keys=True))
+
     def test_reset_isolates_state(self):
         env, _, _ = fresh()
         env.step({"action": "list_records", "table": "ledger"})

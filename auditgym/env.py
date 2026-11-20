@@ -42,6 +42,16 @@ def _echo(value) -> str:
     return text if len(text) <= ECHO_CHARS else text[:ECHO_CHARS] + "..."
 
 
+def _generator_config(config: dict) -> dict:
+    """The generator config: the "generator" value, or every key that is not a reset key. Mixing both is an error."""
+    if "generator" not in config:
+        return {k: v for k, v in config.items() if k not in RESET_KEYS}
+    stray = sorted(map(str, set(config) - RESET_KEYS))
+    if stray:
+        raise ValueError("config has keys outside the reset keys next to \"generator\": " + ", ".join(stray))
+    return config["generator"]
+
+
 def _err(code: str, message: str) -> dict:
     return {"code": code, "message": message[:200]}
 
@@ -92,7 +102,9 @@ class AuditEnv:
                 raise ValueError("seed is required to generate an episode")
             from .generator import generate_episode
 
-            gen_cfg = config.get("generator", {k: v for k, v in config.items() if k not in RESET_KEYS})
+            if not isinstance(seed, int) or isinstance(seed, bool):
+                raise TypeError(f"seed must be an int, got {type(seed).__name__}")
+            gen_cfg = _generator_config(config)
             episode = generate_episode(seed, gen_cfg, secret=self._secret).episode
         if config.get("transform"):
             from .transform import transform_episode

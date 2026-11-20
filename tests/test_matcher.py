@@ -83,6 +83,12 @@ class MatcherTests(unittest.TestCase):
         self.assertEqual(r.tp, 0)
         self.assertEqual(r.unmatched[0]["reason"], "currency")
 
+    def test_wrong_type_is_false_positive(self):
+        f = finding("duplicate_invoice", ["INV-9"], 3177, "EUR", ["D9", "L9", "2026-03-31:USD:EUR"])
+        r = match([f], ISSUES)
+        self.assertEqual(r.tp, 0)
+        self.assertEqual(r.unmatched[0]["reason"], "type")
+
     def test_incomplete_evidence_is_false_positive(self):
         f = finding("wrong_fx_rate", ["INV-9"], 3177, "EUR", ["D9", "L9"])
         r = match([f], ISSUES)

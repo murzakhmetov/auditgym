@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import io as aio
+from . import schema_files
 
 PUBLIC_FILES = ("manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json")
 GRADER_FILES = ("truth.json", "provenance.json")
@@ -85,6 +86,26 @@ class Episode:
         )
 
 
+class EpisodeFormatError(ValueError):
+    """An episode directory holds a file that breaks its published format."""
+
+
+def _checked_truth(path: Path):
+    """Read grader/truth.json and check it against the published schema; name the file and the first errors."""
+    try:
+        truth = aio.read_json(path)
+    except ValueError as exc:
+        raise EpisodeFormatError(f"{path} is not valid JSON: {exc}") from exc
+    errors = schema_files.validate(truth, schema_files.TRUTH)
+    if errors:
+        more = f" (+{len(errors) - 3} more)" if len(errors) > 3 else ""
+        raise EpisodeFormatError(f"{path} is not a valid answer key: " + "; ".join(errors[:3]) + more)
+    aliases = truth.get("id_aliases", {})
+    if not all(isinstance(k, str) and k and isinstance(v, str) and v for k, v in aliases.items()):
+        raise EpisodeFormatError(f"{path} is not a valid answer key: id_aliases must map non-empty strings to non-empty strings")
+    return truth
+
+
 def load_episode(directory: Path, with_grader: bool = True) -> Episode:
     directory = Path(directory)
     pub = directory / "public"
@@ -98,6 +119,9 @@ def load_episode(directory: Path, with_grader: bool = True) -> Episode:
     )
     if with_grader:
         grader = directory / "grader"
-        ep.truth = aio.read_json(grader / "truth.json")
+        ep.truth = _checked_truth(grader / "truth.json")
+        if ep.truth["episode_id"] != ep.manifest["episode_id"]:
+            raise EpisodeFormatError(f"{grader / 'truth.json'} belongs to episode {ep.truth['episode_id']}, "
+                                     f"not {ep.manifest['episode_id']}")
         ep.provenance = aio.read_json(grader / "provenance.json") if (grader / "provenance.json").exists() else {}
     return ep
