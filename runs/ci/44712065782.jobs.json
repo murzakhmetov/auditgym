@@ -1,0 +1,339 @@
+{
+ "run": 44712065782,
+ "commit": "c9c7ab485111fcea7322967ef0e769dd862383e5",
+ "made_with": "gh run view 44712065782 --json jobs, reduced to names, conclusions and times (URLs and IDs dropped)",
+ "jobs": [
+  {
+   "name": "container (network none, 2 CPU, 4 GB)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:51Z",
+   "completed_at": "2026-11-20T09:42:46Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Build",
+     "conclusion": "success"
+    },
+    {
+     "name": "Image size",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check in the container",
+     "conclusion": "success"
+    },
+    {
+     "name": "Container-only isolation tests (root host, separate policy user, must not skip)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Fallback with --user 10001 (policy runs as the same user, check still PASSES)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Fallback with --cap-drop ALL (root without setuid, check still PASSES)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a policy child sees of its parent in each container mode (measured, not asserted; see the logs)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Strict mode in the default image (AUDITGYM_REQUIRE_AGENT_USER=1, the policy really runs as the agent user)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Strict mode with --cap-drop ALL (must refuse with exit code 2 and one error line)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Closed path as organizers run it (seeds file and secret mounted, no network, strict agent user)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the closed-path output",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the container logs",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  },
+  {
+   "name": "check (ubuntu-latest, Python 3.11)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:50Z",
+   "completed_at": "2026-11-20T09:37:13Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check (offline, standard library only)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a same-user policy child can read of its parent (measured, not asserted; see the log)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed episodes and schemas regenerate byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed trajectories replay byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the check report",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  },
+  {
+   "name": "check (windows-latest, Python 3.11)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:51Z",
+   "completed_at": "2026-11-20T09:37:13Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check (offline, standard library only)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a same-user policy child can read of its parent (measured, not asserted; see the log)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed episodes and schemas regenerate byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed trajectories replay byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the check report",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  },
+  {
+   "name": "check (ubuntu-latest, Python 3.12)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:51Z",
+   "completed_at": "2026-11-20T09:37:14Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check (offline, standard library only)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a same-user policy child can read of its parent (measured, not asserted; see the log)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed episodes and schemas regenerate byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed trajectories replay byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the check report",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  },
+  {
+   "name": "check (macos-latest, Python 3.11)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:52Z",
+   "completed_at": "2026-11-20T09:37:31Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check (offline, standard library only)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a same-user policy child can read of its parent (measured, not asserted; see the log)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed episodes and schemas regenerate byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed trajectories replay byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the check report",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  },
+  {
+   "name": "check (ubuntu-latest, Python 3.13)",
+   "conclusion": "success",
+   "started_at": "2026-11-20T09:35:51Z",
+   "completed_at": "2026-11-20T09:37:03Z",
+   "steps": [
+    {
+     "name": "Set up job",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Official check (offline, standard library only)",
+     "conclusion": "success"
+    },
+    {
+     "name": "What a same-user policy child can read of its parent (measured, not asserted; see the log)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed episodes and schemas regenerate byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Committed trajectories replay byte for byte",
+     "conclusion": "success"
+    },
+    {
+     "name": "Upload the check report",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/setup-python@v5",
+     "conclusion": "success"
+    },
+    {
+     "name": "Post Run actions/checkout@v4",
+     "conclusion": "success"
+    },
+    {
+     "name": "Complete job",
+     "conclusion": "success"
+    }
+   ]
+  }
+ ]
+}

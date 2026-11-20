@@ -1,4 +1,10 @@
 {
+ "code": {
+  "code_sha256": "23e2b93445134423a3b446db6beb32160b13f308eb8228094ee56f7eb0479abc",
+  "code_files": 60,
+  "python": "3.11.4",
+  "platform": "Windows-10-10.0.19045-SP0"
+ },
  "chunk_size": 60,
  "configurations": 423,
  "feasible": 401,
@@ -6646,7 +6652,7 @@
    "chunk": 0,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1785 named checks of 70 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1443/1443 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1785 named checks of 70 kinds)"
   },
   {
    "chunk": 1,
@@ -6658,13 +6664,13 @@
    "chunk": 2,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1438/1438 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1779 named checks of 70 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1437/1437 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1779 named checks of 70 kinds)"
   },
   {
    "chunk": 3,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1786 named checks of 70 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 251/251, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1786 named checks of 70 kinds)"
   },
   {
    "chunk": 4,
@@ -6676,7 +6682,7 @@
    "chunk": 5,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1159/1159 (2 skipped), D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1502 named checks of 82 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1157/1157 (2 skipped), D_paired 253/253, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1502 named checks of 82 kinds)"
   },
   {
    "chunk": 6,
