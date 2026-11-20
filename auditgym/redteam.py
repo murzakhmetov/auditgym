@@ -116,6 +116,7 @@ def _probes():
 
     def grandchild():
         with tempfile.TemporaryDirectory() as d:
+            protocol._label_low(d)  # Windows: the Low-integrity child writes the heartbeat here (no-op elsewhere)
             beat = os.path.join(d, "hb.txt")
             run_hostile("Grandchild", HEARTBEAT=beat)
             a = Path(beat).read_text()
@@ -166,6 +167,7 @@ def parent_visibility() -> str:
 # /proc/<ppid>/environ. It reports booleans only, never the value.
 PEEK_POLICY = r'''
 import os
+import sys
 
 NAME = "AUDITGYM_REDTEAM_SECRET"
 
@@ -184,6 +186,7 @@ def _windows_parent_env(pid):
     k32.CloseHandle.argtypes = [wintypes.HANDLE]
     handle = k32.OpenProcess(0x0400 | 0x0010, False, pid)  # PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
     if not handle:
+        WHY.append("OpenProcess(PROCESS_VM_READ) error %d" % ctypes.get_last_error())  # 5 = access denied
         return None
     try:
         class PBI(ctypes.Structure):
@@ -208,12 +211,34 @@ def _windows_parent_env(pid):
         k32.CloseHandle(handle)
 
 
+def _ppid():
+    try:
+        return os.getppid()
+    except OSError:  # Windows at Low integrity: no process snapshot (WinError 18); ask the process itself instead
+        import ctypes
+        ntdll = ctypes.WinDLL("ntdll")
+        k32 = ctypes.WinDLL("kernel32")
+        k32.GetCurrentProcess.restype = ctypes.c_void_p
+        ntdll.NtQueryInformationProcess.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_ulong,
+                                                    ctypes.c_void_p]
+        buf = (ctypes.c_size_t * 6)()
+        if ntdll.NtQueryInformationProcess(k32.GetCurrentProcess(), 0, buf, ctypes.sizeof(buf), None) != 0:
+            raise
+        return buf[5]  # InheritedFromUniqueProcessId
+
+
 def parent_environment():
-    ppid = os.getppid()
+    try:
+        ppid = _ppid()
+    except Exception as exc:
+        WHY.append("parent pid unknown: %s" % exc)
+        return None
+    PPID.append(ppid)
     if os.name == "nt":
         try:
             return _windows_parent_env(ppid)
-        except Exception:
+        except Exception as exc:
+            WHY.append("%s: %s" % (type(exc).__name__, exc))
             return None
     try:
         with open("/proc/%d/environ" % ppid, "rb") as fh:
@@ -226,6 +251,8 @@ def parent_environment():
 
 
 NO_PROC = []
+WHY = []  # why the parent was not readable (Windows)
+PPID = []  # the parent pid this probe tried to open
 
 
 class Probe:
@@ -240,7 +267,9 @@ class Probe:
             return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": []}}
         self.probed = True
         text = parent_environment()
+        agent = sys.modules.get("auditgym.agent")
         return {"action": "probe", "readable": text is not None, "no_proc": bool(NO_PROC),
+                "why": "; ".join(WHY), "ppid": PPID[0] if PPID else None, "integrity": str(getattr(agent, "INTEGRITY_STATUS", "unknown")),
                 "found_in_parent": bool(text) and (NAME + "=") in text, "in_own_environment": NAME in os.environ}
 '''
 
@@ -251,6 +280,7 @@ import json, sys
 from auditgym import protocol
 if len(sys.argv) > 2 and sys.argv[2] == "plain":  # control: the host stays dumpable
     protocol.harden_host = lambda: False
+    protocol.LOWER_INTEGRITY = False  # Windows: the child stays at the host's integrity level
 ap =protocol.AgentProcess("peekparent:Probe", 0, policy_path=sys.argv[1])
 try:
     ap.send({"type": "observation", "observation": {}, "reward": 0.0, "terminated": False, "truncated": False,
@@ -267,10 +297,11 @@ def peek_policy_source(name: str) -> str:
     return PEEK_POLICY.replace('NAME = "AUDITGYM_REDTEAM_SECRET"', f"NAME = {name!r}")
 
 
-def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float = 300.0) -> dict:
+def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float = 300.0, lower: bool = True) -> dict:
     """Run `python -m auditgym run --seeds-file examples/closed_seeds_example.json --secret-env NAME` in a subprocess
-    that has NAME set, with a probe policy that looks for NAME in its parent's environment. Returns the probe's
-    first reported action (readable, found_in_parent, in_own_environment); raises RuntimeError if the run failed."""
+    that has NAME set, with a probe policy that looks for NAME in its parent's environment (lower=False: on
+    Windows the child stays at the host's integrity level, the control that shows the probe can read). Returns the
+    probe's first reported action (readable, found_in_parent, in_own_environment); raises RuntimeError if the run failed."""
     import json
 
     with tempfile.TemporaryDirectory(prefix="auditgym_secret_probe_") as tmp:
@@ -281,7 +312,8 @@ def secret_env_probe(name: str = "AUDITGYM_REDTEAM_SECRET_ENV", timeout_s: float
                str(protocol.PROJECT_ROOT / "examples" / "closed_seeds_example.json"), "--secret-env", name,
                "--policies", "peekparent:Probe", "--policy-path", tmp, "--out", str(out)]
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(protocol.PROJECT_ROOT),
-                           env=dict(os.environ, **{name: "redteam-marker-not-a-secret"}))
+                           env=dict(os.environ, **{name: "redteam-marker-not-a-secret"},
+                                    **({} if lower else {protocol.NO_LOWER_ENV: "1"})))
         try:
             lines = Path(out, "trajectories.jsonl").read_text(encoding="utf-8").splitlines()
         except OSError:
@@ -302,7 +334,8 @@ def secret_env_visibility() -> str:
     if res.get("no_proc"):
         return "--secret-env: not measured on this platform (no /proc)"
     if not res.get("readable"):
-        return "--secret-env: the parent's environment is not readable"
+        why = f" ({res['why']})" if res.get("why") else ""
+        return f"--secret-env: the parent's environment is not readable{why}"
     found = "found" if res.get("found_in_parent") else "not found"
     return f"--secret-env: parent's environment readable, secret variable {found} there"
 
@@ -327,23 +360,31 @@ def parent_secret_visibility(harden: bool = True) -> str:
     if not isinstance(res, dict) or out.get("kind") != "action":
         return f"probe failed: {out}"
     who = "separate policy user" if out.get("separate_user") else "same user as the host"
+    note = ""  # Windows: the integrity level goes after the label prefix, so tools/ci_excerpt.py keeps the line
+    if os.name == "nt":
+        level = str(res.get("integrity", "unknown"))
+        note = "child at Low integrity, " if level.startswith("lowered") else f"child at the host's integrity level ({level}), "
     if res.get("no_proc"):
-        return f"{who}: not measured on this platform (no /proc)"
+        return f"{who}: {note}not measured on this platform (no /proc)"
     if not res.get("readable"):
-        return f"{who}: the parent's environment is not readable"
+        why = f" ({res['why']})" if res.get("why") else ""
+        return f"{who}: {note}the parent's environment is not readable{why}"
     found = "found" if res.get("found_in_parent") else "not found"
     own = "present" if res.get("in_own_environment") else "absent"
-    return f"{who}: parent's environment readable, host variable {found} there ({own} in the child's own environment)"
+    return f"{who}: {note}parent's environment readable, host variable {found} there ({own} in the child's own environment)"
 
 
 def print_parent_report() -> int:
     """Print what a policy child can see of its parent, as measured here (Linux: after harden_host())."""
     protocol.harden_host()
     print("parent process visibility from a policy child (measured):")
-    print("  host hardening: " + protocol.HARDEN_STATUS)
+    if os.name == "nt":
+        print("  host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity")
+    else:
+        print("  host hardening: " + protocol.HARDEN_STATUS)
     print("  " + parent_visibility())
     print("  " + parent_secret_visibility())
-    if sys.platform.startswith("linux"):
+    if sys.platform.startswith("linux") or os.name == "nt":
         print("  control with host hardening off: " + parent_secret_visibility(harden=False))
     print("  " + secret_env_visibility())
     return 0

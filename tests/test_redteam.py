@@ -102,6 +102,13 @@ class CrashGrading(unittest.TestCase):
         self.assertEqual((g["status"], g["valid"], g["n_findings"]), ("step_limit", True, 0))
 
 
+def same_level():
+    """Windows: the policy child keeps the host's integrity level, so it can still write the grader files and the
+    digest check (not the Low-integrity write refusal) is what these tests measure. The refusal itself is
+    asserted in tests/test_windows_hardening.py. Elsewhere a no-op."""
+    return mock.patch.object(protocol, "LOWER_INTEGRITY", False)
+
+
 class CodeIntegrity(unittest.TestCase):
     def test_policy_that_edits_grader_code_fails_the_run(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -110,7 +117,7 @@ class CodeIntegrity(unittest.TestCase):
                 shutil.copytree(ROOT / d, root / d, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             target = str(root / "auditgym" / "reward.py")
             self.assertTrue(os.path.exists(target))
-            with mock.patch.object(protocol, "PROJECT_ROOT", root):
+            with mock.patch.object(protocol, "PROJECT_ROOT", root), same_level():
                 res, _, _, _ = run_hostile("CodeEditor", TARGET=target)
             self.assertIn("reward.py", res["agent_error"])
             self.assertIn("grader code changed", res["agent_error"])
@@ -145,7 +152,7 @@ class CodeIntegrity(unittest.TestCase):
             for d in ("auditgym", "configs", "schemas", "examples"):
                 shutil.copytree(ROOT / d, root / d, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             target = str(root / "auditgym" / "reward.py")
-            with mock.patch.object(protocol, "PROJECT_ROOT", root):
+            with mock.patch.object(protocol, "PROJECT_ROOT", root), same_level():
                 res, _, _, _ = run_hostile("PycPlanter", TARGET=target)
             self.assertIn("grader code changed", res["agent_error"] or "")
             self.assertIn("__pycache__", res["agent_error"])
@@ -284,10 +291,22 @@ class HostSecretHygiene(unittest.TestCase):
     def test_secret_env_is_not_in_the_parent_environment_of_the_policy(self):
         from auditgym.redteam import secret_env_probe
 
-        res = secret_env_probe("AUDITGYM_TEST_SOMEVAR")
+        # the child stays at the host's integrity level here: this measures that `run` itself removed the variable
+        # from its environment block (the Low-integrity child of the default run cannot read the block at all)
+        res = secret_env_probe("AUDITGYM_TEST_SOMEVAR", lower=False)
         self.assertTrue(res["readable"], "the probe could not read the parent's environment, so it proves nothing")
         self.assertFalse(res["found_in_parent"])
         self.assertFalse(res["in_own_environment"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows only: integrity levels")
+    def test_secret_env_default_run_child_is_refused_the_parent_memory(self):
+        from auditgym.redteam import secret_env_probe
+
+        res = secret_env_probe("AUDITGYM_TEST_SOMEVAR2")
+        self.assertTrue(res["integrity"].startswith("lowered"), res["integrity"])
+        self.assertFalse(res["readable"])
+        self.assertFalse(res["found_in_parent"])
+        self.assertIn("error 5", res["why"])
 
 
 if __name__ == "__main__":

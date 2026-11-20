@@ -53,7 +53,11 @@ line is printed to stderr, once per process; nothing crashes. Strict mode (opt-i
 variable AUDITGYM_REQUIRE_AGENT_USER=1 that fallback is an error instead (AgentUserRequired).
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
 guess the path of, and (outside a container) its parent's command line and environment, where
---secret-env values live (on Windows through the parent's process memory; on Linux harden_host() makes
+--secret-env values live (on Windows the child lowers its own token to Low integrity before any policy code
+loads (the --policy-path directory joins sys.path only after that, so nothing in it runs at the host's level),
+and mandatory integrity control then refuses PROCESS_VM_READ on the Medium host: see agent._lower_integrity;
+its working directory is a "work" subdirectory with a Low label and TEMP/TMP point there; a Low child still reads
+every file with a default label, and os.getppid() fails for it; on Linux harden_host() makes
 the host non-dumpable, which blocks /proc/<pid>/environ and /proc/<pid>/mem for a child without
 CAP_SYS_PTRACE and not root, while /proc/<pid>/cmdline stays readable; measured by
 `python -m auditgym.redteam --parent`; the command line `run` removes the --secret-env variable
@@ -330,6 +334,60 @@ def parse_agent_line(line) -> tuple:
 
 
 # --------------------------------------------------------- process-tree control
+NO_LOWER_ENV = "AUDITGYM_NO_LOW_INTEGRITY"  # agent.py reads it: "1" = control run, else the reason it cannot lower
+POLICY_PATH_ENV = "AUDITGYM_POLICY_PATH"  # agent.py adds this directory to sys.path after lowering (Windows)
+LOWER_INTEGRITY = os.environ.get(NO_LOWER_ENV) != "1"  # Windows: the child lowers its own token to Low integrity;
+# the host sets AUDITGYM_NO_LOW_INTEGRITY=1 (or this to False) only for the redteam control runs
+LOW_LABEL_STATUS = "not tried"  # outcome of the last _label_low() call, for diagnostics
+
+
+def _label_low(path: str) -> bool:
+    """Windows: give directory `path` a Low mandatory label that its new children inherit (SDDL
+    S:(ML;OICI;NW;;;LW)), so a child running at Low integrity can write there. Everything else the host
+    made (the staged code, the policy path) keeps the default Medium label and stays read-only for it.
+    Never raises; returns False and sets LOW_LABEL_STATUS when the label could not be set."""
+    global LOW_LABEL_STATUS
+    if os.name != "nt":
+        LOW_LABEL_STATUS = "not applicable: not Windows"
+        return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        adv = ctypes.WinDLL("advapi32", use_last_error=True)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        adv.ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = [
+            wintypes.LPCWSTR, wintypes.DWORD, ctypes.POINTER(ctypes.c_void_p), ctypes.c_void_p]
+        adv.GetSecurityDescriptorSacl.argtypes = [ctypes.c_void_p, ctypes.POINTER(wintypes.BOOL),
+                                                  ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.BOOL)]
+        adv.SetNamedSecurityInfoW.argtypes = [wintypes.LPWSTR, ctypes.c_int, wintypes.DWORD, ctypes.c_void_p,
+                                              ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+        adv.SetNamedSecurityInfoW.restype = wintypes.DWORD
+        k32.LocalFree.argtypes = [ctypes.c_void_p]
+        desc = ctypes.c_void_p()
+        if not adv.ConvertStringSecurityDescriptorToSecurityDescriptorW("S:(ML;OICI;NW;;;LW)", 1,
+                                                                        ctypes.byref(desc), None):
+            LOW_LABEL_STATUS = f"ConvertStringSecurityDescriptor error {ctypes.get_last_error()}"
+            return False
+        try:
+            present, defaulted, sacl = wintypes.BOOL(), wintypes.BOOL(), ctypes.c_void_p()
+            if not adv.GetSecurityDescriptorSacl(desc, ctypes.byref(present), ctypes.byref(sacl),
+                                                 ctypes.byref(defaulted)) or not present.value:
+                LOW_LABEL_STATUS = f"GetSecurityDescriptorSacl error {ctypes.get_last_error()}"
+                return False
+            err = adv.SetNamedSecurityInfoW(path, 1, 0x10, None, None, None, sacl)  # SE_FILE_OBJECT, LABEL_SECURITY_INFORMATION
+            if err != 0:
+                LOW_LABEL_STATUS = f"SetNamedSecurityInfo error {err}"
+                return False
+        finally:
+            k32.LocalFree(desc)
+    except Exception as exc:
+        LOW_LABEL_STATUS = f"{type(exc).__name__}: {exc}"
+        return False
+    LOW_LABEL_STATUS = "ok"
+    return True
+
+
 class _WinJob:
     """A Windows Job Object that kills every process in it when terminated or closed."""
 
@@ -558,8 +616,29 @@ class AgentProcess:
             self._same_user(_no_switch_reason())
         cmd = [sys.executable, "-m", "auditgym.agent", "--policy", policy, "--policy-seed", str(int(policy_seed))]
         kw = {"start_new_session": True} if os.name == "posix" else {}
-        popen = dict(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self._tmp.name,
-                     env=_child_env(policy_path, stage=str(stage)), **kw)
+        cwd, env = self._tmp.name, _child_env(policy_path, stage=str(stage))
+        if os.name == "nt" and ident is None:
+            if not LOWER_INTEGRITY:
+                env[NO_LOWER_ENV] = "1"
+            else:
+                # The child lowers itself to Low integrity, which cannot write Medium objects: its working
+                # directory (a subdirectory, so the staged code stays read-only for it) gets a Low label, and
+                # TEMP/TMP point there. If the label cannot be set the child is not lowered (it would lose
+                # its working directory) and the run goes on as before.
+                work = Path(self._tmp.name, "work")
+                work.mkdir()
+                if _label_low(str(work)):
+                    cwd = str(work)
+                    env["TEMP"] = env["TMP"] = cwd
+                    if policy_path:
+                        # only the staged code is on the child's path from interpreter start: a sitecustomize.py or
+                        # a stdlib-shadowing module in the policy directory would run at the host's level, before
+                        # the token is lowered. agent.main() adds the directory after lowering.
+                        env["PYTHONPATH"] = str(Path(stage).resolve())
+                        env[POLICY_PATH_ENV] = str(Path(policy_path).resolve())
+                else:
+                    env[NO_LOWER_ENV] = "label failed: " + LOW_LABEL_STATUS
+        popen = dict(stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, **kw)
         if ident is not None:
             try:
                 self.proc = subprocess.Popen(cmd, user=ident[1], group=ident[2], extra_groups=[], umask=0o077, **popen)
