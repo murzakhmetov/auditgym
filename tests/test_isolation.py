@@ -12,6 +12,7 @@ from auditgym.__main__ import main as cli_main
 from auditgym.env import AuditEnv
 from auditgym.runner import run_one
 from tests.test_env import episode
+from tests.test_schemas import max_submit_action, max_submit_line, max_valid_finding
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -163,8 +164,10 @@ class LateKey(_Base):
 
 class Maximal(_Submit):
     def findings(self):
-        return [finding(type="wrong_period", affected_ids=["a" * 64] * 10, evidence_ids=["e" * 64] * 10,
-                        explanation="\u00e9\u4e2d" * 500) for _ in range(30)]
+        astral, ws = chr(0x1F600), chr(0x3000)  # the child cannot import tests: this mirrors max_valid_finding()
+        return [finding(type="unallocated_payment", affected_ids=[astral * 64] * 10, evidence_ids=[astral * 64] * 10,
+                        claimed_amount_minor=10 ** 15, currency=ws * 5 + "USD", explanation=astral * 1000)
+                for _ in range(30)]
 """
 
 
@@ -225,10 +228,10 @@ class MalformedSubmit(unittest.TestCase):
         self.assertEqual((g_iso["status"], g_iso["reward"]), (g_proc["status"], g_proc["reward"]))
         self.assertNotIn("invalid_action", traj[-1]["action"])
         self.assertEqual(len(traj[-1]["action"]["findings"]["findings"]), 30)
-        action = {"action": "submit", "findings": {"episode_id": ep.episode_id, "findings": [
-            {"type": "wrong_period", "affected_ids": ["a" * 64] * 10, "claimed_amount_minor": 10 ** 15, "currency": "USD",
-             "evidence_ids": ["e" * 64] * 10, "explanation": "\u00e9\u4e2d" * 500} for _ in range(30)]}}
-        line = json.dumps({"type": "action", "action": action}, ensure_ascii=True) + "\n"
+        self.assertEqual(traj[-1]["action"]["findings"]["findings"][0], max_valid_finding())
+        action = max_submit_action(ep.episode_id)
+        line = max_submit_line(ep.episode_id)
+        self.assertLess(len(line) - 1, protocol.MAX_LINE)
         self.assertEqual(protocol.parse_agent_line(line), ("action", action))
 
     def test_submit_start_detection_is_anchored_and_whitespace_tolerant(self):

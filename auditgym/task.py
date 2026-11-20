@@ -5,7 +5,7 @@ or error counts."""
 from __future__ import annotations
 
 from . import FINDING_TYPES
-from .schemas import MAX_AFFECTED_IDS, MAX_EVIDENCE_IDS, MAX_EXPLANATION_CHARS, MAX_FINDINGS, MAX_ID_CHARS, MAX_PAGE
+from .schemas import MAX_AFFECTED_IDS, MAX_CURRENCY_CHARS, MAX_EVIDENCE_IDS, MAX_EXPLANATION_CHARS, MAX_FINDINGS, MAX_ID_CHARS, MAX_PAGE
 
 TOLERANCE_MINOR = 2
 
@@ -78,6 +78,7 @@ def build_task(episode, max_steps: int, mode: str, time_limit_s: float = 60) -> 
             "max_evidence_ids": MAX_EVIDENCE_IDS,
             "max_explanation_chars": MAX_EXPLANATION_CHARS,
             "max_id_chars": MAX_ID_CHARS,
+            "max_currency_chars": MAX_CURRENCY_CHARS,
             "time_limit_s": int(time_limit_s) if float(time_limit_s).is_integer() else time_limit_s,
         },
         "actions": {

@@ -16,6 +16,7 @@ MAX_EVIDENCE_IDS = 10
 MAX_AFFECTED_IDS = 10
 MAX_EXPLANATION_CHARS = 1000
 MAX_ID_CHARS = 64
+MAX_CURRENCY_CHARS = 8  # the 3-letter code plus whitespace around it
 MAX_AMOUNT_MINOR = 10**15
 
 FINDING_KEYS = (
@@ -140,8 +141,9 @@ def validate_submission(obj, episode_id: str | None) -> list[str]:
                 errors.append(f"{prefix}.claimed_amount_minor must be an integer in [0, {MAX_AMOUNT_MINOR}]")
         if "currency" in f:
             cur = f["currency"]
-            if not isinstance(cur, str) or not _CURRENCY_RE.match(cur.strip()):
-                errors.append(f"{prefix}.currency must be a 3-letter currency code")
+            if not isinstance(cur, str) or len(cur) > MAX_CURRENCY_CHARS or not _CURRENCY_RE.match(cur.strip()):
+                errors.append(f"{prefix}.currency must be a 3-letter currency code "
+                              f"(at most {MAX_CURRENCY_CHARS} characters with surrounding whitespace)")
         if "explanation" in f:
             exp = f["explanation"]
             if not isinstance(exp, str):
@@ -183,7 +185,7 @@ SUBMISSION_JSON_SCHEMA = {
                         "items": ID_ITEM,
                     },
                     "claimed_amount_minor": {"type": "integer", "minimum": 0, "maximum": MAX_AMOUNT_MINOR},
-                    "currency": {"type": "string", "pattern": "^[" + WS_CLASS + "]*[A-Za-z]{3}[" + WS_CLASS + "]*$"},
+                    "currency": {"type": "string", "maxLength": MAX_CURRENCY_CHARS, "pattern": "^[" + WS_CLASS + "]*[A-Za-z]{3}[" + WS_CLASS + "]*$"},
                     "evidence_ids": {
                         "type": "array",
                         "maxItems": MAX_EVIDENCE_IDS,
