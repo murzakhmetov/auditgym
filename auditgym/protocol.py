@@ -29,12 +29,14 @@ mode. The channel is bounded in every direction:
     that consumes a step; the trajectory keeps {"invalid_action": first 256 chars};
     exception: when the line starts like a submit (looks_like_submit: the "action" key with the
     value "submit" as the first member) the episode ends at once as invalid_submission, reward -1,
-    as it does in process for the limits listed here (numbers, depth, nodes, size, and text that
-    does not encode to UTF-8, which schemas.validate_submission rejects in process and in grade
-    too); the trajectory keeps {"action": "submit", "findings": null, "invalid_action": first 256
+    as it does in process for the limits listed here (numbers, depth, nodes, and text that does
+    not encode to UTF-8, which schemas.validate_submission rejects in process and in grade too);
+    the trajectory keeps {"action": "submit", "findings": null, "invalid_action": first 256
     chars}. A replay matches in status, reward and observations, not in the grade's error text.
-    Residual: a malformed submit whose "action" key is not the first member is still an
-    unknown_action step;
+    Size is not at parity: a submit line over MAX_LINE also ends this way, while in process no
+    line limit applies (a valid submission gets that large only through whitespace around the
+    currency code). Residual: a malformed submit whose "action" key is not the first member is
+    still an unknown_action step;
   * any other JSON value as the action, null included, goes to env.step(), which
     returns a bounded error for anything that is not a valid action;
   * the processes the host tracks are killed when the run ends (process group on POSIX,
@@ -51,9 +53,14 @@ line is printed to stderr, once per process; nothing crashes. Strict mode (opt-i
 variable AUDITGYM_REQUIRE_AGENT_USER=1 that fallback is an error instead (AgentUserRequired).
 Limitations: a child running as the same OS user is not a sandbox. It can read files it can
 guess the path of, and (outside a container) its parent's command line and environment, where
---secret-env values live (on Windows through the parent's process memory; measured by
+--secret-env values live (on Windows through the parent's process memory; on Linux harden_host() makes
+the host non-dumpable, which blocks /proc/<pid>/environ and /proc/<pid>/mem for a child without
+CAP_SYS_PTRACE and not root, while /proc/<pid>/cmdline stays readable; measured by
 `python -m auditgym.redteam --parent`; the command line `run` removes the --secret-env variable
-from its own environment block right after reading it, see __main__._secret_from_env). Only tracked
+from its own environment block right after reading it, see __main__._secret_from_env). Two residuals on
+Linux: the command line hardens at the start of main() (python -m auditgym and python -m auditgym.check)
+and AgentProcess before its first child, so only interpreter start-up runs dumpable; and an ancestor that
+was started with the variable in its own environment (a CI step `env:`, `VAR=x make`) stays dumpable. Only tracked
 processes are killed: a process that leaves the group or job (setsid, start_new_session,
 WMI Win32_Process.Create) survives and can edit files later; only a container or a separate
 OS user contains that. Outside the digest: examples/**/*.py (staged into later children),
@@ -98,6 +105,53 @@ CLOSE_GRACE_S = 2.0
 STAGED_MODULES = ("__init__.py", "agent.py", "auditor.py", "money.py", "schemas.py", "timeutil.py",
                   "policies/__init__.py", "policies/auditor_policy.py", "policies/common.py",
                   "policies/flag_all.py", "policies/random_policy.py", "policies/recon.py")
+
+
+# ----------------------------------------------------------------- host hardening
+PR_SET_DUMPABLE = 4
+PR_GET_DUMPABLE = 3
+HARDEN_STATUS = "not tried"   # why the last harden_host() call did or did not apply, for diagnostics
+_HARDENED = False
+
+
+def harden_host() -> bool:
+    """On Linux make the host process non-dumpable, once per process. Returns True when it is in effect.
+
+    prctl(PR_SET_DUMPABLE, 0) makes the kernel refuse /proc/<pid>/environ, /proc/<pid>/mem and ptrace
+    on the host to a process of the same uid that has no CAP_SYS_PTRACE, so a same-user policy child can
+    no longer read the --secret-env value that lives in the start-up environment block. It does not
+    block: a child with CAP_SYS_PTRACE or running as root; /proc/<pid>/cmdline, which stays readable (a
+    file path on the command line is visible); files the same user can read; Windows and macOS, where
+    nothing is done. The policy child is started with execve, which resets its own dumpability, so it
+    is unaffected. A non-dumpable non-root process cannot read its own 0400 /proc/self files (the
+    package reads none). The command line calls it first thing in main() (python -m auditgym and
+    python -m auditgym.check) and AgentProcess before its first child, so only interpreter start-up runs
+    dumpable; an ancestor that holds the variable in its own environment stays readable. Never raises: a
+    missing libc or prctl, or an error return, only sets HARDEN_STATUS and leaves the host as it was."""
+    global _HARDENED, HARDEN_STATUS
+    if _HARDENED:
+        return True
+    if not sys.platform.startswith("linux"):
+        HARDEN_STATUS = "skipped: not Linux"
+        return False
+    try:
+        import ctypes
+
+        libc = ctypes.CDLL(None, use_errno=True)
+        libc.prctl.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong]
+        libc.prctl.restype = ctypes.c_int
+        if libc.prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) != 0:
+            HARDEN_STATUS = "prctl(PR_SET_DUMPABLE) failed: " + os.strerror(ctypes.get_errno())
+            return False
+        if libc.prctl(PR_GET_DUMPABLE, 0, 0, 0, 0) != 0:
+            HARDEN_STATUS = "prctl(PR_SET_DUMPABLE) returned 0 but the process is still dumpable"
+            return False
+    except Exception as exc:  # no libc, no prctl symbol, ctypes missing: stay as before
+        HARDEN_STATUS = f"unavailable: {type(exc).__name__}: {exc}"
+        return False
+    _HARDENED = True
+    HARDEN_STATUS = "applied: PR_SET_DUMPABLE 0"
+    return True
 
 
 # ----------------------------------------------------------------- child setup
@@ -470,6 +524,7 @@ class AgentProcess:
             raise
 
     def __init__(self, policy: str, policy_seed: int = 0, policy_path: str | None = None):
+        harden_host()
         self._tmp = tempfile.TemporaryDirectory(prefix="auditgym_agent_", ignore_cleanup_errors=True)
         self.write_timeout_s = WRITE_TIMEOUT_S
         self.write_timed_out = False

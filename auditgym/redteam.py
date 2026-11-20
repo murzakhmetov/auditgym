@@ -214,8 +214,14 @@ def parent_environment():
     try:
         with open("/proc/%d/environ" % ppid, "rb") as fh:
             return fh.read().decode("utf-8", "replace")
+    except FileNotFoundError:
+        NO_PROC.append(True)  # no /proc here (macOS): nothing was measured
+        return None
     except OSError:
         return None
+
+
+NO_PROC = []
 
 
 class Probe:
@@ -230,7 +236,7 @@ class Probe:
             return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": []}}
         self.probed = True
         text = parent_environment()
-        return {"action": "probe", "readable": text is not None,
+        return {"action": "probe", "readable": text is not None, "no_proc": bool(NO_PROC),
                 "found_in_parent": bool(text) and (NAME + "=") in text, "in_own_environment": NAME in os.environ}
 '''
 
@@ -239,7 +245,9 @@ class Probe:
 PEEK_HOST = r"""
 import json, sys
 from auditgym import protocol
-ap = protocol.AgentProcess("peekparent:Probe", 0, policy_path=sys.argv[1])
+if len(sys.argv) > 2 and sys.argv[2] == "plain":  # control: the host stays dumpable
+    protocol.harden_host = lambda: False
+ap =protocol.AgentProcess("peekparent:Probe", 0, policy_path=sys.argv[1])
 try:
     ap.send({"type": "observation", "observation": {}, "reward": 0.0, "terminated": False, "truncated": False,
              "info": {}})
@@ -286,20 +294,24 @@ def secret_env_visibility() -> str:
         res = secret_env_probe()
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
         return f"--secret-env probe failed: {exc}"
+    if res.get("no_proc"):
+        return "--secret-env: not measured on this platform (no /proc)"
     if not res.get("readable"):
         return "--secret-env: the parent's environment is not readable"
     found = "found" if res.get("found_in_parent") else "not found"
     return f"--secret-env: parent's environment readable, secret variable {found} there"
 
 
-def parent_secret_visibility() -> str:
-    """Can a policy child started by the harness find a variable of the host's environment?"""
+def parent_secret_visibility(harden: bool = True) -> str:
+    """Can a policy child started by the harness find a variable of the host's environment?
+    harden=False keeps the host dumpable: the control that shows the probe can read at all."""
     import json
 
     with tempfile.TemporaryDirectory(prefix="auditgym_peek_") as tmp:
         Path(tmp, "peekparent.py").write_text(PEEK_POLICY, encoding="utf-8")
         env = dict(os.environ, AUDITGYM_REDTEAM_SECRET="redteam-marker-not-a-secret")
-        p = subprocess.run([sys.executable, "-c", PEEK_HOST, tmp], capture_output=True, text=True, timeout=120,
+        argv = [sys.executable, "-c", PEEK_HOST, tmp] + ([] if harden else ["plain"])
+        p = subprocess.run(argv, capture_output=True, text=True, timeout=120,
                            cwd=str(protocol.PROJECT_ROOT), env=env)
     try:
         out = json.loads(p.stdout.strip().splitlines()[-1])
@@ -309,6 +321,8 @@ def parent_secret_visibility() -> str:
     if not isinstance(res, dict) or out.get("kind") != "action":
         return f"probe failed: {out}"
     who = "separate policy user" if out.get("separate_user") else "same user as the host"
+    if res.get("no_proc"):
+        return f"{who}: not measured on this platform (no /proc)"
     if not res.get("readable"):
         return f"{who}: the parent's environment is not readable"
     found = "found" if res.get("found_in_parent") else "not found"
@@ -316,24 +330,30 @@ def parent_secret_visibility() -> str:
     return f"{who}: parent's environment readable, host variable {found} there ({own} in the child's own environment)"
 
 
+def print_parent_report() -> int:
+    """Print what a policy child can see of its parent, as measured here (Linux: after harden_host())."""
+    protocol.harden_host()
+    print("parent process visibility from a policy child (measured):")
+    print("  host hardening: " + protocol.HARDEN_STATUS)
+    print("  " + parent_visibility())
+    print("  " + parent_secret_visibility())
+    if sys.platform.startswith("linux"):
+        print("  control with host hardening off: " + parent_secret_visibility(harden=False))
+    print("  " + secret_env_visibility())
+    return 0
+
+
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if "--parent" in argv:  # only the parent-visibility measurement, a few seconds
-        print("parent process visibility from a policy child (limitation, not blocked):")
-        print("  " + parent_visibility())
-        print("  " + parent_secret_visibility())
-        print("  " + secret_env_visibility())
-        return 0
+        return print_parent_report()
     rows = _probes()
     width = max(len(r[0]) for r in rows)
     ok = True
     for name, passed, secs, detail in rows:
         ok &= passed
         print(f"[{'PASS' if passed else 'FAIL'}] {name.ljust(width)}  {secs:5.1f} s  {detail}")
-    print("parent process visibility from a policy child (limitation, not blocked):")
-    print("  " + parent_visibility())
-    print("  " + parent_secret_visibility())
-    print("  " + secret_env_visibility())
+    print_parent_report()
     print("PASS" if ok else "FAIL")
     return 0 if ok else 1
 

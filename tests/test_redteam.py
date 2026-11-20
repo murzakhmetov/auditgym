@@ -278,8 +278,9 @@ class ParserBounds(unittest.TestCase):
 
 class HostSecretHygiene(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "Windows only: the run removes --secret-env from the process environment "
-                         "block; on Linux the start-up copy stays in /proc/<pid>/environ and only the image's "
-                         "separate policy uid protects it")
+                         "block; on Linux, AgentProcess hardening is tested in tests/test_linux_hardening.py "
+                         "(not readable for a non-root child without CAP_SYS_PTRACE); the run --secret-env "
+                         "path is measured by python -m auditgym.redteam --parent")
     def test_secret_env_is_not_in_the_parent_environment_of_the_policy(self):
         from auditgym.redteam import secret_env_probe
 
