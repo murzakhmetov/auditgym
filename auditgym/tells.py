@@ -376,10 +376,16 @@ def to_markdown(m: dict) -> str:
              "| rule | fires on | true hits | precision | recall | support |", "|---|---:|---:|---:|---:|---:|"]
     for name, r in sorted(m["rules"].items(), key=lambda kv: (-kv[1]["precision"] * (kv[1]["hits"] > 0), kv[0])):
         lines.append(f"| {name} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} | {r['recall']:.4f} | {r['episodes_firing']} |")
+    n, n_err = m["episodes"], m["error_episodes"]
+    base = {"error": n_err / n if n else 0.0, "clean": (n - n_err) / n if n else 0.0}
     lines += ["", "## Episode-level rules", "",
-              "| rule | label | episodes flagged | correct | precision |", "|---|---|---:|---:|---:|"]
+              f"Base rate: {n_err} of {n} episodes have errors ({base['error']:.4f}) and {n - n_err} are clean "
+              f"({base['clean']:.4f}). A rule is a tell only if its precision is well above the base rate of its label.", "",
+              "| rule | label | episodes flagged | correct | precision | base rate of the label |",
+              "|---|---|---:|---:|---:|---:|"]
     for name, r in m["episode_rules"].items():
-        lines.append(f"| {name} | {r['label']} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} |")
+        lines.append(f"| {name} | {r['label']} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} | "
+                     f"{base.get(r['label'], 0.0):.4f} |")
     fx = m["fx_target"]
     lines += ["", "## FX target and the largest foreign purchase", "",
               f"Among the {fx['eligible_episodes']} episodes whose answer key has a wrong_fx_rate target that is a foreign "

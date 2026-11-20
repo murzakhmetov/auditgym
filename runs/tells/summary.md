@@ -46,13 +46,15 @@ A rule fires on the documents it selects. True hits are fired documents that are
 
 ## Episode-level rules
 
-| rule | label | episodes flagged | correct | precision |
-|---|---|---:|---:|---:|
-| any quantity/price outside catalogue -> error | error | 0 | 0 | 0.0000 |
-| any off-hours payment on a boundary day -> error | error | 971 | 731 | 0.7528 |
-| any same-instant pair with terms != 30 -> error | error | 892 | 687 | 0.7702 |
-| small ledger (< 500 rows) with >= 2 refunds -> clean | clean | 0 | 0 | 0.0000 |
-| small ledger (< 500 rows) with >= 3 null-ref receipts -> clean | clean | 0 | 0 | 0.0000 |
+Base rate: 750 of 1000 episodes have errors (0.7500) and 250 are clean (0.2500). A rule is a tell only if its precision is well above the base rate of its label.
+
+| rule | label | episodes flagged | correct | precision | base rate of the label |
+|---|---|---:|---:|---:|---:|
+| any quantity/price outside catalogue -> error | error | 0 | 0 | 0.0000 | 0.7500 |
+| any off-hours payment on a boundary day -> error | error | 971 | 731 | 0.7528 | 0.7500 |
+| any same-instant pair with terms != 30 -> error | error | 892 | 687 | 0.7702 | 0.7500 |
+| small ledger (< 500 rows) with >= 2 refunds -> clean | clean | 0 | 0 | 0.0000 | 0.2500 |
+| small ledger (< 500 rows) with >= 3 null-ref receipts -> clean | clean | 0 | 0 | 0.0000 | 0.2500 |
 
 ## FX target and the largest foreign purchase
 
