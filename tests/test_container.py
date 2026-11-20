@@ -172,7 +172,7 @@ class SeparateUser(unittest.TestCase):
         try:
             self.assertEqual(ap._agent_uid, IDENT[1])
             status = Path("/proc", str(ap.proc.pid), "status").read_text(encoding="ascii")
-            self.assertRegex(status, r"(?m)^Uid:\s+%d\s+%d" % (IDENT[1], IDENT[1]))
+            self.assertRegex(status, r"(?m)^Uid:\s+%d\s+%d\b" % (IDENT[1], IDENT[1]))
         finally:
             ap.close()
 
