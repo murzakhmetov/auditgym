@@ -7,7 +7,20 @@ shared reward. Offline, standard library only, Python 3.11.
 [Русская версия](README.ru.md) · [Design note](docs/DESIGN.md) · [Check report](runs/check/report.md) ·
 [Case](docs/CASE.md) · [Demo viewer](viewer/index.html) (open the file in a browser, works offline)
 
-![auditgym viewer: the evidence graph of one episode](docs/media/viewer.png)
+Excerpt of the output at commit `b04ef7c` (Windows 10, Python 3.11.4):
+
+```text
+$ python -m auditgym check
+auditgym 0.2.0 check (offline, Python 3.11.4); episodes: public master string auditgym-check-v1
+A. unit tests
+fuzz: 3000 in-process + 300 piped, 0 invariant violations, 0 schema/env disagreements
+  [PASS] unittest: 268 run, 260 passed, 8 skipped
+B. committed train/dev episodes
+  [PASS] train/t01_clean_small regenerates byte-identically
+  ...
+summary: A_unit_tests 1/1, B_committed_episodes 40/40, B_replay 10/10, C_data 21/21, C_reward 427/427, D_paired 93/93, E_leaks 3/3, F_contract 20/20 (615 named checks of 78 kinds)
+PASS in 118 s; report: runs/check/report.md
+```
 
 > **Кратко по-русски.** Среда для обучения ИИ-аудитора: генератор синтетических компаний (история → документы →
 > проводки), четыре типа ошибок с записанной причиной, два сценария взаимодействующих ошибок, чистые компании и
@@ -43,13 +56,16 @@ No keys, no network, nothing to install. Python 3.11:
 python -m auditgym check
 ```
 
-`check` prints one line per named check and writes [runs/check/report.md](runs/check/report.md). It exits 0 only
-if every check passes. At commit `66cdc0d` it runs **615 named checks of 78 kinds** (a kind is one property; most run
-on every episode they apply to), one of which runs the **232 unit tests** (outside the image, 8 container-only tests
-report as skipped). About 100 s on Windows 10 with Python 3.11.4 (the committed report records 102 s). CI run
-44663428884 on that commit is green: ubuntu 27 s, windows 57 s, macOS 53 s (Python 3.11) and the container 66 s,
-where the 9 container-only tests ran with none skipped, also in strict mode; strict mode with `--cap-drop ALL` exits 2
-with one error line. The cited lines are kept in [runs/ci/44663428884.txt](runs/ci/44663428884.txt) (made with
+`check` prints one line per named check and rewrites [runs/check/report.md](runs/check/report.md) and
+`report.json`; with the same code on the same machine only their timing fields change. It exits 0 only if every check
+passes. At commit `b04ef7c` it runs **615 named checks of 78 kinds** (a kind is one property; most run on every
+episode they apply to), one of which runs the **268 unit tests** (8 report as skipped on Windows and 9 on Linux and
+macOS: the container-only tests, plus one Windows-only test on Linux and macOS; inside the image only that
+Windows-only test is skipped). About 100–120 s on Windows 10 with Python 3.11.4 (the committed report records
+118 s). CI run 44681249820 on that commit is green: ubuntu 51 s, windows 43 s, macOS 52 s (Python 3.11) and the
+container 58 s, where the 9 container-only tests ran with none skipped, also in strict mode; strict mode with
+`--cap-drop ALL` exits 2 with one error line; the closed path with a mounted seeds file and output directory passes
+in strict mode (3 s). The cited lines are kept in [runs/ci/44681249820.txt](runs/ci/44681249820.txt) (made with
 [tools/ci_excerpt.py](tools/ci_excerpt.py)).
 
 ```bash
@@ -91,6 +107,8 @@ docker rm auditgym-check
    `d08_both_interacting_kzt` in the sidebar to see the answer key (grader view). Click an error for its
    documents, journal rows and local graph, open **Graph** for the whole evidence network, then open a recorded
    run to replay the trajectory step by step ([screenshot](docs/media/viewer_run.png)).
+
+   ![auditgym viewer: the evidence graph of one episode](docs/media/viewer.png)
 3. Run `python -m auditgym verify episodes/dev/d08_both_interacting_kzt`: nine named checks, all `PASS`, then
    the declared discrepancies.
 4. Read [runs/check/report.md](runs/check/report.md) for the baselines on the hidden-like set.
@@ -138,9 +156,16 @@ python -m auditgym check --seeds-file FILE --secret-env AUDITGYM_SECRET --out DI
   one warning line. To require the separate user: `docker run --rm --network none -e AUDITGYM_REQUIRE_AGENT_USER=1
   auditgym`. CI runs this in the default image (the check passes and no container test is skipped) and with
   `--cap-drop ALL` (exit 2, one line).
-- `python tools/organizer_sweep.py DIR` runs this closed check over the stress configuration mix (the 299 feasible
-  configurations of `stress`: 282 random, 17 extreme) with 63-bit seeds and a host secret, in chunks of 50. At commit
-  `0d5f0b6` all six chunks passed, with no FAIL and no traceback (about 14 minutes on Windows 10).
+- CI runs the closed path in the container the way an organizer would: the example seeds file mounted read-only at
+  `/app/secrets/closed.json`, the output directory mounted at `/app/runs/closed`, `--network none`, strict mode and
+  the secret in an environment variable. The step fails unless the report says PASS, and fails if the output holds an
+  answer-key issue ID or the secret.
+- `python tools/organizer_sweep.py DIR [CHUNK] [--record]` runs this closed check over the stress mix plus one
+  boundary configuration per edge value that `config.py` accepts (423 configurations: 401 feasible,
+  22 infeasible, each with a ConfigError that names the reason), with 63-bit seeds and a host secret, and runs
+  the contract battery in process on every feasible episode. At commit `c104240` all 7 chunks of 60
+  passed, every contract battery passed and no feasible configuration failed to generate (about 16 minutes on
+  Windows 10): [runs/sweep/summary.md](runs/sweep/summary.md).
 - Exit codes: 0 pass, 1 failed checks or verification, 2 bad input (one `error:` line), 3 a run finished but an
   agent failed.
 
@@ -182,11 +207,13 @@ instead (exit 2). Outside the container the policy runs as the
 host's user and can read the host's environment, where `--secret-env` values live: on Windows 10,
 `python -m auditgym.redteam --parent` starts a policy through the harness and it finds a host variable in its
 parent's process memory (measured locally). On Linux the same read goes through `/proc/<ppid>/environ` (expected;
-not measured outside the image).
+not measured outside the image). `run`, `generate` and `check` remove the `--secret-env` variable from their
+environment block once they have read it, so the same probe on `run --secret-env` no longer finds that variable
+(measured locally); the value itself stays in the host's memory, which a same-user child can still read.
 
 The container has been built and run in CI (`docker build`, then `docker run --rm --network none --cpus 2 --memory 4g
---pids-limit 512`, again with `--user 10001` and with `--cap-drop ALL`). Mounting closed seeds or an output directory
-into the container was not run.
+--pids-limit 512`, again with `--user 10001` and with `--cap-drop ALL`), and the closed check has run in it with a
+mounted seeds file and output directory in strict mode (see For organizers).
 
 ## Architecture
 
@@ -210,7 +237,8 @@ flowchart LR
 
 - Generator: one company and one reporting period per episode. The 20 committed episodes (10 train, 10 dev) have
   251 to 1,905 ledger rows, 73 to 199 documents (invoices plus payments) and 0 to 10 issues each. Sizes `small`,
-  `medium`, `large`; at most 12 errors per episode; six base currencies (EUR, USD, KZT, JPY, KWD, GBP) and a foreign pool that also holds KRW and BHD; exponents 0, 2
+  `medium`, `large`; at most 12 errors per episode; explicit counts up to 2000 per key, except that prior, sales and
+  purchase invoices too many to read in 100 steps are a ConfigError at once; six base currencies (EUR, USD, KZT, JPY, KWD, GBP) and a foreign pool that also holds KRW and BHD; exponents 0, 2
   and 3 (JPY and KRW 0, KWD and BHD 3, the rest 2); eleven built-in time zones, including DST rules and +05:45.
 - Environment: five read-only tools, 50-row pages, stable cursors, a 100-step budget (submit included) and a 60 s
   limit (`time_limit_s` in the task), bounded errors that consume a step.
@@ -331,6 +359,7 @@ boundary, Sydney DST and one large episode with 12 errors; the scripted auditor 
 | `python -m auditgym grade --episode DIR --findings FILE --steps N` | Grade a findings file |
 | `python -m auditgym transform --in DIR --out DIR2 --permute-seed N --remap-seed N --ts-repr utc --rename-seed N` | Paired-check copy of an episode |
 | `python -m auditgym.tells --n 1000 --master auditgym-tells-v1 --out runs/tells` | Shortcut-tell measurement on generated episodes, writes [runs/tells/summary.md](runs/tells/summary.md) |
+| `python tools/organizer_sweep.py OUT_DIR [CHUNK] [--record]` | The closed check over the stress and boundary mixes; `--record` writes [runs/sweep/summary.md](runs/sweep/summary.md) |
 | `python -m auditgym stress --n 300` | Generator stress run, writes [runs/stress/report.md](runs/stress/report.md) |
 | `python -m auditgym budget` | Action-budget sweep, writes [runs/budget/summary.md](runs/budget/summary.md) |
 | `python -m auditgym demo` | Auditor and recon on one episode, step by step |
@@ -360,7 +389,8 @@ auditgym/          environment, generator, grader, verifier, evidence checker, p
 configs/           splits.json (train/dev seeds and configs, config_version 1)
 episodes/          train/ and dev/: public/ records + grader/ answer key and provenance
 runs/              check/ (report, grades, trajectories), check_closed/ (organizer runs), train_dev/,
-                   stress/, budget/
+                   stress/, budget/, tells/, sweep/ (organizer sweep), ci/ (excerpts of cited CI logs)
+tools/             ci_excerpt.py (keeps the cited CI log lines), organizer_sweep.py (closed path at scale)
 schemas/           JSON schemas: records, actions, observations, findings, truth, policy, provenance, trajectories
 tests/             unittest suites
 docs/              CASE.md, DESIGN.md, TASKS.md, PLAN.md (historical), media/
@@ -379,8 +409,8 @@ payments or personal data are used.
 - **Container.** The image is built and run in CI with `--network none --cpus 2 --memory 4g --pids-limit 512`.
   Inside the image the host runs as root and every policy child as uid 10002 (`agent`). Under `--user 10001` or
   `--cap-drop ALL` the policy falls back to the host's user with one warning line, and the same-user limits below
-  apply; `AUDITGYM_REQUIRE_AGENT_USER=1` turns that fallback into exit 2. Mounting closed seeds or an output directory
-  into the container was not run.
+  apply; `AUDITGYM_REQUIRE_AGENT_USER=1` turns that fallback into exit 2. CI also runs the closed check with a mounted
+  seeds file and output directory in strict mode.
 - **Isolation is a process boundary, not a sandbox.** The policy runs in a separate process with a staged copy of
   the agent-side modules, an empty working directory and a stripped environment. The host hashes the agent-side
   code, configs and schemas before and after each run and fails the run on change; this detects tampering, it does
@@ -388,8 +418,11 @@ payments or personal data are used.
   running as the same OS user can read files whose paths it can guess and, on Windows, its parent's command line
   (measured locally). It can also read the host's environment, where `--secret-env` values live: on Windows from the
   parent's process memory (`python -m auditgym.redteam --parent`, measured locally), on Linux through
-  `/proc/<ppid>/environ` (expected, not measured outside the image). Inside the image the separate policy uid blocks
-  this (CI); the two fallbacks do not. Open train and dev answer keys sit in the repository by design.
+  `/proc/<ppid>/environ` (expected, not measured outside the image). `run`, `generate` and `check` remove the
+  `--secret-env` variable from their environment block after reading it; that hides it from a reader of the
+  environment block on Windows (measured), not from a read of the host's memory, and not from `/proc/<ppid>/environ`,
+  which keeps the start-up copy. Inside the image the separate policy uid blocks all of this (CI); the two fallbacks do
+  not. Open train and dev answer keys sit in the repository by design.
 - **Noninterference** is measured by replay (five policies, in process and in the child, on episodes whose answer
   key is shuffled, replaced or emptied): observations, rewards and info are byte-identical. Timing is not covered,
   because the time limit is part of the contract.
@@ -428,7 +461,9 @@ payments or personal data are used.
 - **Evidence IDs.** An ID that is blank or longer than 64 characters makes the whole submission invalid (reward −1),
   even as an extra evidence ID. The task text publishes this rule (`max_id_chars`). Unknown well-formed extra IDs are
   ignored. An integral float amount (for example `106965.0`) is coerced to an integer by the environment and by the
-  `grade` command alike.
+  `grade` command alike. Text that is not valid UTF-8 (a lone surrogate) in an ID or an explanation also makes the
+  submission invalid. A submit that breaks a protocol limit (too many digits, NaN, too deep, too many nodes, too
+  large) ends the episode as `invalid_submission` (−1) in the policy child, as the same submission does in process.
 - **flag_all** is a format-level attack: it reads first pages and uses document amounts. Smarter attacks are covered
   by the reward battery in `check`, not by this baseline.
 - **Experimental reward** is reported in its own columns and never replaces the common reward.

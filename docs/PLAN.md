@@ -65,7 +65,8 @@ observations. In open training mode the in-process `AuditEnv` may be used direct
   chart of accounts; duplicate rule; finding types with canonical IDs, amount convention, evidence kinds,
   tolerance.
 
-Journal grouping (no extra ledger column): key = payment_id if set, else invoice_id if set, else timestamp.
+Journal grouping (no extra ledger column): key = payment_id if set, else invoice_id if set, else the timestamp
+as an instant (rows of one journal may carry different UTC offsets).
 Opening AR/AP items are booked per invoice against 3900; misc journals have unique timestamps.
 
 ### 3.2 Bookkeeping rules (policy)
