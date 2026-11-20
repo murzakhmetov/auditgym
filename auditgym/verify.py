@@ -14,7 +14,10 @@ Named checks, each independent of the generator's internal state:
                          provenance structure is cross-checked: every injection type and variant is a known one,
                          every injection has non-empty targets naming existing public invoices (payments for the payment
                          role), every distractor has an ids list of existing invoice or payment IDs and a known kind,
-                         and truth issues and injections match one to one by (issue_id, type)
+                         and truth issues and injections match one to one by (issue_id, type), and the target values of
+                         each injection equal the affected_ids of the truth issue with the same issue_id. A
+                         provenance.json that is not an object, ops that are not a list, or a malformed op is a FAIL
+                         line of this check (the replay and the clean-books check are then skipped), not a traceback
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
                          evidence sets) and reports no anomaly
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
@@ -24,10 +27,10 @@ Named checks, each independent of the generator's internal state:
                          null pattern
   no_leaks               public files contain no answer-key markers
 
-verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, a swapped
-variant or distractor kind, or an injection retargeted to another existing record of the right kind (nothing
-stored in the episode says what they should be). "check" catches those by regenerating every committed episode
-from its seed and config and comparing the bytes.
+verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, or a variant or
+distractor kind swapped for another known one (verify DIR does not compare them with truth.json's variant or with manifest.episode_id, which for hidden episodes needs the generation secret, and nothing records the distractor list). An injection
+retargeted to another record is caught by the targets-equal-affected_ids rule. "check" catches the three above by
+regenerating every committed episode from its seed and config and comparing the bytes.
 """
 
 from __future__ import annotations
@@ -44,6 +47,8 @@ from .io import canonical_json, sha256_text
 from .render import apply_ops
 from .timeutil import parse_ts
 
+OP_KEYS = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
+REPLAY_ERRORS = (KeyError, TypeError, AttributeError, ValueError, IndexError)
 INVOICE_FIELDS = ("doc_id", "invoice_id", "kind", "entity_id", "issued_at", "due_at", "currency", "total_minor", "line_items")
 PAYMENT_FIELDS = ("doc_id", "payment_id", "kind", "entity_id", "timestamp", "currency", "amount_minor", "invoice_refs", "bank_ref")
 # the twin episode (inject.py) adds one distractor kind that the config cannot ask for
@@ -191,7 +196,7 @@ def check_leaks(ep: Episode) -> list[str]:
         for marker in LEAK_MARKERS:
             if marker in low:
                 errs.append(f"{name} contains marker {marker!r}")
-    seed = str(ep.provenance.get("seed", ""))
+    seed = str(ep.provenance.get("seed", "")) if isinstance(ep.provenance, dict) else ""
     if len(seed) >= 8 and any(seed in t for t in texts.values()):
         errs.append("seed appears in public files")
     return errs
@@ -285,14 +290,59 @@ def _distractor_errors(dis, document_ids: set) -> list[str]:
     return [f"distractor {kind}: id {r!r} is not a public record" for r in refs if r not in document_ids]
 
 
+def _op_shape_error(op, index: int) -> str | None:
+    """Why one provenance op cannot be replayed, or None when it can."""
+    if not isinstance(op, dict):
+        return f"op {index} must be an object"
+    table, kind, rid = op.get("table"), op.get("op"), op.get("id")
+    if not isinstance(table, str) or table not in OP_KEYS or kind not in ("add", "remove", "set") or not isinstance(rid, str):
+        return f"op {index} needs a known table, an op of add, remove or set, and a string id"
+    if kind == "add" and not (isinstance(op.get("record"), dict) and op["record"].get(OP_KEYS[table]) == rid):
+        return f"op {index}: add needs a record whose {OP_KEYS[table]} is the op id"
+    if kind == "set" and not (isinstance(op.get("field"), str) and "before" in op and "after" in op):
+        return f"op {index}: set needs a field, before and after"
+    return None
+
+
+def provenance_shape_errors(ep: Episode) -> list[str]:
+    """Reasons why provenance.json cannot be replayed at all: not an object, ops not a list, or a malformed op."""
+    prov = ep.provenance
+    if not isinstance(prov, dict):
+        return ["provenance.json must be an object"]
+    ops = prov.get("ops", [])
+    if not isinstance(ops, list):
+        return ["provenance.ops must be a list"]
+    return [e for e in (_op_shape_error(op, i) for i, op in enumerate(ops)) if e][:10]
+
+
+def _retarget_errors(injections: list, issues) -> list[str]:
+    """An injection's target values must be exactly the affected IDs of the truth issue with its issue_id."""
+    affected = {t["issue_id"]: t.get("affected_ids") for t in issues if isinstance(t, dict) and isinstance(t.get("issue_id"), str)}
+    errs = []
+    for inj in injections:
+        if not isinstance(inj, dict) or not isinstance(inj.get("targets"), dict):
+            continue
+        if not isinstance(inj.get("issue_id"), str) or inj["issue_id"] not in affected:
+            continue
+        values = [r for ref in inj["targets"].values() for r in (_id_list(ref) or [])]
+        want = affected[inj["issue_id"]]
+        if isinstance(want, list) and set(values) != set(want):
+            errs.append(f"injection {inj['issue_id']}: targets {sorted(set(values))} differ from the affected_ids "
+                        f"{sorted(set(want))} of the truth issue")
+    return errs
+
+
 def check_provenance_structure(ep: Episode) -> list[str]:
-    """Injections and distractors are well formed, use known names, point at existing public invoices or payments
-    and match the answer key one to one by (issue_id, type)."""
+    """Provenance is replayable, injections and distractors are well formed, use known names, point at existing
+    public invoices or payments, match the answer key one to one by (issue_id, type), and each injection's target
+    values equal the affected_ids of the truth issue with its issue_id."""
+    errs = provenance_shape_errors(ep)
+    if errs:
+        return errs
     injections, distractors = ep.provenance.get("injections", []), ep.provenance.get("distractors", [])
     if not isinstance(injections, list) or not isinstance(distractors, list):
         return ["injections and distractors must be lists"]
     invoice_ids, payment_ids = _document_ids(ep)
-    errs = []
     for inj in injections:
         errs += _injection_errors(inj, invoice_ids, payment_ids)
     for dis in distractors:
@@ -301,12 +351,23 @@ def check_provenance_structure(ep: Episode) -> list[str]:
     declared = sorted((str(t["issue_id"]), str(t["type"])) for t in ep.truth.get("issues", []))
     if injected != declared:
         errs.append(f"injections {injected} do not match truth issues {declared} by (issue_id, type)")
+    errs += _retarget_errors(injections, ep.truth.get("issues", []))
     return errs[:20]
 
 
 def check_roundtrip(ep: Episode, clean: Episode | None) -> list[str]:
     errs = check_provenance_structure(ep)
-    keys = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
+    if provenance_shape_errors(ep):
+        return errs
+    try:
+        return errs + _replay_errors(ep, clean)
+    except REPLAY_ERRORS as exc:
+        return errs + [f"provenance ops cannot be replayed on the published tables: {type(exc).__name__}: {exc}"]
+
+
+def _replay_errors(ep: Episode, clean: Episode | None) -> list[str]:
+    errs = []
+    keys = OP_KEYS
     ops = ep.provenance.get("ops", [])
     rec = reconstruct_clean(ep)
     if clean is not None:
@@ -354,20 +415,31 @@ def clean_episode_from(ep: Episode) -> Episode:
                    truth={"issues": []}, provenance={})
 
 
+def _clean_book_errors(ep: Episode, clean: Episode | None) -> list[str]:
+    """Anomalies or findings in the clean books; a failure when the clean books cannot be reconstructed."""
+    if clean is None and provenance_shape_errors(ep):
+        return ["clean books cannot be reconstructed: provenance is malformed"]
+    try:
+        clean_ep = clean if clean is not None else clean_episode_from(ep)
+        found = audit(clean_ep.manifest, clean_ep.policy, clean_ep.ledger, clean_ep.invoices, clean_ep.payments, clean_ep.fx)
+    except REPLAY_ERRORS as exc:
+        return [f"clean books cannot be reconstructed: {type(exc).__name__}: {exc}"]
+    return [f"clean books: {a}" for a in found["anomalies"][:10]] + [
+        f"clean books show {f['type']} on {f['affected_ids']}" for f in found["findings"][:10]]
+
+
 def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks = {}
     checks["records_schema"] = check_records_schema(ep)
     checks["ids_unique"] = check_ids(ep)
-    clean_ep = clean if clean is not None else clean_episode_from(ep)
-    clean_found = audit(clean_ep.manifest, clean_ep.policy, clean_ep.ledger, clean_ep.invoices, clean_ep.payments, clean_ep.fx)
-    checks["clean_equalities"] = [f"clean books: {a}" for a in clean_found["anomalies"][:10]] + [
-        f"clean books show {f['type']} on {f['affected_ids']}" for f in clean_found["findings"][:10]]
+    checks["clean_equalities"] = _clean_book_errors(ep, clean)
     checks["provenance_roundtrip"] = check_roundtrip(ep, clean)
     found = audit(ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx)
     checks["declared_discrepancies"] = compare_with_truth(found, ep.truth)
     checks["evidence_sufficient"] = check_evidence(ep)
     checks["budget_feasible"] = check_budget(ep)
-    checks["no_surface_tells"] = check_surface(ep, strict=clean is None)
+    checks["no_surface_tells"] = (["provenance is malformed, so the surface cannot be checked"]
+                                  if provenance_shape_errors(ep) else check_surface(ep, strict=clean is None))
     checks["no_leaks"] = check_leaks(ep)
     failures = [f"{name}: {msg}" for name, msgs in checks.items() for msg in msgs]
     return {

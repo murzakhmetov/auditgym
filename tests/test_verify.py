@@ -199,6 +199,93 @@ class DirectoryModeTests(unittest.TestCase):
             ep.provenance = prov
             self.assertTrue(check_provenance_structure(ep))
 
+    def _malformed_file_fails_cleanly(self, content):
+        self.prov_path.write_text(json.dumps(content), encoding="utf-8")
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual(r.stdout.count("PASS  ") + r.stdout.count("FAIL  "), 9, r.stdout)
+        self.assertIn("FAIL  provenance_roundtrip", r.stdout)
+
+    def test_provenance_that_is_a_list_fails_without_a_traceback(self):
+        self._malformed_file_fails_cleanly([])
+
+    def test_ops_that_are_not_a_list_fail_without_a_traceback(self):
+        self.prov["ops"] = "x"
+        self._malformed_file_fails_cleanly(self.prov)
+
+    def test_malformed_ops_fail_without_a_traceback(self):
+        for bad in ("text", {"op": "add"}, {"table": "ledger", "op": "set", "field": "x"},
+                    {"table": "ledger", "op": "remove"}, {"table": "nope", "op": "remove", "id": "x"},
+                    {"table": "ledger", "op": "set", "id": "NO-ROW", "field": "x", "before": 1, "after": 2}):
+            with self.subTest(op=bad):
+                prov = copy.deepcopy(self.prov)
+                prov["ops"].append(bad)
+                self._malformed_file_fails_cleanly(prov)
+
+    def _message_for(self, prov):
+        self.prov_path.write_text(json.dumps(prov), encoding="utf-8")
+        self._malformed_file_fails_cleanly(prov)
+        return json.dumps(verify_dir(self.dir)["checks"])
+
+    def test_op_rules_report_their_own_message_and_skip_the_replay(self):
+        row_id = load_episode(D08).ledger[0]["row_id"]
+        cases = [
+            ({"table": "ledger", "op": "add", "id": "GL-X"}, "add needs a record"),
+            ({"table": "ledger", "op": "set", "id": row_id}, "set needs a field"),
+            ({"table": ["ledger"], "op": "remove", "id": "x"}, "needs a known table"),
+            ({"table": {"a": 1}, "op": "remove", "id": "x"}, "needs a known table"),
+        ]
+        for bad, message in cases:
+            with self.subTest(op=bad):
+                prov = copy.deepcopy(self.prov)
+                prov["ops"].append(bad)
+                text = self._message_for(prov)
+                self.assertIn(message, text)
+                self.assertNotIn("cannot be replayed", text)
+                self.assertNotIn("cannot be reconstructed: ", text.replace("cannot be reconstructed: provenance is malformed", ""))
+
+    def test_ops_of_a_wrong_type_name_the_rule(self):
+        for bad in (5, {"a": 1}):
+            with self.subTest(ops=bad):
+                prov = copy.deepcopy(self.prov)
+                prov["ops"] = bad
+                self.assertIn("provenance.ops must be a list", self._message_for(prov))
+
+    def test_unhashable_issue_ids_fail_without_a_traceback(self):
+        for bad in (["iss_01"], {"a": 1}):
+            with self.subTest(issue_id=bad):
+                prov = copy.deepcopy(self.prov)
+                prov["injections"][0]["issue_id"] = bad
+                self._malformed_file_fails_cleanly(prov)
+        # on the answer-key side the load boundary rejects it first: bad input, one error line, exit 2
+        truth_path = self.dir / "grader" / "truth.json"
+        truth = json.loads(truth_path.read_text(encoding="utf-8"))
+        truth["issues"][0]["issue_id"] = ["iss_01"]
+        truth_path.write_text(json.dumps(truth), encoding="utf-8")
+        self.prov_path.write_text(json.dumps(self.prov), encoding="utf-8")
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual([ln for ln in r.stderr.splitlines() if ln.strip()][0][:6], "error:")
+        self.assertIn("truth.json", r.stderr)
+
+    def test_injection_missing_one_of_two_targets_fails(self):
+        inj = next(i for i in self.prov["injections"] if len(i["targets"]) == 2)
+        del inj["targets"]["invoice"]
+        self.assertIn("differ from the affected_ids", self._message_for(self.prov))
+
+    def test_retargeted_injection_fails(self):
+        target = self.prov["injections"][0]["targets"]
+        role = next(iter(target))
+        other = next(d["invoice_id"] for d in load_episode(D08).invoices if d["invoice_id"] != target[role])
+        target[role] = other
+        self.save()
+        r = run_verify(self.dir)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("FAIL  provenance_roundtrip", r.stdout)
+        self.assertIn("differ from the affected_ids", json.dumps(verify_dir(self.dir)["checks"]))
+
 
 class TransformedEpisodeTests(unittest.TestCase):
     def test_transformed_episodes_verify_in_directory_mode(self):
