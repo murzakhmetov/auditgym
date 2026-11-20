@@ -14,7 +14,8 @@ import sys
 
 KEEP = re.compile(
     r"(summary: A_unit_tests|^PASS in \d+ s|^FAIL|^real\t|^##\[group\]Run (docker|python -m auditgym check|time docker)"
-    r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED)"
+    r"|^auditgym:\d|^auditgym:latest|warning: policy runs|\(tests\.test_container\.|^Ran \d+ tests|^OK|^FAILED"
+    r"|^error: AUDITGYM_REQUIRE_AGENT_USER|^exit code \d+)"
 )
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 

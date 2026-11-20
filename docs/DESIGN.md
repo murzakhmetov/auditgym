@@ -89,8 +89,16 @@ weekends. Correctly booked receipts, disbursements and invoices are placed at th
 midnight in the same windows as the boundary errors. Duplicates and legitimate repeats share the same terms
 (14/30/45 days) and payment-status distribution. Clean ledgers never overdraw the bank.
 FX targets still never fall on a weekend or an FX holiday, because a same-day rate is required.
-`tests/test_tells.py` measures 30 one-feature rules and 5 episode-level rules on the 20 open episodes; no measured
-rule is both selective and useful. The limits are in its docstring.
+`python -m auditgym.tells --n 1000 --master auditgym-tells-v1 --out runs/tells` measures 36 document rules and 5
+episode-level rules on 1000 generated episodes (750 with errors; 3799 of 141 479 documents affected, a base rate of
+0.027) and writes `runs/tells/summary.md` and `summary.json`, byte-identical across runs (about 160 s). The best
+document rules are about eight times the base rate and look for twin invoices ("paid twin invoice": precision 0.231 at
+recall 0.079; "invoice with a twin": 0.218 at recall 0.291): a twin is where a duplicate must be looked for, and about
+four in five twin invoices are not in the answer key. The episode rules that fire stay within 0.03 of their base rate (0.753 and
+0.770 against 0.750). The largest foreign purchase is the FX target in 17 of 180 eligible episodes (0.094, chance
+0.103). `tests/test_tells.py` asserts the same thresholds on the 20 committed episodes (33 document rules, 5 episode
+rules); on 100 generated episodes it asserts the window-by-kind and window-count rules, which the CLI does not measure,
+and it smoke-runs the CLI over the 36 rule names.
 
 Guards: injected monetary differences are at least 100 minor units (50 times the tolerance); FX targets fall
 on dates with a published rate; unallocated targets are single-reference receipts with no other receipt on the
@@ -194,6 +202,15 @@ neither read the package, seeds files or grader outputs nor write to the code; t
 the different uid (other-uid `/proc/<pid>/environ` needs CAP_SYS_PTRACE). `tests/test_container.py` runs inside the image
 in CI and must not skip; `--user 10001` and `--cap-drop ALL` fall back to a same-user child with one warning and still
 pass. Only `PermissionError` falls back; any other start failure is an agent error, so the fallback cannot hide a fault.
+Once a switch has worked in a process, a refused `chown` or `setuid` is an error, never a silent start as root; a host
+whose `/proc` cannot be listed never switches, because `kill_uid` could not see the agent's processes.
+
+Strict mode (opt-in): with `AUDITGYM_REQUIRE_AGENT_USER=1` the fallback is an error (`AgentUserRequired`, not an
+`OSError`, so it is never graded as an agent error). `check`, `run` (when it starts a child), `demo`, `viewer` and
+`budget` start and stop one policy child first and exit 2 with one `error:` line before the first episode and before
+any report. The image does not set it: a runner that adds `--user` or drops capabilities must still pass. CI runs the
+check and the container tests in strict mode in the default image (none skipped), and checks that strict mode with
+`--cap-drop ALL` exits 2 with exactly one line.
 
 ## 6. Matcher and reward
 
@@ -255,35 +272,57 @@ twin's row order.
 
 ## 8. Reproducibility and paired checks
 
-`transform.py` permutes rows, remaps every ID consistently in records, answer key and provenance, and rewrites
-timestamps as the same instants in another offset. Issue numbering, affected-ID order and evidence order follow
+`transform.py` permutes rows, remaps every ID consistently in records, answer key and provenance, rewrites
+timestamps as the same instants in another offset, and (`rename_seed`) replaces the company name and every invoice line
+description with synthetic wording from a seeded injective mapping, in records and provenance, keeping reference tokens
+such as `SUB-2025-05-6014`. Counterparties appear in the public records only as entity IDs, which the remap replaces. Issue numbering, affected-ID order and evidence order follow
 content roles, not ID strings, so the oracle answer maps one to one.
 
 The official check (`python -m auditgym check`) groups its named checks in the five rubric groups of `RUBRIC` in
 `auditgym/check.py`. The section keys in `runs/check/report.json` are stable; the grouping is presentation only.
 Sections:
 
-- `E_leaks`: every observation of the recorded runs holds only the allowed fields; no answer-key marker; oracle
-  trajectories are never published.
+- `F_contract`: 20 named contract checks in process on one hidden-like episode (`contract_battery.py`): reset and
+  observation keys, 50-row pages, record keys in order, the same cursor twice and again after a fresh reset, unknown ID
+  and action, calculator limits, submit and finished episodes, truncation at step 100 and not before, a frozen-clock
+  time limit, eval hiding the reward, -1 for invalid and foreign submissions, the observation schema, and a 300-action
+  seeded fuzz with a reset at every episode end. Every group runs inside `try`, so a crash is a failed row.
+- `E_leaks`: the observations of this run's hidden-like baselines (2219) hold only the allowed fields and no
+  answer-key marker; oracle trajectories are never published.
 - `B_committed_episodes`: each committed episode regenerates byte for byte from its seed and config and verifies.
-- `B_replay`: recorded actions from `runs/train_dev/trajectories.jsonl`, for each split and policy, replay in a fresh
-  environment with JSON-equal observations and the same terminal reward.
+- `B_replay`: recorded actions from `runs/train_dev/trajectories.jsonl`, for each split and policy (10 groups, the
+  silent baseline included), replay in a fresh environment with JSON-equal observations and the same terminal reward.
 - `C_data`: the hidden-like episodes verify; resampling rates are measured.
 - `C_reward`: reward properties on every episode. On every error episode an attack battery runs: a type shotgun
   (one finding under each type), an amount ladder (neighbouring amounts), junk padding (the reward equals
   `clip(2F1 − 1)` exactly and stays below the answer alone), evidence stuffing (a true positive, by the published
-  rule) and a right amount with the ID of an unrelated real invoice (not a true positive). On every clean episode, a
-  false accusation of each of the four types scores exactly −1 and falls below silence.
+  rule) and a right amount with the ID of an unrelated real invoice (not a true positive). Every distractor in the
+  grader's provenance also becomes the most plausible false finding, built from the real records by the published
+  rules: base currency, the posted base amount of the key row, the documents and rows the rules require, and for FX the
+  neighbouring published date's rate. On an error episode it costs exactly one false positive when added to the oracle
+  answer and matches no issue alone (an accusation that names only the records of an injected error is left out,
+  and the line is SKIP only when every accusation of that kind is left out); on a clean episode it
+  scores −1, below silence. Each such accusation must also match a decoy key that states exactly its claim and no
+  decoy that differs in one criterion (type, IDs, currency, amount beyond tolerance, evidence), so a matcher that
+  ignores any one criterion fails. `tests/test_check_battery.py` shows that the same constructors give true positives
+  on the records of real issues. The baselines include `silent` (submits nothing at once); the check asserts
+  auditor > silent.
 - `D_paired`: same seed and config regenerate identical records and answer key; the same actions reproduce identical
   transitions (random explorer); isolated child and in-process runs agree; transforms (permutation, remap, timestamp
-  representation) keep the oracle answer and reward, and the auditor matches the same (issue, amount) pairs.
-- `A_unit_tests`: the whole unit suite (`unittest discover`), reported as one check.
+  representation, renaming) keep the oracle answer and reward, and the auditor matches the same (issue, amount) pairs
+  (93 checks).
+- `A_unit_tests`: the whole unit suite (`unittest discover`), reported as one check with run, passed and skipped
+  counts.
+
+The report header states the coverage (615 named checks of 78 kinds; a kind is one property, and most run on every
+episode they apply to) and whether the policy child ran as a separate user.
 
 Unit tests rerun generation under two `PYTHONHASHSEED` values (`tests/test_generator.py`), and the committed schema
 files must stay byte-equal to the generated ones (`tests/test_contract_fuzz.py`, test_committed_schema_files_equal_generated_ones).
 
-Closed runs: `python -m auditgym check --seeds-file FILE --secret-env VAR --out DIR` runs sections C, D and E and the
-replay of its own runs on the organizer's episodes. Checks that need error or clean episodes missing from the file are
+Closed runs: `python -m auditgym check --seeds-file FILE --secret-env VAR --out DIR` runs sections C, D, E and F and
+the replay of its own runs on the organizer's episodes, and warns about seeds of 40 bits or fewer when no secret is
+set. Checks that need error or clean episodes missing from the file are
 reported as SKIP. It writes `runs/check_closed` by default, never `runs/check`.
 
 ## 9. Measured results
@@ -299,6 +338,10 @@ Hidden-like set (20 episodes from the public master string `auditgym-check-v1`, 
 | oracle (grader-side) | 1.000 | 1.000 | 1.00 | 1.00 | 0.0 | 1.00 | 0 |
 | scripted auditor (verifier code) | 0.936 | 1.000 | 1.00 | 1.00 | 32.0 | 1.00 | 0 |
 | recon (simple reconciliation) | −0.589 | 0.231 | 0.16 | 0.75 | 32.0 | 0.00 | 40 |
+| silent (submits nothing at once) | −0.500 | 0.250 | n/a | 0.00 | 0.0 | 0.25 | 0 |
+
+The empty answer scores −0.500: +1 on the 5 clean episodes and −1 on the 15 error episodes. Recon and the random
+explorer score below it; only the scripted auditor and the oracle beat it.
 
 Recon's misses on this set are all `not_flagged`: its recall is 0.6 on FX and 0.625 on period errors, and it is 1.0 on
 duplicates and unallocated receipts. Recon's return fell after the data shortcuts were removed (commit `a94d9b9`,
@@ -307,7 +350,8 @@ against the current file), and the hidden-like set −0.490 → −0.589 (`git s
 scripted auditor barely moved (dev 0.947 → 0.943). The cause has not been isolated; the same change also altered the
 distractor mix.
 
-Open splits: scripted auditor return 0.971 (train) and 0.943 (dev); recon −0.690 and −0.689. On dev, recon misses are
+Open splits: scripted auditor return 0.971 (train) and 0.943 (dev); recon −0.690 and −0.689; silent −0.400 and
+−0.600. On dev, recon misses are
 `not_flagged` (FX recall 0.22, period recall 0.25). Macro P and R count clean episodes as 0, so the oracle sits at 0.7
 (train) and 0.8 (dev); micro P and R are the figures to read.
 
@@ -351,9 +395,12 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 - **Unallocated payment evidence.** The three-record evidence set relies on a generator guarantee: the receipt references
   a single invoice, and no other receipt is booked against that invoice. The cited records cannot show this; an agent can
   confirm it only by reading all payments.
-- **Residual public tells.** Two tells from the answer-key audit are weaker but not gone: the largest foreign purchase can
-  be the FX target, and off-hours payments are no longer only boundary receipts. The measurements behind this ran outside
-  the repository, so no command here reproduces them, and neither is a selective rule on its own.
+- **Shortcut tells** are measured only for the rules written down in `auditgym/tells.py` (section 3). A feature nobody
+  listed may still leak.
+- **Evidence padding.** Extra evidence IDs up to the 10-ID cap are free (published superset rule); the battery checks
+  that padding stays a true positive and does not penalize it.
+- **Paired transforms** cover row order, ID remap, timestamp representation and renaming. There is no date shift:
+  period boundaries, FX dates and time-zone rules would have to move together.
 - **Accounting model.** Deliberately small: base-currency ledger, payments in the invoice currency, no taxes, credit
   notes or cross-currency settlement, eleven built-in time zones instead of the IANA database.
 - **flag_all** is a format-level attack. Smarter attacks are covered by the reward battery in `check` (section 8).
@@ -371,7 +418,7 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 | Requirement (case section 05) | Test or check |
 |---|---|
 | correct answer with evidence beats silence on erroneous ledgers | `tests/test_reward.py` RewardPropertyTests; check `C_reward` (live episodes) |
-| silence beats false accusations on clean ledgers | `test_reward.py`; `tests/test_env.py` test_empty_answer_on_clean_episode_is_rewarded; check `C_reward` |
+| silence beats false accusations on clean ledgers | `test_reward.py`; `tests/test_env.py` test_empty_answer_on_clean_episode_is_rewarded; check `C_reward` (one accusation per distractor, built from the real records; one check line per kind) |
 | duplicates gain nothing | `test_reward.py` test_duplicates_gain_nothing; `tests/test_matcher.py` test_repeated_finding_is_false_positive |
 | flagging every row or type scores poorly | `test_reward.py` test_flag_everything_scores_poorly; check `C_reward`: flag_all mean return <= -0.9 |
 | saving steps only slightly separates equal answers | `test_reward.py` test_saving_steps_only_slightly_separates_equal_answers; check `C_reward` |
@@ -382,7 +429,9 @@ Also listed in [README.md](../README.md#limitations) and mirrored in [README.ru.
 | invalid input | `tests/test_matcher.py` test_invalid_structures; `tests/test_env.py` test_invalid_submission_ends_with_minus_one, test_errors_are_bounded_and_consume_a_step; `tests/test_calculator.py`; `tests/test_contract_fuzz.py` |
 | timeouts | `tests/test_env.py` test_time_limit_truncates, test_step_limit_truncates_with_empty_answer; `tests/test_isolation.py` test_agent_that_stalls_is_truncated |
 | hostile policy processes | `tests/test_redteam.py`; `tests/test_noninterference.py`; `python -m auditgym.redteam` |
-| shortcut tells | `tests/test_tells.py`; check `C_data` |
+| shortcut tells | `python -m auditgym.tells` ([runs/tells/summary.md](../runs/tells/summary.md)); `tests/test_tells.py` |
+| contract: reset/step, schemas, limits, termination, invalid input, leaks | check `F_contract` (20 named checks) and `E_leaks`; `tests/test_contract_battery.py`, `tests/test_contract_fuzz.py` |
+| attacking answers | check `C_reward` battery with decoy keys; `tests/test_check_battery.py` |
 
 ## 12. Viewer
 
@@ -405,20 +454,24 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   `schemas`; then a replay of the open splits, followed by `git diff` on `runs/train_dev/trajectories.jsonl`. The
   check report is uploaded as an artifact.
 - Job `docker` on `ubuntu-latest`: `docker build -t auditgym .` (base `python:3.11.10-slim-bookworm`), `docker image ls`,
-  then `time docker run --rm --network none --cpus 2 --memory 4g --pids-limit 512 auditgym`; then
+  then `time docker run --network none --cpus 2 --memory 4g --pids-limit 512 auditgym` (the container is kept so that
+  `runs/check/unittest.log` and `report.md` can be copied out, printed on failure and uploaded); then
   `tests.test_container` and `tests.test_redteam` inside the image, failing if any container test is skipped; then the
-  check and `tests.test_container` again with `--user 10001` and with `--cap-drop ALL` (fallback to the host user).
+  check and `tests.test_container` again with `--user 10001` and with `--cap-drop ALL` (fallback to the host user);
+  then strict mode (`-e AUDITGYM_REQUIRE_AGENT_USER=1`) in the default image, where the check must pass and no container
+  test may be skipped, and with `--cap-drop ALL`, where the run must exit 2 with exactly one `error:` line. The
+  container logs are uploaded as artifacts.
 
-Latest completed run on `main` at the time of writing: run 44642027342, commit `99b7b6632a9d8b89a224c3b8ddf1756ad18463d5`
-(`Docs honesty pass (P2), container text after P9, grade coerces integral floats`), conclusion success. The lines
-cited here are kept in [runs/ci/44642027342.txt](../runs/ci/44642027342.txt):
+Latest completed run on `main` at the time of writing: run 44656432334, commit `af2fc47428dfbd9ebbee384c5b4c54d33ae95119`
+(`test_container: a regex word boundary, not a backspace byte`), conclusion success. The lines cited here are kept in
+[runs/ci/44656432334.txt](../runs/ci/44656432334.txt):
 
 | Job | Result | Time reported by the job |
 |---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | `PASS in 43 s` |
-| check (windows-latest, Python 3.11) | success | `PASS in 58 s` |
-| check (macos-latest, Python 3.11) | success | `PASS in 37 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 233 MB | `PASS in 38 s`; `time` reports 39.5 s; container tests: 8 ran, none skipped; `--user 10001` and `--cap-drop ALL`: `PASS in 37 s` and `PASS in 38 s`, `OK (skipped=7)` |
+| check (ubuntu-latest, Python 3.11) | success | `PASS in 48 s` |
+| check (windows-latest, Python 3.11) | success | `PASS in 41 s` |
+| check (macos-latest, Python 3.11) | success | `PASS in 36 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 234 MB | `PASS in 67 s`; `time` reports 68.2 s; container tests: 9 ran, none skipped; `--user 10001` and `--cap-drop ALL`: `PASS in 63 s` and `PASS in 64 s`, `OK (skipped=8)`; strict mode: `PASS in 67 s` and 9 container tests `OK`; strict mode with `--cap-drop ALL`: `exit code 2`, one `error:` line |
 
 No CI run has been executed on Python 3.12 or 3.13. The container job runs the image's default command, which is
 `python -m auditgym check`.
