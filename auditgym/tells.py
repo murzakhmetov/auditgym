@@ -9,6 +9,15 @@ generates N episodes from a public master string with the check-set config mix (
 batch of 20 per derived master), measures every document rule, the residual tells (largest foreign purchase,
 off-hours payment) and the episode-level rules, and writes summary.md and summary.json. The files hold no
 timings and are byte-identical across runs; the elapsed time goes to stdout only.
+
+Line-identical pairs. Decoys (legit_repeat) and the sources of duplicate_invoice errors are drawn by one builder and
+a duplicate is a converted pair, so a pair is a duplicate with the same chance whatever its side, shape (the two
+invoices carry one instant, or the second is keyed 2 to 9 days later), currency, price, item, terms or payment status.
+The rules on pairs (a twin by side, a later line-identical repeat by side, the later member, a foreign-currency pair, a
+pair under 300 USD, a subscription item, an earlier member that was paid, a member posted off its issued_at) measure
+that; the old generator failed them (a subscription item and a 300 USD floor only on duplicates, a purchase-only pool).
+The CLI adds two kinds of rules that need many episodes (PAIR_COUNT_RULES: the number of pairs of an episode against its
+size and the number of pairs against the duplicate count) and the table of pairs and duplicates by side and shape.
 """
 
 from __future__ import annotations
@@ -32,6 +41,8 @@ BATCH = 20
 
 SPEC_PRECISION, SPEC_RECALL = 0.5, 0.3
 STRONG_PRECISION, STRONG_HITS = 0.8, 3
+
+PAIR_MAX_GAP = timedelta(days=10)  # two line-identical invoices further apart are not a pair (2 to 9 days later, plus hours)
 
 SALES = {d: (p, q) for d, p, q in catalog.SALES_ITEMS}
 PURCHASES = [(t.split("{")[0].strip(), p) for t, p, _ in catalog.PURCHASE_ITEMS]
@@ -71,12 +82,69 @@ class Ctx:
             self.docs[p["payment_id"]] = ("payment", p, parse_ts(p["timestamp"]))
         self.paid = {r for p in ep.payments for r in (p["invoice_refs"] or [])}
         self.acct2900 = {r["payment_id"] for r in ep.ledger if r["account"] == "2900" and r["payment_id"]}
+        self.rows2900 = sum(1 for r in ep.ledger if r["account"] == "2900")
+        self.has1100 = {r["payment_id"] for r in ep.ledger if r["account"] == "1100" and r["payment_id"]}
+        self.pay_count = defaultdict(int)  # invoice id -> number of payments that list it
+        self.receipt_count = defaultdict(int)  # invoice id -> number of receipts that list it
+        for p in ep.payments:
+            for r in set(p["invoice_refs"] or []):
+                self.pay_count[r] += 1
+                self.receipt_count[r] += p["kind"] == "receipt"
+        self.opening = {r["invoice_id"] for r in ep.ledger if r["account"] == "3900" and r["invoice_id"]}  # carried in at period start
+        self.received = defaultdict(int)  # invoice id -> sum of the receipts that list only it
+        for p in ep.payments:
+            if p["kind"] == "receipt" and p["invoice_refs"] and len(p["invoice_refs"]) == 1:
+                self.received[p["invoice_refs"][0]] += p["amount_minor"]
         self.local_cache = {}
         by_key = defaultdict(list)
+        by_lines = defaultdict(list)
         for inv in ep.invoices:
             by_key[(inv["kind"], inv["entity_id"], inv["currency"], inv["total_minor"], parse_ts(inv["issued_at"]))].append(inv["invoice_id"])
+            lines = tuple((li["description"].replace(li["ref"], "").strip(), li["quantity"], li["unit_price_minor"], li["amount_minor"])
+                          for li in inv["line_items"])
+            by_lines[(inv["kind"], inv["entity_id"], inv["currency"], inv["total_minor"], lines)].append(inv["invoice_id"])
         self.twins = {i for ids in by_key.values() if len(ids) > 1 for i in ids}
         by_id = {i["invoice_id"]: i for i in ep.invoices}
+        # line-identical pairs (references ignored: the one in a purchase description is stripped), the two invoices at most
+        # PAIR_MAX_GAP apart (recurring subscription invoices are 20 or more days apart), ordered by instant and id
+        self.pairs = []
+        self.pair_shape = {}  # frozenset of the two ids -> "same" (one instant) or "later"
+        for group in by_lines.values():
+            if len(group) < 2:
+                continue
+            group = sorted(group, key=lambda i: (parse_ts(by_id[i]["issued_at"]), i))
+            n = 0
+            while n + 1 < len(group):  # neighbours at most PAIR_MAX_GAP apart; an ordinary invoice of the same price far away does not hide the pair
+                ids = group[n:n + 2]
+                t0, t1 = (parse_ts(by_id[i]["issued_at"]) for i in ids)
+                if t1 - t0 > PAIR_MAX_GAP:
+                    n += 1
+                    continue
+                self.pairs.append(ids)
+                self.pair_shape[frozenset(ids)] = "same" if t0 == t1 else "later"
+                n += 2
+        self.pair_members = {i for ids in self.pairs for i in ids}
+        self.pair_later = {ids[1] for ids in self.pairs if self.pair_shape[frozenset(ids)] == "later"}
+        self.pair_earlier_of_later = {ids[0] for ids in self.pairs if self.pair_shape[frozenset(ids)] == "later"}
+        self.pair_earlier_paid = {i for ids in self.pairs if ids[0] in self.paid for i in ids}  # both members of such a pair
+        own_posting = defaultdict(set)  # invoice_id -> instants of its own posting rows (no payment)
+        for r in ep.ledger:
+            if r["invoice_id"] and not r["payment_id"]:
+                own_posting[r["invoice_id"]].add(parse_ts(r["timestamp"]))
+        self.off_posting = {i for i in self.pair_members if own_posting[i] - {parse_ts(by_id[i]["issued_at"])}}
+        # posting lag: the instant of a document's own posting rows minus the document's instant. Opening items (carried in at
+        # period start against 3900) and documents without a posting have none.
+        inv_rows, pay_rows = defaultdict(list), defaultdict(list)
+        for r in ep.ledger:
+            if r["payment_id"]:
+                pay_rows[r["payment_id"]].append(r)
+            elif r["invoice_id"]:
+                inv_rows[r["invoice_id"]].append(r)
+        self.lag = {}
+        for i, (kind, _rec, inst) in self.docs.items():
+            rows = inv_rows[i] if kind == "invoice" else pay_rows[i]
+            if rows and not any(r["account"] == "3900" for r in rows):
+                self.lag[i] = parse_ts(rows[0]["timestamp"]) - inst
         self.odd_terms_pair = {i for ids in by_key.values() if len(ids) > 1 and any(self.terms(by_id[x]) != 30 for x in ids) for i in ids}
         self.paid_or_odd_pair = {i for ids in by_key.values() if len(ids) > 1
                                  and (any(self.terms(by_id[x]) != 30 for x in ids) or any(x in self.paid for x in ids))
@@ -151,6 +219,97 @@ def _boundary_window(c, i, kinds=None):
     return (kinds is None or label in kinds) and in_error_window(inst, c.p1, c.sched)
 
 
+def _pair_side(c, i, side):
+    return i in c.twins and c.docs[i][1]["kind"] == side
+
+
+def _pair_usd(c, i):
+    rec = c.docs[i][1]
+    return usd(rec["total_minor"], rec["currency"])
+
+
+def _subscription(c, i):
+    return any(li["ref"].startswith("SUB-") for li in c.docs[i][1]["line_items"])
+
+
+def _lag(c, i) -> timedelta:
+    return c.lag.get(i, timedelta(0))
+
+
+def _lag_is_offset(c, i) -> bool:
+    lag = _lag(c, i)
+    return lag != timedelta(0) and lag == -timedelta(minutes=c.sched.offset_at(c.docs[i][2]))
+
+
+def _lag_date_change_foreign(c, i) -> bool:
+    kind, rec, inst = c.docs[i]
+    return (_lag(c, i) != timedelta(0) and rec["currency"] != c.base
+            and c.local(inst + _lag(c, i)).date() != c.local(inst).date())
+
+
+def _credit_on_single_payment(c, i) -> bool:
+    """A payment with a 2900 row whose invoice has exactly one payment (the only one)."""
+    refs = c.docs[i][1].get("invoice_refs") if c.docs[i][0] == "payment" else None
+    return i in c.acct2900 and bool(refs) and c.pay_count[refs[0]] == 1
+
+
+def _credit_within_invoice(c, i) -> bool:
+    """... and the payment is not larger than the invoice total (no overpayment explains the 2900 row)."""
+    if not _credit_on_single_payment(c, i):
+        return False
+    rec = c.docs[i][1]
+    inv = c.docs.get(rec["invoice_refs"][0])
+    return inv is not None and inv[0] == "invoice" and rec["amount_minor"] <= inv[1]["total_minor"]
+
+
+def _relieved_and_credited_with_another_receipt(c, i) -> bool:
+    """A receipt with a 1100 row and a 2900 row whose invoice another receipt also lists (a part-paid invoice)."""
+    kind, rec, _ = c.docs[i]
+    if kind != "payment" or rec["kind"] != "receipt" or not rec["invoice_refs"] or i not in c.acct2900 or i not in c.has1100:
+        return False
+    return any(c.receipt_count[r] > 1 for r in rec["invoice_refs"])
+
+
+def _receipt_without_relief(c, i) -> bool:
+    """A receipt with invoice references and no 1100 row (nothing relieved a receivable)."""
+    kind, rec, _ = c.docs[i]
+    return kind == "payment" and rec["kind"] == "receipt" and bool(rec["invoice_refs"]) and i not in c.has1100
+
+
+def _credit_receipt_refs(c, i) -> list:
+    """The invoices listed by a receipt with a 2900 row (empty for anything else)."""
+    kind, rec, _ = c.docs[i]
+    if kind != "payment" or rec["kind"] != "receipt" or i not in c.acct2900:
+        return []
+    return [r for r in rec["invoice_refs"] or [] if r in c.docs and c.docs[r][0] == "invoice"]
+
+
+def _day_of_period(c, inv_id) -> int:
+    """Local calendar days from the first day of the period to the invoice's local date (negative for an opening item)."""
+    return (c.local(c.docs[inv_id][2]).date() - c.local(c.p0).date()).days
+
+
+def _credit_on_opening_item(c, i) -> bool:
+    """A receipt with a 2900 row that lists an opening-item invoice (one carried in at period start against 3900)."""
+    return any(r in c.opening for r in _credit_receipt_refs(c, i))
+
+
+def _credit_after_invoice_off_days(c, i) -> bool:
+    """A receipt with a 2900 row dated after its invoice, the invoice not issued on days 0 to 10 of the period."""
+    return any(c.docs[i][2] > c.docs[r][2] and not 0 <= _day_of_period(c, r) <= 10 for r in _credit_receipt_refs(c, i))
+
+
+def _part_paid_invoice(c, i) -> bool:
+    """A sales invoice with two or more receipts that sum to less than its total."""
+    kind, rec, _ = c.docs[i]
+    return kind == "invoice" and rec["kind"] == "sales" and c.receipt_count[i] >= 2 and c.received[i] < rec["total_minor"]
+
+
+def _over_received_sales(c) -> int:
+    """Sales invoices whose receipts sum to more than the invoice total."""
+    return sum(1 for i, (k, rec, _t) in c.docs.items() if k == "invoice" and rec["kind"] == "sales" and c.received[i] > rec["total_minor"])
+
+
 def _round_amount(c, i):
     kind, rec, _ = c.docs[i]
     amount = rec["total_minor"] if kind == "invoice" else rec["amount_minor"]
@@ -183,6 +342,17 @@ RULES = {
     "unpaid twin invoice": lambda c, i: i in c.twins and i not in c.paid,
     "paid twin invoice": lambda c, i: i in c.twins and i in c.paid,
     "invoice with a twin": lambda c, i: i in c.twins,
+    "sales invoice with a twin": lambda c, i: _pair_side(c, i, "sales"),
+    "purchase invoice with a twin": lambda c, i: _pair_side(c, i, "purchase"),
+    "invoice with a later line-identical repeat (2 to 10 days)": lambda c, i: i in c.pair_earlier_of_later,
+    "sales invoice with a later line-identical repeat": lambda c, i: i in c.pair_earlier_of_later and c.docs[i][1]["kind"] == "sales",
+    "purchase invoice with a later line-identical repeat": lambda c, i: i in c.pair_earlier_of_later and c.docs[i][1]["kind"] == "purchase",
+    "later member of a line-identical pair": lambda c, i: i in c.pair_later,
+    "line-identical pair in a foreign currency": lambda c, i: i in c.pair_members and c.docs[i][1]["currency"] != c.base,
+    "line-identical pair under 300 USD": lambda c, i: i in c.pair_members and _pair_usd(c, i) < 300,
+    "same-instant pair of a subscription item": lambda c, i: i in c.pair_members and _subscription(c, i),
+    "line-identical pair, earlier member paid": lambda c, i: i in c.pair_earlier_paid,
+    "line-identical pair member posted off its issued_at": lambda c, i: i in c.off_posting,
     "same-instant pair with terms != 30": lambda c, i: i in c.odd_terms_pair,
     "same-instant pair, terms != 30 or one copy paid": lambda c, i: i in c.paid_or_odd_pair,
     "sales invoice in the error window": lambda c, i: _boundary_window(c, i, ("sales",)) and _inv(c, i),
@@ -192,7 +362,22 @@ RULES = {
     "document on an FX holiday": lambda c, i: c.local(c.docs[i][2]).date().isoformat() in c.holidays,
     "payment with a 2900 row": lambda c, i: i in c.acct2900,
     "payment with a 2900 row and invoice refs": lambda c, i: i in c.acct2900 and bool(c.docs[i][1]["invoice_refs"]),
+    "payment with a 2900 row on an invoice that has no other payment": _credit_on_single_payment,
+    "... and the payment is at most the invoice total": _credit_within_invoice,
+    "receipt with invoice references and no 1100 row": _receipt_without_relief,
+    "receipt with a 1100 row and a 2900 row on an invoice that another receipt also lists": _relieved_and_credited_with_another_receipt,
+    "receipt with a 2900 row on an opening-item invoice": _credit_on_opening_item,
+    "receipt with a 2900 row dated after its invoice, the invoice not issued on days 0 to 10 of the period": _credit_after_invoice_off_days,
+    "sales invoice with two or more receipts that sum to less than its total": _part_paid_invoice,
     "round amount": _round_amount,
+    # posting lag: a posting is booked at its own moment inside the document's period (policy posting_rules.posting_timestamp),
+    # so another instant is ordinary; only a crossing of the period boundary is an error
+    "posting row at a different instant than its document": lambda c, i: _lag(c, i) != timedelta(0),
+    "posted later than its document": lambda c, i: _lag(c, i) > timedelta(0),
+    "posted earlier than its document": lambda c, i: _lag(c, i) < timedelta(0),
+    "lag equals the zone offset": _lag_is_offset,
+    "lag of less than one hour": lambda c, i: timedelta(0) < abs(_lag(c, i)) < timedelta(hours=1),
+    "lag across a date change on a foreign-currency document": _lag_date_change_foreign,
 }
 
 
@@ -202,16 +387,73 @@ def _count(c, pred):
 
 # episode-level rules: (label predicted, predicate). "error" rules need exactly-perfect precision with 3 episodes,
 # "clean" rules precision >= 0.9 with 2 episodes (only 5 of the 20 episodes are clean)
+def _all_local_offset(c) -> bool:
+    """Public text only: no ledger timestamp is written as UTC and at most two distinct offsets appear (the local one and
+    its other side of a clock change)."""
+    texts = [r["timestamp"] for r in c.ep.ledger]
+    if not texts or any(t.endswith("Z") or t.endswith("+00:00") for t in texts):
+        return False
+    return len({t[-6:] for t in texts}) <= 2
+
+
+def _size_max_lags(c) -> int:
+    """The largest default posting_lag count of the episode's size, read off the ledger size (a public number)."""
+    rows = len(c.ep.ledger)
+    return 22 if rows < 500 else (38 if rows < 1250 else 50)
+
+
+def _differing_postings(c) -> int:
+    return sum(1 for v in c.lag.values() if v != timedelta(0))
+
+
+def _unexplained_2900(c) -> int:
+    """Rows on 2900 that no refund (a credit row and a relief row) and no receipt without invoice references explains."""
+    refunds = _count(c, lambda p: p["kind"] == "refund")
+    nulls = _count(c, lambda p: p["kind"] == "receipt" and not p["invoice_refs"])
+    return c.rows2900 - 2 * refunds - nulls
+
+
 EPISODE_RULES = {
     "any quantity/price outside catalogue -> error": ("error", lambda c: any(outside_catalogue(i) for i in c.ep.invoices)),
     "any off-hours payment on a boundary day -> error": ("error", lambda c: any(
         k == "payment" and _boundary_day(c, i) and _off_hours(c, i) for i, (k, _r, _t) in c.docs.items())),
     "any same-instant pair with terms != 30 -> error": ("error", lambda c: bool(c.odd_terms_pair)),
+    "any posting at a different instant than its document -> error": ("error", lambda c: any(v != timedelta(0) for v in c.lag.values())),
+    "more postings at another instant than the size's largest default lag count -> error": ("error", lambda c: _differing_postings(c) > _size_max_lags(c)),
+    "at most 5 documents posted later than their timestamp -> clean": ("clean", lambda c: sum(1 for v in c.lag.values() if v > timedelta(0)) <= 5),
+    "8 or more ledger rows on account 2900 -> error": ("error", lambda c: c.rows2900 >= 8),
+    "2900 rows beyond twice the refunds plus the null-ref receipts -> error": ("error", lambda c: _unexplained_2900(c) > 0),
+    "any receipt with a 2900 row lists an opening-item invoice -> error": ("error", lambda c: any(_credit_on_opening_item(c, i) for i in c.docs)),
+    "any receipt with a 2900 row dated after an invoice not issued on days 0 to 10 -> error": ("error", lambda c: any(
+        _credit_after_invoice_off_days(c, i) for i in c.docs)),
+    "any sales invoice with two or more receipts below its total -> error": ("error", lambda c: any(_part_paid_invoice(c, i) for i in c.docs)),
+    "at most 3 sales invoices whose receipts sum above their total -> error": ("error", lambda c: _over_received_sales(c) <= 3),
+    "at most 0.64 payments per invoice -> error": ("error", lambda c: len(c.ep.payments) <= 0.64 * len(c.ep.invoices)),
+    "122 or more invoices -> error": ("error", lambda c: len(c.ep.invoices) >= 122),
+    "every ledger timestamp in the local offset (no UTC, <= 2 offsets) -> clean": ("clean", _all_local_offset),
     "small ledger (< 500 rows) with >= 2 refunds -> clean": ("clean", lambda c: len(c.ep.ledger) < 500 and _count(
         c, lambda p: p["kind"] == "refund") >= 2),
     "small ledger (< 500 rows) with >= 3 null-ref receipts -> clean": ("clean", lambda c: len(c.ep.ledger) < 500 and _count(
         c, lambda p: p["kind"] == "receipt" and not p["invoice_refs"]) >= 3),
 }
+
+
+# Rules on the number of line-identical pairs, measured by the CLI and by the generated-sample test only: the 20 committed
+# episodes hold too few of them per size. The count of an episode never depends on its duplicates (it is drawn per size and
+# holds them), so these are expected to stay below the limits; the pair-count document rule still sees the weak prior
+# D / T of an episode with few pairs.
+PAIR_COUNT_RULES = {
+    "pair member in an episode with <= 2 line-identical pairs": lambda c, i: i in c.pair_members and len(c.pairs) <= 2,
+}
+PAIR_COUNT_EPISODE_RULES = {
+    "small ledger (< 500 rows) with >= 3 line-identical pairs -> error": ("error", lambda c: len(c.ep.ledger) < 500 and len(c.pairs) >= 3),
+}
+DUP_CELLS = ("sales/same", "sales/later", "purchase/same", "purchase/later")
+
+
+def duplicate_pairs(c) -> set:
+    """Pairs (as frozensets of invoice IDs) that are the affected IDs of a duplicate_invoice issue."""
+    return {frozenset(i["affected_ids"]) for i in c.ep.truth["issues"] if i["type"] == "duplicate_invoice"}
 
 
 def measure_episodes(ctxs: list) -> dict:
@@ -239,13 +481,17 @@ RESIDUAL_RULES = {
 class Tally:
     """Pooled counts for the document rules and the episode rules, fed one episode at a time."""
 
-    def __init__(self, rules: dict):
-        self.rules = rules
-        self.fired = dict.fromkeys(rules, 0)
-        self.hit = dict.fromkeys(rules, 0)
-        self.episodes_firing = dict.fromkeys(rules, 0)
-        self.ep_flagged = dict.fromkeys(EPISODE_RULES, 0)
-        self.ep_hits = dict.fromkeys(EPISODE_RULES, 0)
+    def __init__(self, rules: dict, pair_counts: bool = False):
+        self.main_rules = rules
+        self.pair_counts = pair_counts
+        self.rules = {**rules, **(PAIR_COUNT_RULES if pair_counts else {})}
+        self.episode_rules = {**EPISODE_RULES, **(PAIR_COUNT_EPISODE_RULES if pair_counts else {})}
+        self.fired = dict.fromkeys(self.rules, 0)
+        self.hit = dict.fromkeys(self.rules, 0)
+        self.episodes_firing = dict.fromkeys(self.rules, 0)
+        self.ep_flagged = dict.fromkeys(self.episode_rules, 0)
+        self.ep_hits = dict.fromkeys(self.episode_rules, 0)
+        self.dup_cells = {k: {"pairs": 0, "duplicates": 0} for k in DUP_CELLS}
         self.episodes = self.documents = self.affected = self.error_episodes = 0
         self.fx_eligible = self.fx_hits = 0
         self.fx_chance = 0.0
@@ -263,10 +509,15 @@ class Tally:
             self.fired[name] += len(fired)
             self.hit[name] += len(fired & truth)
             self.episodes_firing[name] += bool(fired)
-        for name, (label, rule) in EPISODE_RULES.items():
+        for name, (label, rule) in self.episode_rules.items():
             if rule(c):
                 self.ep_flagged[name] += 1
                 self.ep_hits[name] += bool(ep.truth["issues"]) == (label == "error")
+        dups = duplicate_pairs(c)
+        for ids in c.pairs:
+            cell = self.dup_cells[c.docs[ids[0]][1]["kind"] + "/" + c.pair_shape[frozenset(ids)]]
+            cell["pairs"] += 1
+            cell["duplicates"] += frozenset(ids) in dups
 
     def add_fx(self, c) -> None:
         """Count one episode for the FX-target tell: eligible when a wrong_fx_rate target is a foreign purchase;
@@ -280,18 +531,33 @@ class Tally:
         self.fx_chance += len(targets) / len(c.rank_p)
 
     def result(self) -> dict:
-        rules = {n: {"predicted": self.fired[n], "hits": self.hit[n],
-                     "precision": self.hit[n] / self.fired[n] if self.fired[n] else 0.0,
-                     "recall": self.hit[n] / self.affected if self.affected else 0.0,
-                     "episodes_firing": self.episodes_firing[n]} for n in self.rules}
-        episode_rules = {n: {"label": label, "predicted": self.ep_flagged[n], "hits": self.ep_hits[n],
-                             "precision": self.ep_hits[n] / self.ep_flagged[n] if self.ep_flagged[n] else 0.0}
-                         for n, (label, _r) in EPISODE_RULES.items()}
+        def doc(names):
+            return {n: {"predicted": self.fired[n], "hits": self.hit[n],
+                        "precision": self.hit[n] / self.fired[n] if self.fired[n] else 0.0,
+                        "recall": self.hit[n] / self.affected if self.affected else 0.0,
+                        "episodes_firing": self.episodes_firing[n]} for n in names}
+
+        def episode(rules):
+            return {n: {"label": label, "predicted": self.ep_flagged[n], "hits": self.ep_hits[n],
+                        "precision": self.ep_hits[n] / self.ep_flagged[n] if self.ep_flagged[n] else 0.0}
+                    for n, (label, _r) in rules.items()}
+
+        rules = doc(self.main_rules)
+        episode_rules = episode(EPISODE_RULES)
+        cells = {k: dict(v) for k, v in self.dup_cells.items()}
+        cells["pooled"] = {"pairs": sum(v["pairs"] for v in cells.values()), "duplicates": sum(v["duplicates"] for v in cells.values())}
+        for v in cells.values():
+            v["precision"] = v["duplicates"] / v["pairs"] if v["pairs"] else 0.0
         fx = {"eligible_episodes": self.fx_eligible, "largest_is_target": self.fx_hits,
               "rate": self.fx_hits / self.fx_eligible if self.fx_eligible else 0.0,
               "chance": self.fx_chance / self.fx_eligible if self.fx_eligible else 0.0}
-        return {"rules": rules, "episode_rules": episode_rules, "fx_target": fx, "affected": self.affected,
-                "episodes": self.episodes, "documents": self.documents, "error_episodes": self.error_episodes}
+        out = {"rules": rules, "episode_rules": episode_rules, "fx_target": fx, "affected": self.affected,
+               "episodes": self.episodes, "documents": self.documents, "error_episodes": self.error_episodes,
+               "duplicates_by_side": cells}
+        if self.pair_counts:
+            out["pair_count_rules"] = doc(PAIR_COUNT_RULES)
+            out["pair_count_episode_rules"] = episode(PAIR_COUNT_EPISODE_RULES)
+        return out
 
 
 def measure_episode_objects(episodes) -> dict:
@@ -327,7 +593,7 @@ def generate_sample(n: int, master: str = DEFAULT_MASTER):
 
 def run(n: int, master: str = DEFAULT_MASTER) -> dict:
     """Generate n episodes and measure RULES, RESIDUAL_RULES and the episode rules over them."""
-    tally = Tally({**RULES, **RESIDUAL_RULES})
+    tally = Tally({**RULES, **RESIDUAL_RULES}, pair_counts=True)
     for ep in generate_sample(n, master):
         tally.add(ep)
     out = tally.result()
@@ -342,8 +608,13 @@ def table(m: dict) -> str:
     for name, r in sorted(m["rules"].items(), key=lambda kv: -kv[1]["precision"] * (kv[1]["hits"] > 0)):
         lines.append(f"{name:44s} {r['predicted']:5d} {r['hits']:5d} {r['precision']:6.2f} {r['recall']:6.2f}")
     lines.append("episode-level rules (episodes flagged, correct, precision)")
-    for name, r in m["episode_rules"].items():
+    for name, r in {**m["episode_rules"], **m.get("pair_count_episode_rules", {})}.items():
         lines.append(f"{name:62s} {r['predicted']:3d} {r['hits']:3d} {r['precision']:5.2f}")
+    for name, r in m.get("pair_count_rules", {}).items():
+        lines.append(f"{name:62s} {r['predicted']:5d} {r['hits']:5d} {r['precision']:5.2f}")
+    lines.append("duplicates by side and shape (line-identical pairs, pairs that are duplicates, precision)")
+    for name, r in m["duplicates_by_side"].items():
+        lines.append(f"{name:62s} {r['pairs']:5d} {r['duplicates']:5d} {r['precision']:5.2f}")
     return "\n".join(lines)
 
 
@@ -352,8 +623,10 @@ def rounded(m: dict) -> dict:
     out = json.loads(json.dumps(m))
     for key in ("rate", "chance"):
         out["fx_target"][key] = round(out["fx_target"][key], 4)
-    for group in ("rules", "episode_rules"):
-        for r in out[group].values():
+    for r in out["duplicates_by_side"].values():
+        r["precision"] = round(r["precision"], 4)
+    for group in ("rules", "episode_rules", "pair_count_rules", "pair_count_episode_rules"):
+        for r in out.get(group, {}).values():
             for key in ("precision", "recall"):
                 if key in r:
                     r[key] = round(r[key], 4)
@@ -386,6 +659,27 @@ def to_markdown(m: dict) -> str:
     for name, r in m["episode_rules"].items():
         lines.append(f"| {name} | {r['label']} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} | "
                      f"{base.get(r['label'], 0.0):.4f} |")
+    if "pair_count_rules" in m:
+        lines += ["", "## Pair-count rules", "",
+                  "The number of line-identical pairs of an episode is drawn per size and holds the duplicates, so it must not "
+                  "separate episodes with a duplicate from clean ones. The rules are measured here and in the generated-sample "
+                  "test only: the 20 committed episodes hold too few pairs per size.", "",
+                  "| rule | fires on | true hits | precision | recall | support |", "|---|---:|---:|---:|---:|---:|"]
+        for name, r in m["pair_count_rules"].items():
+            lines.append(f"| {name} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} | {r['recall']:.4f} | {r['episodes_firing']} |")
+        lines += ["", "| episode rule | label | episodes flagged | correct | precision | base rate of the label |",
+                  "|---|---|---:|---:|---:|---:|"]
+        for name, r in m["pair_count_episode_rules"].items():
+            lines.append(f"| {name} | {r['label']} | {r['predicted']} | {r['hits']} | {r['precision']:.4f} | "
+                         f"{base.get(r['label'], 0.0):.4f} |")
+    lines += ["", "## Duplicates by side and shape", "",
+              "A line-identical pair is two invoices of one counterparty with the same kind, currency, total and lines "
+              "(references ignored) at most 10 days apart. Its shape is `same` when both carry one instant and `later` when "
+              "the second is keyed 2 to 9 days after the first. A pair is a duplicate when the answer key lists it. Decoys "
+              "and duplicates come from one pair builder, so the precision of a pair is about the same in every cell.", "",
+              "| side/shape | pairs | duplicates | precision |", "|---|---:|---:|---:|"]
+    for name, r in m["duplicates_by_side"].items():
+        lines.append(f"| {name} | {r['pairs']} | {r['duplicates']} | {r['precision']:.4f} |")
     fx = m["fx_target"]
     lines += ["", "## FX target and the largest foreign purchase", "",
               f"Among the {fx['eligible_episodes']} episodes whose answer key has a wrong_fx_rate target that is a foreign "

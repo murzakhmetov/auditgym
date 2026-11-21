@@ -80,7 +80,12 @@ def build_policy(*, tz: str, schedule: list, period_start: str, period_end: str,
             "applies_to": ["FX conversion", "proportional relief of open items"],
         },
         "posting_rules": {
-            "posting_timestamp": "A posting's ledger timestamp equals its document's timestamp.",
+            "posting_timestamp": (
+                "A posting is booked at its own moment, which may be earlier or later than its document's timestamp "
+                "(minutes, hours or days). That moment must fall in the same reporting period as the document (see "
+                "reporting_period.rule). It never changes an amount: amounts and exchange rates follow the document "
+                "(its local calendar date under fx.date_rule), never the posting moment."
+            ),
             "sales_invoice": "Dr 1100 / Cr 4000 for the base amount of total_minor.",
             "purchase_invoice": "Dr 5000 / Cr 2000 for the base amount of total_minor.",
             "receipt": (
@@ -88,8 +93,9 @@ def build_policy(*, tz: str, schedule: list, period_start: str, period_end: str,
                 "listed order, each up to its open balance in document currency. Relieve 1100 at the booked carrying "
                 "amount: proportional to the allocated share of the open document amount, and the allocation that "
                 "closes an item relieves its whole remaining carrying amount. Any remainder beyond the referenced open "
-                "balances, or the whole receipt when invoice_refs is null, is credited to 2900 at the payment-date "
-                "rate. The balancing difference is posted to 7900."
+                "balances (an invoice that is not yet posted when the receipt is booked, or that earlier payments have "
+                "already settled, has none), or the whole receipt when invoice_refs is null, is credited to 2900 at the "
+                "payment-date rate. The balancing difference is posted to 7900."
             ),
             "disbursement": "Dr 2000 at the carrying amount relieved, Cr 1000 at the payment-date rate, difference to 7900.",
             "refund": (
@@ -105,10 +111,14 @@ def build_policy(*, tz: str, schedule: list, period_start: str, period_end: str,
             "written with; never compare the timestamp strings literally)."
         ),
         "duplicate_rule": (
-            "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item "
-            "(description, quantity, unit_price_minor, amount_minor, ref) are identical; issued_at is identical when "
-            "it denotes the same instant (compare as instants, whatever offset each timestamp is written with). "
-            "Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount."
+            "Two invoices are duplicates when kind, entity_id, currency, total_minor and every line item "
+            "(description, quantity, unit_price_minor, amount_minor, ref) are identical. "
+            "Line refs identify the supply: the supplier's references on purchase invoices and the delivery references "
+            "on sales invoices. issued_at need not be identical: a copy keyed again later carries the later issued_at "
+            "and is converted at the rate of its own local date. Invoices that differ in "
+            "any line ref are separate supplies, even with the same counterparty, date, lines and amount. The "
+            "duplicate amount is the base amount posted for the later copy; compare issued_at values as instants, "
+            "whatever offset each is written with; two copies of the same instant post equal amounts."
         ),
         "accounts": dict(ACCOUNTS),
         "nulls": "Missing references are explicit nulls: an empty field in CSV, null in JSON. Links are never guessed.",

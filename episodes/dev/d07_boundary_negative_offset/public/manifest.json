@@ -1,31 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_20363810edc85e79",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_173d0ddf2a86a176",
   "company": {
-    "name": "Tavella Energy Ltda",
+    "name": "Zanaro Energy Ltda",
     "synthetic": true
   },
   "base_currency": "USD",
   "currency_exponents": {
     "USD": 2,
-    "JPY": 0,
-    "KWD": 3
+    "JPY": 0
   },
-  "period_start": "2026-08-01T00:00:00-03:00",
-  "period_end": "2026-09-01T00:00:00-03:00",
-  "ledger_extract_end": "2026-09-08T00:00:00-03:00",
+  "period_start": "2026-12-01T00:00:00-03:00",
+  "period_end": "2027-01-01T00:00:00-03:00",
+  "ledger_extract_end": "2027-01-08T00:00:00-03:00",
   "timezone": "America/Sao_Paulo",
   "record_counts": {
-    "ledger": 896,
-    "invoices": 96,
-    "payments": 59,
-    "fx": 153
+    "ledger": 905,
+    "invoices": 94,
+    "payments": 72,
+    "fx": 82
   },
   "document_counts": {
-    "invoices": 96,
-    "payments": 59,
-    "total": 155
+    "invoices": 94,
+    "payments": 72,
+    "total": 166
   },
   "rounding": {
     "mode": "half_even",

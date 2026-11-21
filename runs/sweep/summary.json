@@ -1,13 +1,13 @@
 {
  "code": {
-  "code_sha256": "7b5b6d890732af60a8208fb8adaecf3cc556bd2608df024552f7cb74f448a1a1",
+  "code_sha256": "3cee80095401854a8d09c484d68603d5015b28df09c4d6238d9d291d712abf15",
   "code_files": 60,
   "python": "3.11.4",
   "platform": "Windows-10-10.0.19045-SP0"
  },
  "chunk_size": 60,
- "configurations": 423,
- "feasible": 418,
+ "configurations": 428,
+ "feasible": 422,
  "infeasible": [
   {
    "name": "random_271",
@@ -18,8 +18,12 @@
    "reason": "timezone UTC never has a UTC offset, but the requested errors need one"
   },
   {
+   "name": "bnd_tz_Europe/London_utc_wall_clock",
+   "reason": "no feasible variant of wrong_fx_rate for this configuration"
+  },
+  {
    "name": "bnd_counts_sales_invoices_max",
-   "reason": "counts too large for the 100-step budget: 2014 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts"
+   "reason": "counts too large for the 100-step budget: 2015 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts"
   },
   {
    "name": "bnd_counts_purchase_invoices_max",
@@ -27,7 +31,7 @@
   },
   {
    "name": "bnd_counts_prior_invoices_max",
-   "reason": "counts too large for the 100-step budget: 2028 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts"
+   "reason": "counts too large for the 100-step budget: 2029 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts"
   }
  ],
  "generation_failures": [],
@@ -5900,7 +5904,11 @@
      "null_ref_receipt": 0,
      "boundary_doc": 0,
      "midnight_fx": 0,
-     "weekend_fx": 0
+     "weekend_fx": 0,
+     "posting_lag": 0,
+     "credit_receipt": 0,
+     "prepaid_receipt": 0,
+     "split_remainder": 0
     }
    }
   },
@@ -5920,7 +5928,11 @@
      "null_ref_receipt": 8,
      "boundary_doc": 8,
      "midnight_fx": 8,
-     "weekend_fx": 8
+     "weekend_fx": 8,
+     "posting_lag": 8,
+     "credit_receipt": 8,
+     "prepaid_receipt": 8,
+     "split_remainder": 8
     }
    }
   },
@@ -5940,7 +5952,11 @@
      "null_ref_receipt": 0,
      "boundary_doc": 0,
      "midnight_fx": 0,
-     "weekend_fx": 0
+     "weekend_fx": 0,
+     "posting_lag": 0,
+     "credit_receipt": 0,
+     "prepaid_receipt": 0,
+     "split_remainder": 0
     },
     "errors": {
      "duplicate_invoice": 1,
@@ -5967,7 +5983,11 @@
      "null_ref_receipt": 8,
      "boundary_doc": 8,
      "midnight_fx": 8,
-     "weekend_fx": 8
+     "weekend_fx": 8,
+     "posting_lag": 8,
+     "credit_receipt": 8,
+     "prepaid_receipt": 8,
+     "split_remainder": 8
     }
    }
   },
@@ -6082,10 +6102,54 @@
    }
   },
   {
+   "name": "bnd_distractor_posting_lag_8",
+   "group": "boundary",
+   "seed": 2926410903581693612,
+   "chunk": 5,
+   "config": {
+    "distractors": {
+     "posting_lag": 8
+    }
+   }
+  },
+  {
+   "name": "bnd_distractor_credit_receipt_8",
+   "group": "boundary",
+   "seed": 6294794232659808902,
+   "chunk": 5,
+   "config": {
+    "distractors": {
+     "credit_receipt": 8
+    }
+   }
+  },
+  {
+   "name": "bnd_distractor_prepaid_receipt_8",
+   "group": "boundary",
+   "seed": 3641929849863788656,
+   "chunk": 5,
+   "config": {
+    "distractors": {
+     "prepaid_receipt": 8
+    }
+   }
+  },
+  {
+   "name": "bnd_distractor_split_remainder_8",
+   "group": "boundary",
+   "seed": 4765979086879191185,
+   "chunk": 6,
+   "config": {
+    "distractors": {
+     "split_remainder": 8
+    }
+   }
+  },
+  {
    "name": "bnd_errors_all_0",
    "group": "boundary",
    "seed": 1491966864359760392,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "duplicate_invoice": 0,
@@ -6099,7 +6163,7 @@
    "name": "bnd_errors_max_total",
    "group": "boundary",
    "seed": 6044856740625566205,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "duplicate_invoice": 3,
@@ -6113,7 +6177,7 @@
    "name": "bnd_errors_duplicate_invoice_max",
    "group": "boundary",
    "seed": 6960844283145601366,
-   "chunk": 5,
+   "chunk": 6,
    "config": {
     "errors": {
      "duplicate_invoice": 12
@@ -6493,27 +6557,6 @@
    }
   },
   {
-   "name": "bnd_tz_Europe/London_utc_wall_clock",
-   "group": "boundary",
-   "seed": 2629185166216090144,
-   "chunk": 6,
-   "config": {
-    "timezone": "Europe/London",
-    "errors": {
-     "wrong_period": 2,
-     "wrong_fx_rate": 2
-    },
-    "variants": {
-     "wrong_period": [
-      "utc_wall_clock"
-     ],
-     "wrong_fx_rate": [
-      "utc_date"
-     ]
-    }
-   }
-  },
-  {
    "name": "bnd_tz_America/New_York_utc_wall_clock",
    "group": "boundary",
    "seed": 1371224933438232236,
@@ -6702,6 +6745,22 @@
     "variants": {
      "duplicate_invoice": [
       "same_day_copy"
+     ]
+    }
+   }
+  },
+  {
+   "name": "bnd_variant_duplicate_invoice_rekeyed_copy",
+   "group": "boundary",
+   "seed": 7434011621007875964,
+   "chunk": 6,
+   "config": {
+    "errors": {
+     "duplicate_invoice": 2
+    },
+    "variants": {
+     "duplicate_invoice": [
+      "rekeyed_copy"
      ]
     }
    }
@@ -6899,7 +6958,7 @@
    "name": "bnd_counts_suppliers_max",
    "group": "boundary",
    "seed": 8260366560155890874,
-   "chunk": 6,
+   "chunk": 7,
    "config": {
     "counts": {
      "suppliers": 2000
@@ -6910,7 +6969,7 @@
    "name": "bnd_counts_target_rows_max",
    "group": "boundary",
    "seed": 7244827999893249044,
-   "chunk": 6,
+   "chunk": 7,
    "config": {
     "counts": {
      "target_rows": 2000
@@ -6923,43 +6982,49 @@
    "chunk": 0,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 66 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1562/1562 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2024 named checks of 68 kinds)"
   },
   {
    "chunk": 1,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1428/1428, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1891 named checks of 76 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1547/1547, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2010 named checks of 80 kinds)"
   },
   {
    "chunk": 2,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1437/1437 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1899 named checks of 66 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1557/1557 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2019 named checks of 68 kinds)"
   },
   {
    "chunk": 3,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 66 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1555/1555 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2017 named checks of 68 kinds)"
   },
   {
    "chunk": 4,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 66 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1562/1562 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2024 named checks of 68 kinds)"
   },
   {
    "chunk": 5,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1200/1200 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1665 named checks of 77 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1287/1287 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1752 named checks of 81 kinds)"
   },
   {
    "chunk": 6,
-   "episodes": 58,
+   "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 60/60, C_reward 1160/1160, D_paired 357/357 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1609 named checks of 77 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1326/1326, D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1789 named checks of 81 kinds)"
+  },
+  {
+   "chunk": 7,
+   "episodes": 2,
+   "exit_code": 0,
+   "summary": "summary: C_data 3/3 (1 skipped), C_reward 34/34 (4 skipped), D_paired 15/15 (1 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (86 named checks of 57 kinds)"
   }
  ],
  "all_exit_codes_zero": true

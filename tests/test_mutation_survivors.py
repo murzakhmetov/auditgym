@@ -284,7 +284,11 @@ class VerifySurvivors(unittest.TestCase):
 
     def test_a_touched_ledger_row_needs_an_untouched_twin(self):  # verify-surface-pattern
         ep = copy.deepcopy(self.ep)
-        row = ep.ledger[0]
+        pattern = lambda r: (r["account"], r["entity_id"] is None, r["invoice_id"] is None, r["payment_id"] is None, r["debit_minor"] > 0)
+        counts = {}
+        for r in ep.ledger:
+            counts[pattern(r)] = counts.get(pattern(r), 0) + 1
+        row = next(r for r in ep.ledger if counts[pattern(r)] >= 2)  # a row that has an untouched twin
         ep.provenance = {"ops": [{"table": "ledger", "op": "set", "id": row["row_id"]}]}
         self.assertEqual(check_surface(ep), [])
         row["account"] = "9999"
@@ -339,19 +343,97 @@ class EvidenceSurvivors(unittest.TestCase):
         ep, type_, es = evidence_case("t03_duplicate")
         self.assertIsNone(derive(ep, type_, es + ["NO-SUCH-RECORD"]))
 
+    def duplicate_case(self, variant="rekeyed_copy"):
+        """The first evidence set of the first committed duplicate of this variant: (episode copy, type, set, its two
+        posting rows, its two documents). The documents are ordered earlier first."""
+        for split in ("train", "dev"):
+            for d in sorted((ROOT / "episodes" / split).iterdir()):
+                ep = load_episode(d)
+                for n, inj in enumerate((ep.provenance or {}).get("injections", [])):
+                    if inj["type"] == "duplicate_invoice" and inj["variant"] == variant:
+                        t = ep.truth["issues"][n]
+                        ep, es = copy.deepcopy(ep), list(t["evidence_sets"][0])
+                        rows = [r for r in ep.ledger if r["row_id"] in es]
+                        docs = sorted((d for d in ep.invoices if d["doc_id"] in es), key=lambda x: parse_ts(x["issued_at"]))
+                        self.assertEqual((len(rows), len(docs)), (2, 2))
+                        rows.sort(key=lambda r: parse_ts(r["timestamp"]))
+                        self.assertIsNotNone(derive(ep, t["type"], es))
+                        return ep, t["type"], es, rows, docs
+        self.fail(f"no committed {variant} duplicate")
+
     def test_duplicate_rows_must_share_the_account(self):  # evidence-duplicate-account
-        ep, type_, es = evidence_case("t03_duplicate")
-        rows = [r for r in ep.ledger if r["row_id"] in es]
-        self.assertEqual(len(rows), 2)
-        rows[1]["account"] = "9999"
+        ep, type_, es, rows, docs = self.duplicate_case()
+        # one row moves to the other account the invoice kind posts to: each row alone still passes the kind's account test
+        other = {"2000": "5000", "5000": "2000", "1100": "4000", "4000": "1100"}
+        rows[1]["account"] = other[rows[1]["account"]]
+        self.assertIsNone(derive(ep, type_, es))
+
+    def test_duplicate_rows_must_be_the_invoices_own_postings(self):  # evidence-duplicate-own-posting
+        ep, type_, es, rows, docs = self.duplicate_case()
+        payment = ep.payments[0]["payment_id"]
+        rows[0]["payment_id"] = payment  # a payment's relief row, not the invoice's posting
+        self.assertIsNone(derive(ep, type_, es))
+
+    def test_duplicate_rows_must_sit_in_the_posting_accounts_of_the_kind(self):  # evidence-duplicate-posting-account
+        ep, type_, es, rows, docs = self.duplicate_case()
+        for row in rows:
+            row["account"] = "7900"  # one account for both rows, but not one of the kind's posting accounts
+        self.assertIsNone(derive(ep, type_, es))
+
+    def test_duplicate_rows_must_sit_in_their_documents_period(self):  # evidence-duplicate-row-period
+        from datetime import timedelta
+
+        from auditgym.timeutil import format_utc
+
+        ep, type_, es, rows, docs = self.duplicate_case()
+        p1 = parse_ts(ep.policy["reporting_period"]["end"])
+        rows[1]["timestamp"] = format_utc(p1 + timedelta(days=1))  # booked after the period of an invoice inside it
+        self.assertIsNone(derive(ep, type_, es))
+
+    def test_a_duplicate_row_may_sit_at_another_moment_of_its_period(self):  # evidence-duplicate-row-instant-required
+        from datetime import timedelta
+
+        from auditgym.timeutil import format_utc
+
+        ep, type_, es, rows, docs = self.duplicate_case()
+        p0, p1 = (parse_ts(ep.policy["reporting_period"][k]) for k in ("start", "end"))
+        moved = parse_ts(rows[0]["timestamp"]) + timedelta(hours=7)
+        self.assertTrue(p0 <= moved < p1)
+        rows[0]["timestamp"] = format_utc(moved)
+        self.assertIsNotNone(derive(ep, type_, es))
+
+    def test_duplicates_of_one_instant_post_equal_amounts(self):  # evidence-duplicate-equal-amounts
+        ep, type_, es, rows, docs = self.duplicate_case("same_day_copy")
+        column = "debit_minor" if rows[1]["debit_minor"] else "credit_minor"
+        rows[1][column] += 1
         self.assertIsNone(derive(ep, type_, es))
 
     def test_duplicate_invoices_must_share_the_signature(self):  # evidence-duplicate-signature
-        ep, type_, es = evidence_case("t03_duplicate")
-        docs = [d for d in ep.invoices if d["doc_id"] in es]
-        self.assertEqual(len(docs), 2)
+        ep, type_, es, rows, docs = self.duplicate_case()
         docs[1]["total_minor"] += 1
         self.assertIsNone(derive(ep, type_, es))
+
+    def test_a_later_copy_needs_the_published_rekey_clause(self):  # evidence-duplicate-rekey-clause
+        ep, type_, es, rows, docs = self.duplicate_case()
+        self.assertNotEqual(parse_ts(docs[0]["issued_at"]), parse_ts(docs[1]["issued_at"]))
+        self.assertIn(evidence_check.REKEY_CLAUSE, ep.policy["duplicate_rule"])
+        ep.policy["duplicate_rule"] = ep.policy["duplicate_rule"].replace(evidence_check.REKEY_CLAUSE, "issued_at must be identical")
+        self.assertIsNone(derive(ep, type_, es))
+        # a same-instant set still derives without the clause
+        ep, type_, es, rows, docs = self.duplicate_case("same_day_copy")
+        ep.policy["duplicate_rule"] = ep.policy["duplicate_rule"].replace(evidence_check.REKEY_CLAUSE, "issued_at must be identical")
+        self.assertIsNotNone(derive(ep, type_, es))
+
+    def test_the_amount_is_the_row_of_the_later_copy(self):  # evidence-duplicate-later-amount
+        ep, type_, es, rows, docs = self.duplicate_case()
+        by_id = {r["row_id"]: r for r in rows}
+        later = next(r for r in rows if parse_ts(r["timestamp"]) == parse_ts(docs[1]["issued_at"]))
+        column = "debit_minor" if later["debit_minor"] else "credit_minor"
+        self.assertEqual(derive(ep, type_, es)[2], later[column])
+        earlier = next(r for r in rows if r is not later)
+        earlier[column if earlier[column] else "credit_minor"] += 7  # the earlier row differs: only the later one is the amount
+        self.assertEqual(derive(ep, type_, es)[2], later[column])
+        self.assertEqual(len(by_id), 2)
 
     def test_an_unallocated_payment_row_sits_in_account_2900(self):  # evidence-unallocated-account
         ep, type_, es = evidence_case("t04_unallocated")

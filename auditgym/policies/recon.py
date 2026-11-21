@@ -3,8 +3,9 @@
 Reads all tables, then applies the kind of shortcuts a quick reconciliation
 script would use. The environment is designed so that each shortcut fails on
 some distractor:
-  * duplicates: same supplier, currency, total and calendar date (ignores line
-    refs, so legitimate repeats become false positives);
+  * duplicates: same supplier, currency, total and calendar date, purchase
+    invoices only (ignores line refs, so legitimate repeats become false
+    positives, and it never looks at sales invoices);
   * unallocated: any 2900 credit of a receipt that carries invoice_refs
     (overpayment excess is legitimate and becomes a false positive); it cites
     the receipt, the first referenced invoice, the 2900 row, the receipt's bank

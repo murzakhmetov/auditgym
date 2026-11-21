@@ -5,6 +5,8 @@ The same engine produces the clean books (no overrides) and the erroneous books
 derived by the policy rules instead of being patched by hand.
 
 Policy implemented here (published in policy.json):
+  * a posting is booked at its own moment: the document's timestamp, or inv.posted / payment.posted (a posting lag
+    inside the document's period) or an override; amounts and rates follow the document, never the posting moment;
   * invoice posting at the posting timestamp (normally issued_at), base amount
     = round(total * rate(local date of issued_at)), sales Dr 1100 / Cr 4000,
     purchases Dr 5000 / Cr 2000;
@@ -85,9 +87,9 @@ def post(h: History, ov: Overrides | None = None) -> Books:
         invoices[inv.key] = inv
     events = []
     for inv in invoices.values():
-        events.append((ov.inv_ts.get(inv.key, inv.issued), 0, inv.key))
+        events.append((ov.inv_ts.get(inv.key, inv.posted or inv.issued), 0, inv.key))
     for p in h.payments.values():
-        events.append((ov.pay_ts.get(p.key, p.ts), 1, p.key))
+        events.append((ov.pay_ts.get(p.key, p.posted or p.ts), 1, p.key))
     for m in h.misc.values():
         events.append((m.ts, 2, m.key))
     events.sort()

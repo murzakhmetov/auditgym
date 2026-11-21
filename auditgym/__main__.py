@@ -135,6 +135,7 @@ def _run_meta(args, secret: str | None, min_bits: int | None, n_episodes: int, r
         "min_seed_bits": min_bits,
         "no_secret": bool(getattr(args, "no_secret", False) and args.seeds_file),  # the explicit opt-out was used
         "allow_same_user": bool(getattr(args, "same_user_accepted", False)),
+        "open_answer_keys_readable": bool(getattr(args, "open_answer_keys_readable", False)),
         "refused_entries": [{"name": n, "reason": r} for n, r in refused],
         "command": cmd,
     }
@@ -181,6 +182,8 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
     from . import protocol
     from .policies import is_external
 
+    protocol.forbid_same_user_for_custom(False)
+    protocol.allow_same_user_fallback(False)
     custom = [p for p in policies if is_external(p)]
     if not custom:
         return
@@ -190,11 +193,36 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
     if protocol.require_agent_user():
         return  # strict mode either switches user or refuses later
     switch = protocol._can_switch_user()
+    committed = _committed_episode_dirs()  # public by design: the committed train/dev episodes, not any new folder under them
+    keys = [str(d) for d in answer_key_dirs if (Path(d) / "grader").exists() and Path(d).resolve() not in committed]
+    closed = bool(args.seeds_file or args.secret_env)
+    open_keys = [str(d) for d in answer_key_dirs if (Path(d) / "grader").exists() and Path(d).resolve() in committed]
+
+    def warn_open():
+        """The committed open splits publish their answer keys; a policy as the host's user can read them. Not a refusal."""
+        if not open_keys:
+            return
+        more = f" and {len(open_keys) - 1} more" if len(open_keys) > 1 else ""
+        print(f"WARNING: custom policy {custom[0]} runs as the host's user next to the public answer keys of the open "
+              f"splits ({open_keys[0]}/grader{more}): it can read them; fine for training, never for evaluation",
+              file=sys.stderr)
+        args.open_answer_keys_readable = True
+
     if not args.in_process and switch:
-        return  # the child runs as the separate policy user
+        # The child is expected to run as the separate policy user. AgentProcess can still fall back to the host user
+        # (the account already has processes, chown or setuid refused): next to closed data or an answer key that is
+        # refused at the fallback point unless --allow-same-user is given, not warned about.
+        if closed or keys:
+            risk = ("closed episodes (a seeds file or --secret-env)" if closed
+                    else f"answer keys ({keys[0]}/grader" + (f" and {len(keys) - 1} more" if len(keys) > 1 else "") + ")")
+            if not getattr(args, "allow_same_user", False):
+                protocol.forbid_same_user_for_custom(True, risk)
+            else:
+                protocol.allow_same_user_fallback(True, risk)  # recorded in meta.json only if the child really falls back
+        return
     advice = ("drop --in-process" if switch  # this host can switch to the policy user once the policy leaves the process
               else "run it in the official image (separate policy user)")
-    if args.seeds_file or args.secret_env:
+    if closed:
         if not getattr(args, "allow_same_user", False):
             raise InputError(f"custom policy {custom[0]} would run as the host's user on closed episodes (a seeds file "
                              f"or --secret-env): it could read the seeds file and any file that user can read; "
@@ -202,9 +230,8 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
         print(f"WARNING: custom policy {custom[0]} runs as the host's user on closed episodes (--allow-same-user): "
               f"it can read the seeds file and any file that user can read", file=sys.stderr)
         args.same_user_accepted = True  # meta.json records the override only when it took effect
+        warn_open()
         return
-    committed = _committed_episode_dirs()  # public by design: the committed train/dev episodes, not any new folder under them
-    keys = [str(d) for d in answer_key_dirs if (Path(d) / "grader").exists() and Path(d).resolve() not in committed]
     if keys:
         more = f" and {len(keys) - 1} more" if len(keys) > 1 else ""
         if not getattr(args, "allow_same_user", False):
@@ -214,6 +241,7 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
         print(f"WARNING: custom policy {custom[0]} runs as the host's user next to answer keys ({keys[0]}/grader{more}) "
               f"(--allow-same-user): it can read them", file=sys.stderr)
         args.same_user_accepted = True
+    warn_open()
 
 
 def _require_agent_user() -> None:
@@ -285,6 +313,7 @@ def cmd_verify(args) -> int:
 
 
 def cmd_run(args) -> int:
+    from . import protocol
     from .episode import load_episode
     from .generator import generate_episode
     from .report import markdown_table, miss_table, summarize
@@ -346,8 +375,16 @@ def cmd_run(args) -> int:
     _custom_policy_guard(policies, args, episode_dirs)
     if not args.in_process and any(p != "oracle" for p in policies):
         _require_agent_user()
-    traj, grades = run_many(episodes, policies, mode=args.mode, isolated=not args.in_process,
-                            max_steps=args.max_steps, policy_seed=args.policy_seed, policy_path=args.policy_path)
+    try:
+        traj, grades = run_many(episodes, policies, mode=args.mode, isolated=not args.in_process,
+                                max_steps=args.max_steps, policy_seed=args.policy_seed, policy_path=args.policy_path)
+        if protocol.same_user_fell_back():
+            args.same_user_accepted = True
+    except protocol.AgentUserRequired as exc:
+        raise InputError(str(exc)) from exc
+    finally:
+        protocol.forbid_same_user_for_custom(False)
+        protocol.allow_same_user_fallback(False)
     out = Path(args.out)
     aio.write_jsonl(out / "trajectories.jsonl", traj, ascii_only=True)
     aio.write_jsonl(out / "grades.jsonl", grades, ascii_only=True)

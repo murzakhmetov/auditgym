@@ -1,21 +1,21 @@
 {
-  "episode_id": "ep_8ca9c39297aa4aa3",
+  "episode_id": "ep_d3846f363ffd2173",
   "findings": [
     {
       "type": "duplicate_invoice",
       "affected_ids": [
-        "BILL-185583",
-        "BILL-128817"
+        "BILL-474475",
+        "BILL-744669"
       ],
-      "claimed_amount_minor": 410006,
-      "currency": "KWD",
+      "claimed_amount_minor": 32093200,
+      "currency": "KZT",
       "evidence_ids": [
-        "DOC-481386",
-        "DOC-878143",
-        "GL-511657",
-        "GL-342200"
+        "DOC-753244",
+        "DOC-181487",
+        "GL-260909",
+        "GL-946899"
       ],
-      "explanation": "Purchase invoice entered twice: same supplier, date, currency, total and line references; both copies are posted to accounts payable."
+      "explanation": "Purchase invoice entered twice: same supplier, currency, total and line references; the copy was keyed again 3 days later and is posted at its own date, so its base amount is the later posting; both copies are posted to accounts payable and expense."
     }
   ]
 }

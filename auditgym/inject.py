@@ -16,15 +16,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 
-from . import catalog
 from .books import Books, Overrides, policy_rate
-from .config import BOUNDARY_FX_FALLBACK, ConfigError, boundary_utc_date_ok, utc_date_days
-from .history import LARGE_PURCHASE_USD, LARGE_SALES_USD, HistoryBuilder, Invoice, SampleRetry
+from .config import BOUNDARY_FX_FALLBACK, UNALLOCATED_PRIOR_SHARE, ConfigError, boundary_utc_date_ok, utc_date_days
+from .history import (LARGE_PURCHASE_USD, LARGE_SALES_USD, PAIR_SHAPE_OF_VARIANT, PAIR_SIDES, VARIANT_OF_PAIR_SHAPE,
+                      HistoryBuilder, Invoice, SampleRetry)
 from .money import convert_minor
 from .timeutil import in_ambiguous_hour, local_datetime, offset_minutes
 
 MATERIALITY_MIN = 100
 TOLERANCE_MINOR = 2
+PART_PAID_SHARE = 0.5  # share of unallocated receipts whose invoice was already part paid by an earlier receipt
 TYPE_ORDER = {"duplicate_invoice": 0, "unallocated_payment": 1, "wrong_fx_rate": 2, "wrong_period": 3}
 SCENARIO_ORDER = {"single": 0, "boundary_fx_payment": 1, "fx_invoice_partial_allocation": 2}
 
@@ -146,47 +147,61 @@ def feasible_variants(b: HistoryBuilder, etype: str, allowed: list, late_limit: 
 
 
 # ---------------------------------------------------------------- creators
-def create_duplicate(b: HistoryBuilder, plan: Plan) -> None:
+def convert_pair(b: HistoryBuilder, plan: Plan, variants: list) -> None:
+    """One duplicate_invoice error from a drawn line-identical pair. The pair is chosen uniformly among the unused pairs of
+    an allowed shape, so side, payment status, terms, item and price have the same chance for a duplicate as for a decoy.
+    The first invoice stays the original. The second one leaves the history, takes the first one's line items (so its
+    references match) and is posted as the copy at its own issued_at and the rate of its own date; it was never paid.
+    The variant follows the pair's shape: the same instant is same_day_copy, a later one is rekeyed_copy. With twin=true nothing is converted: the chosen pair
+    is relabelled and the twin keeps the whole history, including the choice, with the opposite answer."""
     h = b.h
-    d = b.loose_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
-    inv = _new_invoice(b, "purchase", b.local_time(d, b.doc_hours()), None, 300)
-    if b.rng.random() < 0.5:
-        t = b.pay_time_after(inv.issued, 2, 15)
-        if t:
-            b.add_payment("disbursement", inv.entity, inv.currency, t, inv.total, [inv.key])
-    copy = Invoice(b.key("I"), inv.kind, inv.entity, inv.currency, inv.issued, inv.due,
-                   [replace(li) for li in inv.lines], [], duplicate_of=inv.key)
-    item = next(it for it in catalog.PURCHASE_ITEMS if inv.lines[0].description.startswith(it[0].split("{")[0]))
-    twin_ref = b.new_ref(item[2], inv.issued, inv.entity)  # drawn in both modes so the rest of the history is identical
-    assert twin_ref != inv.lines[0].ref  # refs are unique per episode, so the twin is never a true duplicate
+    shapes = {PAIR_SHAPE_OF_VARIANT[v] for v in variants}
+    cands = [p for p in b.pairs if not p.get("used") and p["shape"] in shapes]
+    if not cands:  # unreachable for a resolved config (repeat_pairs >= the duplicate count); kept for hand-built ones
+        with b.stream(b.dup_rng):
+            cands = [b.repeat_pair(b.rng.choice(PAIR_SIDES), b.rng.choice(sorted(shapes)))]
+    pair = b.dup_rng.choice(cands)
+    pair["used"] = True
+    original, second = h.invoices[pair["first"]], h.invoices[pair["second"]]
     if b.cfg.get("twin"):
-        # paired twin with the opposite answer: the second invoice is a separate supply (different line ref)
-        li = copy.lines[0]
-        copy.lines = [replace(li, ref=twin_ref, description=item[0].format(ref=twin_ref))]
-        copy.duplicate_of = None
-        copy.tags = ["legit_repeat", "twin"]
-        b.h.invoices[copy.key] = copy
-        b.h.distractors.append({"kind": "twin_legit_repeat", "keys": [inv.key, copy.key]})
+        pair["entry"]["kind"] = "twin_legit_repeat"
+        for inv in (original, second):
+            inv.tags = ["legit_repeat", "twin"]
         return
+    del h.invoices[second.key]
+    h.distractors.remove(pair["entry"])
+    copy = Invoice(second.key, original.kind, original.entity, original.currency, second.issued, second.due,
+                   [replace(li) for li in original.lines], [], duplicate_of=original.key)
     plan.extra_invoices.append(copy)
-    plan.items.append(Item("duplicate_invoice", "same_day_copy", "single", {"original": inv.key, "copy": copy.key}))
+    plan.items.append(Item("duplicate_invoice", VARIANT_OF_PAIR_SHAPE[pair["shape"]], "single",
+                           {"original": original.key, "copy": copy.key}))
 
 
 def create_unallocated(b: HistoryBuilder, plan: Plan, variant: str, scenario: str = "single",
                        invoice: Invoice | None = None, after: datetime | None = None) -> None:
     h, rng = b.h, b.rng
+    fresh = invoice is None
     if invoice is None:
-        if rng.random() < 0.35:
-            d = b.loose_date(h.p_first_date - timedelta(days=30), h.p_first_date - timedelta(days=3))
-            invoice = _new_invoice(b, "sales", b.local_time(d, b.doc_hours()), None, 900, ["prior"])
-        else:
-            d = b.loose_date(h.p_first_date, h.p_last_date - timedelta(days=8))
-            invoice = _new_invoice(b, "sales", b.local_time(d, b.doc_hours()), None, 900)
+        prior = b.unallocated_prior.pop() if b.unallocated_prior else rng.random() < UNALLOCATED_PRIOR_SHARE
+        invoice = b.open_invoice(prior)
     start = max(after or invoice.issued, invoice.issued, h.p0)
-    t = b.pay_time_after(start, 1, 14, in_period=True)
+    open_total = invoice.total
+    t = None
+    if fresh and b.alloc_rng.random() < PART_PAID_SHARE:
+        # an earlier part payment already relieved the invoice (on the stream of its own): the receipt below meets a balance
+        # that is open but smaller than the invoice total, so a count of the invoice's payments or the total says nothing
+        with b.stream(b.alloc_rng):
+            t_first = b.pay_time_after(start, 1, 8, in_period=True)
+            t = b.pay_time_after(t_first, 1, 10, in_period=True) if t_first else None
+            if t:
+                part = max(1, int(invoice.total * b.alloc_rng.uniform(0.3, 0.6)))
+                b.add_payment("receipt", invoice.entity, invoice.currency, t_first, part, [invoice.key], ["part_paid"])
+                open_total = invoice.total - part
+    if t is None:
+        t = b.pay_time_after(start, 1, 14, in_period=True)
     if t is None:
         raise RetryAttempt("no room for the receipt inside the period")
-    amount = invoice.total if rng.random() < 0.65 else int(invoice.total * rng.uniform(0.45, 0.9))
+    amount = open_total if rng.random() < 0.65 else max(1, int(open_total * rng.uniform(0.45, 0.9)))
     p = b.add_payment("receipt", invoice.entity, invoice.currency, t, amount, [invoice.key])
     alloc = 0 if variant == "missing" else max(1, int(amount * rng.uniform(0.2, 0.75)))
     plan.items.append(Item("unallocated_payment", variant, scenario, {"payment": p.key, "invoice": invoice.key}, {"alloc": alloc}))
@@ -307,10 +322,11 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
         if not variants:
             raise ConfigError(f"no feasible variant of {etype} for this configuration")
         for _ in range(n):
-            v = b.rng.choice(variants)
             if etype == "duplicate_invoice":
-                create_duplicate(b, plan)
-            elif etype == "unallocated_payment":
+                convert_pair(b, plan, variants)  # no main-stream draw: the choice is on the pairs' own stream
+                continue
+            v = b.rng.choice(variants)
+            if etype == "unallocated_payment":
                 create_unallocated(b, plan, v)
             elif etype == "wrong_fx_rate":
                 create_wrong_fx(b, plan, v)
@@ -322,6 +338,26 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
         else:
             create_fx_invoice_partial_allocation(b, plan, cfg["variants"]["wrong_fx_rate"], cfg["variants"]["unallocated_payment"])
     return plan
+
+
+def plan_posting_lags(b: HistoryBuilder, plan: Plan) -> None:
+    """Posting lags (HistoryBuilder.apply_posting_lags) around the planned errors. A target whose posting moment is the error
+    (wrong_period, the posting_date variant, the boundary receipt) never takes one and its moment orders the documents around
+    it; the documents of the other issues (the receipt and invoice of an unallocated payment, an invoice with a wrong rate)
+    take lags like any clean document, and the issue stays what it is: amounts and rates follow the document."""
+    protected, fixed, error_keys = set(), {}, set()
+    for it in plan.items:
+        for role, key in it.targets.items():
+            if it.type == "duplicate_invoice":
+                continue  # the pair's own lags (drawn by pair, converted or not)
+            own = it.type == "wrong_period" or (it.type == "wrong_fx_rate" and (it.variant == "posting_date" or role == "payment"))
+            if own:
+                protected.add(key)
+                if "posting_ts" in it.data:
+                    fixed[key] = it.data["posting_ts"]
+            else:
+                error_keys.add(key)
+    b.apply_posting_lags(plan.extra_invoices, fixed, protected, error_keys - protected)
 
 
 # ---------------------------------------------------------------- overrides
@@ -400,13 +436,23 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
             ex_o, ex_c = inv_row(o, "counter"), inv_row(c, "counter")
             amount = _line_amount(ap_c)
             doc = books.invoices[o]
+            sales = doc.kind == "sales"
+            who, accounts = (("customer", "receivable and revenue") if sales else ("supplier", "payable and expense"))
+            if it.variant == "same_day_copy":
+                explanation = (f"{'Sales' if sales else 'Purchase'} invoice entered twice: same {who}, date, currency, total and "
+                               f"{'delivery' if sales else 'line'} references; both copies are posted to accounts {accounts}.")
+            else:
+                gap = (h.local_date(books.invoices[c].issued) - h.local_date(doc.issued)).days
+                explanation = (f"{'Sales' if sales else 'Purchase'} invoice entered twice: same {who}, currency, total and "
+                               f"{'delivery' if sales else 'line'} references; the copy was keyed again {gap} days later and is "
+                               f"posted at its own date, so its base amount is the later posting; both copies are posted to "
+                               f"accounts {accounts}.")
             issues.append({
                 "item": it, "affected": [("invoice", o), ("invoice", c)], "amount": amount,
                 "evidence": [[("doc", o), ("doc", c), ("row", ap_o.ident), ("row", ap_c.ident)],
                              [("doc", o), ("doc", c), ("row", ex_o.ident), ("row", ex_c.ident)]],
                 "sort": (doc.issued, amount),
-                "explanation": "Purchase invoice entered twice: same supplier, date, currency, total and line "
-                               "references; both copies are posted to accounts payable.",
+                "explanation": explanation,
             })
         elif it.type == "unallocated_payment":
             p, i = t["payment"], t["invoice"]

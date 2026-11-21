@@ -1,6 +1,6 @@
 {
-  "auditgym_version": "0.2.0",
-  "generator_version": "0.2.0",
+  "auditgym_version": "0.3.0",
+  "generator_version": "0.3.0",
   "config_version": "1",
   "schema_version": "auditgym/1.0",
   "grade_version": "1",
@@ -23,6 +23,7 @@
   "min_seed_bits": null,
   "no_secret": false,
   "allow_same_user": false,
+  "open_answer_keys_readable": false,
   "refused_entries": [],
   "command": [
     "python",

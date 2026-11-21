@@ -15,7 +15,7 @@ from auditgym.matcher import CRITERIA, match
 
 ROOT = Path(__file__).resolve().parent.parent
 KINDS = ("legit_repeat", "recurring", "split_payment", "multi_invoice_payment", "underpayment",
-         "overpayment_refund", "null_ref_receipt", "boundary_doc", "midnight_fx", "weekend_fx", "twin_legit_repeat")
+         "overpayment_refund", "null_ref_receipt", "boundary_doc", "midnight_fx", "weekend_fx", "posting_lag", "twin_legit_repeat")
 
 
 def _episodes() -> list:

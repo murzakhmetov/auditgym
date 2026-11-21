@@ -1,32 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_d9f26d15631b2bc7",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_a88b2000d6d5d03e",
   "company": {
-    "name": "Torana Machinery GmbH",
+    "name": "Mirara Energy GmbH",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "GBP": 2,
-    "JPY": 0,
     "CHF": 2
   },
-  "period_start": "2027-10-01T00:00:00+02:00",
-  "period_end": "2027-11-01T00:00:00+01:00",
-  "ledger_extract_end": "2027-11-08T00:00:00+01:00",
+  "period_start": "2027-04-01T00:00:00+02:00",
+  "period_end": "2027-05-01T00:00:00+02:00",
+  "ledger_extract_end": "2027-05-08T00:00:00+02:00",
   "timezone": "Europe/Berlin",
   "record_counts": {
-    "ledger": 945,
-    "invoices": 89,
-    "payments": 57,
-    "fx": 200
+    "ledger": 722,
+    "invoices": 99,
+    "payments": 71,
+    "fx": 79
   },
   "document_counts": {
-    "invoices": 89,
-    "payments": 57,
-    "total": 146
+    "invoices": 99,
+    "payments": 71,
+    "total": 170
   },
   "rounding": {
     "mode": "half_even",

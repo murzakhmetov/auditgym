@@ -1,23 +1,23 @@
 {
   "schema_version": "auditgym/1.0",
-  "base_currency": "GBP",
-  "timezone": "Europe/London",
+  "base_currency": "USD",
+  "timezone": "Asia/Kolkata",
   "utc_offset_schedule": [
     {
-      "from_utc": "2026-04-14T00:00:00Z",
-      "offset": "+01:00"
+      "from_utc": "2024-11-14T00:00:00Z",
+      "offset": "+05:30"
     }
   ],
   "local_time_rule": "Company-local time of an instant = the instant plus the UTC offset in force at that instant, taken from utc_offset_schedule (each entry applies from its from_utc instant until the next entry). Local calendar dates are always taken in company time, whatever offset a timestamp happens to be written with.",
   "reporting_period": {
-    "start": "2026-06-01T00:00:00+01:00",
-    "end": "2026-07-01T00:00:00+01:00",
+    "start": "2025-01-01T00:00:00+05:30",
+    "end": "2025-02-01T00:00:00+05:30",
     "end_is_exclusive": true,
     "rule": "A document belongs to the reporting period when start <= its own timestamp < end, compared as instants (issued_at for invoices, timestamp for payments). A posting belongs to the period of its ledger timestamp. A posting must fall in the same period as its document."
   },
   "ledger_extract": {
-    "start": "2026-06-01T00:00:00+01:00",
-    "end": "2026-07-08T00:00:00+01:00",
+    "start": "2025-01-01T00:00:00+05:30",
+    "end": "2025-02-08T00:00:00+05:30",
     "rule": "ledger.csv covers the reporting period plus a 7-day cut-off window after it. Items open at period start are carried in by opening journals dated at period start against account 3900."
   },
   "fx": {
@@ -26,17 +26,22 @@
     "date_rule": "Use the rate dated on the document's local calendar date (issued_at for invoices, timestamp for payments). If no rate is published on that date, use the latest earlier published date.",
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
-      "holidays_without_rates": [],
-      "first_date": "2026-04-15",
-      "last_date": "2026-07-09"
+      "holidays_without_rates": [
+        "2025-01-14",
+        "2025-01-22"
+      ],
+      "first_date": "2024-11-15",
+      "last_date": "2025-02-07"
     },
     "conversion": "base_minor = round(amount_minor * rate * 10^(exp_base - exp_document))",
     "rounding": "half_up",
     "other_pairs": "Rows for pairs other than document currency -> base currency are not used for postings."
   },
   "currency_exponents": {
-    "GBP": 2,
-    "EUR": 2
+    "USD": 2,
+    "KWD": 3,
+    "JPY": 0,
+    "GBP": 2
   },
   "rounding": {
     "mode": "half_up",
@@ -50,17 +55,17 @@
     ]
   },
   "posting_rules": {
-    "posting_timestamp": "A posting's ledger timestamp equals its document's timestamp.",
+    "posting_timestamp": "A posting is booked at its own moment, which may be earlier or later than its document's timestamp (minutes, hours or days). That moment must fall in the same reporting period as the document (see reporting_period.rule). It never changes an amount: amounts and exchange rates follow the document (its local calendar date under fx.date_rule), never the posting moment.",
     "sales_invoice": "Dr 1100 / Cr 4000 for the base amount of total_minor.",
     "purchase_invoice": "Dr 5000 / Cr 2000 for the base amount of total_minor.",
-    "receipt": "Dr 1000 for the base amount at the payment-date rate. Allocate the payment to invoice_refs in the listed order, each up to its open balance in document currency. Relieve 1100 at the booked carrying amount: proportional to the allocated share of the open document amount, and the allocation that closes an item relieves its whole remaining carrying amount. Any remainder beyond the referenced open balances, or the whole receipt when invoice_refs is null, is credited to 2900 at the payment-date rate. The balancing difference is posted to 7900.",
+    "receipt": "Dr 1000 for the base amount at the payment-date rate. Allocate the payment to invoice_refs in the listed order, each up to its open balance in document currency. Relieve 1100 at the booked carrying amount: proportional to the allocated share of the open document amount, and the allocation that closes an item relieves its whole remaining carrying amount. Any remainder beyond the referenced open balances (an invoice that is not yet posted when the receipt is booked, or that earlier payments have already settled, has none), or the whole receipt when invoice_refs is null, is credited to 2900 at the payment-date rate. The balancing difference is posted to 7900.",
     "disbursement": "Dr 2000 at the carrying amount relieved, Cr 1000 at the payment-date rate, difference to 7900.",
     "refund": "A refund references the invoice whose overpayment it returns. Dr 2900 at the carrying amount of that overpayment credit (proportional if partly refunded), Cr 1000 at the payment-date rate, difference to 7900.",
     "payment_currency": "A payment is in the currency of every invoice it references.",
     "opening": "One opening journal per open invoice (keyed by invoice_id) and one bank opening journal without IDs, all dated at period start."
   },
   "journal_grouping": "Ledger rows form one journal when they share payment_id; otherwise when they share invoice_id; otherwise when their timestamps denote the same instant (compare as instants, whatever offset each timestamp is written with; never compare the timestamp strings literally).",
-  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor, issued_at and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical; issued_at is identical when it denotes the same instant (compare as instants, whatever offset each timestamp is written with). Invoices that differ in any line ref are separate supplies, even with the same supplier, date and amount.",
+  "duplicate_rule": "Two invoices are duplicates when kind, entity_id, currency, total_minor and every line item (description, quantity, unit_price_minor, amount_minor, ref) are identical. Line refs identify the supply: the supplier's references on purchase invoices and the delivery references on sales invoices. issued_at need not be identical: a copy keyed again later carries the later issued_at and is converted at the rate of its own local date. Invoices that differ in any line ref are separate supplies, even with the same counterparty, date, lines and amount. The duplicate amount is the base amount posted for the later copy; compare issued_at values as instants, whatever offset each is written with; two copies of the same instant post equal amounts.",
   "accounts": {
     "1000": "Bank",
     "1100": "Accounts receivable",

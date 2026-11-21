@@ -1,33 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_00c5e2fd9546ae19",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_beb8936148844f6a",
   "company": {
-    "name": "Torium Components LLP",
+    "name": "Darion Machinery Ltd",
     "synthetic": true
   },
-  "base_currency": "KZT",
+  "base_currency": "KWD",
   "currency_exponents": {
-    "KZT": 2,
-    "AED": 2
+    "KWD": 3,
+    "USD": 2
   },
-  "period_start": "2025-04-01T00:00:00+05:00",
-  "period_end": "2025-05-01T00:00:00+05:00",
-  "ledger_extract_end": "2025-05-08T00:00:00+05:00",
-  "timezone": "Asia/Almaty",
+  "period_start": "2026-11-01T00:00:00+03:00",
+  "period_end": "2026-12-01T00:00:00+03:00",
+  "ledger_extract_end": "2026-12-08T00:00:00+03:00",
+  "timezone": "Asia/Kuwait",
   "record_counts": {
-    "ledger": 286,
-    "invoices": 45,
-    "payments": 28,
+    "ledger": 335,
+    "invoices": 63,
+    "payments": 52,
     "fx": 93
   },
   "document_counts": {
-    "invoices": 45,
-    "payments": 28,
-    "total": 73
+    "invoices": 63,
+    "payments": 52,
+    "total": 115
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

@@ -1,34 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_c17b3c1e2c23b514",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_d64355952aeed786",
   "company": {
-    "name": "Kaiion Trading GmbH",
+    "name": "Darana Energy Ltda",
     "synthetic": true
   },
-  "base_currency": "EUR",
+  "base_currency": "USD",
   "currency_exponents": {
-    "EUR": 2,
-    "JPY": 0,
-    "USD": 2
+    "USD": 2,
+    "KWD": 3
   },
-  "period_start": "2027-10-01T00:00:00+02:00",
-  "period_end": "2027-11-01T00:00:00+01:00",
-  "ledger_extract_end": "2027-11-08T00:00:00+01:00",
-  "timezone": "Europe/Berlin",
+  "period_start": "2025-02-01T00:00:00-03:00",
+  "period_end": "2025-03-01T00:00:00-03:00",
+  "ledger_extract_end": "2025-03-08T00:00:00-03:00",
+  "timezone": "America/Sao_Paulo",
   "record_counts": {
-    "ledger": 1905,
-    "invoices": 121,
-    "payments": 77,
-    "fx": 143
+    "ledger": 1691,
+    "invoices": 128,
+    "payments": 97,
+    "fx": 78
   },
   "document_counts": {
-    "invoices": 121,
-    "payments": 77,
-    "total": 198
+    "invoices": 128,
+    "payments": 97,
+    "total": 225
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

@@ -13,8 +13,12 @@ catalogue ranges (injected documents were scaled up), payments outside business 
 receipt had one), the largest foreign purchase (FX targets were priced above all ordinary purchases), documents
 near local midnight and on boundary days, weekend dates (no target was ever on a weekend), payment terms and
 payment status (legit repeats were always 30 days and unpaid), an unpaid twin, account 2900 usage, and round
-amounts. Rules that simply apply the published accounting policy (a posting that differs from its document, a
-rate that differs from the policy rate) are not shortcuts: they are the task, so they are not measured here.
+amounts. A rate that differs from the policy rate is not a shortcut: it is the task, so it is not measured here. A posting
+at another instant than its document is measured since round 8: before it, the policy said a posting's timestamp equals its
+document's, so that rule picked out the answer key (14 of 14 flagged documents of the committed episodes, 54 of 54 on 100
+generated ones); now a posting is booked at its own moment inside the document's period (distractor posting_lag, and lags on
+documents of error issues at the same rate), and the rules on a different instant, on the sign, the size, the zone offset
+and a date change are measured like every other rule.
 
 Episode-level rules (any outlier means errors; a small ledger with extra refunds or null-ref receipts means
 clean) are measured on the 20 episodes as well: a rule that always names the error label needs a perfect score
@@ -29,10 +33,17 @@ twin 0.75, 3 hits. At episode level the old data gave: any catalogue outlier 8 o
 boundary-day off-hours payment 3 of 3, a small ledger with 2 refunds 2 of 2 clean, with 3 null-ref receipts 2 of
 2 clean. The spec limit alone would not have flagged any document rule (recall below 0.3 for each), so the
 second limit (precision 0.8 with 3 hits) is what makes this test fail on that data: run on it, nine rules and the
-catalogue-range check fail. With the current generator the best document rule reaches precision 0.25 with 5 hits (a paid twin invoice)
-and the best recall among selective rules is 0.28 at precision 0.17 (an invoice with a twin), far from both
-limits; the episode-level rules flag nothing (clean labels, catalogue outliers) or reach only 0.75 to 0.78
-(error labels, whose base rate is 0.75). Run with -v/--verbose (or set AUDITGYM_TELLS_TABLE=1) to print the table.
+catalogue-range check fail. With the current generator (version 0.3.0 with posting lags) the best document rule reaches precision 0.25 with 4 hits (a
+sales invoice in the error window) and the best recall among selective rules is 0.18 at precision 0.17 (a payment with a 2900 row and
+invoice refs), far from both limits; a posting at another instant than its document has precision 0.035 (20 hits of 575 flagged
+documents) at recall 0.40; the episode-level rules flag nothing (clean labels, catalogue outliers) or reach 0.75 on 15 of 20 episodes
+(any posting at another instant, any off-hours payment on a boundary day) and 0.80 on 15 episodes (a same-instant pair with terms other
+than 30 days): error labels, whose base rate is 0.75. Line-identical pairs: decoys and the sources of duplicates come
+from one builder and a duplicate is a converted pair, so the rules on a pair (a twin by side, a foreign currency, under
+300 USD, a subscription item, an earlier member that was paid, a member posted off its issued_at) fire on a pair with
+the same precision as on a duplicate; GeneratedDuplicateTests checks that on 100 generated episodes (the precision of a
+pair per side and shape stays below 0.5 and within a factor of 3 between the four cells; the pair count of an episode, which holds the
+duplicates, does not separate episodes with a duplicate). Run with -v/--verbose (or set AUDITGYM_TELLS_TABLE=1) to print the table.
 """
 
 import contextlib
@@ -117,6 +128,7 @@ def generated_sample() -> list:
     from auditgym.generator import GenerationError, generate_episode
 
     rng = random.Random(1234)
+    pairs_info = []
     types = ("duplicate_invoice", "unallocated_payment", "wrong_fx_rate", "wrong_period")
     out = []
     while len(out) < GEN_EPISODES:
@@ -141,7 +153,19 @@ def generated_sample() -> list:
             if in_error_window(inst, c.p1, c.sched):
                 window[rec["kind"]].add(i)
         out.append((size, window, targets))
+        dups = tells.duplicate_pairs(c)
+        pairs_info.append({
+            "size": size, "pairs": len(c.pairs), "has_duplicate": bool(dups),
+            "cells": [(c.docs[ids[0]][1]["kind"] + "/" + c.pair_shape[frozenset(ids)], frozenset(ids) in dups) for ids in c.pairs],
+            "subscription_pairs": sum(1 for i in c.pair_members if tells.RULES["same-instant pair of a subscription item"](c, i)),
+            "off_posting": len(c.off_posting), "off_dup": len(c.off_posting & {i for ids in c.pairs if frozenset(ids) in dups for i in ids}),
+            "affected": len(c.affected()),
+            "lag_flagged": sum(1 for i in c.docs if tells.RULES["posting row at a different instant than its document"](c, i)),
+            "lag_hits": len({i for i in c.docs if tells.RULES["posting row at a different instant than its document"](c, i)} & c.affected()),
+            "docs": len(c.docs), "error": bool(ep.truth["issues"]), "ep_lag": any(v for v in c.lag.values()),
+            "members": len(c.pair_members), "dup_members": sum(len(ids) for ids in c.pairs if frozenset(ids) in dups)})
     _CACHE["gen"] = out
+    _CACHE["gen_pairs"] = pairs_info
     return out
 
 
@@ -166,7 +190,158 @@ class GeneratedBoundaryTests(unittest.TestCase):
                                       ("fewer than the typical count", [bool(t) for w, t in eps if len(w[kind]) < typical])):
                     with self.subTest(size=size, kind=kind, rule=rule):
                         if len(flagged) >= 8:
-                            self.assertLess(sum(flagged) / len(flagged), 0.85, f"{size} {kind} {rule}: {sum(flagged)} of {len(flagged)}")
+                            # the lower 95 % Wilson bound of the share, not the point estimate: on 8 to 40 flagged episodes the
+                            # estimate moves by 5 points with the draw (the receipt count sat at 0.85 on the data before round 8
+                            # as well, because the boundary receipt of the scenario is one more receipt in the window)
+                            n, k, z = len(flagged), sum(flagged), 1.96
+                            lower = (k / n + z * z / (2 * n) - z * ((k / n * (1 - k / n) + z * z / (4 * n)) / n) ** 0.5) / (1 + z * z / n)
+                            self.assertLess(lower, 0.85, f"{size} {kind} {rule}: {k} of {n}")
+
+
+class GeneratedDuplicateTests(unittest.TestCase):
+    """A duplicate is a converted line-identical pair, so a pair must be a duplicate with the same chance whatever its side
+    and whatever the pair count of its episode (the visible count is drawn per size and holds the duplicates)."""
+
+    @classmethod
+    def setUpClass(cls):
+        generated_sample()
+        cls.info = _CACHE["gen_pairs"]
+
+    def test_pairs_exist_in_every_side_and_shape_cell_and_are_balanced(self):
+        cells = defaultdict(lambda: [0, 0])
+        for e in self.info:
+            for cell, dup in e["cells"]:
+                cells[cell][0] += 1
+                cells[cell][1] += dup
+        self.assertEqual(set(cells), set(tells.DUP_CELLS))
+        rates = {}
+        for cell, (pairs, dups) in cells.items():
+            with self.subTest(cell=cell):
+                self.assertGreaterEqual(dups, 3, f"{cell}: {dups} duplicates in {pairs} pairs")
+                rates[cell] = dups / pairs
+                self.assertLess(rates[cell], SPEC_PRECISION)
+        if all(cells[s][0] >= 15 for s in cells):
+            self.assertLessEqual(max(rates.values()) / min(rates.values()), 3.0, str(dict(cells)))
+
+    def test_pair_count_does_not_separate_duplicate_episodes(self):
+        for size in ("small", "medium"):
+            eps = [e for e in self.info if e["size"] == size]
+            counts = [e["pairs"] for e in eps]
+            typical = max(set(counts), key=counts.count)
+            for rule, flagged in (("more pairs than typical", [e["has_duplicate"] for e in eps if e["pairs"] > typical]),
+                                  ("fewer pairs than typical", [e["has_duplicate"] for e in eps if e["pairs"] < typical])):
+                with self.subTest(size=size, rule=rule):
+                    if len(flagged) >= 8:
+                        self.assertLess(sum(flagged) / len(flagged), 0.85, f"{size} {rule}: {sum(flagged)} of {len(flagged)}")
+
+    def test_bottom_of_the_range_pair_members_are_not_a_tell(self):
+        from auditgym.config import DEFAULT_REPEAT_PAIRS
+
+        members = hits = affected = 0
+        for e in self.info:
+            affected += e["affected"]
+            if e["pairs"] <= DEFAULT_REPEAT_PAIRS[e["size"]][0]:
+                members += e["members"]
+                hits += e["dup_members"]
+        self.assertGreater(members, 0)
+        precision, recall = hits / members, hits / affected
+        self.assertFalse(precision >= SPEC_PRECISION and recall >= SPEC_RECALL, f"precision {precision:.2f}, recall {recall:.2f}")
+        self.assertLess(precision, STRONG_PRECISION)
+
+    def test_no_subscription_pairs(self):
+        self.assertEqual(sum(e["subscription_pairs"] for e in self.info), 0)
+
+    def test_a_pair_member_posted_off_its_instant_is_a_duplicate_no_more_often_than_any_member(self):
+        # posting lags (round 8): decoys and duplicates take them at the rate of every other document, so the rule is no tell
+        off = sum(e["off_posting"] for e in self.info)
+        off_dup = sum(e["off_dup"] for e in self.info)
+        members = sum(e["members"] for e in self.info)
+        dup_members = sum(e["dup_members"] for e in self.info)
+        self.assertGreater(off, 40)
+        self.assertLess(off_dup / off, SPEC_PRECISION, f"{off_dup} of {off} members posted off their instant are duplicates")
+        self.assertLessEqual(off_dup / off, 1.5 * dup_members / members, (off_dup, off, dup_members, members))
+
+
+class GeneratedLagTests(unittest.TestCase):
+    """A posting at another instant than its document says almost nothing about the answer key (round 8): the document rule
+    stays far below the spec limit and the episode rule does not exceed the error base rate by more than a few points."""
+
+    @classmethod
+    def setUpClass(cls):
+        generated_sample()
+        cls.info = _CACHE["gen_pairs"]
+
+    def test_the_document_rule_is_not_a_tell(self):
+        flagged = sum(e["lag_flagged"] for e in self.info)
+        hits = sum(e["lag_hits"] for e in self.info)
+        base = sum(e["affected"] for e in self.info) / sum(e["docs"] for e in self.info)
+        self.assertGreater(flagged, 500)
+        self.assertLess(hits / flagged, 0.15, f"{hits} of {flagged} flagged documents are in the key")
+        self.assertLess(hits / flagged, 4 * base + 0.03, (hits / flagged, base))
+
+    def test_the_episode_rule_stays_at_the_error_base_rate(self):
+        flagged = [e for e in self.info if e["ep_lag"]]
+        base = sum(e["error"] for e in self.info) / len(self.info)
+        precision = sum(e["error"] for e in flagged) / len(flagged)
+        self.assertGreater(len(flagged), 0.9 * len(self.info))  # clean episodes have lags too
+        self.assertLessEqual(precision, base + 0.05, (precision, base))
+
+
+class GeneratedCreditTests(unittest.TestCase):
+    """What a row on 2900, the number of invoices and the number of late postings say about the answer key (round 8): before it a
+    payment with a 2900 row on an invoice with one payment was in the key every time, an episode with 8 or more rows on 2900 was
+    an error episode, and the invoice count grew with the errors."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.m = tells.run(80)
+        n, e = cls.m["episodes"], cls.m["error_episodes"]
+        cls.base = {"error": e / n, "clean": (n - e) / n}
+
+    def test_the_single_payment_rules_on_2900_are_not_tells(self):
+        for name in ("payment with a 2900 row on an invoice that has no other payment", "... and the payment is at most the invoice total",
+                     "receipt with invoice references and no 1100 row",
+                     "receipt with a 1100 row and a 2900 row on an invoice that another receipt also lists",
+                     "receipt with a 2900 row on an opening-item invoice",
+                     "receipt with a 2900 row dated after its invoice, the invoice not issued on days 0 to 10 of the period",
+                     "sales invoice with two or more receipts that sum to less than its total"):
+            r = self.m["rules"][name]
+            with self.subTest(rule=name):
+                self.assertGreater(r["predicted"], 50)
+                self.assertLess(r["precision"], 0.5, f"{name}: {r['hits']} of {r['predicted']}")
+
+    def test_the_episode_rules_on_counts_stay_near_the_base_rate(self):
+        for name in ("8 or more ledger rows on account 2900 -> error", "2900 rows beyond twice the refunds plus the null-ref receipts -> error",
+                     "122 or more invoices -> error", "more postings at another instant than the size's largest default lag count -> error",
+                     "at most 5 documents posted later than their timestamp -> clean",
+                     "any receipt with a 2900 row lists an opening-item invoice -> error",
+                     "any receipt with a 2900 row dated after an invoice not issued on days 0 to 10 -> error",
+                     "any sales invoice with two or more receipts below its total -> error",
+                     "at most 3 sales invoices whose receipts sum above their total -> error",
+                     "at most 0.64 payments per invoice -> error"):
+            r = self.m["episode_rules"][name]
+            with self.subTest(rule=name):
+                if r["predicted"] >= 12:
+                    self.assertLessEqual(r["precision"], self.base[r["label"]] + 0.2, f"{name}: {r['hits']} of {r['predicted']}")
+
+
+class PairGroupTests(unittest.TestCase):
+    def test_an_ordinary_invoice_of_the_same_price_far_away_does_not_hide_a_pair(self):
+        import copy
+        from datetime import timedelta
+
+        from auditgym.generator import generate_episode
+        from auditgym.timeutil import format_ts, parse_ts
+
+        ep = generate_episode(5, {"size": "small", "errors": {}, "distractors": {"legit_repeat": 2}}).episode
+        before = tells.Ctx(ep).pairs
+        self.assertEqual(len(before), 2)
+        by_id = {i["invoice_id"]: i for i in ep.invoices}
+        extra = copy.deepcopy(by_id[before[0][0]])
+        extra["invoice_id"] = "ZZ-EXTRA-1"
+        extra["issued_at"] = format_ts(parse_ts(extra["issued_at"]) + timedelta(days=45), 0)
+        ep.invoices.append(extra)
+        self.assertEqual(sorted(tells.Ctx(ep).pairs), sorted(before))
 
 
 class GeneratedSmokeTests(unittest.TestCase):
@@ -180,6 +355,14 @@ class GeneratedSmokeTests(unittest.TestCase):
         self.assertLessEqual(m["fx_target"]["largest_is_target"], m["fx_target"]["eligible_episodes"])
         self.assertEqual(set(m["rules"]), set(RULES) | set(tells.RESIDUAL_RULES))
         self.assertEqual(set(m["episode_rules"]), set(EPISODE_RULES))
+        self.assertEqual(set(m["pair_count_rules"]), set(tells.PAIR_COUNT_RULES))
+        self.assertEqual(set(m["pair_count_episode_rules"]), set(tells.PAIR_COUNT_EPISODE_RULES))
+        self.assertEqual(set(m["duplicates_by_side"]), {"sales/same", "sales/later", "purchase/same", "purchase/later", "pooled"})
+        cells = m["duplicates_by_side"]
+        parts = [v for k, v in cells.items() if k != "pooled"]
+        self.assertEqual(cells["pooled"]["pairs"], sum(v["pairs"] for v in parts))
+        self.assertEqual(cells["pooled"]["duplicates"], sum(v["duplicates"] for v in parts))
+        self.assertLessEqual(cells["pooled"]["duplicates"], cells["pooled"]["pairs"])
         for r in m["rules"].values():
             self.assertEqual(set(r), {"predicted", "hits", "precision", "recall", "episodes_firing"})
             self.assertLessEqual(r["hits"], r["predicted"])

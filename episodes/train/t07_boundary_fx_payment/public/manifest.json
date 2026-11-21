@@ -1,32 +1,31 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_b026d21a050f33d3",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_7aec4c9f58d0d600",
   "company": {
-    "name": "Kenum Foods LLP",
+    "name": "Miron Agro Ltd",
     "synthetic": true
   },
-  "base_currency": "KZT",
+  "base_currency": "KWD",
   "currency_exponents": {
-    "KZT": 2,
-    "USD": 2,
-    "AED": 2,
-    "EUR": 2
+    "KWD": 3,
+    "EUR": 2,
+    "BHD": 3
   },
-  "period_start": "2027-08-01T00:00:00+05:00",
-  "period_end": "2027-09-01T00:00:00+05:00",
-  "ledger_extract_end": "2027-09-08T00:00:00+05:00",
-  "timezone": "Asia/Almaty",
+  "period_start": "2026-04-01T00:00:00+03:00",
+  "period_end": "2026-05-01T00:00:00+03:00",
+  "ledger_extract_end": "2026-05-08T00:00:00+03:00",
+  "timezone": "Asia/Kuwait",
   "record_counts": {
-    "ledger": 966,
-    "invoices": 94,
-    "payments": 61,
-    "fx": 207
+    "ledger": 660,
+    "invoices": 101,
+    "payments": 70,
+    "fx": 143
   },
   "document_counts": {
-    "invoices": 94,
-    "payments": 61,
-    "total": 155
+    "invoices": 101,
+    "payments": 70,
+    "total": 171
   },
   "rounding": {
     "mode": "half_up",

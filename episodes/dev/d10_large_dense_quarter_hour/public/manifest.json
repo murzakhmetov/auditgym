@@ -1,33 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_bebcfea775f1e3d6",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_9c938b77942dc7a9",
   "company": {
-    "name": "Eloen Retail Pvt Ltd",
+    "name": "Torix Trading Pvt Ltd",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "GBP": 2
+    "CHF": 2,
+    "JPY": 0,
+    "USD": 2
   },
-  "period_start": "2027-12-01T00:00:00+05:45",
-  "period_end": "2028-01-01T00:00:00+05:45",
-  "ledger_extract_end": "2028-01-08T00:00:00+05:45",
+  "period_start": "2027-06-01T00:00:00+05:45",
+  "period_end": "2027-07-01T00:00:00+05:45",
+  "ledger_extract_end": "2027-07-08T00:00:00+05:45",
   "timezone": "Asia/Kathmandu",
   "record_counts": {
-    "ledger": 1817,
-    "invoices": 127,
-    "payments": 72,
-    "fx": 90
+    "ledger": 1823,
+    "invoices": 131,
+    "payments": 100,
+    "fx": 217
   },
   "document_counts": {
-    "invoices": 127,
-    "payments": 72,
-    "total": 199
+    "invoices": 131,
+    "payments": 100,
+    "total": 231
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

@@ -29,6 +29,16 @@ ROOT = Path(__file__).resolve().parent.parent
 D08 = ROOT / "episodes" / "dev" / "d08_both_interacting_kzt"
 
 
+def _dir_with(variant: str) -> Path:
+    """The first committed episode directory (train, then dev) whose provenance injects the variant."""
+    for split in ("train", "dev"):
+        for d in sorted((ROOT / "episodes" / split).iterdir()):
+            if d.is_dir() and any(i["variant"] == variant for i in
+                                  json.loads((d / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]):
+                return d
+    raise AssertionError(f"no committed episode injects {variant}")
+
+
 def run_verify(directory: Path):
     return subprocess.run([sys.executable, "-m", "auditgym", "verify", str(directory)], cwd=str(ROOT),
                           capture_output=True, text=True, encoding="utf-8", timeout=120)
@@ -671,14 +681,23 @@ class JournalGroupingTests(unittest.TestCase):
             self.assertIn("same instant", ep.policy["journal_grouping"])
             self.assert_journals_balance(ep, e["name"])
 
+    def test_check_set_error_entries_use_every_timestamp_representation(self):
+        # an episode written entirely in the local offset must not be clean by construction
+        errors = [e for e in check_set() if not e["name"].endswith("_clean")]
+        self.assertEqual({e["config"]["ts_repr"] for e in errors}, {"utc", "mixed", "local"})
+        for rep in ("utc", "mixed", "local"):
+            self.assertGreaterEqual(sum(e["config"]["ts_repr"] == rep for e in errors), 4)
+
     def test_literal_timestamp_strings_would_split_journals(self):
-        ep = load_episode(ROOT / "episodes" / "train" / "t01_clean_small")
-        literal = {}
-        for r in ep.ledger:
-            if not (r["payment_id"] or r["invoice_id"]):
-                literal.setdefault(r["timestamp"], []).append(r)
-        unbalanced = [k for k, rows in literal.items()
-                      if sum(r["debit_minor"] for r in rows) != sum(r["credit_minor"] for r in rows)]
+        unbalanced = []
+        for split in ("train", "dev"):
+            for d in sorted((ROOT / "episodes" / split).iterdir()):
+                literal = {}
+                for r in load_episode(d).ledger:
+                    if not (r["payment_id"] or r["invoice_id"]):
+                        literal.setdefault(r["timestamp"], []).append(r)
+                unbalanced += [(d.name, k) for k, rows in literal.items()
+                               if sum(r["debit_minor"] for r in rows) != sum(r["credit_minor"] for r in rows)]
         self.assertTrue(unbalanced, "the committed data should need instant comparison")
 
 
@@ -758,6 +777,27 @@ class AnswerKeyCrossChecks(unittest.TestCase):
 
 T08 = ROOT / "episodes" / "train" / "t08_fx_partial_allocation"
 D05 = ROOT / "episodes" / "dev" / "d05_fx_utc_stale_mixed_ts"
+T05 = ROOT / "episodes" / "train" / "t05_fx_rate"
+T04 = ROOT / "episodes" / "train" / "t04_unallocated"
+
+
+def _alloc_is_pinned(src: Path, inj: dict) -> bool:
+    """change.alloc is pinned by the ledger only for a base-currency payment: in a foreign currency one more document unit
+    can convert to the same base amount (verify.py docstring)."""
+    pol = json.loads((src / "public" / "policy.json").read_text(encoding="utf-8"))
+    pays = {json.loads(ln)["payment_id"]: json.loads(ln) for ln in (src / "public" / "payments.jsonl").read_text(encoding="utf-8").splitlines()}
+    return pays[inj["targets"]["payment"]]["currency"] == pol["base_currency"]
+
+
+def _dir_with_pinned_partial() -> Path:
+    """The first committed episode (train, then dev) with a partial unallocated_payment whose payment is in the base currency."""
+    for split in ("train", "dev"):
+        for d in sorted((ROOT / "episodes" / split).iterdir()):
+            if d.is_dir():
+                for inj in json.loads((d / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]:
+                    if inj["type"] == "unallocated_payment" and inj["variant"] == "partial" and _alloc_is_pinned(d, inj):
+                        return d
+    raise AssertionError("no committed partial unallocated_payment in the base currency")
 
 
 def _shifted(key, value):
@@ -805,10 +845,12 @@ class ChangeRecordTests(unittest.TestCase):
 
     def test_every_tampered_change_key_fails(self):
         seen = set()
-        for src in (D08, T08, D05):
+        for src in dict.fromkeys((D08, T08, D05, T05, T04, _dir_with_pinned_partial(), *(_dir_with(v) for v in ("transposed", "stale_rate", "posting_date", "utc_date")))):
             injections = json.loads((src / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
             for n, inj in enumerate(injections):
                 for key in inj["change"]:
+                    if key == "alloc" and not _alloc_is_pinned(src, inj):
+                        continue
                     seen.add((inj["type"], inj["variant"], key))
                     with self.subTest(episode=src.name, issue=inj["issue_id"], key=key):
                         d = self.copy(src)
@@ -838,15 +880,45 @@ class ChangeRecordTests(unittest.TestCase):
 
     def test_rule_by_rule_tampers_fail(self):
         d04 = ROOT / "episodes" / "dev" / "d04_unallocated_missing_eur"
+        t04 = _dir_with_pinned_partial()
+        d10 = _dir_with("transposed")  # a committed episode with a transposed rate (it has a second valid transposition)
         by_id = lambda p, i: next(x for x in p["injections"] if x["issue_id"] == i)
+
+        def transposed(p):
+            return next(x for x in p["injections"] if x["variant"] == "transposed")["change"]
+
+        def another_transposition(rate, recorded):
+            """A rate that is also a valid transposition of `rate` (two adjacent digits swapped, at least 0.2 % apart)
+            but not the recorded one: the rule accepts its shape, only the ledger amount tells it from the recorded one."""
+            digits = [i for i, ch in enumerate(rate) if ch.isdigit()]
+            for a, c in zip(digits, digits[1:]):
+                if c != a + 1 or rate[a] == rate[c]:
+                    continue
+                cand = list(rate)
+                cand[a], cand[c] = cand[c], cand[a]
+                cand = "".join(cand)
+                if cand != recorded and not (cand.startswith("0") and not cand.startswith("0.")) and abs(Decimal(cand) - Decimal(rate)) >= Decimal(rate) * Decimal("0.002"):
+                    return cand
+            raise AssertionError(f"no other transposition of {rate}")
+
+        def set_rate(rate_of):
+            def edit(p):
+                ch = transposed(p)
+                ch["wrong_rate"] = rate_of(ch)
+            return edit
+
+        def lower_alloc(p):
+            ch = next(x for x in p["injections"] if x["type"] == "unallocated_payment" and x["variant"] == "partial")["change"]
+            ch["alloc"] -= 1
+
         cases = [
-            (D08, "another transposition of the rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "158.263")),
-            (D08, "a transposition with a trailing zero", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "581.2630")),
-            (D08, "exponent rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "1e99999999")),
-            (D08, "signed rate", lambda p: by_id(p, "iss_05")["change"].__setitem__("wrong_rate", "+581.263")),
+            (d10, "another transposition of the rate", set_rate(lambda ch: another_transposition(ch["correct_rate"], ch["wrong_rate"]))),
+            (d10, "a transposition with a trailing zero", set_rate(lambda ch: ch["wrong_rate"] + "0")),
+            (d10, "exponent rate", set_rate(lambda ch: "1e99999999")),
+            (d10, "signed rate", set_rate(lambda ch: "+" + ch["wrong_rate"])),
             (d04, "alloc is a bool", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", False)),
             (d04, "variant swapped to partial", lambda p: by_id(p, "iss_01").__setitem__("variant", "partial")),
-            (T08, "alloc one unit lower (2900 rule)", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", 577911)),
+            (t04, "alloc one unit lower (2900 rule)", lower_alloc),  # a base-currency receipt: one unit is visible in the ledger
         ]
         for src, label, edit in cases:
             with self.subTest(label):
@@ -934,6 +1006,24 @@ def _issue_parts(ep, issue):
     return pay, inv
 
 
+def _plain_partial_base():
+    """(episode, issue) of a committed unallocated_payment in the base currency with a relief row whose invoice has no other
+    payment: the plain story the balance tests below edit row by row (a part-paid invoice has a second relief on it)."""
+    for _s, _n, ep in load_split_episodes():
+        refs = {}
+        for p in ep.payments:
+            for r in p["invoice_refs"] or []:
+                refs.setdefault(r, []).append(p["payment_id"])
+        for t in ep.truth["issues"]:
+            if t["type"] != "unallocated_payment":
+                continue
+            pay, inv = _issue_parts(ep, t)
+            relieved = any(r["payment_id"] == pay["payment_id"] and r["account"] == "1100" for r in ep.ledger)
+            if inv["currency"] == ep.policy["base_currency"] and relieved and len(refs[inv["invoice_id"]]) == 1:
+                return ep, t
+    raise AssertionError("no plain base-currency unallocated_payment with a relief among the committed episodes")
+
+
 class UnallocatedEvidenceSetTests(unittest.TestCase):
     """The one acceptable set of an unallocated_payment issue: both documents, the payment's 2900 row and every
     receivable row that carries the invoice ID, so the cited records alone show that the invoice was open."""
@@ -975,25 +1065,24 @@ class UnallocatedEvidenceSetTests(unittest.TestCase):
                     biggest = max(biggest, len(t["evidence_sets"][0]))
         for _ep, t in self.issues():
             biggest = max(biggest, len(t["evidence_sets"][0]))
-        # 2 documents + the 2900 row + the invoice's posting (or opening) row + this receipt's relief row
-        # + the receipt's bank row for a foreign-currency invoice
-        self.assertEqual(biggest, 6)
+        # 2 documents + the 2900 row + the invoice's posting (or opening) row + this receipt's relief row + the relief row of an
+        # earlier part payment + the receipt's bank row for a foreign-currency invoice
+        self.assertEqual(biggest, 7)
         self.assertLessEqual(biggest, MAX_EVIDENCE_IDS)
 
     def test_the_open_balance_comes_from_the_rows_not_from_the_invoice_total(self):
-        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
-        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        ep, t = _plain_partial_base()
         es = t["evidence_sets"][0]
         pay, inv = _issue_parts(ep, t)
         before, after = evidence_check.unallocated_open_balance(es, ep)
+        posting = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["debit_minor"] > 0)
         relief = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["credit_minor"] > 0)
-        self.assertEqual((before, after), (325690, 325690 - relief["credit_minor"]))
+        self.assertEqual((before, after), (posting["debit_minor"], posting["debit_minor"] - relief["credit_minor"]))
         inv["total_minor"] += 1000  # the document total does not enter the balance
         self.assertEqual(evidence_check.unallocated_open_balance(es, ep), (before, after))
 
     def test_a_receipt_story_with_a_foreign_relief_or_a_bad_balance_derives_nothing(self):
-        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
-        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        ep, t = _plain_partial_base()
         es = t["evidence_sets"][0]
         pay, inv = _issue_parts(ep, t)
 
@@ -1017,8 +1106,7 @@ class UnallocatedEvidenceSetTests(unittest.TestCase):
         self.assertIsNone(derive(es + [es[0]]))  # a repeated ID
 
     def test_a_base_currency_balance_on_the_rows_must_cover_the_receipt(self):
-        ep = load_episode(ROOT / "episodes" / "dev" / "d09_large_mixed")
-        t = next(t for t in ep.truth["issues"] if t["type"] == "unallocated_payment")
+        ep, t = _plain_partial_base()
         es = t["evidence_sets"][0]
         pay, inv = _issue_parts(ep, t)
         self.assertEqual(inv["currency"], ep.policy["base_currency"])
@@ -1063,10 +1151,15 @@ class UnallocatedEvidenceSetTests(unittest.TestCase):
         posting = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["debit_minor"] > 0)
         relief = next(r for r in ep.ledger if r["row_id"] in es and r["account"] == "1100" and r["credit_minor"] > 0)
         own = relief["credit_minor"]
+        own_amount = pay["amount_minor"]
+        pay["amount_minor"] = inv["total_minor"]  # the receipt pays for the whole invoice: the relief bound cannot be what rejects
+        self.assertIsNotNone(derive())
         relief["credit_minor"] = posting["debit_minor"]
         self.assertIsNone(derive())  # the relief takes the whole balance: nothing is left for the 2900 amount
         relief["credit_minor"] = own
-        pay["amount_minor"] = pay["amount_minor"] // 2
+        pay["amount_minor"] = own_amount
+        self.assertIsNotNone(derive())
+        pay["amount_minor"] = 1
         self.assertIsNone(derive())  # the relief is more than the receipt can have paid for
 
     def test_a_set_without_every_receivable_row_fails_verify(self):

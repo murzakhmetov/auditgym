@@ -123,8 +123,10 @@ def _amt(row: dict) -> int:
 
 
 def doc_signature(doc: dict) -> tuple:
+    """What makes two invoices duplicates (policy.duplicate_rule), the same for purchase and sales invoices. issued_at is
+    not part of it: a copy keyed again later carries a later instant."""
     return (
-        doc["kind"], doc["entity_id"], doc["currency"], doc["total_minor"], parse_ts(doc["issued_at"]),
+        doc["kind"], doc["entity_id"], doc["currency"], doc["total_minor"],
         tuple((li["description"], li["quantity"], li["unit_price_minor"], li["amount_minor"], li["ref"]) for li in doc["line_items"]),
     )
 
@@ -235,8 +237,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
                 "type": "wrong_period", "affected_ids": [iid], "amount": posted, "currency": base,
                 "evidence_sets": [[doc["doc_id"], prim["row_id"]], [doc["doc_id"], ctr["row_id"]]],
             })
-        elif post_ts != issued and not fx_finding:
-            anomalies.append(f"invoice {iid} posted at a different time within the same period")
+        # a posting at another moment inside the document's period is ordinary (policy posting_timestamp): no finding, no anomaly
 
     # ------------------------------------------------------------ duplicates
     groups: dict = {}
@@ -249,7 +250,7 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
         if len(docs) > 2:
             anomalies.append("more than two identical invoices")
             continue
-        a, b = docs
+        a, b = sorted(docs, key=lambda d: (parse_ts(d["issued_at"]), d["invoice_id"]))  # b is the later copy
         pa, pb = ("1100", "4000") if a["kind"] == "sales" else ("2000", "5000")
         ra = {r["account"]: r for _, r in journals[("I", a["invoice_id"])]}
         rb = {r["account"]: r for _, r in journals[("I", b["invoice_id"])]}
@@ -302,8 +303,6 @@ def audit(manifest: dict, policy: dict, ledger: list, invoices: list, payments: 
             has_finding = True
             findings.append({"type": "wrong_period", "affected_ids": [pid], "amount": posted_bank, "currency": base,
                              "evidence_sets": [[doc["doc_id"], bank["row_id"]]]})
-        elif post_ts != ts_doc:
-            anomalies.append(f"payment {pid} posted at a different time within the same period")
         rate_used = rate
         if kind in ("receipt", "disbursement"):
             remaining = doc["amount_minor"]

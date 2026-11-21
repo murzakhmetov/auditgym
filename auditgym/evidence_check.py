@@ -1,10 +1,14 @@
 """Evidence-only checker: a second, independent implementation of the rules.
 
 Given one issue type and the cited record IDs, derive (type, affected ID set, amount) from those records and the
-published policy alone. This module deliberately shares no helper with the auditor or with money.py:
+published policy alone. The one exception is the completeness of an unallocated_payment set: the published evidence is
+"every ledger row of the invoice on its receivable account 1100", so the checker also reads the ledger to see that no such
+row is left out (a set that omits the relief of an earlier part payment shows a larger balance than the invoice had).
+This module deliberately shares no helper with the auditor or with money.py:
 
   * UTC offsets are read from policy.utc_offset_schedule and parsed here;
-  * the duplicate signature is built here from the fields named in policy.duplicate_rule;
+  * the duplicate signature is built here from the fields named in policy.duplicate_rule (issued_at is not one of them:
+    when the two instants differ the rule must state that it need not be identical, and the amount is the later row);
   * FX conversion uses fractions.Fraction with explicit rounding per policy.rounding.mode.
 
 Imports: the standard library, timeutil.parse_ts (ISO timestamp parsing) and the Episode container only.
@@ -19,8 +23,12 @@ from fractions import Fraction
 from .episode import Episode
 from .timeutil import parse_ts
 
-# Fields that make two invoices duplicates; every name must appear in policy.duplicate_rule.
-DUPLICATE_FIELDS = ("kind", "entity_id", "currency", "total_minor", "issued_at")
+# Fields that make two invoices duplicates; every name must appear in policy.duplicate_rule. issued_at is not one of them,
+# but when the two instants differ the rule must say so (REKEY_CLAUSE), or the checker derives nothing.
+DUPLICATE_FIELDS = ("kind", "entity_id", "currency", "total_minor")
+REKEY_CLAUSE = "issued_at need not be identical"
+# The accounts an invoice of each kind posts to: receivable and revenue, payable and expense.
+POSTING_ACCOUNTS = {"sales": ("1100", "4000"), "purchase": ("2000", "5000")}
 LINE_FIELDS = ("description", "quantity", "unit_price_minor", "amount_minor", "ref")
 TOLERANCE_MINOR = 2
 
@@ -80,11 +88,11 @@ def convert_fraction(amount_minor: int, rate, src_exp: int, dst_exp: int, mode: 
 def _duplicate_signature(doc: dict, rule_text: str):
     if any(name not in rule_text for name in DUPLICATE_FIELDS + LINE_FIELDS):
         return None  # the published rule does not name the fields this checker relies on
-    head = tuple(parse_ts(doc[f]) if f == "issued_at" else doc[f] for f in DUPLICATE_FIELDS)
+    head = tuple(doc[f] for f in DUPLICATE_FIELDS)
     return head + (tuple(tuple(li[f] for f in LINE_FIELDS) for li in doc["line_items"]),)
 
 
-def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_fx: list, base: str) -> tuple | None:
+def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_fx: list, base: str, ledger: list) -> tuple | None:
     """unallocated_payment from the cited records only: the receipt, the sales invoice, the receipt's 2900 row, every
     receivable (1100) row of the invoice and, for a foreign-currency invoice, the receipt's bank (1000) row. Returns
     (payment, invoice, 2900 row, posted, relieved) or None. The invoice's open balance is derived from the 1100 rows
@@ -93,7 +101,10 @@ def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_
     balance posted on the cited rows covers the receipt and the receipt is exactly its relief plus the 2900 amount. In a
     foreign currency the rows carry base amounts only and the 2900 amount carries the payment-date rate, so the bank row
     (the whole receipt at that rate) is cited: with no relief the whole bank amount sits in 2900, with a relief 2900 holds
-    less than the bank amount. The covering test in a foreign currency stays on the document total."""
+    less than the bank amount. The covering test in a foreign currency stays on the document total. Receivable rows of the
+    invoice from earlier receipts are allowed (booked before this one: part payments that left the balance), but the set
+    must hold every receivable row the invoice has on the ledger, so a set that leaves an earlier relief out (and so shows a
+    larger balance than the invoice had) derives nothing."""
     pays = [d for d in cited_docs if "payment_id" in d]
     invs = [d for d in cited_docs if "invoice_id" in d]
     if len(pays) != 1 or len(invs) != 1 or len(cited_rows) < 2 or cited_fx or len(set(evidence)) != len(evidence):
@@ -113,7 +124,10 @@ def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_
         return None
     if bank and not (bank[0]["payment_id"] == p["payment_id"] and bank[0]["debit_minor"] > 0 and bank[0]["credit_minor"] == 0):
         return None
-    posted = relieved = 0
+    cited_ids = {r["row_id"] for r in cited_rows}
+    if any(r["invoice_id"] == i["invoice_id"] and r["account"] == "1100" and r["row_id"] not in cited_ids for r in ledger):
+        return None  # a receivable row of the invoice is left out: the balance on the cited rows is not the invoice's balance
+    posted = relieved = prior = 0
     for r in receivable:
         if r["account"] != "1100" or r["invoice_id"] != i["invoice_id"]:
             return None
@@ -125,17 +139,19 @@ def _receivable_story(evidence: list, cited_docs: list, cited_rows: list, cited_
             posted += r["debit_minor"]
         elif r["payment_id"] == p["payment_id"]:
             relieved += r["credit_minor"]
+        elif r["payment_id"] is not None and r["credit_minor"] > 0 and parse_ts(r["timestamp"]) < parse_ts(u["timestamp"]):
+            prior += r["credit_minor"]  # an earlier payment already relieved part of the invoice: the balance is what is left
         else:
-            return None  # a credit from another payment (or from nowhere): the invoice may be settled elsewhere
-    if posted <= 0 or posted - relieved <= 0:
+            return None  # a credit from nowhere or booked after the receipt: the invoice may be settled elsewhere
+    if posted <= 0 or posted - prior - relieved <= 0:
         return None  # no booked balance, or nothing left open for the 2900 amount to belong to
     if 2 * relieved * i["total_minor"] > 2 * posted * p["amount_minor"] + i["total_minor"]:
         return None  # the receipt cannot have relieved more of the invoice than it paid (proportional carrying amount)
-    if not foreign and (p["amount_minor"] > posted or relieved + u["credit_minor"] != p["amount_minor"]):
-        return None  # base currency: the cited balance covers the receipt, which is exactly its relief plus the 2900 amount
+    if not foreign and (p["amount_minor"] > posted - prior or relieved + u["credit_minor"] != p["amount_minor"]):
+        return None  # base currency: the open balance covers the receipt, which is exactly its relief plus the 2900 amount
     if foreign and (u["credit_minor"] != bank[0]["debit_minor"] if relieved == 0 else u["credit_minor"] >= bank[0]["debit_minor"]):
         return None  # foreign currency: all of the bank amount sits in 2900 when nothing was relieved, else part of it
-    return p, i, u, posted, relieved
+    return p, i, u, posted - prior, relieved
 
 
 def unallocated_open_balance(evidence: list, ep: Episode) -> tuple | None:
@@ -149,7 +165,7 @@ def unallocated_open_balance(evidence: list, ep: Episode) -> tuple | None:
     cited_fx = [e for e in evidence if e in fxs]
     if any(e not in rows and e not in docs and e not in fxs for e in evidence):
         return None
-    story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, ep.policy["base_currency"])
+    story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, ep.policy["base_currency"], ep.ledger)
     return None if story is None else (story[3], story[3] - story[4])
 
 
@@ -189,16 +205,35 @@ def derive_from_evidence(issue_type: str, evidence: list, ep: Episode) -> tuple 
         sig_a, sig_b = _duplicate_signature(a, pol["duplicate_rule"]), _duplicate_signature(b, pol["duplicate_rule"])
         if sig_a is None or sig_a != sig_b:
             return None
+        if a["invoice_id"] == b["invoice_id"]:
+            return None
         ra = [r for r in cited_rows if r["invoice_id"] == a["invoice_id"]]
         rb = [r for r in cited_rows if r["invoice_id"] == b["invoice_id"]]
         if len(ra) != 1 or len(rb) != 1 or ra[0]["account"] != rb[0]["account"]:
             return None
-        amt = ra[0]["debit_minor"] or ra[0]["credit_minor"]
-        if amt != (rb[0]["debit_minor"] or rb[0]["credit_minor"]):
+        # each row is its own invoice's posting (no payment relief) in an account the invoice kind posts to, booked in the
+        # period of the invoice (a posting is booked at its own moment, which may differ from issued_at inside the
+        # period: policy posting_rules.posting_timestamp); the amount is the row of the later copy
+        if ra[0]["account"] not in POSTING_ACCOUNTS[a["kind"]]:
             return None
-        return issue_type, frozenset({a["invoice_id"], b["invoice_id"]}), amt
+        for doc, row in ((a, ra[0]), (b, rb[0])):
+            if row["payment_id"] is not None:
+                return None
+            if (p0 <= parse_ts(row["timestamp"]) < p1) != (p0 <= parse_ts(doc["issued_at"]) < p1):
+                return None
+        amt_a = ra[0]["debit_minor"] or ra[0]["credit_minor"]
+        amt_b = rb[0]["debit_minor"] or rb[0]["credit_minor"]
+        inst_a, inst_b = parse_ts(a["issued_at"]), parse_ts(b["issued_at"])
+        if inst_a == inst_b:
+            if amt_a != amt_b:
+                return None  # copies of one instant post equal amounts
+        elif REKEY_CLAUSE not in pol["duplicate_rule"]:
+            return None  # the published rule does not say that a later copy may carry another issued_at
+        # the amount is the row of the later document (equal instants: either row, they are equal)
+        later = amt_b if (inst_b, b["invoice_id"]) >= (inst_a, a["invoice_id"]) else amt_a
+        return issue_type, frozenset({a["invoice_id"], b["invoice_id"]}), later
     if issue_type == "unallocated_payment":
-        story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, base)
+        story = _receivable_story(evidence, cited_docs, cited_rows, cited_fx, base, ep.ledger)
         if story is None:
             return None
         return issue_type, frozenset({story[0]["payment_id"], story[1]["invoice_id"]}), story[2]["credit_minor"]

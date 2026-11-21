@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "config_version": "1",
   "seed": "3171845029911648203",
   "secret_used": false,
@@ -13,18 +13,17 @@
   "resolved_config": {
     "config_version": "1",
     "size": "medium",
-    "base_currency": "KZT",
+    "base_currency": "KWD",
     "foreign_currencies": [
-      "USD",
-      "AED",
-      "EUR"
+      "EUR",
+      "BHD"
     ],
-    "timezone": "Asia/Almaty",
-    "period": "2027-08",
+    "timezone": "Asia/Kuwait",
+    "period": "2026-04",
     "rounding": "half_up",
-    "id_style": "prefixed",
+    "id_style": "numeric",
     "ts_repr": "utc",
-    "row_order": "time",
+    "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 0,
@@ -33,7 +32,8 @@
     },
     "variants": {
       "duplicate_invoice": [
-        "same_day_copy"
+        "same_day_copy",
+        "rekeyed_copy"
       ],
       "unallocated_payment": [
         "missing",
@@ -55,38 +55,47 @@
       "boundary_fx_payment"
     ],
     "distractors": {
-      "legit_repeat": 2,
       "recurring": 2,
       "split_payment": 2,
       "multi_invoice_payment": 1,
       "underpayment": 2,
-      "overpayment_refund": 1,
-      "null_ref_receipt": 2,
       "midnight_fx": 3,
       "weekend_fx": 2,
-      "boundary_doc": 5
+      "boundary_doc": 6,
+      "posting_lag": 25,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 3,
+      "split_remainder": 3,
+      "credit_receipt": 4,
+      "prepaid_receipt": 0,
+      "legit_repeat": 5
     },
+    "repeat_pairs": 5,
     "counts": {
-      "customers": 15,
-      "suppliers": 8,
-      "sales_invoices": 36,
+      "customers": 14,
+      "suppliers": 7,
+      "sales_invoices": 30,
       "purchase_invoices": 22,
       "prior_invoices": 6,
-      "target_rows": 965
+      "target_rows": 659
+    },
+    "unallocated_prior": 0,
+    "error_invoice_load": {
+      "sales": 1,
+      "purchase": 0,
+      "sales_paid": 1
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Kenum Foods LLP",
-    "customers": 16,
-    "suppliers": 10,
-    "invoices": 94,
-    "payments": 61,
-    "misc_journals": 302,
-    "holidays": [
-      "2027-08-05"
-    ]
+    "company": "Miron Agro Ltd",
+    "customers": 14,
+    "suppliers": 7,
+    "invoices": 101,
+    "payments": 70,
+    "misc_journals": 125,
+    "holidays": []
   },
   "injections": [
     {
@@ -95,13 +104,13 @@
       "variant": "utc_date",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "RCPT-649093"
+        "payment": "32502313"
       },
       "change": {
-        "wrong_rate_date": "2027-08-31",
-        "correct_rate": "517.900",
-        "correct_rate_date": "2027-09-01",
-        "wrong_rate": "516.170"
+        "wrong_rate_date": "2026-04-30",
+        "correct_rate": "0.315950",
+        "correct_rate_date": "2026-05-01",
+        "wrong_rate": "0.315612"
       }
     },
     {
@@ -110,10 +119,10 @@
       "variant": "utc_wall_clock",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "RCPT-649093"
+        "payment": "32502313"
       },
       "change": {
-        "posting_ts": "2027-08-31T16:09:43+00:00"
+        "posting_ts": "2026-04-30T20:09:25+00:00"
       }
     }
   ],
@@ -121,206 +130,464 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-164409",
-        "BILL-156551"
+        "16665759",
+        "16003529"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-995578",
-        "BILL-223202"
+        "24339309",
+        "25570737"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "17683250",
+        "11197675"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "25438623",
+        "24798611",
+        "44704782"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "27674370",
+        "25035250"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-957893",
-        "BILL-204590"
+        "27651803",
+        "29403326"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-467149",
-        "BILL-336940"
+        "23997582",
+        "24536075"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-351605",
-        "RCPT-432911",
-        "RCPT-816905"
+        "15348328",
+        "36021128",
+        "34284718"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-599795",
-        "RCPT-468463",
-        "RCPT-550531"
+        "19442538",
+        "38695419",
+        "33408019"
       ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "13896493",
+        "33006265",
+        "34292184"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "11767222",
+        "31232142",
+        "39860293"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "12182541",
+        "37905249",
+        "33810299"
+      ],
+      "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-925410",
-        "INV-123827",
-        "RCPT-639395"
+        "13996993",
+        "18845462",
+        "33119109"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-905471",
-        "RCPT-126228"
+        "17215662",
+        "38800817"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-681502",
-        "RCPT-392734"
+        "11134484",
+        "36167421"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-439581",
-        "RCPT-640451",
-        "RFND-888659"
+        "16375247",
+        "31388752",
+        "58840749"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "13319681",
+        "37665886",
+        "53233923"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-148325"
+        "34007828"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-811257"
+        "34301457"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "34961237"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-867434",
-        "PAY-577497"
+        "29577250"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-539486"
+        "13834726",
+        "38641801"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-505685",
-        "PAY-980065"
+        "17174665"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-202550",
-        "PAY-295386"
+        "15294350"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-971695"
+        "24919874",
+        "44150037"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "16501068"
+      ]
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "14731039",
+        "38380415"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "17725254",
+        "37435755"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "14501288",
+        "33032066"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "15129455",
+        "36312330"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "21633037"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-388683"
+        "14867711",
+        "37119048"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "BILL-556729",
-        "PAY-514606"
-      ]
-    },
-    {
-      "kind": "midnight_fx",
-      "ids": [
-        "INV-215098"
+        "13489132"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-269918"
+        "14385543"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-113956"
+        "15078419"
       ]
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "13996993"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "18845462"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "16280430"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "45848345"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "14385543"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "29055885"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "38218230"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "17347709"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "32052938"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "34007828"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "12842266"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "21045522"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "36222490"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "14731039"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "44718671"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "19719292"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "14867711"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "25659632"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "21159660"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "33238332"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "36974542"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "34284718"
+      ],
+      "shape": "earlier"
+    }
+  ],
+  "posting_lags": [
+    {
+      "id": "24798611",
+      "shape": "earlier",
+      "role": "pair"
+    },
+    {
+      "id": "27674370",
+      "shape": "later",
+      "role": "pair"
     }
   ],
   "ops": [
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-444798",
+      "id": "94784782",
       "field": "timestamp",
-      "before": "2027-08-31T21:09:43Z",
-      "after": "2027-08-31T16:09:43Z"
+      "before": "2026-04-30T23:09:25Z",
+      "after": "2026-04-30T20:09:25Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-444798",
+      "id": "94784782",
       "field": "debit_minor",
-      "before": 0,
-      "after": 572010
+      "before": 3178,
+      "after": 4286
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-444798",
-      "field": "credit_minor",
-      "before": 132817,
-      "after": 0
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-897829",
+      "id": "95216694",
       "field": "timestamp",
-      "before": "2027-08-31T21:09:43Z",
-      "after": "2027-08-31T16:09:43Z"
+      "before": "2026-04-30T23:09:25Z",
+      "after": "2026-04-30T20:09:25Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-897829",
+      "id": "95216694",
       "field": "debit_minor",
-      "before": 210999711,
-      "after": 210294884
+      "before": 1036145,
+      "after": 1035037
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-910400",
+      "id": "97668780",
       "field": "timestamp",
-      "before": "2027-08-31T21:09:43Z",
-      "after": "2027-08-31T16:09:43Z"
+      "before": "2026-04-30T23:09:25Z",
+      "after": "2026-04-30T20:09:25Z"
     }
   ],
-  "clean_digest": "0e5f803ad5d9af55d73c2142da3b6c4f0a91755b8a4719671f0fdeaaa4e71ee4",
-  "clean_records_digest": "d7d6ef2167fa403980d77eabf5f81f8deee80e0a3178023037ae1b579049db47",
-  "final_digest": "2f06594d187cf64921a6c7d98eaa50b01689211245e6e477f18f171df6df406d",
+  "clean_digest": "4d41562bc64a19d0172345463269fccbb163dbaa7c01cdc6bd7de47d81e40f01",
+  "clean_records_digest": "24ca137897131d36c3e85290b45525b1afa362e22162f260d623a74757066f8c",
+  "final_digest": "c874b17917ba58cee789dcf4c52b990a124e2166cd980647d0bcd2e469c7b37d",
   "rejected_attempts": []
 }

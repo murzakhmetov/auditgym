@@ -1,12 +1,63 @@
 {
   "affected": 3799,
-  "documents": 141479,
+  "documents": 170058,
+  "duplicates_by_side": {
+    "pooled": {
+      "duplicates": 553,
+      "pairs": 3776,
+      "precision": 0.1465
+    },
+    "purchase/later": {
+      "duplicates": 136,
+      "pairs": 906,
+      "precision": 0.1501
+    },
+    "purchase/same": {
+      "duplicates": 136,
+      "pairs": 994,
+      "precision": 0.1368
+    },
+    "sales/later": {
+      "duplicates": 136,
+      "pairs": 977,
+      "precision": 0.1392
+    },
+    "sales/same": {
+      "duplicates": 145,
+      "pairs": 899,
+      "precision": 0.1613
+    }
+  },
   "episode_rules": {
-    "any off-hours payment on a boundary day -> error": {
-      "hits": 731,
+    "122 or more invoices -> error": {
+      "hits": 207,
       "label": "error",
-      "precision": 0.7528,
-      "predicted": 971
+      "precision": 0.8625,
+      "predicted": 240
+    },
+    "2900 rows beyond twice the refunds plus the null-ref receipts -> error": {
+      "hits": 750,
+      "label": "error",
+      "precision": 0.75,
+      "predicted": 1000
+    },
+    "8 or more ledger rows on account 2900 -> error": {
+      "hits": 742,
+      "label": "error",
+      "precision": 0.7533,
+      "predicted": 985
+    },
+    "any off-hours payment on a boundary day -> error": {
+      "hits": 723,
+      "label": "error",
+      "precision": 0.7492,
+      "predicted": 965
+    },
+    "any posting at a different instant than its document -> error": {
+      "hits": 750,
+      "label": "error",
+      "precision": 0.75,
+      "predicted": 1000
     },
     "any quantity/price outside catalogue -> error": {
       "hits": 0,
@@ -14,165 +65,342 @@
       "precision": 0.0,
       "predicted": 0
     },
-    "any same-instant pair with terms != 30 -> error": {
-      "hits": 687,
+    "any receipt with a 2900 row dated after an invoice not issued on days 0 to 10 -> error": {
+      "hits": 749,
       "label": "error",
-      "precision": 0.7702,
-      "predicted": 892
+      "precision": 0.7497,
+      "predicted": 999
+    },
+    "any receipt with a 2900 row lists an opening-item invoice -> error": {
+      "hits": 689,
+      "label": "error",
+      "precision": 0.7514,
+      "predicted": 917
+    },
+    "any sales invoice with two or more receipts below its total -> error": {
+      "hits": 750,
+      "label": "error",
+      "precision": 0.75,
+      "predicted": 1000
+    },
+    "any same-instant pair with terms != 30 -> error": {
+      "hits": 582,
+      "label": "error",
+      "precision": 0.7558,
+      "predicted": 770
+    },
+    "at most 0.64 payments per invoice -> error": {
+      "hits": 12,
+      "label": "error",
+      "precision": 0.6667,
+      "predicted": 18
+    },
+    "at most 3 sales invoices whose receipts sum above their total -> error": {
+      "hits": 35,
+      "label": "error",
+      "precision": 0.6604,
+      "predicted": 53
+    },
+    "at most 5 documents posted later than their timestamp -> clean": {
+      "hits": 24,
+      "label": "clean",
+      "precision": 0.2474,
+      "predicted": 97
+    },
+    "every ledger timestamp in the local offset (no UTC, <= 2 offsets) -> clean": {
+      "hits": 79,
+      "label": "clean",
+      "precision": 0.2582,
+      "predicted": 306
+    },
+    "more postings at another instant than the size's largest default lag count -> error": {
+      "hits": 0,
+      "label": "error",
+      "precision": 0.0,
+      "predicted": 0
     },
     "small ledger (< 500 rows) with >= 2 refunds -> clean": {
-      "hits": 0,
+      "hits": 61,
       "label": "clean",
-      "precision": 0.0,
-      "predicted": 0
+      "precision": 0.2961,
+      "predicted": 206
     },
     "small ledger (< 500 rows) with >= 3 null-ref receipts -> clean": {
-      "hits": 0,
+      "hits": 71,
       "label": "clean",
-      "precision": 0.0,
-      "predicted": 0
+      "precision": 0.343,
+      "predicted": 207
     }
   },
   "episodes": 1000,
   "error_episodes": 750,
   "fx_target": {
-    "chance": 0.1025,
-    "eligible_episodes": 180,
+    "chance": 0.1057,
+    "eligible_episodes": 181,
     "largest_is_target": 17,
-    "rate": 0.0944
+    "rate": 0.0939
   },
   "master": "auditgym-tells-v1",
+  "pair_count_episode_rules": {
+    "small ledger (< 500 rows) with >= 3 line-identical pairs -> error": {
+      "hits": 138,
+      "label": "error",
+      "precision": 0.6935,
+      "predicted": 199
+    }
+  },
+  "pair_count_rules": {
+    "pair member in an episode with <= 2 line-identical pairs": {
+      "episodes_firing": 121,
+      "hits": 122,
+      "precision": 0.2521,
+      "predicted": 484,
+      "recall": 0.0321
+    }
+  },
   "residual": [
     "residual: off-hours payment",
     "residual: off-hours payment inside the error window",
     "residual: off-hours payment outside the error window"
   ],
   "rules": {
+    "... and the payment is at most the invoice total": {
+      "episodes_firing": 686,
+      "hits": 435,
+      "precision": 0.2308,
+      "predicted": 1885,
+      "recall": 0.1145
+    },
     "boundary day, off-hours invoice": {
-      "episodes_firing": 960,
-      "hits": 162,
-      "precision": 0.0556,
-      "predicted": 2912,
-      "recall": 0.0426
+      "episodes_firing": 970,
+      "hits": 175,
+      "precision": 0.0588,
+      "predicted": 2975,
+      "recall": 0.0461
     },
     "boundary day, off-hours payment": {
-      "episodes_firing": 971,
-      "hits": 149,
-      "precision": 0.0458,
-      "predicted": 3250,
-      "recall": 0.0392
+      "episodes_firing": 965,
+      "hits": 143,
+      "precision": 0.0434,
+      "predicted": 3296,
+      "recall": 0.0376
     },
     "disbursement in the error window": {
-      "episodes_firing": 480,
+      "episodes_firing": 509,
       "hits": 0,
       "precision": 0.0,
-      "predicted": 672,
+      "predicted": 722,
       "recall": 0.0
     },
     "document on an FX holiday": {
-      "episodes_firing": 650,
-      "hits": 117,
-      "precision": 0.0254,
-      "predicted": 4601,
-      "recall": 0.0308
+      "episodes_firing": 691,
+      "hits": 131,
+      "precision": 0.0217,
+      "predicted": 6026,
+      "recall": 0.0345
     },
     "dominant foreign purchase (>= 1.5x runner-up)": {
-      "episodes_firing": 199,
-      "hits": 5,
-      "precision": 0.0251,
-      "predicted": 199,
-      "recall": 0.0013
+      "episodes_firing": 190,
+      "hits": 4,
+      "precision": 0.0211,
+      "predicted": 190,
+      "recall": 0.0011
+    },
+    "invoice with a later line-identical repeat (2 to 10 days)": {
+      "episodes_firing": 911,
+      "hits": 272,
+      "precision": 0.1445,
+      "predicted": 1883,
+      "recall": 0.0716
     },
     "invoice with a twin": {
-      "episodes_firing": 1000,
-      "hits": 1106,
-      "precision": 0.2181,
-      "predicted": 5070,
-      "recall": 0.2911
+      "episodes_firing": 912,
+      "hits": 562,
+      "precision": 0.1484,
+      "predicted": 3786,
+      "recall": 0.1479
+    },
+    "lag across a date change on a foreign-currency document": {
+      "episodes_firing": 998,
+      "hits": 706,
+      "precision": 0.0855,
+      "predicted": 8253,
+      "recall": 0.1858
+    },
+    "lag equals the zone offset": {
+      "episodes_firing": 920,
+      "hits": 437,
+      "precision": 0.055,
+      "predicted": 7949,
+      "recall": 0.115
+    },
+    "lag of less than one hour": {
+      "episodes_firing": 881,
+      "hits": 34,
+      "precision": 0.014,
+      "predicted": 2424,
+      "recall": 0.0089
     },
     "largest foreign purchase": {
       "episodes_firing": 999,
-      "hits": 27,
-      "precision": 0.027,
+      "hits": 20,
+      "precision": 0.02,
       "predicted": 999,
-      "recall": 0.0071
+      "recall": 0.0053
     },
     "largest foreign sale": {
       "episodes_firing": 1000,
-      "hits": 33,
-      "precision": 0.033,
+      "hits": 44,
+      "precision": 0.044,
       "predicted": 1000,
-      "recall": 0.0087
+      "recall": 0.0116
     },
     "largest invoice": {
       "episodes_firing": 1000,
-      "hits": 18,
-      "precision": 0.018,
+      "hits": 36,
+      "precision": 0.036,
       "predicted": 1000,
-      "recall": 0.0047
+      "recall": 0.0095
+    },
+    "later member of a line-identical pair": {
+      "episodes_firing": 911,
+      "hits": 272,
+      "precision": 0.1445,
+      "predicted": 1883,
+      "recall": 0.0716
+    },
+    "line-identical pair in a foreign currency": {
+      "episodes_firing": 804,
+      "hits": 430,
+      "precision": 0.1503,
+      "predicted": 2860,
+      "recall": 0.1132
+    },
+    "line-identical pair member posted off its issued_at": {
+      "episodes_firing": 731,
+      "hits": 172,
+      "precision": 0.1319,
+      "predicted": 1304,
+      "recall": 0.0453
+    },
+    "line-identical pair under 300 USD": {
+      "episodes_firing": 295,
+      "hits": 84,
+      "precision": 0.1224,
+      "predicted": 686,
+      "recall": 0.0221
+    },
+    "line-identical pair, earlier member paid": {
+      "episodes_firing": 807,
+      "hits": 424,
+      "precision": 0.1528,
+      "predicted": 2774,
+      "recall": 0.1116
     },
     "near-midnight (UTC date differs) invoice": {
-      "episodes_firing": 890,
-      "hits": 418,
-      "precision": 0.0623,
-      "predicted": 6711,
-      "recall": 0.11
+      "episodes_firing": 921,
+      "hits": 472,
+      "precision": 0.0612,
+      "predicted": 7712,
+      "recall": 0.1242
     },
     "near-midnight (UTC date differs) payment": {
-      "episodes_firing": 890,
-      "hits": 199,
-      "precision": 0.0335,
-      "predicted": 5932,
-      "recall": 0.0524
+      "episodes_firing": 920,
+      "hits": 209,
+      "precision": 0.0273,
+      "predicted": 7646,
+      "recall": 0.055
     },
     "off-hours document": {
       "episodes_firing": 1000,
-      "hits": 701,
-      "precision": 0.0365,
-      "predicted": 19231,
-      "recall": 0.1845
+      "hits": 699,
+      "precision": 0.031,
+      "predicted": 22557,
+      "recall": 0.184
     },
     "off-hours invoice": {
       "episodes_firing": 1000,
-      "hits": 452,
-      "precision": 0.0539,
-      "predicted": 8384,
-      "recall": 0.119
+      "hits": 458,
+      "precision": 0.0501,
+      "predicted": 9137,
+      "recall": 0.1206
     },
     "off-hours payment": {
       "episodes_firing": 1000,
-      "hits": 249,
-      "precision": 0.023,
-      "predicted": 10847,
-      "recall": 0.0655
+      "hits": 241,
+      "precision": 0.018,
+      "predicted": 13420,
+      "recall": 0.0634
     },
     "paid twin invoice": {
-      "episodes_firing": 800,
-      "hits": 300,
-      "precision": 0.2313,
-      "predicted": 1297,
-      "recall": 0.079
+      "episodes_firing": 637,
+      "hits": 140,
+      "precision": 0.1518,
+      "predicted": 922,
+      "recall": 0.0369
     },
     "payment with a 2900 row": {
       "episodes_firing": 1000,
       "hits": 718,
-      "precision": 0.1196,
-      "predicted": 6002,
+      "precision": 0.051,
+      "predicted": 14080,
       "recall": 0.189
     },
     "payment with a 2900 row and invoice refs": {
       "episodes_firing": 1000,
       "hits": 718,
-      "precision": 0.2161,
-      "predicted": 3322,
+      "precision": 0.0688,
+      "predicted": 10436,
       "recall": 0.189
     },
+    "payment with a 2900 row on an invoice that has no other payment": {
+      "episodes_firing": 946,
+      "hits": 435,
+      "precision": 0.121,
+      "predicted": 3594,
+      "recall": 0.1145
+    },
+    "posted earlier than its document": {
+      "episodes_firing": 1000,
+      "hits": 779,
+      "precision": 0.0462,
+      "predicted": 16876,
+      "recall": 0.2051
+    },
+    "posted later than its document": {
+      "episodes_firing": 1000,
+      "hits": 569,
+      "precision": 0.046,
+      "predicted": 12360,
+      "recall": 0.1498
+    },
+    "posting row at a different instant than its document": {
+      "episodes_firing": 1000,
+      "hits": 1348,
+      "precision": 0.0461,
+      "predicted": 29236,
+      "recall": 0.3548
+    },
     "purchase invoice in the error window": {
-      "episodes_firing": 543,
-      "hits": 93,
-      "precision": 0.1144,
-      "predicted": 813,
-      "recall": 0.0245
+      "episodes_firing": 582,
+      "hits": 96,
+      "precision": 0.1087,
+      "predicted": 883,
+      "recall": 0.0253
+    },
+    "purchase invoice with a later line-identical repeat": {
+      "episodes_firing": 641,
+      "hits": 136,
+      "precision": 0.1501,
+      "predicted": 906,
+      "recall": 0.0358
+    },
+    "purchase invoice with a twin": {
+      "episodes_firing": 671,
+      "hits": 272,
+      "precision": 0.1368,
+      "predicted": 1988,
+      "recall": 0.0716
     },
     "qty/price outside catalogue": {
       "episodes_firing": 0,
@@ -182,46 +410,95 @@
       "recall": 0.0
     },
     "receipt in the error window": {
-      "episodes_firing": 601,
+      "episodes_firing": 616,
       "hits": 150,
-      "precision": 0.1506,
-      "predicted": 996,
+      "precision": 0.1487,
+      "predicted": 1009,
       "recall": 0.0395
+    },
+    "receipt with a 1100 row and a 2900 row on an invoice that another receipt also lists": {
+      "episodes_firing": 697,
+      "hits": 133,
+      "precision": 0.1152,
+      "predicted": 1155,
+      "recall": 0.035
+    },
+    "receipt with a 2900 row dated after its invoice, the invoice not issued on days 0 to 10 of the period": {
+      "episodes_firing": 999,
+      "hits": 460,
+      "precision": 0.102,
+      "predicted": 4512,
+      "recall": 0.1211
+    },
+    "receipt with a 2900 row on an opening-item invoice": {
+      "episodes_firing": 917,
+      "hits": 187,
+      "precision": 0.0817,
+      "predicted": 2289,
+      "recall": 0.0492
+    },
+    "receipt with invoice references and no 1100 row": {
+      "episodes_firing": 869,
+      "hits": 292,
+      "precision": 0.1054,
+      "predicted": 2771,
+      "recall": 0.0769
     },
     "residual: off-hours payment": {
       "episodes_firing": 1000,
-      "hits": 249,
-      "precision": 0.023,
-      "predicted": 10847,
-      "recall": 0.0655
+      "hits": 241,
+      "precision": 0.018,
+      "predicted": 13420,
+      "recall": 0.0634
     },
     "residual: off-hours payment inside the error window": {
-      "episodes_firing": 752,
-      "hits": 147,
-      "precision": 0.0927,
-      "predicted": 1585,
-      "recall": 0.0387
+      "episodes_firing": 756,
+      "hits": 138,
+      "precision": 0.0857,
+      "predicted": 1611,
+      "recall": 0.0363
     },
     "residual: off-hours payment outside the error window": {
       "episodes_firing": 1000,
-      "hits": 102,
-      "precision": 0.011,
-      "predicted": 9262,
-      "recall": 0.0268
+      "hits": 103,
+      "precision": 0.0087,
+      "predicted": 11809,
+      "recall": 0.0271
     },
     "round amount": {
-      "episodes_firing": 371,
-      "hits": 46,
-      "precision": 0.0196,
-      "predicted": 2346,
-      "recall": 0.0121
+      "episodes_firing": 385,
+      "hits": 47,
+      "precision": 0.017,
+      "predicted": 2765,
+      "recall": 0.0124
     },
     "sales invoice in the error window": {
-      "episodes_firing": 541,
-      "hits": 73,
-      "precision": 0.0881,
-      "predicted": 829,
-      "recall": 0.0192
+      "episodes_firing": 550,
+      "hits": 82,
+      "precision": 0.0987,
+      "predicted": 831,
+      "recall": 0.0216
+    },
+    "sales invoice with a later line-identical repeat": {
+      "episodes_firing": 657,
+      "hits": 136,
+      "precision": 0.1392,
+      "predicted": 977,
+      "recall": 0.0358
+    },
+    "sales invoice with a twin": {
+      "episodes_firing": 636,
+      "hits": 290,
+      "precision": 0.1613,
+      "predicted": 1798,
+      "recall": 0.0763
+    },
+    "sales invoice with two or more receipts that sum to less than its total": {
+      "episodes_firing": 1000,
+      "hits": 92,
+      "precision": 0.0269,
+      "predicted": 3424,
+      "recall": 0.0242
     },
     "sales qty above catalogue max": {
       "episodes_firing": 0,
@@ -230,75 +507,82 @@
       "predicted": 0,
       "recall": 0.0
     },
+    "same-instant pair of a subscription item": {
+      "episodes_firing": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "predicted": 0,
+      "recall": 0.0
+    },
     "same-instant pair with terms != 30": {
-      "episodes_firing": 892,
-      "hits": 740,
-      "precision": 0.2131,
-      "predicted": 3472,
-      "recall": 0.1948
+      "episodes_firing": 770,
+      "hits": 390,
+      "precision": 0.155,
+      "predicted": 2516,
+      "recall": 0.1027
     },
     "same-instant pair, terms != 30 or one copy paid": {
-      "episodes_firing": 969,
-      "hits": 942,
-      "precision": 0.2188,
-      "predicted": 4306,
-      "recall": 0.248
+      "episodes_firing": 846,
+      "hits": 488,
+      "precision": 0.1554,
+      "predicted": 3140,
+      "recall": 0.1285
     },
     "terms 14 or 45 days": {
       "episodes_firing": 1000,
-      "hits": 1930,
-      "precision": 0.0351,
-      "predicted": 54977,
-      "recall": 0.508
+      "hits": 1976,
+      "precision": 0.0319,
+      "predicted": 61914,
+      "recall": 0.5201
     },
     "terms not 30 days": {
       "episodes_firing": 1000,
-      "hits": 1949,
-      "precision": 0.0352,
-      "predicted": 55410,
-      "recall": 0.513
+      "hits": 1990,
+      "precision": 0.0319,
+      "predicted": 62374,
+      "recall": 0.5238
     },
     "top-3 foreign purchase": {
       "episodes_firing": 999,
-      "hits": 121,
-      "precision": 0.0405,
-      "predicted": 2989,
-      "recall": 0.0319
+      "hits": 111,
+      "precision": 0.0372,
+      "predicted": 2985,
+      "recall": 0.0292
     },
     "top-3 foreign sale": {
       "episodes_firing": 1000,
-      "hits": 106,
-      "precision": 0.0353,
+      "hits": 115,
+      "precision": 0.0383,
       "predicted": 3000,
-      "recall": 0.0279
+      "recall": 0.0303
     },
     "unpaid twin invoice": {
-      "episodes_firing": 1000,
-      "hits": 806,
-      "precision": 0.2136,
-      "predicted": 3773,
-      "recall": 0.2122
+      "episodes_firing": 912,
+      "hits": 422,
+      "precision": 0.1473,
+      "predicted": 2864,
+      "recall": 0.1111
     },
     "weekday date": {
       "episodes_firing": 1000,
-      "hits": 3417,
-      "precision": 0.0269,
-      "predicted": 127143,
-      "recall": 0.8994
+      "hits": 3429,
+      "precision": 0.0224,
+      "predicted": 152757,
+      "recall": 0.9026
     },
     "weekend date": {
       "episodes_firing": 1000,
-      "hits": 382,
-      "precision": 0.0266,
-      "predicted": 14336,
-      "recall": 0.1006
+      "hits": 370,
+      "precision": 0.0214,
+      "predicted": 17301,
+      "recall": 0.0974
     },
     "within 12 h of period boundary": {
       "episodes_firing": 1000,
-      "hits": 389,
-      "precision": 0.04,
-      "predicted": 9719,
-      "recall": 0.1024
+      "hits": 430,
+      "precision": 0.0424,
+      "predicted": 10143,
+      "recall": 0.1132
     }
   }
 }

@@ -20,7 +20,7 @@ from .books import BooksError, post
 from .config import ConfigError, resolve
 from .episode import Episode
 from .history import HistoryBuilder, SampleRetry
-from .inject import RetryAttempt, derive_issues, make_overrides, plan_errors
+from .inject import RetryAttempt, derive_issues, make_overrides, plan_errors, plan_posting_lags
 from .io import canonical_json
 from .render import Renderer, diff_records
 from .rng import Rng
@@ -65,6 +65,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
     b.protected_dates |= plan.protected_dates
     b.protected_dates |= {b.h.p_last_date, b.h.next_first_date}
     b.build_fx()
+    plan_posting_lags(b, plan)  # on its own stream; after the FX rates, which one lag shape reads
     clean_books = post(b.h)
     target_rows = cfg["counts"]["target_rows"]
     b.fill_misc(max(0, target_rows - len(clean_books.lines) - 2 * len(plan.extra_invoices)))
@@ -108,8 +109,13 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
         })
     distractors = []
     for d in b.h.distractors:
-        distractors.append({"kind": d["kind"],
-                            "ids": [renderer.inv_id.get(k) or renderer.pay_id.get(k) for k in d["keys"]]})
+        entry = {"kind": d["kind"], "ids": [renderer.inv_id.get(k) or renderer.pay_id.get(k) for k in d["keys"]]}
+        if "shape" in d:
+            entry["shape"] = d["shape"]
+        distractors.append(entry)
+    # lags of documents that are not distractors (members of line-identical pairs, documents of error issues)
+    posting_lags = [{"id": renderer.inv_id.get(e["key"]) or renderer.pay_id.get(e["key"]), "shape": e["shape"], "role": e["role"]}
+                    for e in b.lag_log if e["role"] != "distractor"]
     manifest = renderer.manifest(episode_id, tables["ledger"], tables["invoices"], tables["payments"], tables["fx"])
     clean_manifest = renderer.manifest(episode_id, tables_clean["ledger"], tables_clean["invoices"],
                                        tables_clean["payments"], tables_clean["fx"])
@@ -140,6 +146,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
         },
         "injections": injections,
         "distractors": distractors,
+        "posting_lags": posting_lags,
         "ops": ops,
         "clean_digest": clean.public_digest(),
         "clean_records_digest": clean_records_digest,

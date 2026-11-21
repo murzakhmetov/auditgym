@@ -113,8 +113,9 @@ def _accusation(ep, ftype: str, docs: list, amount: int, evidence: list, why: st
             "currency": ep.manifest["base_currency"], "evidence_ids": evidence, "explanation": why}
 
 
-def duplicate_attack(ep, first: dict, second: dict, why: str = "two invoices, same supplier and amount") -> dict:
-    """Published duplicate_invoice shape: both copies, base amount of one posting, both documents and both key rows."""
+def duplicate_attack(ep, first: dict, second: dict, why: str = "two invoices, same counterparty and amount") -> dict:
+    """Published duplicate_invoice shape, either side: both copies, the base amount posted for the later copy (`second`),
+    both documents and both key rows."""
     rows = [_key_row(ep, first), _key_row(ep, second)]
     return _accusation(ep, "duplicate_invoice", [first, second], _posted_base(ep, second), _cite([first, second], rows), why)
 
@@ -194,11 +195,13 @@ def _attack_for(ep, kind: str, docs: list):
         return duplicate_attack(ep, inv[0], inv[1])
     if kind in ("split_payment", "multi_invoice_payment", "underpayment", "overpayment_refund") and inv and pay:
         return unallocated_attack(ep, pay[0], inv[0])
+    if kind == "credit_receipt" and inv and pay:  # the receipt that left the credit is the last payment of the distractor
+        return unallocated_attack(ep, pay[-1], inv[0])
     if kind == "null_ref_receipt" and pay:
         row = _unallocated_row(ep, pay[0])
         return _accusation(ep, "unallocated_payment", [pay[0]], _row_amount(row, _amount(pay[0])), _cite([pay[0]], [row]),
                            "receipt names no invoice")
-    if kind == "boundary_doc" and subject:
+    if kind in ("boundary_doc", "posting_lag") and subject:  # a lag inside the period looks like a booking in another period
         return period_attack(ep, subject[0])
     if kind in ("midnight_fx", "weekend_fx") and subject:
         return _neighbour_fx_attack(ep, subject[0])

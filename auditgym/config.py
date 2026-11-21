@@ -23,7 +23,7 @@ class ConfigError(ValueError):
 
 
 VARIANTS = {
-    "duplicate_invoice": ("same_day_copy",),
+    "duplicate_invoice": ("same_day_copy", "rekeyed_copy"),
     "unallocated_payment": ("missing", "partial"),
     "wrong_fx_rate": ("utc_date", "posting_date", "stale_rate", "transposed"),
     "wrong_period": ("booked_early", "booked_late", "utc_wall_clock"),
@@ -40,6 +40,10 @@ DISTRACTORS = (
     "boundary_doc",
     "midnight_fx",
     "weekend_fx",
+    "posting_lag",
+    "credit_receipt",
+    "prepaid_receipt",
+    "split_remainder",
 )
 SIZES = {
     "small": {"customers": (6, 9), "suppliers": (5, 7), "sales_invoices": (14, 22), "purchase_invoices": (8, 12),
@@ -50,20 +54,50 @@ SIZES = {
               "prior_invoices": (5, 8), "target_rows": (1500, 2000)},
 }
 DEFAULT_DISTRACTORS = {
-    "small": {"legit_repeat": 1, "recurring": 1, "split_payment": 1, "multi_invoice_payment": 1, "underpayment": 1,
-              "overpayment_refund": 1, "null_ref_receipt": 1, "midnight_fx": 2, "weekend_fx": 1},
-    "medium": {"legit_repeat": 2, "recurring": 2, "split_payment": 2, "multi_invoice_payment": 1, "underpayment": 2,
-               "overpayment_refund": 1, "null_ref_receipt": 2, "midnight_fx": 3, "weekend_fx": 2},
-    "large": {"legit_repeat": 3, "recurring": 3, "split_payment": 3, "multi_invoice_payment": 2, "underpayment": 3,
-              "overpayment_refund": 2, "null_ref_receipt": 2, "midnight_fx": 4, "weekend_fx": 3},
+    "small": {"recurring": 1, "split_payment": 1, "multi_invoice_payment": 1, "underpayment": 1,
+              "midnight_fx": 2, "weekend_fx": 1},
+    "medium": {"recurring": 2, "split_payment": 2, "multi_invoice_payment": 1, "underpayment": 2,
+               "midnight_fx": 3, "weekend_fx": 2},
+    "large": {"recurring": 3, "split_payment": 3, "multi_invoice_payment": 2, "underpayment": 3,
+              "midnight_fx": 4, "weekend_fx": 3},
 }
 # default counts drawn from a range (an explicit count in the config stays exact); a fixed default would let the
 # number of boundary documents separate episodes with boundary errors from clean ones
 DEFAULT_DISTRACTOR_RANGES = {
-    "small": {"boundary_doc": (2, 7)},
-    "medium": {"boundary_doc": (3, 8)},
-    "large": {"boundary_doc": (4, 8)},
+    "small": {"boundary_doc": (2, 7), "posting_lag": (12, 22), "overpayment_refund": (1, 3), "null_ref_receipt": (1, 3),
+              "split_remainder": (1, 4)},
+    "medium": {"boundary_doc": (3, 8), "posting_lag": (24, 38), "overpayment_refund": (1, 3), "null_ref_receipt": (2, 4),
+               "split_remainder": (2, 5)},
+    "large": {"boundary_doc": (4, 8), "posting_lag": (32, 50), "overpayment_refund": (2, 4), "null_ref_receipt": (2, 4),
+              "split_remainder": (2, 6)},
 }
+# credit_receipt: a receipt that leaves a customer credit in 2900 although it is not an error, in three over-received shapes
+# (an overpayment that is not refunded, a second receipt on an invoice that is already settled, a part payment topped up by a
+# receipt above the rest; every one is credited to 2900 by policy because no invoice balance is open to relieve), and
+# prepaid_receipt, a receipt that names an invoice issued after it. The unallocated_payment errors take the place of
+# prepaid receipts, so the number of invoices whose receipts sum above their total, the number of settled and topped-up
+# receipts and the rows on 2900 that those explain never depend on how many errors are injected; what an error changes is
+# the number of prepaid receipts, which is zero in half of the episodes and otherwise drawn from a range, so that it says little (a fresh unallocated
+# receipt names an invoice that was issued before it, like every other 2900 credit that is not prepaid).
+CREDIT_OVER_RANGES = {"small": (2, 4), "medium": (3, 5), "large": (3, 6)}
+PREPAID_RANGES = {"small": (1, 5), "medium": (1, 6), "large": (1, 7)}
+PREPAID_ZERO_SHARE = 0.5  # half of the episodes draw no prepaid receipt at all, so "no receipt dated before its invoice" is common
+# share of the fresh unallocated receipts (and of the over-received credit receipts) whose invoice was issued before the
+# period (an opening item); the prior invoices an error brings are taken out of counts.prior_invoices
+UNALLOCATED_PRIOR_SHARE = 0.35
+# split_remainder (ranges in DEFAULT_DISTRACTOR_RANGES): a part payment followed by a second receipt that leaves a rest of the invoice open (both relieve 1100 in
+# full, nothing goes to 2900); per episode, on a fork, so that an invoice with two receipts below its total is no tell
+# posting_lag: the number of documents of the extract whose posting is booked at another instant than the document's (invoices
+# and payments of both sides and currencies), the postings that are errors included. It is about a quarter of the documents of
+# the period, drawn per episode, and the lags of ordinary documents fill what the errors leave of it, so neither the count nor
+# a share of it depends on how many errors are injected. The lagged documents are drawn uniformly from the clean ones, the
+# pair members and the documents of error issues alike. (An explicit 0 therefore leaves only the errors' own postings at
+# another instant: a diagnostic setting, not for a split or a check set.)
+FORKED_RANGES = ("posting_lag", "overpayment_refund", "null_ref_receipt", "split_remainder")
+MAX_POSTING_LAG = 64
+# Line-identical pairs of one counterparty (the decoys and the sources of duplicate_invoice errors alike). The visible
+# count is drawn from this range per size and holds duplicates, so it never depends on how many errors are injected.
+DEFAULT_REPEAT_PAIRS = {"small": (2, 4), "medium": (3, 5), "large": (3, 6)}
 TOP_KEYS = {
     "config_version", "size", "base_currency", "foreign_currencies", "timezone", "period", "rounding", "id_style",
     "ts_repr", "row_order", "errors", "variants", "interacting", "distractors", "counts", "twin",
@@ -141,7 +175,7 @@ def validate(config: dict) -> dict:
         if not isinstance(distractors, dict) or any(k not in DISTRACTORS for k in distractors):
             raise ConfigError(f"distractors keys must be among {', '.join(DISTRACTORS)}")
         for k, v in distractors.items():
-            _int_in(v, 0, 8, f"distractors.{k}")
+            _int_in(v, 0, MAX_POSTING_LAG if k == "posting_lag" else 8, f"distractors.{k}")
     if "twin" in config and not isinstance(config["twin"], bool):
         raise ConfigError("twin must be true or false")
     counts = config.get("counts")
@@ -163,6 +197,18 @@ def min_read_pages(counts: dict) -> int:
     add or move rows, never remove them (tests/test_generator.py checks both on the committed episodes)."""
     n = counts["prior_invoices"] + counts["sales_invoices"] + counts["purchase_invoices"]
     return -(-n // PAGE_ROWS) + -(-2 * n // PAGE_ROWS)
+
+
+def error_invoice_load(config: dict) -> tuple[int, int]:
+    """(sales, purchase) invoices that the requested errors add on top of the ordinary ones: the boundary receipt's invoice (a
+    sales invoice) and one invoice of either side (split evenly, the side is drawn) for every wrong rate and wrong period. An
+    unallocated receipt adds an invoice as well, but it takes the place of a credit receipt, whose count (and invoice) shrinks
+    by one for it (CREDIT_TOTAL_RANGES), so it needs no deduction here; the fx_invoice_partial_allocation scenario shares the
+    invoice of its wrong rate with the receipt and nets out the same way."""
+    errors = config.get("errors") or {}
+    inter = config.get("interacting") or []
+    either = int(errors.get("wrong_fx_rate", 0)) + int(errors.get("wrong_period", 0))
+    return ("boundary_fx_payment" in inter) + (either + 1) // 2, either // 2
 
 
 def resolve(config: dict, rng: Rng) -> dict:
@@ -224,6 +270,25 @@ def resolve(config: dict, rng: Rng) -> dict:
     counts = {}
     for k, (lo, hi) in SIZES[size].items():
         counts[k] = (config.get("counts") or {}).get(k, rng.randint(lo, hi))
+    # Every wrong_fx_rate and wrong_period error (and the boundary scenario) adds an invoice of its own on top of the ordinary
+    # ones; those are taken out of the drawn counts, so the number of invoices of an episode never depends on how many errors
+    # it holds (an explicit count stays exact).
+    sales_red, purchase_red = error_invoice_load(config)
+    load = {"sales": 0, "purchase": 0, "sales_paid": 0}
+    for k, red in (("sales_invoices", sales_red), ("purchase_invoices", purchase_red)):
+        if k not in (config.get("counts") or {}):
+            before = counts[k]
+            counts[k] = max(1, before - red)
+            load[k.split("_")[0]] = before - counts[k]
+    # the boundary scenario's invoice is paid by its receipt; the others that an error adds are never paid
+    load["sales_paid"] = min(1, load["sales"]) if "boundary_fx_payment" in inter else 0
+    errors = {t: int((config.get("errors") or {}).get(t, 0)) for t in FINDING_TYPES}
+    # A fresh unallocated receipt sits on an opening item with the share UNALLOCATED_PRIOR_SHARE (drawn here, so the prior
+    # invoices it brings can be taken out of counts.prior_invoices: the number of opening items never depends on the errors)
+    prior_rng = rng.fork("unallocated_prior")
+    prior_hits = sum(prior_rng.random() < UNALLOCATED_PRIOR_SHARE for _ in range(errors["unallocated_payment"]))
+    if "prior_invoices" not in (config.get("counts") or {}):
+        counts["prior_invoices"] = max(0, counts["prior_invoices"] - prior_hits)
     floor = min_read_pages(counts)
     if floor + 1 > STEP_BUDGET:
         n = counts["prior_invoices"] + counts["sales_invoices"] + counts["purchase_invoices"]
@@ -231,9 +296,25 @@ def resolve(config: dict, rng: Rng) -> dict:
                           f"need at least {floor} pages to read in full, plus the submit; lower those counts")
     distractors = dict(DEFAULT_DISTRACTORS[size])
     for k, (lo, hi) in DEFAULT_DISTRACTOR_RANGES[size].items():
-        distractors[k] = rng.randint(lo, hi)
-    distractors.update(config.get("distractors") or {})
-    errors = {t: int((config.get("errors") or {}).get(t, 0)) for t in FINDING_TYPES}
+        # posting_lag is drawn on its own fork, so the draws that follow (the repeat pairs fork, everything else) stay put
+        distractors[k] = (rng.fork(f"distractor:{k}") if k in FORKED_RANGES else rng).randint(lo, hi)
+    n_dup = errors["duplicate_invoice"]
+    explicit = dict(config.get("distractors") or {})
+    n_unalloc = errors["unallocated_payment"] + ("fx_invoice_partial_allocation" in inter)
+    distractors["credit_receipt"] = rng.fork("distractor:credit_receipt").randint(*CREDIT_OVER_RANGES[size])
+    pre = rng.fork("distractor:prepaid_receipt")
+    drawn_prepaid = 0 if pre.random() < PREPAID_ZERO_SHARE else pre.randint(*PREPAID_RANGES[size])
+    distractors["prepaid_receipt"] = max(0, drawn_prepaid - n_unalloc)
+    lo, hi = DEFAULT_REPEAT_PAIRS[size]
+    # drawn on a fork, so every other resolved field keeps its draw order when the range is retuned
+    drawn = rng.fork("repeat_pairs").randint(lo, hi)
+    # a duplicate count above the range's lower bound would crowd the decoys out (every visible pair a duplicate), so
+    # then the decoys are drawn on top of the duplicates; for D at most lo this is the old draw
+    pairs = drawn if n_dup <= lo else n_dup + drawn
+    if "legit_repeat" in explicit:  # an explicit count keeps its meaning: the number of legitimate repeats
+        pairs = explicit["legit_repeat"] + n_dup
+    distractors.update(explicit)
+    distractors["legit_repeat"] = pairs - n_dup
     return {
         "config_version": CONFIG_VERSION,
         "size": size,
@@ -249,7 +330,10 @@ def resolve(config: dict, rng: Rng) -> dict:
         "variants": {t: variants.get(t, list(VARIANTS[t])) for t in FINDING_TYPES},
         "interacting": inter,
         "distractors": distractors,
+        "repeat_pairs": pairs,
         "counts": counts,
+        "unallocated_prior": prior_hits,
+        "error_invoice_load": load,
         "twin": bool(config.get("twin", False)),
     }
 

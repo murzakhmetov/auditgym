@@ -292,6 +292,8 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
             inj["targets"] = {k: m.get(v, v) for k, v in inj.get("targets", {}).items()}
         for d in new.provenance.get("distractors", []):
             d["ids"] = [m.get(x, x) for x in d.get("ids", [])]
+        for e in new.provenance.get("posting_lags", []):  # lags of pair members and of documents of error issues
+            e["id"] = m.get(e["id"], e["id"])
     if rename_seed is not None:
         names = _name_map(ep, int(rename_seed))
         new.manifest = _rename_deep(new.manifest, names)

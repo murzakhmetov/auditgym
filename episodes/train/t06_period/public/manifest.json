@@ -1,30 +1,31 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_89b966ab6fb5c121",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_2b3e7ba11b2fd9fe",
   "company": {
-    "name": "Tavella Foods Pvt Ltd",
+    "name": "Corium Foods Pvt Ltd",
     "synthetic": true
   },
   "base_currency": "KWD",
   "currency_exponents": {
     "KWD": 3,
+    "EUR": 2,
     "USD": 2
   },
-  "period_start": "2027-03-01T00:00:00+05:45",
-  "period_end": "2027-04-01T00:00:00+05:45",
-  "ledger_extract_end": "2027-04-08T00:00:00+05:45",
+  "period_start": "2025-07-01T00:00:00+05:45",
+  "period_end": "2025-08-01T00:00:00+05:45",
+  "ledger_extract_end": "2025-08-08T00:00:00+05:45",
   "timezone": "Asia/Kathmandu",
   "record_counts": {
-    "ledger": 300,
-    "invoices": 52,
-    "payments": 29,
-    "fx": 95
+    "ledger": 236,
+    "invoices": 60,
+    "payments": 41,
+    "fx": 140
   },
   "document_counts": {
-    "invoices": 52,
-    "payments": 29,
-    "total": 81
+    "invoices": 60,
+    "payments": 41,
+    "total": 101
   },
   "rounding": {
     "mode": "half_even",

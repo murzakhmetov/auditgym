@@ -1,30 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_4c8053844593e39b",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_9abbc9a0a473b639",
   "company": {
-    "name": "Ostora Textiles Ltd",
+    "name": "Norion Retail Pvt Ltd",
     "synthetic": true
   },
-  "base_currency": "GBP",
+  "base_currency": "USD",
   "currency_exponents": {
-    "GBP": 2,
-    "EUR": 2
+    "USD": 2,
+    "KWD": 3,
+    "JPY": 0,
+    "GBP": 2
   },
-  "period_start": "2026-06-01T00:00:00+01:00",
-  "period_end": "2026-07-01T00:00:00+01:00",
-  "ledger_extract_end": "2026-07-08T00:00:00+01:00",
-  "timezone": "Europe/London",
+  "period_start": "2025-01-01T00:00:00+05:30",
+  "period_end": "2025-02-01T00:00:00+05:30",
+  "ledger_extract_end": "2025-02-08T00:00:00+05:30",
+  "timezone": "Asia/Kolkata",
   "record_counts": {
-    "ledger": 251,
-    "invoices": 58,
-    "payments": 33,
-    "fx": 93
+    "ledger": 317,
+    "invoices": 59,
+    "payments": 43,
+    "fx": 207
   },
   "document_counts": {
-    "invoices": 58,
-    "payments": 33,
-    "total": 91
+    "invoices": 59,
+    "payments": 43,
+    "total": 102
   },
   "rounding": {
     "mode": "half_up",

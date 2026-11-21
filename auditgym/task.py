@@ -11,9 +11,9 @@ TOLERANCE_MINOR = 2
 
 FINDING_TYPE_RULES = {
     "duplicate_invoice": {
-        "meaning": "The same invoice is posted twice (see policy.duplicate_rule).",
+        "meaning": "The same invoice, purchase or sales, is posted twice, possibly keyed again on a later date (see policy.duplicate_rule).",
         "affected_ids": "invoice_id of both copies",
-        "amount": "base amount of one copy's posting",
+        "amount": "base amount posted for the later copy (equal for two copies with the same issued_at instant)",
         "evidence": "both invoice documents plus, for both copies, the posting row on the same side "
                     "(both payable/receivable rows, or both expense/revenue rows)",
     },
@@ -23,12 +23,13 @@ FINDING_TYPE_RULES = {
         "affected_ids": "payment_id and the referenced invoice_id",
         "amount": "base amount wrongly credited to 2900",
         "evidence": "the payment document, the invoice document, the payment's 2900 row, and every ledger row of "
-                    "the invoice on its receivable account 1100: its posting (or opening item) and any relief by this "
-                    "payment; for a foreign-currency invoice also the payment's bank (1000) row",
+                    "the invoice on its receivable account 1100: its posting (or opening item) and every relief, by "
+                    "earlier payments that left the balance and by this payment; for a foreign-currency invoice also "
+                    "the payment's bank (1000) row",
     },
     "wrong_fx_rate": {
         "meaning": "A foreign-currency document is converted with a rate other than the policy rate "
-                   "(wrong date or wrong value).",
+                   "(wrong date or wrong value). The policy rate follows the document's own date, not the moment it was posted.",
         "affected_ids": "invoice_id or payment_id of the document",
         "amount": "absolute difference between the posted base amount and the policy base amount, measured on the "
                   "receivable/payable row (invoices) or the bank row (payments)",
@@ -37,7 +38,8 @@ FINDING_TYPE_RULES = {
     },
     "wrong_period": {
         "meaning": "A document is posted outside the period its own timestamp belongs to, in company time; only "
-                   "crossings into or out of the reporting period count.",
+                   "crossings into or out of the reporting period count. A posting at another moment inside the "
+                   "document's own period is ordinary (policy.posting_rules.posting_timestamp) and is no finding.",
         "affected_ids": "invoice_id or payment_id of the document",
         "amount": "posted base amount of the receivable/payable row (invoices) or the bank row (payments)",
         "evidence": "the document and one of its posting rows (invoices: either side; payments: the bank row)",

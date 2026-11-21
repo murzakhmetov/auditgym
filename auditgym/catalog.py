@@ -40,6 +40,9 @@ SALES_ITEMS = [
     ("Machine rental, per day", (110, 520), (1, 15)),
 ]
 
+# Delivery reference of a sales invoice: one per invoice, its lines carry "<reference>-<line_no>".
+SALES_REF = "SO-{n5}"
+
 # Supplier categories: (description template, unit price range in USD, line ref pattern)
 PURCHASE_ITEMS = [
     ("Freight {ref}", (150, 2400), "WB-{n5}"),

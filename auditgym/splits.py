@@ -93,9 +93,10 @@ def check_set(master: str = "auditgym-check-v1") -> list:
             errors[rng.choice(types)] = 1
         entries.append({"name": f"h{i + 11:02d}_mixed", "seed": rng.next_u64() >> 1,
                         "config": {"size": rng.choice(sizes), "errors": errors}})
-    # Error entries alternate between UTC and mixed-offset timestamps so that
-    # recon's "date as written" shortcut meets the utc_* variants in the set.
+    # Error entries cycle through UTC, mixed-offset and local timestamps: recon's "date as written" shortcut meets the
+    # utc_* variants in two thirds of them, and an episode written entirely in the local offset is no longer a clean
+    # one by construction (clean entries draw their ts_repr at random from the same three).
     # (The master string and the RNG draws above are unchanged.)
     for j, e in enumerate(x for x in entries if not x["name"].endswith("_clean")):
-        e["config"]["ts_repr"] = "utc" if j % 2 == 0 else "mixed"
+        e["config"]["ts_repr"] = ("utc", "mixed", "local")[j % 3]
     return entries

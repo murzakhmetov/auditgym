@@ -1,7 +1,7 @@
 {
-  "listed": 126,
-  "counted": 126,
-  "killed": 126,
+  "listed": 180,
+  "counted": 180,
+  "killed": 180,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,22 +9,26 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 82,
-  "killed_by_survivor_tests": 44,
+  "killed_by_existing": 132,
+  "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
-    "tests.test_cli": "44c76f02a349503bb5a9aab0c3edbc25a2529ae528a0ef9300feffb002ef96ee",
+    "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
+    "tests.test_cli": "8fe82f20ab433c901b73818fbdb2e6357f6fb52f7fa78cf58571e899e8b23b12",
     "tests.test_contract_battery": "1788930fb9c9d96984d38799d58cf6f640c298b3dfd9c693acbfddfa2882ec7d",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
+    "tests.test_credit_receipts": "3706202e383822c0350fbd68662e71caa78d81d3dc677d3f56aadc0afafa1bb3",
     "tests.test_env": "3e5aa5f9731e0744f665a9c40ccfb5b8a6bbd69f24503ebc498575ba53eab00a",
-    "tests.test_generator": "f12351b4595d38135a835be50dd776d749ead330be9ea69cec45acb169a53d4e",
+    "tests.test_generator": "8c5c7903bf14a788161f922723bbf6c8ad4b7984754b15aa6a6e6fd0212469ab",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
-    "tests.test_mutation_survivors": "fec1a3c7d2e611e02c0ae0f1ef280403ccfd52467d24cca230b6c9676138c35e",
+    "tests.test_mutation_survivors": "019b38f73238c7198a50bb1b6960b118f6215f3f9723f1e252e4bfaf605e9c1b",
+    "tests.test_posting_lag": "cec911720b097990ad00b23339b122cf83025038a04a55d173afaa695782c4ed",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
+    "tests.test_tells": "4b6cf101e96cc8a73b86dd712c7c3850590eb9857a97aa1d34ad1db489dfdbe7",
     "tests.test_transform_shift": "857b9fa817a8fbaefbcfd4645a209ea0594bf8f6ef7bd2d69ff51ffbdf2d9a64",
-    "tests.test_verify": "9f3ec4d0fd8cc49422b1fbf3a846e3f84b632cd5030f86845250d1bbaf868535",
+    "tests.test_verify": "db04b79067d0bf2aae618043d8ed20cf37f46ebb0db2b1b1ff47c370200630a4",
     "tests.test_windows_hardening": "29247373d21201b452658db381426f447f3670f460c72b58e5b608dfd0129038"
   },
   "mutants": [
@@ -802,7 +806,7 @@
       "file": "auditgym/env.py",
       "breaks": "page size: the default page is 10 rows, not 50",
       "status": "killed",
-      "killed_by": "survivor tests",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_env",
         "tests.test_contract_battery"
@@ -1158,6 +1162,391 @@
       "sha256": "4e22a3e456bfe69d2e15eb1263c550d1e5476a9dfffa257904dba616567e1916"
     },
     {
+      "id": "evidence-duplicate-own-posting",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: a row of a payment (a relief), not the invoice's own posting, still supports it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "16144868197838de6723cd24f5bee9e7166cf8622ebdf5526cf6421956c41bd6"
+    },
+    {
+      "id": "evidence-duplicate-posting-account",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: two rows in an account the invoice kind does not post to still support it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "377a09080b5fa86c5f6e90660f74c8d51c7b1754bb9c32e693dacb2f7e175ad5"
+    },
+    {
+      "id": "evidence-duplicate-row-period",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: a row booked in another period than its invoice still supports it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "0f8ddd32e4a7c5b3d6194497947487ec5700a745d9b99a41a93bd8ccb4748e59"
+    },
+    {
+      "id": "evidence-duplicate-row-instant-required",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: a row posted at another moment of its invoice's period no longer supports it (a posting lag breaks the evidence)",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "65797ef6ecc262c2ed8e75650bf16aefbc1bc1f88b6a6e39bb3971c2b976e8a2"
+    },
+    {
+      "id": "evidence-duplicate-equal-amounts",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: two copies of one instant that post different amounts still support it",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "60ab1aef38aacfb8999919174e00495dc13bb5f005e39fe72c2d6d2ec03c011f"
+    },
+    {
+      "id": "evidence-duplicate-signature-issued-at",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: issued_at is part of the signature again, so a copy keyed again later no longer supports it",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "eacab30941d42de3fa6f353c0a7ce3d1a9a65114d44588f4124ce4d366f036a6"
+    },
+    {
+      "id": "evidence-duplicate-later-amount",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: the amount is the earlier document's row, not the later copy's",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "e31b9fd1b6d4489be6409599dd7185d3b20fdb75439d3f26776d8da6f1cb24b1"
+    },
+    {
+      "id": "evidence-duplicate-rekey-clause",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "duplicate_invoice: a later copy supports the finding although the published rule does not say issued_at may differ",
+      "status": "killed",
+      "killed_by": "survivor tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "15b3b7517983af9aa27c531699e8a7c0d0699363232857431c6cc7432e80c72c"
+    },
+    {
+      "id": "auditor-duplicate-earlier-amount",
+      "file": "auditgym/auditor.py",
+      "breaks": "duplicate_invoice: the independent auditor takes the amount of the earlier copy, not the later one",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "a8f3e5f539724e8092167a475c9d3dd9e2e65c9cc8112787d879cb54279fe1cb"
+    },
+    {
+      "id": "auditor-duplicate-signature-issued-at",
+      "file": "auditgym/auditor.py",
+      "breaks": "duplicate_invoice: the independent auditor needs one instant again, so it misses a copy keyed again later",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify",
+        "tests.test_generator"
+      ],
+      "sha256": "d145b3dcc3fad329a0dc6e53fcff09ed66beaed7ea8bc876f56ad1c53d09d7e8"
+    },
+    {
+      "id": "config-repeat-pairs-plus-duplicates",
+      "file": "auditgym/config.py",
+      "breaks": "pairs: the visible pair count grows with the number of duplicates",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "9067a8a899d8b8979fd9369aab2643680757c89dcd094aef8154a18d860e6fe4"
+    },
+    {
+      "id": "config-repeat-pairs-crowded-out",
+      "file": "auditgym/config.py",
+      "breaks": "pairs: a duplicate count above the range leaves no decoy pair, every visible pair is a duplicate",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "fb5477500e4a7df3a390f493cd38b3e4a9fd14cb7cb1b92a605651b9b4a0eb15"
+    },
+    {
+      "id": "tells-pair-group-exactly-two",
+      "file": "auditgym/tells.py",
+      "breaks": "pairs: an ordinary invoice of the same price hides a repeat pair from the tells",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_tells"
+      ],
+      "sha256": "f92ba12e360f2dc9416c6b87de14a1337fbfffb248d690ee7545430c424a372b"
+    },
+    {
+      "id": "cli-same-user-fallback-unrecorded",
+      "file": "auditgym/__main__.py",
+      "breaks": "allow_same_user: a closed run that fell back to the host user is recorded as not having used the override",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_cli"
+      ],
+      "sha256": "86e56b90f2b46039236154574b1bc019249c72e9360044298cc03345157ddb9a"
+    },
+    {
+      "id": "inject-duplicate-copy-keeps-original-instant",
+      "file": "auditgym/inject.py",
+      "breaks": "duplicate_invoice: a re-keyed copy takes the original's instant, so the variant is never later",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "d05cbf12b75d2bc2eb60e34ba684f36f5e2d9624badddcee057ed08cd5f5328f"
+    },
+    {
+      "id": "inject-duplicate-copy-keeps-own-refs",
+      "file": "auditgym/inject.py",
+      "breaks": "duplicate_invoice: the copy keeps its own fresh references, so the pair is two separate supplies",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "19ffd0d04304f79851b872aada915d8ab44c396d2dd8a545ed3b2d23e546e53c"
+    },
+    {
+      "id": "history-pair-one-shape",
+      "file": "auditgym/history.py",
+      "breaks": "pairs: every decoy pair carries one instant, so a pair keyed again later is always a duplicate",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_generator"
+      ],
+      "sha256": "b9c4e4a417f68669aea913f2e8f539d167b490dc96009de000801a7d7dbb6112"
+    },
+    {
+      "id": "policy-posting-moment",
+      "file": "auditgym/policy.py",
+      "breaks": "policy: the published rule says again that a posting's timestamp equals its document's, which the data no longer follow",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "c45b638c1856e4f5ca7a5ea770d675890f26ff4cbc26ace6e5f233d748b14dfc"
+    },
+    {
+      "id": "books-lag-ignored",
+      "file": "auditgym/books.py",
+      "breaks": "posting lag: an invoice's lag is dropped when it is booked, so the shape recorded in provenance is not in the ledger",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "aac528e95646b21ce2ffd537c1f9fd56da75f481a437cbdbc8121975cf63a560"
+    },
+    {
+      "id": "history-lag-crosses-period",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: a lag may carry a posting past the end of its document's period",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "100989a7be7124cbc8a65d6c1bb1e53f6aafaf6909ef76902c8e74a819bc3a2b"
+    },
+    {
+      "id": "history-lag-order",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: a payment may be booked before the invoice it settles, which changes the allocation",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "f9d797260ae8172d18ea000591434c43fd586cfd3db5fbaaa3ed3dcaf06d8e56"
+    },
+    {
+      "id": "history-lag-date-change-same-rate",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: a lag across a date change may land on a date with the same rate, so it is no hard negative for wrong_fx_rate",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "5eb24e1a68f0bf9da60b079462ef70fe84128d8a06c261f8fe686ddea2975d1b"
+    },
+    {
+      "id": "history-lag-utc-sign",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: the UTC wall-clock shape moves the posting the wrong way, so it no longer mirrors utc_wall_clock",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "e330efe12bf140b44bd31f29776dc17991d4a66b466cdc276e65dce25f79f862"
+    },
+    {
+      "id": "history-lag-error-documents",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: documents of error issues never take one, so a lag marks a document clean",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "d3237cea2fc683beb9e3a8c2cd05160ad1fa140b47dad2a19b0d7380061922cc"
+    },
+    {
+      "id": "history-lag-pair-documents",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: members of line-identical pairs never take one, so a pair member posted at another moment is a duplicate",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_tells",
+        "tests.test_posting_lag"
+      ],
+      "sha256": "f75e2910bc11704c5878fc4909a9b1d9cc85fc7fa2f806806debb594642ed783"
+    },
+    {
+      "id": "history-lag-budget-ignores-errors",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: the lags of ordinary documents come on top of the postings that are errors, so an error episode shows more of them",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "344e74fdd7a57ac20d6aafefb97e7041b738e8e10cb1140c72188306d7215384"
+    },
+    {
+      "id": "history-lag-protected-documents",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: a document whose posting is the error (wrong_period, posting_date, the boundary receipt) may take a lag as well",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "f09068ddd7b6833d23ddf96fcdb2acad45623d414a57ef612a84402ef26c12d3"
+    },
+    {
+      "id": "history-lag-sibling-payments",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: payments of one invoice may swap their posting order, which moves an allocation",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "68b0dcd85b8238069d0369ff3407b2dadc2b9f84ce7725724592261f0c8a1217"
+    },
+    {
+      "id": "history-lag-taken-instants",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: a lagged posting may share its instant with another document",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "10a2b8bd6352063e6cb5c1ef9c7fb6fede2c10f1333013cd1f4cd54d67db8559"
+    },
+    {
+      "id": "history-lag-shortfall-silent",
+      "file": "auditgym/history.py",
+      "breaks": "posting lag: an explicit count that cannot be placed is lowered without a word",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "4f5f8356ec2d2e0ebe65522364463b5a5dd59baf53a77815f4870cd550c0d01c"
+    },
+    {
+      "id": "config-lag-range-on-main-stream",
+      "file": "auditgym/config.py",
+      "breaks": "config: the lag count is drawn on the main stream, which moves every draw after it",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "6a89e0db0091a59ebd190837abfaa6923fbd99e6fdaafc6fd4dfe1b0d0eaf8b6"
+    },
+    {
+      "id": "auditor-lag-anomaly",
+      "file": "auditgym/auditor.py",
+      "breaks": "auditor: a posting at another moment inside the period is an anomaly again, so a clean book with lags fails",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag",
+        "tests.test_verify"
+      ],
+      "sha256": "0abaeaa9c6404e92326aaff21b2f570b872de9e7daf15e5c647ebe15ad96dccc"
+    },
+    {
+      "id": "tells-lag-offset-sign",
+      "file": "auditgym/tells.py",
+      "breaks": "tells: the rule 'lag equals the zone offset' has the wrong sign, so it misses the UTC wall-clock lags",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_posting_lag"
+      ],
+      "sha256": "a3e5e579e0d2b5d0ab3b222607a8b1a48225f5eff691c14a4679b6472a53641a"
+    },
+    {
+      "id": "battery-posting-lag-attack",
+      "file": "auditgym/check_battery.py",
+      "breaks": "check battery: a posting lag has no false accusation, so the distractor goes unchecked",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_check_battery"
+      ],
+      "sha256": "a5155628912973e75775fca60e3b4683fb9aa9b04d6389f6e224533886ea4a64"
+    },
+    {
       "id": "evidence-unallocated-total",
       "file": "auditgym/evidence_check.py",
       "breaks": "unallocated_payment: a payment equal to the invoice total is rejected",
@@ -1215,7 +1604,7 @@
         "tests.test_verify",
         "tests.test_generator"
       ],
-      "sha256": "c5127a2cf1052d314ac83370cd25ad68557ab7946647f24d34d102b1fc71daf0"
+      "sha256": "740fe0f3c0c7244447f6c961774a67eb0deb1fde190e25f757e6718cdb75b94c"
     },
     {
       "id": "evidence-unallocated-relief-bound",
@@ -1239,7 +1628,7 @@
         "tests.test_verify",
         "tests.test_generator"
       ],
-      "sha256": "66f3a7a417c80ec9fa18c2715f51dfeb7454c41a164f6b65167833f2906518d0"
+      "sha256": "264704a7317cb0ddf755c332abc3fed7d5488e8bfcc0bae4a4d294f872364440"
     },
     {
       "id": "evidence-unallocated-base-cover",
@@ -1251,7 +1640,7 @@
         "tests.test_verify",
         "tests.test_generator"
       ],
-      "sha256": "9eabcc112794d85c6708e7b5c4578f27e154f4809b224cd73549db3774e0c0e5"
+      "sha256": "b7183500dfdb8ac4dd2d37bfb0d350364c7ae62d820ce6bfaef54985f2353147"
     },
     {
       "id": "evidence-unallocated-bank-count",
@@ -1300,6 +1689,218 @@
         "tests.test_generator"
       ],
       "sha256": "d5ee5721ef0e77daadb86aaaede378e6a627d51d57e417a37c620c1a0ef7d793"
+    },
+    {
+      "id": "evidence-unallocated-prior-late",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: a relief booked after the receipt still counts as an earlier part payment",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts",
+        "tests.test_verify"
+      ],
+      "sha256": "eaa1fddbd9af6444862d62b50df63c2c4a3212338abd30878888b02ac096d849"
+    },
+    {
+      "id": "evidence-unallocated-complete-rows",
+      "file": "auditgym/evidence_check.py",
+      "breaks": "unallocated_payment: a set that leaves out the relief of an earlier part payment (and so shows a larger balance) derives the finding",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts",
+        "tests.test_verify"
+      ],
+      "sha256": "210bcd9d609b782d5454e050237894a56659033f8ca4aa96cd532dd8e2c3d202"
+    },
+    {
+      "id": "verify-sole-receipt-late",
+      "file": "auditgym/verify.py",
+      "breaks": "evidence_sufficient: another payment on the invoice booked after the receipt passes as an earlier part payment",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "b253d8f00a0093f164a73a48eabfb0161f80baaf6a9fcd86424bd3f56528118f"
+    },
+    {
+      "id": "verify-alloc-prior-relief",
+      "file": "auditgym/verify.py",
+      "breaks": "change record: the relief of an unallocated receipt on a part-paid invoice is checked against the whole carrying amount",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts",
+        "tests.test_generator"
+      ],
+      "sha256": "d8c2aa942ea9b16506dfcc524349d189b1d4b454323cba3236848b4cfe9d5196"
+    },
+    {
+      "id": "inject-part-paid-never",
+      "file": "auditgym/inject.py",
+      "breaks": "unallocated_payment: every error target is the only payment of its invoice, so a payment count marks the answer key",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "df3197319a1425298fa87301324e9dc158309dde6903811873647b1c65f20341"
+    },
+    {
+      "id": "config-credit-total-ignores-errors",
+      "file": "auditgym/config.py",
+      "breaks": "config: the prepaid receipts come on top of the unallocated_payment errors, so the rows on 2900 grow with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "470f4fad79f302a77549b5ba118a025adb771479bc3ef7ee3caaa2c17568b26f"
+    },
+    {
+      "id": "history-credit-receipts-none",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: no receipt leaves a credit in 2900 without an error, so a single payment with a 2900 row is always one",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "5fba8e21b707c318058a26baa6236494019464ae68c5f64d4c839744d67bb53f"
+    },
+    {
+      "id": "history-credit-prepaid-never",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: no receipt precedes its invoice, so a single receipt within the total with a 2900 row is always an error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "d7bb247557c31a9fc421b27bddb857f4a30d9f510da667611a00b3d02dbda9fc"
+    },
+    {
+      "id": "history-credit-topped-up-never",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: no receipt that relieves the rest of a part-paid invoice also credits an excess, so a 1100 and a 2900 row on an invoice with two receipts is always an error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "8b225b507749e3537782c0d29593d193ac5b9fc68b990284a0073e29e5d4a651"
+    },
+    {
+      "id": "config-invoice-load-ignored",
+      "file": "auditgym/config.py",
+      "breaks": "config: the invoices an error adds come on top of the drawn counts, so the invoice count grows with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "db9b760d3c02973bdbc8dbca7047a29c793fd92df440b7329871174394f5d27b"
+    },
+    {
+      "id": "history-open-invoice-never-prior",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: no credit receipt and no unallocated receipt is on an opening item, or the other way round: a 2900 credit on an opening item is an error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "46648c0e04710621a93ece605c7feddb521c0c038aa7c41622637a578b7fa170"
+    },
+    {
+      "id": "inject-unallocated-prior-flags-ignored",
+      "file": "auditgym/inject.py",
+      "breaks": "unallocated_payment: the opening items an error brings are not the ones taken out of the prior invoices, so their number grows with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "92a1de50bffc49dec36e870d28382e4b046c77f8d4b9b0eccc95f73860f5a0c3"
+    },
+    {
+      "id": "config-prior-hits-not-deducted",
+      "file": "auditgym/config.py",
+      "breaks": "config: the opening items of the unallocated receipts come on top of the prior invoices, so the opening items grow with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "1df6ef274efb8fe4a642581a1cfa5c44a499a15128793d3d7bcac35bdab98e08"
+    },
+    {
+      "id": "history-split-remainder-none",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: no invoice has two receipts that leave a rest open, so such an invoice is always a part-paid unallocated_payment error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "231ca99f7a8613837e831d4291c49344781d822524067d7ddc17ac4db24ad2ae"
+    },
+    {
+      "id": "history-paid-slots-ignore-load",
+      "file": "auditgym/history.py",
+      "breaks": "history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "cd94f6bdd114ef63ffcaa5fa1ac309b829aedf6160407be7ea63d34e3959899b"
+    },
+    {
+      "id": "history-credit-dates-business-days",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: every 2900 credit that is not prepaid sits on an invoice of the first days of the period, so a later invoice is an error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "dcb47ed315bed0f91094e8ac26025bc29652d76dd3589b227ab0c69a3ea477c6"
+    },
+    {
+      "id": "history-credit-second-share-fixed",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: the share of credits that follow an earlier receipt is the same in every episode",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "c92e2e97b6ce08b9733aacdbb84651f8259e36ef02bb2b00fb85b62bc8496976"
+    },
+    {
+      "id": "config-prepaid-always-drawn",
+      "file": "auditgym/config.py",
+      "breaks": "config: every episode has prepaid receipts, so an episode without a receipt dated before its invoice is one with unallocated errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "cdc5a7a5d2dfaa05d91c93e557e6682e1a91687e6f56a9a325b58b329d865f39"
+    },
+    {
+      "id": "history-split-remainder-never-prior",
+      "file": "auditgym/history.py",
+      "breaks": "distractors: a part-paid invoice that leaves a rest is never an opening item, so such an opening item is an error",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_credit_receipts"
+      ],
+      "sha256": "604ecbcdd1363993c707a375326e9b935897d231bfa5c057fcda19f61e929c96"
     },
     {
       "id": "evidence-fx-future-date",
@@ -1580,6 +2181,17 @@
         "tests.test_cli"
       ],
       "sha256": "23f59a165e436c210273b7dd4668071de20b5a9f6492c1cdf2f8cb56327f28ef"
+    },
+    {
+      "id": "cli-keys-fallback-unarmed",
+      "file": "auditgym/__main__.py",
+      "breaks": "a custom policy next to an answer key falls back to the host's user at the fallback point with only a warning",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_cli"
+      ],
+      "sha256": "8cc41a46a378d2c51a2a9154192d7dc8bd312698fe057b8f9bb5deb725d5770c"
     },
     {
       "id": "protocol-cap-setuid",

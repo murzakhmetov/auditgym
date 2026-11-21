@@ -1,30 +1,31 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
-  "episode_id": "ep_ab6dc9ecfa068559",
+  "generator_version": "0.3.0",
+  "episode_id": "ep_525d5e16d2ee4078",
   "company": {
-    "name": "Astaro Agro Ltd",
+    "name": "Verium Agro KK",
     "synthetic": true
   },
-  "base_currency": "EUR",
+  "base_currency": "JPY",
   "currency_exponents": {
-    "EUR": 2,
-    "JPY": 0
+    "JPY": 0,
+    "USD": 2,
+    "KRW": 0
   },
-  "period_start": "2026-07-01T00:00:00+01:00",
-  "period_end": "2026-08-01T00:00:00+01:00",
-  "ledger_extract_end": "2026-08-08T00:00:00+01:00",
-  "timezone": "Europe/London",
+  "period_start": "2026-06-01T00:00:00+09:00",
+  "period_end": "2026-07-01T00:00:00+09:00",
+  "ledger_extract_end": "2026-07-08T00:00:00+09:00",
+  "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 637,
-    "invoices": 87,
-    "payments": 57,
-    "fx": 79
+    "ledger": 785,
+    "invoices": 106,
+    "payments": 76,
+    "fx": 153
   },
   "document_counts": {
-    "invoices": 87,
-    "payments": 57,
-    "total": 144
+    "invoices": 106,
+    "payments": 76,
+    "total": 182
   },
   "rounding": {
     "mode": "half_up",

@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "config_version": "1",
   "seed": "3390586214427051877",
   "secret_used": false,
@@ -24,16 +24,15 @@
     "size": "medium",
     "base_currency": "USD",
     "foreign_currencies": [
-      "GBP",
       "EUR",
-      "KWD"
+      "GBP"
     ],
     "timezone": "America/New_York",
-    "period": "2027-09",
-    "rounding": "half_even",
-    "id_style": "hex",
+    "period": "2027-05",
+    "rounding": "half_up",
+    "id_style": "slashed",
     "ts_repr": "mixed",
-    "row_order": "time",
+    "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 0,
@@ -42,7 +41,8 @@
     },
     "variants": {
       "duplicate_invoice": [
-        "same_day_copy"
+        "same_day_copy",
+        "rekeyed_copy"
       ],
       "unallocated_payment": [
         "missing",
@@ -60,36 +60,50 @@
     },
     "interacting": [],
     "distractors": {
-      "legit_repeat": 2,
       "recurring": 2,
       "split_payment": 2,
       "multi_invoice_payment": 1,
       "underpayment": 2,
-      "overpayment_refund": 1,
-      "null_ref_receipt": 2,
       "midnight_fx": 3,
       "weekend_fx": 2,
-      "boundary_doc": 3
+      "boundary_doc": 6,
+      "posting_lag": 28,
+      "overpayment_refund": 3,
+      "null_ref_receipt": 3,
+      "split_remainder": 5,
+      "credit_receipt": 3,
+      "prepaid_receipt": 0,
+      "legit_repeat": 5
     },
+    "repeat_pairs": 5,
     "counts": {
-      "customers": 15,
+      "customers": 10,
       "suppliers": 7,
-      "sales_invoices": 34,
-      "purchase_invoices": 19,
-      "prior_invoices": 8,
-      "target_rows": 959
+      "sales_invoices": 38,
+      "purchase_invoices": 14,
+      "prior_invoices": 6,
+      "target_rows": 766
+    },
+    "unallocated_prior": 0,
+    "error_invoice_load": {
+      "sales": 1,
+      "purchase": 1,
+      "sales_paid": 0
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Ostella Systems Inc",
-    "customers": 15,
-    "suppliers": 8,
-    "invoices": 90,
-    "payments": 51,
-    "misc_journals": 306,
-    "holidays": []
+    "company": "Rynion Energy Inc",
+    "customers": 10,
+    "suppliers": 7,
+    "invoices": 104,
+    "payments": 80,
+    "misc_journals": 167,
+    "holidays": [
+      "2027-05-13",
+      "2027-05-18"
+    ]
   },
   "injections": [
     {
@@ -98,13 +112,13 @@
       "variant": "utc_date",
       "scenario": "single",
       "targets": {
-        "invoice": "si_ab809459"
+        "invoice": "PI/2027/439924"
       },
       "change": {
-        "correct_rate": "3.26255",
-        "correct_rate_date": "2027-09-21",
-        "wrong_rate": "3.26074",
-        "wrong_rate_date": "2027-09-22"
+        "correct_rate": "1.05356",
+        "correct_rate_date": "2027-05-19",
+        "wrong_rate": "1.05087",
+        "wrong_rate_date": "2027-05-20"
       }
     },
     {
@@ -113,13 +127,13 @@
       "variant": "stale_rate",
       "scenario": "single",
       "targets": {
-        "invoice": "pi_11a4a7a3"
+        "invoice": "PI/2027/531136"
       },
       "change": {
-        "correct_rate": "1.08915",
-        "correct_rate_date": "2027-09-23",
-        "wrong_rate": "1.09527",
-        "wrong_rate_date": "2027-08-31"
+        "correct_rate": "1.06475",
+        "correct_rate_date": "2027-05-27",
+        "wrong_rate": "1.05323",
+        "wrong_rate_date": "2027-04-30"
       }
     }
   ],
@@ -127,177 +141,513 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_c07e16e2",
-        "pi_e9062e5d",
-        "dp_67c8a2c2"
+        "PI/2027/451440",
+        "PI/2027/126199",
+        "BP/2027/344757"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_9e044d4c",
-        "pi_17273c69"
+        "PI/2027/685219",
+        "PI/2027/457073",
+        "BP/2027/690253"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2027/225629",
+        "PI/2027/364247",
+        "BP/2027/996352"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "SI/2027/805539",
+        "SI/2027/462538",
+        "BR/2027/797248"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "SI/2027/912524",
+        "SI/2027/482163",
+        "BR/2027/236900"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_6368e7e9",
-        "pi_d129efaa"
+        "PI/2027/974398",
+        "PI/2027/679114"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_c67a9c7f",
-        "pi_0e03cb35"
+        "PI/2027/398477",
+        "PI/2027/255665"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_102eee3d",
-        "rc_c290d38d",
-        "rc_561f810a"
+        "SI/2027/481454",
+        "BR/2027/103067",
+        "BR/2027/210497"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_88dcf43d",
-        "rc_0867416b",
-        "rc_1d63b568"
+        "SI/2027/101702",
+        "BR/2027/485180",
+        "BR/2027/746569"
       ]
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2027/340211",
+        "BR/2027/926906",
+        "BR/2027/991725"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2027/566668",
+        "BR/2027/879201",
+        "BR/2027/865601"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2027/714952",
+        "BR/2027/768567",
+        "BR/2027/239661"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2027/834550",
+        "BR/2027/586704",
+        "BR/2027/495995"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "SI/2027/983760",
+        "BR/2027/735971",
+        "BR/2027/210718"
+      ],
+      "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_39b43091",
-        "si_5286cbe0",
-        "rc_d5f9ba3f"
+        "SI/2027/532389",
+        "SI/2027/661677",
+        "BR/2027/834682"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_6f3c92b8",
-        "rc_74fdc430"
+        "SI/2027/923173",
+        "BR/2027/386093"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_93c12ef0",
-        "rc_02e6c069"
+        "SI/2027/862220",
+        "BR/2027/776068"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_b2d9ca9a",
-        "rc_7c858b12",
-        "rf_1b13e16e"
+        "SI/2027/768560",
+        "BR/2027/146237",
+        "RF/2027/367935"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "SI/2027/657669",
+        "BR/2027/834412",
+        "RF/2027/614907"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "SI/2027/361430",
+        "BR/2027/242434",
+        "RF/2027/843864"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_d7c64a57"
+        "BR/2027/469625"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_4255cd81"
+        "BR/2027/622855"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "BR/2027/226351"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_d55e73cb"
+        "SI/2027/632986"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_dbab3228"
+        "PI/2027/270049",
+        "BP/2027/708637"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_8493afa7",
-        "dp_3c5200e6"
+        "PI/2027/207416",
+        "BP/2027/401304"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2027/674011",
+        "BR/2027/672061"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2027/484057",
+        "BP/2027/732170"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2027/825031",
+        "BR/2027/230951"
+      ]
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2027/466642",
+        "BR/2027/701476",
+        "BR/2027/568902"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2027/948252",
+        "BR/2027/310256"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2027/880674",
+        "BR/2027/596987",
+        "BR/2027/593645"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "midnight_fx",
+      "ids": [
+        "SI/2027/874976"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_db227405"
+        "SI/2027/645214",
+        "BR/2027/316422"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_bca96e21",
-        "rc_e5e25fbf"
-      ]
-    },
-    {
-      "kind": "midnight_fx",
-      "ids": [
-        "si_af339f29"
+        "PI/2027/411002"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_7a601f43"
+        "SI/2027/445178"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_812d63ab"
+        "SI/2027/739717"
       ]
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/457318"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/594813"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/236900"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/408762"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/797248"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/960134"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/879201"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/142248"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/135579"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/949059"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/338712"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/101702"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2027/785740"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/978150"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2027/482301"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2027/674011"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/323414"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/139815"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2027/207416"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2027/679114"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/768567"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/239661"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/242434"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2027/489958"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BP/2027/732170"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/622855"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2027/485180"
+      ],
+      "shape": "earlier"
+    }
+  ],
+  "posting_lags": [
+    {
+      "id": "PI/2027/364247",
+      "shape": "earlier",
+      "role": "pair"
     }
   ],
   "ops": [
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_7ddbf4b9",
-      "field": "debit_minor",
-      "before": 309090,
-      "after": 310827
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "gl_e660f381",
+      "id": "J/2027/447688",
       "field": "credit_minor",
-      "before": 456137,
-      "after": 455884
+      "before": 283081,
+      "after": 282358
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_e693312b",
+      "id": "J/2027/555878",
       "field": "credit_minor",
-      "before": 309090,
-      "after": 310827
+      "before": 221037,
+      "after": 218645
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_f3f4f37f",
+      "id": "J/2027/846829",
       "field": "debit_minor",
-      "before": 456137,
-      "after": 455884
+      "before": 221037,
+      "after": 218645
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2027/847772",
+      "field": "debit_minor",
+      "before": 283081,
+      "after": 282358
     }
   ],
-  "clean_digest": "224e0ec5492a2703e5baf3b68e98e6110b2b2324f7a1696f6c50ec658e96f93b",
-  "clean_records_digest": "62b96441104fe040700b8f806fcf59d19cba7deae903bc5c7d5f527ed652c07a",
-  "final_digest": "1dfe17bf9e224ceb312eb08f5a6f9e324547fc6ee09ea89931edb913ed5eaa19",
+  "clean_digest": "d660e1b8365f5ecd566c1c3e218abc0151f634180c81ed3c8a2a797c3f99853d",
+  "clean_records_digest": "ab96693e7ccaa731304bccc5ee389f57cefd774fa42fa06296e9735313b0a02f",
+  "final_digest": "37b939e37a9a678f2e3893c21ddcf5613cd557ad39d80edb7e09682cbfbe5c82",
   "rejected_attempts": []
 }

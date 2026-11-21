@@ -375,6 +375,9 @@ class CustomPolicyInProcess(unittest.TestCase):
                 self.assertIs(protocol._caps_allow_switch(), expected)
         with mock.patch.object(protocol.os, "name", "posix"), mock.patch("builtins.open", side_effect=OSError):
             self.assertIs(protocol._caps_allow_switch(), False)
+        with mock.patch.object(protocol.os, "name", "posix"), \
+                mock.patch("builtins.open", mock.mock_open(read_data="Name:\tx\n")):  # no CapEff line: fail closed
+            self.assertIs(protocol._caps_allow_switch(), False)
         with mock.patch.object(protocol.os, "name", "nt"):
             self.assertIs(protocol._caps_allow_switch(), False)
         ident = ("agent", 10001, 10001)
@@ -386,6 +389,10 @@ class CustomPolicyInProcess(unittest.TestCase):
         with mock.patch.object(protocol.aio, "agent_identity", return_value=None), \
                 mock.patch.object(protocol, "_proc_listable", return_value=True), \
                 mock.patch.object(protocol, "_caps_allow_switch", return_value=True):
+            self.assertIs(protocol._can_switch_user(), False)
+        with mock.patch.object(protocol.aio, "agent_identity", return_value=ident), \
+                mock.patch.object(protocol, "_proc_listable", return_value=False), \
+                mock.patch.object(protocol, "_caps_allow_switch", return_value=True):  # /proc not listable
             self.assertIs(protocol._can_switch_user(), False)
 
     def test_a_cap_dropped_root_does_not_skip_the_guard(self):
@@ -420,10 +427,58 @@ class CustomPolicyInProcess(unittest.TestCase):
                 self.assertIn("answer keys", err)  # a new folder under episodes/train is not a committed episode
                 rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "train" / "ep"))
                 self.assertEqual(rc, 0, err)
-                self.assertNotIn("answer keys", err)  # an open split: public by design
+                self.assertNotIn("error:", err)  # an open split: public by design, so a warning and no refusal
+                self.assertIn("public answer keys of the open splits", err)
                 rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "hidden" / "ep"))
                 self.assertEqual(rc, 2, err)
                 self.assertIn("answer keys", err)  # a closed folder under episodes/ is refused
+
+    def test_a_same_user_custom_policy_on_the_open_splits_gets_one_warning_and_a_meta_key(self):
+        from auditgym import protocol
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "proj"
+            shutil.copytree(self.EP, root / "episodes" / "train" / "ep")
+            shutil.copytree(self.EP, root / "episodes" / "train" / "ep2")
+            (root / "episodes" / "index.json").write_text(json.dumps({"episodes": [
+                {"split": "train", "name": "ep"}, {"split": "train", "name": "ep2"}]}), encoding="utf-8")
+            with mock.patch.object(protocol, "PROJECT_ROOT", root):
+                rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "train"))
+                self.assertEqual(rc, 0, err)
+                lines = [ln for ln in err.splitlines() if "custom policy" in ln]
+                self.assertEqual(len(lines), 1, err)
+                self.assertTrue(lines[0].startswith("WARNING: custom policy "), lines[0])
+                self.assertIn("runs as the host's user next to the public answer keys of the open splits (", lines[0])
+                self.assertIn("/grader and 1 more): it can read them; fine for training, never for evaluation", lines[0])
+                meta = json.loads((Path(d) / "o" / "meta.json").read_text(encoding="utf-8"))
+                self.assertIs(meta["open_answer_keys_readable"], True)
+                self.assertIs(meta["allow_same_user"], False)
+                self.assertFalse(protocol._NO_SAME_USER_EXTERNAL)
+                self.assertFalse(protocol._SAME_USER_ALLOWED_CLOSED)
+                # a built-in policy: no line, key false
+                rc, _o, err = cli("run", "--policies", "recon", "--in-process", "--episodes",
+                                  str(root / "episodes" / "train" / "ep"), "--out", str(Path(d) / "o2"), env_extra=self.NONSTRICT)
+                self.assertEqual(rc, 0, err)
+                self.assertNotIn("WARNING", err)
+                meta = json.loads((Path(d) / "o2" / "meta.json").read_text(encoding="utf-8"))
+                self.assertIs(meta["open_answer_keys_readable"], False)
+
+    def test_no_open_split_warning_when_the_policy_runs_as_the_separate_user(self):
+        from auditgym import protocol
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "proj"
+            shutil.copytree(self.EP, root / "episodes" / "train" / "ep")
+            (root / "episodes" / "index.json").write_text(
+                json.dumps({"episodes": [{"split": "train", "name": "ep"}]}), encoding="utf-8")
+            import types
+            args = types.SimpleNamespace(in_process=False, seeds_file=None, secret_env=None, allow_same_user=False)
+            with mock.patch.object(protocol, "PROJECT_ROOT", root),                     mock.patch.object(protocol, "_can_switch_user", return_value=True),                     mock.patch.object(protocol, "require_agent_user", return_value=False),                     contextlib.redirect_stderr(io.StringIO()) as err:
+                cli_mod._custom_policy_guard(["examples.custom_policy:FirstPagePolicy"], args,
+                                             [root / "episodes" / "train" / "ep"])
+            self.assertEqual(err.getvalue(), "")
+            self.assertFalse(protocol._NO_SAME_USER_EXTERNAL)
+            self.assertFalse(hasattr(args, "open_answer_keys_readable"))
 
     def test_a_built_in_policy_never_sees_the_policy_path(self):
         """A file named like a standard-library module in --policy-path must not run for a built-in policy."""
@@ -442,7 +497,8 @@ class CustomPolicyInProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             rc, _o, err = self.run_custom(d, "--episodes", self.EP)
             self.assertEqual(rc, 0, err)
-            self.assertNotIn("custom policy", err)
+            self.assertNotIn("error:", err)  # the committed open split warns (no refusal); see the open-split test
+            self.assertEqual(len([ln for ln in err.splitlines() if "custom policy" in ln]), 1, err)
             rc, _o, err = cli("run", "--seeds-file", seeds, "--no-secret", "--policies", "flag_all", "--in-process",
                               "--out", str(Path(d) / "o2"), env_extra=self.NONSTRICT)
             self.assertEqual(rc, 0, err)
@@ -799,6 +855,151 @@ class StressHelpers(unittest.TestCase):
             text = (Path(d) / "report.md").read_text(encoding="utf-8")
             self.assertTrue(text.startswith("# auditgym stress run"))
             self.assertIn("verify failed", text)
+
+
+class CanSwitchUserTests(unittest.TestCase):
+    """A root host with AUDITGYM_AGENT_USER set but without CAP_SETUID, CAP_SETGID or CAP_CHOWN (docker --cap-drop ALL)
+    has an identity, yet the policy child falls back to the host's user. The guard must treat that as same-user."""
+
+    IDENT = ("agent", 1000, 1000)
+
+    def test_guard_refuses_a_closed_run_when_the_child_cannot_switch(self):
+        import argparse
+
+        args = argparse.Namespace(in_process=False, seeds_file="seeds.json", secret_env=None, allow_same_user=False)
+        policy = "examples.custom_policy:FirstPagePolicy"
+        env = {k: v for k, v in os.environ.items() if k != protocol.REQUIRE_ENV}
+        with mock.patch.dict(os.environ, env, clear=True):
+            with mock.patch.object(protocol, "_can_switch_user", return_value=False):
+                with self.assertRaises(cli_mod.InputError) as ctx:
+                    cli_mod._custom_policy_guard([policy], args)
+                self.assertIn("official image", str(ctx.exception))
+                self.assertNotIn("drop --in-process", str(ctx.exception))
+            with mock.patch.object(protocol, "_can_switch_user", return_value=True):
+                cli_mod._custom_policy_guard([policy], args)  # the child runs as the policy user: no refusal
+                args.in_process = True
+                with self.assertRaises(cli_mod.InputError) as ctx:
+                    cli_mod._custom_policy_guard([policy], args)
+                self.assertIn("drop --in-process", str(ctx.exception))
+
+    def test_closed_run_refuses_the_host_user_fallback_when_the_account_already_has_processes(self):
+        # the guard predicts a switch (identity, /proc, capabilities) but AgentProcess would fall back to the host user
+        # because the policy account already has processes: on a closed run that is an error, not a warning
+        import argparse
+
+        args = argparse.Namespace(in_process=False, seeds_file="seeds.json", secret_env=None, allow_same_user=False)
+        env = {k: v for k, v in os.environ.items() if k != protocol.REQUIRE_ENV}
+        env["AUDITGYM_AGENT_USER"] = "agent"
+        started = []
+        self.addCleanup(protocol.forbid_same_user_for_custom, False)
+        self.addCleanup(protocol.allow_same_user_fallback, False)
+        with mock.patch.dict(os.environ, env, clear=True),                 mock.patch.object(protocol.aio, "agent_identity", return_value=self.IDENT),                 mock.patch.object(protocol, "_proc_listable", return_value=True),                 mock.patch.object(protocol, "_caps_allow_switch", return_value=True),                 mock.patch.object(protocol, "_uid_pids", return_value=[4242]),                 mock.patch.object(protocol, "_SWITCHED", False), mock.patch.object(protocol, "_WARNED", False),                 mock.patch.object(protocol.subprocess, "Popen", side_effect=lambda *a, **k: started.append(1)):
+            cli_mod._custom_policy_guard(["examples.custom_policy:FirstPagePolicy"], args)  # predicted switch: passes
+            with self.assertRaises(protocol.AgentUserRequired) as ctx:
+                protocol.AgentProcess("examples.custom_policy:FirstPagePolicy")
+            self.assertIn("--allow-same-user", str(ctx.exception))
+            self.assertEqual(started, [])  # no child was started as the host user
+            # a built-in policy on the same run is not affected (the fallback only warns)
+            stub = mock.Mock(_policy_name="silent")
+            try:
+                protocol.AgentProcess._same_user(stub, "test")
+            except protocol.AgentUserRequired:
+                self.fail("built-in policies keep the warning")
+            # with --allow-same-user the flag is not set
+            args.allow_same_user = True
+            cli_mod._custom_policy_guard(["examples.custom_policy:FirstPagePolicy"], args)
+            self.assertFalse(protocol._NO_SAME_USER_EXTERNAL)
+
+    def test_allow_same_user_is_recorded_when_the_child_falls_back_to_the_host_user(self):
+        # the guard predicted a switch; AgentProcess then fell back (account has processes, chown or setuid refused):
+        # with --allow-same-user the run goes on as the host user and meta.json says so; without it nothing is written
+        seeds = self.seeds_file_for_run()
+        policy = "examples.custom_policy:FirstPagePolicy"
+        real_popen = subprocess.Popen
+        ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
+        for data, fallback, allow in [(dt, fb, al) for dt in ("seeds", "keys") for fb in ("pids", "chown", "setuid")
+                                      for al in (False, True)]:
+            if True:
+                with self.subTest(data=data, fallback=fallback, allow=allow), tempfile.TemporaryDirectory() as d:
+                    out = Path(d) / "run"
+                    if data == "keys":  # an answer-key directory outside the committed open episodes
+                        shutil.copytree(ep, Path(d) / "keys_ep")
+                    started = []
+
+                    def popen(cmd, *a, **k):
+                        as_user = k.pop("user", None)
+                        for key in ("group", "extra_groups", "umask", "start_new_session"):
+                            k.pop(key, None)
+                        if as_user is not None and fallback == "setuid":
+                            raise PermissionError(1, "Operation not permitted")
+                        started.append("agent" if as_user is not None else "host")
+                        return real_popen(cmd, *a, **k)
+
+                    def chown(*a, **k):
+                        if fallback == "chown":
+                            raise PermissionError(1, "Operation not permitted")
+
+                    env = {k: v for k, v in os.environ.items() if k != protocol.REQUIRE_ENV}
+                    env["AUDITGYM_AGENT_USER"] = "agent"
+                    data_args = (["--seeds-file", seeds, "--no-secret"] if data == "seeds"
+                                 else ["--episodes", str(Path(d) / "keys_ep")])
+                    argv = ["run", *data_args, "--policies", policy, "--out", str(out), "--max-steps", "3"]
+                    if allow:
+                        argv.append("--allow-same-user")
+                    err = io.StringIO()
+                    with contextlib.ExitStack() as st:
+                        st.enter_context(mock.patch.dict(os.environ, env, clear=True))
+                        st.enter_context(mock.patch.object(protocol.aio, "agent_identity", return_value=self.IDENT))
+                        st.enter_context(mock.patch.object(protocol.aio, "private_files", contextlib.nullcontext))
+                        st.enter_context(mock.patch.object(protocol, "_proc_listable", return_value=True))
+                        st.enter_context(mock.patch.object(protocol, "_caps_allow_switch", return_value=True))
+                        st.enter_context(mock.patch.object(protocol, "_uid_pids", return_value=[4242] if fallback == "pids" else []))
+                        st.enter_context(mock.patch.object(protocol, "kill_uid", return_value=True))
+                        st.enter_context(mock.patch.object(protocol, "_chown_tree", side_effect=chown))
+                        st.enter_context(mock.patch.object(protocol, "_SWITCHED", False))
+                        st.enter_context(mock.patch.object(protocol, "_WARNED", False))
+                        st.enter_context(mock.patch.object(protocol.subprocess, "Popen", side_effect=popen))
+                        st.enter_context(mock.patch.object(os, "geteuid", return_value=0, create=True))
+                        st.enter_context(mock.patch.object(os, "getegid", return_value=0, create=True))
+                        st.enter_context(contextlib.redirect_stderr(err))
+                        st.enter_context(contextlib.redirect_stdout(io.StringIO()))
+                        code = cli_mod.main(argv)
+                    self.assertFalse(protocol._NO_SAME_USER_EXTERNAL)
+                    self.assertFalse(protocol._SAME_USER_ALLOWED_CLOSED)
+                    if allow:
+                        self.assertEqual(code, 0, err.getvalue())
+                        self.assertEqual(set(started), {"host"})
+                        meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+                        self.assertIs(meta["allow_same_user"], True)
+                        self.assertIn("--allow-same-user", err.getvalue())
+                        self.assertEqual(err.getvalue().count("WARNING: custom policy"), 1, err.getvalue())
+                        if data == "keys":
+                            self.assertIn("answer keys", err.getvalue())
+                            self.assertNotIn("seeds file", err.getvalue())
+                    else:
+                        if data == "keys":
+                            self.assertIn("answer keys", err.getvalue())
+                        self.assertEqual(code, 2, err.getvalue())
+                        self.assertEqual(started, [])
+                        self.assertFalse(out.exists(), "a refused run writes nothing")
+
+    def seeds_file_for_run(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        f = Path(d) / "seeds.json"
+        f.write_text(json.dumps({"split": "t", "episodes": [{"name": "c_ok", "seed": 6602239917354212077,
+                                                             "config": {"size": "small", "period": "2026-05"}}]}), encoding="utf-8")
+        return str(f)
+
+    def test_guard_is_the_helper_not_the_bare_identity(self):
+        # identity and /proc present, capabilities gone: the same refusal as for a host without an identity
+        import argparse
+
+        args = argparse.Namespace(in_process=False, seeds_file="seeds.json", secret_env=None, allow_same_user=False)
+        env = {k: v for k, v in os.environ.items() if k != protocol.REQUIRE_ENV}
+        with mock.patch.dict(os.environ, env, clear=True),                 mock.patch.object(protocol.aio, "agent_identity", return_value=self.IDENT),                 mock.patch.object(protocol, "_proc_listable", return_value=True),                 mock.patch.object(protocol, "_caps_allow_switch", return_value=False):
+            with self.assertRaises(cli_mod.InputError):
+                cli_mod._custom_policy_guard(["examples.custom_policy:FirstPagePolicy"], args)
 
 
 if __name__ == "__main__":

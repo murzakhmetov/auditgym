@@ -29,15 +29,17 @@ Named checks, each independent of the generator's internal state:
                          touched booking row (invoice 1100 or 2000, payment 1000) equals the amount at wrong_rate.
                          unallocated_payment: alloc fits the variant (missing 0, partial more), 2900 holds the converted
                          amount - alloc, and the ledger relieves the invoice by the proportional carrying amount of alloc
+                         (of what earlier part payments left open)
   declared_discrepancies the independent auditor reproduces exactly the answer key (types, affected IDs, amounts,
                          evidence sets) and reports no anomaly; truth id_aliases equal {doc_id: invoice_id or
                          payment_id} of the public records (nothing missing or extra) and every issue variant is one
                          of config.VARIANTS[type]
   evidence_sufficient    each acceptable evidence set alone (plus policy and manifest) re-derives type, affected
                          IDs and amount, using evidence_check.py (independent of auditor.py and money.py); and for every
-                         unallocated_payment issue no other receipt settled the invoice, checked on all public records: no
-                         payment but the issue's lists the invoice in invoice_refs, and no ledger row but the issue's own
-                         payment relieves it (credit to 1100 for a sales invoice, debit to 2000 for a purchase invoice); and the
+                         unallocated_payment issue no other receipt settled the invoice, checked on all public records: a
+                         payment but the issue's lists the invoice in invoice_refs only as an earlier part payment (booked
+                         before, relieving the invoice, nothing in 2900), and no ledger row but those payments' and the
+                         issue's own relieves it (credit to 1100 for a sales invoice, debit to 2000 for a purchase invoice); and the
                          set holds every 1100 (sales) or 2000 (purchase) row that carries the invoice ID, read from
                          all public rows, and for a foreign-currency invoice the payment's bank (1000) row
   budget_feasible        reading every page of every table plus submit fits in 100 steps
@@ -58,6 +60,7 @@ variant cases above by regenerating every committed episode from its seed and co
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 import re
 from datetime import date, timedelta
 from fractions import Fraction
@@ -216,10 +219,11 @@ def compare_with_truth(found: dict, truth: dict) -> list[str]:
 
 def _sole_receipt_errors(ep: Episode, issue: dict) -> list[str]:
     """unallocated_payment: the evidence cannot show that no other receipt settled the invoice, so check it on all
-    public records. No payment other than the issue's one lists the invoice in invoice_refs, and no ledger row other
-    than the issue's own payment relieves the invoice: a credit to 1100 (receivable of a sales invoice) or a debit to
-    2000 (payable of a purchase invoice) that carries the invoice ID. The invoice's own booking is a debit to 1100
-    (sales) or a credit to 2000 (purchase), so it never counts."""
+    public records. A payment other than the issue's one may list the invoice only as an earlier part payment: booked before
+    the issue's payment, relieving the invoice in full (a credit to 1100 of a sales invoice that carries the invoice ID, so
+    the cited rows show the balance it left) and leaving nothing in 2900. No other ledger row relieves the invoice: a credit
+    to 1100 (receivable of a sales invoice) or a debit to 2000 (payable of a purchase invoice) that carries the invoice ID.
+    The invoice's own booking is a debit to 1100 (sales) or a credit to 2000 (purchase), so it never counts."""
     ids = set(issue.get("affected_ids", []))
     pays = [d for d in ep.payments if d["payment_id"] in ids]
     invs = [d for d in ep.invoices if d["invoice_id"] in ids]
@@ -228,12 +232,26 @@ def _sole_receipt_errors(ep: Episode, issue: dict) -> list[str]:
     if len(pays) > 1 or len(invs) > 1:
         return [f"{issue['issue_id']}: {len(pays)} payment and {len(invs)} invoice documents carry the affected IDs"]
     pid, inv = pays[0]["payment_id"], invs[0]
-    errs = [f"{issue['issue_id']}: payment {d['payment_id']} also lists invoice {inv['invoice_id']} in invoice_refs"
-            for d in ep.payments if d["payment_id"] != pid and inv["invoice_id"] in (d["invoice_refs"] or [])]
     account, side = ("1100", "credit_minor") if inv["kind"] == "sales" else ("2000", "debit_minor")
+    rows_of = defaultdict(list)
+    for r in ep.ledger:
+        if r["payment_id"]:
+            rows_of[r["payment_id"]].append(r)
+    issue_ts = min((parse_ts(r["timestamp"]) for r in rows_of[pid]), default=None)
+    errs, earlier = [], set()
+    for d in ep.payments:
+        if d["payment_id"] == pid or inv["invoice_id"] not in (d["invoice_refs"] or []):
+            continue
+        rows = rows_of[d["payment_id"]]
+        relieves = any(r["invoice_id"] == inv["invoice_id"] and r["account"] == account and r[side] > 0 for r in rows)
+        late = issue_ts is None or any(parse_ts(r["timestamp"]) >= issue_ts for r in rows)
+        if d["kind"] != ("receipt" if inv["kind"] == "sales" else "disbursement") or not relieves or late                 or any(r["account"] == "2900" for r in rows):
+            errs.append(f"{issue['issue_id']}: payment {d['payment_id']} also lists invoice {inv['invoice_id']} in invoice_refs")
+        else:
+            earlier.add(d["payment_id"])
     errs += [f"{issue['issue_id']}: ledger row {r['row_id']} relieves invoice {inv['invoice_id']} ({account}) besides the issue's payment"
              for r in ep.ledger if r["invoice_id"] == inv["invoice_id"] and r["account"] == account and r[side] > 0
-             and r["payment_id"] != pid]
+             and r["payment_id"] != pid and r["payment_id"] not in earlier]
     return errs[:5]
 
 
@@ -677,8 +695,16 @@ def _alloc_errors(ix: _ChangeIndex, inj: dict, ch: dict, name: str) -> list[str]
     if len(carrying) != 1:
         errs.append(f"injection {name}: the invoice has {len(carrying)} receivable booking rows, so its carrying amount is unknown")
     elif inv["total_minor"] > 0:
-        base = carrying[0]
-        want = base if alloc == inv["total_minor"] else _round_fraction(Fraction(base * alloc, inv["total_minor"]), ix.mode)
+        # earlier receipts (posted before this one) have already relieved part of the carrying amount and of the document total
+        pay_ts = min((parse_ts(r["timestamp"]) for r in ix.rows_by_pay.get(pay["payment_id"], [])), default=None)
+        base, open_doc = carrying[0], inv["total_minor"]
+        for r in sorted(ix.rows_by_inv.get(inv["invoice_id"], []), key=lambda r: (parse_ts(r["timestamp"]), r["row_id"])):
+            other = ix.pay.get(r["payment_id"])
+            if (r["account"] == "1100" and r["credit_minor"] > 0 and other is not None and other["payment_id"] != pay["payment_id"]
+                    and pay_ts is not None and parse_ts(r["timestamp"]) < pay_ts):
+                base -= r["credit_minor"]
+                open_doc -= min(other["amount_minor"], open_doc)
+        want = base if alloc == open_doc else _round_fraction(Fraction(base * alloc, open_doc), ix.mode) if open_doc > 0 else 0
         if relieved != want:
             errs.append(f"injection {name}: the ledger relieves {relieved} of the invoice, change.alloc {alloc} relieves {want}")
     return errs

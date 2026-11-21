@@ -9,12 +9,15 @@ the company time zone rules.
 
 from __future__ import annotations
 
+import contextlib
 import random
-from dataclasses import dataclass, field
+from collections import defaultdict
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from . import catalog
+from .config import UNALLOCATED_PRIOR_SHARE
 from .money import CURRENCY_EXPONENTS, quantize_rate
 from .timeutil import TZ_RULES, in_ambiguous_hour, local_date, local_datetime, month_bounds, offset_minutes
 
@@ -47,6 +50,7 @@ class Invoice:
     lines: list
     tags: list = field(default_factory=list)
     duplicate_of: str | None = None
+    posted: datetime | None = None  # posting moment when it differs from issued (a posting lag); None = booked at issued
 
     @property
     def total(self) -> int:
@@ -64,6 +68,7 @@ class Payment:
     refs: list | None
     bank_ref: str
     tags: list = field(default_factory=list)
+    posted: datetime | None = None  # posting moment when it differs from ts (a posting lag); None = booked at ts
 
 
 @dataclass
@@ -135,14 +140,43 @@ LARGE_PURCHASE_USD = 2000.0
 # boundary at random, so neither the kind nor the number of documents in the error window gives a target away
 BOUNDARY_KINDS = ("sales", "purchase", "receipt", "disbursement")
 BOUNDARY_ERROR_SIDE_SHARE = 0.6
+# Shapes of a line-identical pair of invoices: "same" is two copies of one instant (the same_day_copy variant of
+# duplicate_invoice when converted); "later" is the second invoice keyed again 2 to 9 local days later, at its own date and
+# hour (the rekeyed_copy variant). Decoys and duplicate sources are drawn by one builder, from the shapes of the allowed
+# duplicate variants only.
+PAIR_SHAPE_OF_VARIANT = {"same_day_copy": "same", "rekeyed_copy": "later"}
+LATER_GAP_DAYS = (2, 9)
+OPEN_INVOICE_USD = 900.0  # size floor of the invoice of a 2900 credit, error or not
+VARIANT_OF_PAIR_SHAPE = {s: v for v, s in PAIR_SHAPE_OF_VARIANT.items()}
+PAIR_SIDES = ("sales", "purchase")
+# Posting lags: a posting is booked at its own moment inside the document's period. Four shapes, mirroring the error shapes
+# in size and sign: booked later (minutes, hours or 1 to 5 business days, like booked_late and posting_date), booked
+# earlier (up to a day or two, like booked_early), at the UTC wall clock of the local time (like utc_wall_clock) and, on a
+# foreign-currency document, across a date change with another published rate (booked at the document-date rate).
+LAG_SHAPES = ("later", "earlier", "utc_wall_clock", "date_change")
+LAG_TRIES = 8
 
 
 class HistoryBuilder:
     """Builds a consistent, error-free history. Deterministic for a given RNG."""
 
     def __init__(self, rng: random.Random, cfg: dict):
+        # Named streams for the draws of the sales references, the line-identical pairs and the choice of the pairs that
+        # become duplicates. They are forked first, before any draw, so none depends on the main stream.
+        self.ref_rng = rng.fork("refs")
+        self.pair_rng = rng.fork("repeats")
+        self.dup_rng = rng.fork("duplicates")
+        self.lag_rng = rng.fork("posting_lag")  # every posting-lag draw: unrelated draws never move
+        self.credit_rng = rng.fork("credit_receipts")  # the credit_receipt distractors (invoices, times, amounts)
+        self.alloc_rng = rng.fork("earlier_payment")  # the earlier part payment of an unallocated receipt's invoice
+        # which fresh unallocated receipts sit on an opening item: the resolved count of them, in a shuffled order of its own
+        n_fresh = int((cfg.get("errors") or {}).get("unallocated_payment", 0))
+        self.unallocated_prior = [True] * int(cfg.get("unallocated_prior", 0)) + [False] * (n_fresh - int(cfg.get("unallocated_prior", 0)))
+        rng.fork("unallocated_prior_order").shuffle(self.unallocated_prior)
+        self.lag_log: list[dict] = []  # {"key", "shape", "role"} of every lagged document; role distractor, pair or error
         self.rng = rng
         self.cfg = cfg
+        self.pairs: list[dict] = []  # drawn line-identical pairs; inject.convert_pair turns some into duplicates
         year, month = (int(p) for p in cfg["period"].split("-"))
         tz = cfg["timezone"]
         p0, p1 = month_bounds(tz, year, month)
@@ -171,6 +205,15 @@ class HistoryBuilder:
         self._used_times: set[datetime] = set()
 
     # ------------------------------------------------------------ helpers
+    @contextlib.contextmanager
+    def stream(self, rng):
+        """Draw every helper below from `rng` instead of the main stream inside the block."""
+        saved, self.rng = self.rng, rng
+        try:
+            yield
+        finally:
+            self.rng = saved
+
     def key(self, prefix: str) -> str:
         n = self._counters.get(prefix, 0) + 1
         self._counters[prefix] = n
@@ -263,12 +306,16 @@ class HistoryBuilder:
         minor = int(value / grain) * grain
         return max(grain, minor)
 
-    def new_ref(self, pattern: str, issued: datetime, entity: str | None = None) -> str:
+    def new_ref(self, pattern: str, issued: datetime | None = None, entity: str | None = None, rng=None) -> str:
         """Line reference, unique per episode. Every pattern has a random part, so uniqueness never needs a
         sequence suffix that would reveal the creation order of documents."""
-        ym = f"{self.h.local_date(issued).year:04d}-{self.h.local_date(issued).month:02d}"
+        rng = rng or self.rng
+        ym = ""
+        if "{ym}" in pattern:
+            local = self.h.local_date(issued)
+            ym = f"{local.year:04d}-{local.month:02d}"
         for _ in range(1000):
-            ref = pattern.format(n4=self.rng.randint(1000, 9999), n5=self.rng.randint(10000, 99999), ym=ym)
+            ref = pattern.format(n4=rng.randint(1000, 9999), n5=rng.randint(10000, 99999), ym=ym)
             if ref not in self._used_refs:
                 self._used_refs.add(ref)
                 return ref
@@ -321,8 +368,13 @@ class HistoryBuilder:
                 break
         else:
             raise SampleRetry("no ordinary-looking sales invoice reaches the size floor")
+        return self.number_sales_lines(lines, self.new_ref(catalog.SALES_REF, rng=self.ref_rng))
+
+    @staticmethod
+    def number_sales_lines(lines: list, ref: str) -> list:
+        """One delivery reference per sales invoice; its lines carry "<reference>-<line_no>"."""
         for idx, li in enumerate(lines):
-            li.ref = f"L{idx + 1}"
+            li.ref = f"{ref}-{idx + 1}"
         return lines
 
     def purchase_lines(self, ccy: str, issued: datetime, item=None, unit_override=None, entity: str | None = None,
@@ -390,6 +442,35 @@ class HistoryBuilder:
                 return t
         return None
 
+    def open_invoice(self, prior: bool, min_usd: float = OPEN_INVOICE_USD) -> Invoice:
+        """The sales invoice of a 2900 credit that is not a refund, drawn the same way for the unallocated_payment errors and
+        for the clean credits (credit_receipt shapes, overpayment_refund): an opening item (issued 3 to 30 days before the
+        period) with the share UNALLOCATED_PRIOR_SHARE, otherwise an invoice of the period up to 8 days before its end; dates
+        are loose (weekends included), the hour an ordinary document hour, the size at least `min_usd`."""
+        h = self.h
+        if prior:
+            d = self.loose_date(h.p_first_date - timedelta(days=30), h.p_first_date - timedelta(days=3))
+            tags = ["prior"]
+        else:
+            d = self.loose_date(h.p_first_date, h.p_last_date - timedelta(days=8))
+            tags = None
+        issued = self.local_time(d, self.doc_hours())
+        ent = self.entity_with("customer", foreign=None)
+        return self.add_invoice("sales", ent, issued, self.sales_lines(h.entities[ent].currency, min_usd_total=min_usd), tags)
+
+    def paid_slots(self, n: int, removed: int, removed_paid: int, share: float) -> list:
+        """Paid or unpaid for each of the n + removed nominal invoices, each paid with probability `share`; then the slots of
+        the invoices that an error brought are dropped (unpaid ones first, `removed_paid` of them paid ones). What is left
+        are the n ordinary invoices."""
+        coins = [self.rng.random() < share for _ in range(n + removed)]
+        for want, drop in ((True, removed_paid), (False, removed - removed_paid)):
+            while drop > 0 and want in coins:
+                coins.remove(want)
+                drop -= 1
+        while len(coins) > n:  # not enough slots of the wanted kind: drop whatever is left over
+            coins.pop(0)
+        return coins
+
     # ------------------------------------------------------------ regular flow
     def build_regular(self) -> None:
         h, cfg, rng = self.h, self.cfg, self.rng
@@ -403,20 +484,19 @@ class HistoryBuilder:
                 t = self.pay_time_after(max(inv.issued, h.p0), min_days=1, max_days=25)
                 if t:
                     self.add_payment("receipt" if kind == "sales" else "disbursement", inv.entity, inv.currency, t, inv.total, [inv.key])
-        # in-period sales
-        for _ in range(counts["sales_invoices"]):
-            inv = self.random_sales_invoice()
-            if rng.random() < 0.7:
-                t = self.pay_time_after(inv.issued, 2, 25)
-                if t:
-                    self.add_payment("receipt", inv.entity, inv.currency, t, inv.total, [inv.key])
-        # in-period purchases
-        for _ in range(counts["purchase_invoices"]):
-            inv = self.random_purchase_invoice()
-            if rng.random() < 0.6:
-                t = self.pay_time_after(inv.issued, 3, 20)
-                if t:
-                    self.add_payment("disbursement", inv.entity, inv.currency, t, inv.total, [inv.key])
+        # in-period sales and purchases. An invoice that an error adds (wrong rate, wrong period) is never paid and was taken
+        # out of the drawn count, so its slot is taken out of the unpaid ones: the payments per invoice of an episode never
+        # depend on how many errors it holds (the boundary scenario's invoice is paid by its receipt: a paid slot goes)
+        load = cfg.get("error_invoice_load") or {}
+        for kind, share, lo_d, hi_d in (("sales", 0.7, 2, 25), ("purchase", 0.6, 3, 20)):
+            n = counts[f"{kind}_invoices"]
+            slots = self.paid_slots(n, int(load.get(kind, 0)), int(load.get(f"{kind}_paid", 0)), share)
+            for paid in slots:
+                inv = self.random_sales_invoice() if kind == "sales" else self.random_purchase_invoice()
+                if paid:
+                    t = self.pay_time_after(inv.issued, lo_d, hi_d)
+                    if t:
+                        self.add_payment("receipt" if kind == "sales" else "disbursement", inv.entity, inv.currency, t, inv.total, [inv.key])
         # a few documents dated in the cut-off window (correctly booked there)
         for _ in range(rng.randint(2, 4)):
             d = self.business_date(h.next_first_date, h.next_first_date + timedelta(days=CUTOFF_DAYS - 2))
@@ -436,21 +516,7 @@ class HistoryBuilder:
     def build_distractors(self) -> None:
         h, rng = self.h, self.rng
         dcounts = self.cfg["distractors"]
-        for _ in range(dcounts.get("legit_repeat", 0)):
-            sup = self.entity_with("supplier")
-            d = self.loose_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
-            issued = self.local_time(d, self.doc_hours())
-            item = rng.choice([it for it in catalog.PURCHASE_ITEMS if "{ym}" not in it[2]])
-            unit = self.unit_price_minor(h.entities[sup].currency, item[1][0], item[1][1])
-            terms = rng.choice([14, 30, 45])  # drawn exactly like the terms of a duplicate pair
-            a = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit, sup), ["legit_repeat"], terms)
-            b = self.add_invoice("purchase", sup, issued, self.purchase_lines(h.entities[sup].currency, issued, item, unit, sup), ["legit_repeat"], terms)
-            keys = [a.key, b.key]
-            if rng.random() < 0.5:  # one copy is paid with the same probability as the original of a duplicate pair
-                t = self.pay_time_after(a.issued, 2, 15)
-                if t:
-                    keys.append(self.add_payment("disbursement", sup, a.currency, t, a.total, [a.key]).key)
-            h.distractors.append({"kind": "legit_repeat", "keys": keys})
+        self.build_repeat_pairs(self.cfg.get("repeat_pairs", dcounts.get("legit_repeat", 0)))
         for _ in range(dcounts.get("recurring", 0)):
             sup = self.entity_with("supplier")
             item = rng.choice([it for it in catalog.PURCHASE_ITEMS if "{ym}" in it[2]] or catalog.PURCHASE_ITEMS)
@@ -471,6 +537,7 @@ class HistoryBuilder:
                 p1 = self.add_payment("receipt", inv.entity, inv.currency, t1, part, [inv.key], ["split"])
                 p2 = self.add_payment("receipt", inv.entity, inv.currency, t2, inv.total - part, [inv.key], ["split"])
                 h.distractors.append({"kind": "split_payment", "keys": [inv.key, p1.key, p2.key]})
+        self.build_split_remainders(dcounts.get("split_remainder", 0))
         for _ in range(dcounts.get("multi_invoice_payment", 0)):
             cust = self.entity_with("customer")
             d1 = self.business_date(h.p_first_date, h.p_first_date + timedelta(days=10))
@@ -487,18 +554,22 @@ class HistoryBuilder:
                 p = self.add_payment("receipt", inv.entity, inv.currency, t, int(inv.total * rng.uniform(0.5, 0.95)), [inv.key], ["underpaid"])
                 h.distractors.append({"kind": "underpayment", "keys": [inv.key, p.key]})
         for _ in range(dcounts.get("overpayment_refund", 0)):
-            inv = self.random_sales_invoice(self.business_date(h.p_first_date, h.p_first_date + timedelta(days=10)))
-            t = self.pay_time_after(inv.issued, 1, 8, in_period=True)
-            if not t:
-                continue
-            excess = max(1, int(inv.total * rng.uniform(0.03, 0.2)))
-            p = self.add_payment("receipt", inv.entity, inv.currency, t, inv.total + excess, [inv.key], ["overpaid"])
-            keys = [inv.key, p.key]
-            t2 = self.pay_time_after(t, 2, 12)
-            if t2:
-                r = self.add_payment("refund", inv.entity, inv.currency, t2, excess, [inv.key], ["refund"])
-                keys.append(r.key)
-            h.distractors.append({"kind": "overpayment_refund", "keys": keys})
+            prior = rng.random() < UNALLOCATED_PRIOR_SHARE
+            for _try in range(8):
+                inv = self.open_invoice(prior)
+                t = self.pay_time_after(max(inv.issued, h.p0), 1, 8, in_period=True)
+                if not t:
+                    del h.invoices[inv.key]
+                    continue
+                excess = max(1, int(inv.total * rng.uniform(0.03, 0.2)))
+                p = self.add_payment("receipt", inv.entity, inv.currency, t, inv.total + excess, [inv.key], ["overpaid"])
+                keys = [inv.key, p.key]
+                t2 = self.pay_time_after(t, 2, 12)
+                if t2:
+                    r = self.add_payment("refund", inv.entity, inv.currency, t2, excess, [inv.key], ["refund"])
+                    keys.append(r.key)
+                h.distractors.append({"kind": "overpayment_refund", "keys": keys})
+                break
         for _ in range(dcounts.get("null_ref_receipt", 0)):
             cust = self.entity_with("customer")
             ccy = h.entities[cust].currency
@@ -512,6 +583,7 @@ class HistoryBuilder:
             error_side = rng.random() < BOUNDARY_ERROR_SIDE_SHARE
             keys = self.boundary_document(kind, error_side)
             h.distractors.append({"kind": "boundary_doc", "keys": keys})
+        self.build_credit_receipts(dcounts.get("credit_receipt", 0), dcounts.get("prepaid_receipt", 0))
         if h.foreign:
             for j in range(dcounts.get("midnight_fx", 0)):
                 keys = self.near_midnight_documents(payment=(j % 2 == 1))
@@ -523,6 +595,155 @@ class HistoryBuilder:
                     continue
                 inv = self.random_sales_invoice(rng.choice(weekend), foreign=True, tags=["weekend"])
                 h.distractors.append({"kind": "weekend_fx", "keys": [inv.key]})
+
+    def build_split_remainders(self, count: int) -> None:
+        """`count` split payments that leave a rest open, on the stream of the credit receipts, on an invoice drawn like the one of an
+        unallocated receipt (open_invoice: an opening item with the share UNALLOCATED_PRIOR_SHARE, loose dates over the period,
+        size floor): a part payment (30 to 70 %), then
+        a second receipt of 45 to 90 % of what is left. Both receipts relieve 1100 in full and nothing goes to 2900, so an
+        invoice whose receipts sum to less than its total is ordinary; the part-paid unallocated_payment errors are the only
+        other invoices of that kind. Recorded as a split_payment distractor of shape "remainder". A shortfall raises
+        SampleRetry (the count is exact)."""
+        h = self.h
+        with self.stream(self.credit_rng):
+            rng = self.rng
+            for _ in range(count):
+                prior = rng.random() < UNALLOCATED_PRIOR_SHARE  # decided before the tries, like every other credit invoice
+                for _try in range(8):
+                    inv = self.open_invoice(prior)
+                    start = max(inv.issued, h.p0)
+                    t1 = self.pay_time_after(start, 1, 8, in_period=True)
+                    t2 = self.pay_time_after(t1, 1, 10, in_period=True) if t1 else None
+                    if not t2:
+                        del h.invoices[inv.key]
+                        continue
+                    part = max(1, int(inv.total * rng.uniform(0.3, 0.7)))
+                    second = max(1, int((inv.total - part) * rng.uniform(0.45, 0.9)))
+                    p1 = self.add_payment("receipt", inv.entity, inv.currency, t1, part, [inv.key], ["split"])
+                    p2 = self.add_payment("receipt", inv.entity, inv.currency, t2, second, [inv.key], ["split", "remainder"])
+                    h.distractors.append({"kind": "split_payment", "keys": [inv.key, p1.key, p2.key], "shape": "remainder"})
+                    break
+                else:
+                    raise SampleRetry("no room for a split payment that leaves a rest")
+
+    def build_credit_receipts(self, count: int, prepaid: int = 0) -> None:
+        """`count` receipts that leave a credit in 2900 without being an error, and `prepaid` more of the prepaid shape, on
+        their own stream. Over-received shapes (an invoice drawn like the one of an unallocated receipt: an opening item with
+        the share UNALLOCATED_PRIOR_SHARE, loose dates over the period, size floor OPEN_INVOICE_USD): "overpaid", an overpayment
+        that is never refunded (one payment, amount above the invoice total); "settled", a second receipt on an invoice that an
+        earlier receipt settled in full; "topped_up", a part payment (30 to 60 % of the invoice) followed by a receipt that is
+        more than what was left but at most the invoice total, so it relieves the rest and credits the excess to 2900 (a 1100
+        row and a 2900 row on an invoice with another receipt, which would otherwise mark the part-paid unallocated_payment
+        errors). "prepaid": a receipt that names an invoice issued 1 to 8 days after it (one payment, amount at most the
+        total, so the 2900 row says nothing about the amount or the payment count). All credited to 2900 by policy because no
+        invoice balance is open to relieve. A shortfall (no room for a shape after 8 tries) raises SampleRetry."""
+        h = self.h
+        with self.stream(self.credit_rng):
+            # the share of the over-received credits that follow an earlier receipt (settled, topped_up) is drawn per episode,
+            # so the number of 2900 receipts that are dated after their invoice and within its total (what an error adds one
+            # of) varies from episode to episode and says little about the errors
+            second_share = self.credit_second_share = self.rng.uniform(0.2, 0.9)
+            for i in range(count + prepaid):
+                rng = self.rng
+                if i < count:
+                    prior = rng.random() < UNALLOCATED_PRIOR_SHARE
+                    r = rng.random()
+                    shape = "overpaid" if r >= second_share else ("settled" if r < second_share / 2 else "topped_up")
+                else:
+                    prior, shape = False, "prepaid"
+                for _try in range(8):
+                    if shape == "prepaid":
+                        d = self.business_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
+                        t = self.local_time(d, self.payment_hours())
+                        d_inv = self.loose_date(d + timedelta(days=1), min(d + timedelta(days=8), h.p_last_date))
+                        ent = self.entity_with("customer", foreign=None)
+                        inv = self.add_invoice("sales", ent, self.local_time(d_inv, self.doc_hours()),
+                                               self.sales_lines(h.entities[ent].currency, min_usd_total=OPEN_INVOICE_USD))
+                        if inv.issued <= t:
+                            del h.invoices[inv.key]
+                            continue
+                        amount = inv.total if rng.random() < 0.6 else max(1, int(inv.total * rng.uniform(0.4, 0.95)))
+                        p = self.add_payment("receipt", inv.entity, inv.currency, t, amount, [inv.key], ["prepaid"])
+                        keys = [inv.key, p.key]
+                    else:
+                        inv = self.open_invoice(prior)
+                        start = max(inv.issued, h.p0)
+                        if shape == "overpaid":
+                            t, t2 = self.pay_time_after(start, 1, 14, in_period=True), True
+                        else:
+                            t = self.pay_time_after(start, 1, 8, in_period=True)
+                            t2 = self.pay_time_after(t, 1, 10, in_period=True) if t else None
+                        if not t or not t2:
+                            del h.invoices[inv.key]
+                            continue
+                        if shape == "overpaid":
+                            excess = max(1, int(inv.total * rng.uniform(0.03, 0.2)))
+                            p = self.add_payment("receipt", inv.entity, inv.currency, t, inv.total + excess, [inv.key], ["overpaid"])
+                            keys = [inv.key, p.key]
+                        elif shape == "topped_up":
+                            part = max(1, int(inv.total * rng.uniform(0.3, 0.6)))
+                            excess = max(1, int(part * rng.uniform(0.05, 0.8)))
+                            p1 = self.add_payment("receipt", inv.entity, inv.currency, t, part, [inv.key], ["part_paid"])
+                            p2 = self.add_payment("receipt", inv.entity, inv.currency, t2, inv.total - part + excess, [inv.key], ["topped_up"])
+                            keys = [inv.key, p1.key, p2.key]
+                        else:
+                            p1 = self.add_payment("receipt", inv.entity, inv.currency, t, inv.total, [inv.key], ["settled"])
+                            p2 = self.add_payment("receipt", inv.entity, inv.currency, t2, max(1, int(inv.total * rng.uniform(0.3, 1.0))),
+                                                  [inv.key], ["repaid"])
+                            keys = [inv.key, p1.key, p2.key]
+                    h.distractors.append({"kind": "credit_receipt", "keys": keys, "shape": shape})
+                    break
+                else:
+                    raise SampleRetry(f"no room for a {shape} credit receipt")
+
+    def build_repeat_pairs(self, count: int) -> None:
+        """Draw `count` line-identical pairs on their own stream. Side and shape are uniform (shapes: those of the allowed
+        duplicate variants), so that a pair that inject.convert_pair later turns into a duplicate was drawn like every
+        other pair. Each pair is recorded as a legit_repeat distractor until then."""
+        shapes = sorted({PAIR_SHAPE_OF_VARIANT[v] for v in self.cfg["variants"]["duplicate_invoice"]})
+        with self.stream(self.pair_rng):
+            for _ in range(count):
+                self.repeat_pair(self.rng.choice(PAIR_SIDES), self.rng.choice(shapes))
+
+    def repeat_pair(self, side: str, shape: str) -> dict:
+        """One pair of invoices of one counterparty with identical kind, currency, terms, total and lines except for the
+        line reference, which is fresh (a supplier reference inside the description of a purchase, a delivery reference
+        on a sales invoice). Shape "same": both carry one instant. The first invoice is paid with probability 1/2 and the
+        second never. Shape "later": the second invoice is dated 2 to 9 local days after the first (never after the period's
+        last day), at an ordinary document hour, with its own due date (its date plus the shared terms). No size floor
+        and no subscription item: the pool does not depend on what the pair becomes."""
+        if shape not in ("same", "later"):
+            raise ValueError(f"unknown pair shape {shape!r}")
+        h, rng = self.h, self.rng
+        sup = self.entity_with("customer" if side == "sales" else "supplier")
+        ccy = h.entities[sup].currency
+        d = self.loose_date(h.p_first_date + timedelta(days=1), h.p_last_date - timedelta(days=3))
+        issued = self.local_time(d, self.doc_hours())
+        terms = rng.choice([14, 30, 45])
+        issued_b = issued
+        if shape == "later":
+            d2 = self.loose_date(d + timedelta(days=LATER_GAP_DAYS[0]), min(d + timedelta(days=LATER_GAP_DAYS[1]), h.p_last_date))
+            issued_b = self.local_time(d2, self.doc_hours())
+        if side == "purchase":
+            item = rng.choice([it for it in catalog.PURCHASE_ITEMS if "{ym}" not in it[2]])
+            unit = self.unit_price_minor(ccy, item[1][0], item[1][1])
+            lines_a = self.purchase_lines(ccy, issued, item, unit, sup)
+            lines_b = self.purchase_lines(ccy, issued_b, item, unit, sup)
+        else:
+            lines_a = self.sales_lines(ccy)
+            lines_b = self.number_sales_lines([replace(li) for li in lines_a], self.new_ref(catalog.SALES_REF, rng=self.ref_rng))
+        a = self.add_invoice(side, sup, issued, lines_a, ["legit_repeat"], terms)
+        b = self.add_invoice(side, sup, issued_b, lines_b, ["legit_repeat"], terms)
+        keys = [a.key, b.key]
+        if rng.random() < 0.5:
+            t = self.pay_time_after(a.issued, 2, 15)
+            if t:
+                keys.append(self.add_payment("receipt" if side == "sales" else "disbursement", sup, a.currency, t, a.total, [a.key]).key)
+        entry = {"kind": "legit_repeat", "keys": keys}
+        h.distractors.append(entry)
+        pair = {"side": side, "shape": shape, "first": a.key, "second": b.key, "entry": entry}
+        self.pairs.append(pair)
+        return pair
 
     def floor_usd(self, kind: str, minimum: float = 0.0) -> float:
         """Size floor of an ordinary invoice: half of them clear the same floor as the error targets."""
@@ -583,6 +804,149 @@ class HistoryBuilder:
                      else self.purchase_lines(ccy, ts, entity=ent, min_usd=floor))
             return [self.add_invoice(kind, ent, ts, lines, ["midnight"]).key]
         return None
+
+    # ------------------------------------------------------------ posting lags
+    @staticmethod
+    def _shift_business(d: date, k: int) -> date:
+        """The k-th weekday after d (before d for a negative k)."""
+        step, n = (1 if k > 0 else -1), abs(k)
+        while n:
+            d += timedelta(days=step)
+            if d.weekday() < 5:
+                n -= 1
+        return d
+
+    def _lag_clock(self, d: date, lo: int, hi: int) -> datetime:
+        rng = self.lag_rng
+        return local_datetime(self.h.tz, d, rng.randint(lo, hi), rng.randint(0, 59), rng.randint(0, 59))
+
+    def _lag_candidate(self, shape: str, ts: datetime) -> datetime | None:
+        h, rng = self.h, self.lag_rng
+        d0 = h.local_date(ts)
+        if shape == "later":
+            r = rng.random()
+            if r < 0.12:  # under an hour
+                return ts + timedelta(minutes=rng.randint(5, 59), seconds=rng.randint(0, 59))
+            if r < 0.5:  # hours
+                return ts + timedelta(minutes=rng.randint(60, 23 * 60 + 59), seconds=rng.randint(0, 59))
+            return self._lag_clock(self._shift_business(d0, rng.randint(1, 5)), 8, 18)
+        if shape == "earlier":
+            r = rng.random()
+            if r < 0.1:
+                return ts - timedelta(minutes=rng.randint(5, 59), seconds=rng.randint(0, 59))
+            if r < 0.5:
+                return ts - timedelta(minutes=rng.randint(60, 30 * 60), seconds=rng.randint(0, 59))
+            return self._lag_clock(self._shift_business(d0, -rng.randint(1, 2)), 8, 18)
+        if shape == "utc_wall_clock":
+            off = offset_minutes(h.tz, ts)
+            return ts - timedelta(minutes=off) if off else None
+        later = rng.random() < 0.7  # date_change
+        days = rng.randint(1, 3) if later else -rng.randint(1, 2)
+        return self._lag_clock(d0 + timedelta(days=days), 8, 18)
+
+    def apply_posting_lags(self, extra_invoices: list, fixed: dict, protected: set, error_keys: set) -> None:
+        """Give documents a posting moment other than their timestamp (Invoice.posted, Payment.posted).
+
+        Eligible are the documents inside the period and the cut-off documents after it; the posting stays in the same
+        period (never crosses the period's end or start, never leaves the extract) and keeps its place in the posting
+        order against the documents it interacts with (an invoice and the payments that settle it, payments of one
+        invoice), so no allocation or relief changes: a lag moves timestamps only, never an amount or a rate.
+        `fixed` holds the posting moments that errors set (wrong_period, posting_date, the boundary receipt) and
+        `protected` the documents whose posting moment is the error itself.
+        distractors.posting_lag is the number of documents of the extract whose posting is at another instant than the
+        document's, the postings that are errors included: the lags of ordinary documents fill what the errors leave of
+        it, so the visible count of postings at another instant is drawn per episode and never depends on how many
+        errors are injected. The lagged documents are drawn uniformly from all the eligible ones, clean documents,
+        members of line-identical pairs (decoys and duplicates alike, converted or not, so a twin keeps the same lags) and
+        documents of error issues alike, so a lag says nothing about an answer-key document; only the clean ones are
+        recorded as posting_lag distractors. A count that cannot be placed resamples the attempt (an explicit count is
+        never silently lowered)."""
+        h, rng = self.h, self.lag_rng
+        n_lag = int(self.cfg["distractors"].get("posting_lag", 0))
+        self.lag_log = []
+        if n_lag <= 0:
+            return
+        docs = {}  # key -> (document, instant, currency)
+        for k, inv in h.invoices.items():
+            docs[k] = (inv, inv.issued, inv.currency)
+        for inv in extra_invoices:
+            docs[inv.key] = (inv, inv.issued, inv.currency)
+        for k, p in h.payments.items():
+            docs[k] = (p, p.ts, p.currency)
+
+        def window(ts):
+            if h.p0 <= ts < h.p1:
+                return h.p0, h.p1
+            if h.p1 <= ts < h.cutoff_end:
+                return h.p1 - timedelta(seconds=1), h.cutoff_end
+            return None
+
+        def eff(k):
+            doc, ts, _c = docs[k]
+            return fixed[k] if k in fixed else (doc.posted or ts)
+
+        eligible = {k for k, (_d, ts, _c) in docs.items() if k not in protected and window(ts)}
+        pair_set = {k for pair in self.pairs for k in (pair["first"], pair["second"]) if k in eligible}
+        # postings that are errors already sit at another instant; they count toward the episode's total
+        budget = n_lag - sum(1 for k, v in fixed.items() if k in docs and v != docs[k][1])
+        by_invoice = defaultdict(list)
+        for p in h.payments.values():
+            for ref in p.refs or []:
+                if ref in docs:
+                    by_invoice[ref].append(p.key)
+        related = defaultdict(set)
+        for ref, pays in by_invoice.items():
+            for a in pays:
+                related[a].add(ref)
+                related[ref].add(a)
+                related[a].update(x for x in pays if x != a)
+        taken = {eff(k) for k in docs} | set(self._used_times)
+
+        def place(key, role) -> bool:
+            doc, ts, ccy = docs[key]
+            lo_w, hi_w = window(ts)
+            cur = eff(key)
+            before = [eff(x) for x in related[key] if x in docs and eff(x) <= cur]
+            after = [eff(x) for x in related[key] if x in docs and eff(x) > cur]
+            lo = max([lo_w] + before)
+            hi = min([hi_w] + after)
+            d0 = h.local_date(ts)
+            off = offset_minutes(h.tz, ts)
+            shapes = list(LAG_SHAPES if ccy != h.base else LAG_SHAPES[:3])
+            rng.shuffle(shapes)
+            for shape in shapes:
+                for _ in range(1 if shape == "utc_wall_clock" else LAG_TRIES):
+                    cand = self._lag_candidate(shape, ts)
+                    if cand is None:
+                        break
+                    if not (lo < cand < hi) or cand in taken or in_ambiguous_hour(h.tz, cand):
+                        continue
+                    if (shape == "later" and cand <= ts) or (shape == "earlier" and cand >= ts):
+                        continue
+                    if shape == "utc_wall_clock" and offset_minutes(h.tz, cand) != off:
+                        continue
+                    if shape == "date_change":
+                        day = h.local_date(cand)
+                        r_doc, r_post = self.rate_on(ccy, d0), self.rate_on(ccy, day)
+                        if day == d0 or r_doc is None or r_post is None or r_doc[0] == r_post[0]:
+                            continue
+                    doc.posted = cand
+                    taken.add(cand)
+                    self.lag_log.append({"key": key, "shape": shape, "role": role})
+                    return True
+            return False
+
+        placed = 0
+        for key in rng.sample(sorted(eligible), len(eligible)):
+            if placed >= budget:
+                break
+            role = "pair" if key in pair_set else ("error" if key in error_keys else "distractor")
+            if place(key, role):
+                placed += 1
+                if role == "distractor":
+                    h.distractors.append({"kind": "posting_lag", "keys": [key], "shape": self.lag_log[-1]["shape"]})
+        if placed < budget:
+            raise SampleRetry(f"only {placed} of {budget} posting lags could be placed")
 
     # ------------------------------------------------------------ FX
     def choose_holidays(self) -> None:

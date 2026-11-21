@@ -517,6 +517,41 @@ def kill_uid(uid: int, gid: int | None = None) -> bool:
 _SWITCHED = False  # a user switch has worked in this process: never fall back to the host user silently
 _WARNED = False
 REQUIRE_ENV = "AUDITGYM_REQUIRE_AGENT_USER"
+_NO_SAME_USER_EXTERNAL = False  # set by the CLI guard for one closed run with a custom policy and no --allow-same-user
+
+
+_SAME_USER_ALLOWED_CLOSED = False  # --allow-same-user on a closed run with a custom policy that is expected to switch user
+_SAME_USER_FELL_BACK = False  # a custom policy really ran as the host user in that run
+_AT_RISK_DEFAULT = "closed episodes (a seeds file or --secret-env)"
+_AT_RISK = _AT_RISK_DEFAULT  # what the guard says is next to the policy, for the messages
+
+
+def allow_same_user_fallback(flag: bool, at_risk: str | None = None) -> None:
+    """The CLI guard calls this for one closed run with --allow-same-user: a custom policy may then fall back to the
+    host user, and same_user_fell_back() says whether it did. Resets the fell-back flag. at_risk names what is next to
+    the policy in the WARNING (default: closed episodes)."""
+    global _SAME_USER_ALLOWED_CLOSED, _SAME_USER_FELL_BACK, _AT_RISK
+    if at_risk:
+        _AT_RISK = at_risk
+    elif not flag:
+        _AT_RISK = _AT_RISK_DEFAULT
+    _SAME_USER_ALLOWED_CLOSED = bool(flag)
+    _SAME_USER_FELL_BACK = False
+
+
+def same_user_fell_back() -> bool:
+    return _SAME_USER_FELL_BACK
+
+
+def forbid_same_user_for_custom(flag: bool, at_risk: str | None = None) -> None:
+    """For this run, a custom (module:Class) policy never falls back to the host user, whatever the reason for the
+    fallback: AgentProcess raises AgentUserRequired instead. Built-in policies are not affected."""
+    global _NO_SAME_USER_EXTERNAL, _AT_RISK
+    _NO_SAME_USER_EXTERNAL = bool(flag)
+    if at_risk:
+        _AT_RISK = at_risk
+    elif not flag:
+        _AT_RISK = _AT_RISK_DEFAULT
 
 
 class AgentUserRequired(RuntimeError):
@@ -637,6 +672,22 @@ class AgentProcess:
     def _same_user(self, reason: str) -> None:
         """Warn once that the policy runs as the host user; in strict mode raise (and drop the temporary directory)."""
         try:
+            if _NO_SAME_USER_EXTERNAL:
+                from .policies import is_external
+
+                if is_external(self._policy_name):
+                    raise AgentUserRequired(f"custom policy {self._policy_name} next to {_AT_RISK} cannot run as a separate "
+                                            f"user ({reason}); pass --allow-same-user to accept running as the host's user")
+            if _SAME_USER_ALLOWED_CLOSED:
+                from .policies import is_external
+
+                if is_external(self._policy_name):
+                    global _SAME_USER_FELL_BACK
+                    if not _SAME_USER_FELL_BACK:  # one WARNING per run, not one per episode or per branch
+                        _SAME_USER_FELL_BACK = True
+                        print(f"WARNING: custom policy {self._policy_name} runs as the host's user next to {_AT_RISK} "
+                              f"(--allow-same-user; {reason}): it can read them and any file that user can read",
+                              file=sys.stderr)
             _warn_same_user(reason)
         except AgentUserRequired:
             self._tmp.cleanup()
@@ -644,6 +695,7 @@ class AgentProcess:
 
     def __init__(self, policy: str, policy_seed: int = 0, policy_path: str | None = None):
         harden_host()
+        self._policy_name = policy
         from .policies import is_external
 
         if not is_external(policy):
@@ -656,12 +708,14 @@ class AgentProcess:
         global _SWITCHED
         self._agent_uid = self._agent_gid = None
         ident = aio.agent_identity()
+        fell_back = False  # _same_user already ran for this child
         if ident is not None and not _proc_listable():
             ident = None
         if ident is not None:
             if not _SWITCHED and _uid_pids(ident[1]):
                 self._same_user(f"account {ident[0]} already has processes; use a dedicated account, one run per container")
                 ident = None
+                fell_back = True
             elif _SWITCHED and not kill_uid(ident[1], ident[2]):
                 self._tmp.cleanup()
                 raise OSError(f"processes of uid {ident[1]} survived the previous episode")
@@ -677,7 +731,8 @@ class AgentProcess:
                     raise
                 self._same_user(f"chown refused: {exc.strerror or exc}")
                 ident = None
-        if ident is None:
+                fell_back = True
+        if ident is None and not fell_back:
             self._same_user(_no_switch_reason())
         kw = {"start_new_session": True} if os.name == "posix" else {}
         cwd, env = self._tmp.name, _child_env(policy_path, stage=str(stage))
