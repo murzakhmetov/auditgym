@@ -3,6 +3,7 @@
 import json
 import contextlib
 import io
+import os
 import unittest
 
 from auditgym.env import AuditEnv
@@ -362,6 +363,7 @@ class WeakSeedInEvalMode(unittest.TestCase):
                          {"episode_id": "e", "mode": "eval", "max_steps": 9})
         with tempfile.TemporaryDirectory() as d:
             protocol._label_low(d)  # Windows: the Low-integrity child may write here (no-op elsewhere)
+            os.chmod(d, 0o777)  # the image: the child runs as the separate policy uid and must import and write here
             out = Path(d) / "seen.txt"
             spy = ["import json",
                    "class Spy:",

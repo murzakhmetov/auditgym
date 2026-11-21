@@ -17,7 +17,7 @@
     "tests.test_contract_battery": "1788930fb9c9d96984d38799d58cf6f640c298b3dfd9c693acbfddfa2882ec7d",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
     "tests.test_credit_receipts": "3706202e383822c0350fbd68662e71caa78d81d3dc677d3f56aadc0afafa1bb3",
-    "tests.test_env": "41ff61c642a282292204f0088e8c132aa5eca485ab5c030ba6294c26f3562693",
+    "tests.test_env": "972531a313ee41de84a411a72c1f8c661f890c74fe6e7787361c832f35187d59",
     "tests.test_generator": "8261cc2a15d65504f80db2c29047c0761132c5ba1bc61ac6feeb7758a67081d3",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
