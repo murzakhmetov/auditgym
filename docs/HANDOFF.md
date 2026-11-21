@@ -136,3 +136,18 @@ FAILED: mutation
 
 The review of step 1 did not run (the weekly usage limit of the previous account was reached). If the review
 changes code or tests, run step 2 again; otherwise continue with step 3 (these records are already committed).
+
+### What stopped it, and what to do (step A)
+
+- Passed before the stop: build-splits twice (byte-identical), schemas, train/dev twice (identical trajectories), budget,
+  stress (300 random configs: 299 generated and verified, 0 verify failures, 1 infeasible; 17 extreme: all verified,
+  the auditor closed all 17), tells.
+- Stopped at the mutation record: 195 of 196 mutants killed. The survivor is `history-paid-slots-ignore-load`
+  (tools/mutation_smoke.py, about line 475; auditgym/history.py, the line
+  `coins = [self.rng.random() < share for _ in range(n + removed)]`). It was killed on round 8.2; round 9 changed
+  error_invoice_load (purchase_paid), so the test that used to catch it no longer does.
+- Fix: run `python tools/mutation_smoke.py OUT_DIR --only history-paid-slots-ignore-load` to see it survive, read the
+  mutant's listed tests (CRED in tools/mutation_smoke.py) and tests/test_mutation_survivors.py, and add or adjust one test
+  so that the mutated line fails it (payments per invoice must not fall with the number of errors, now on both sides).
+  Do not delete the mutant. Then rerun step 2 from the mutation record onward (mutation, check, closed example, viewer,
+  unit tests, redteam, sweep) and commit the records.
