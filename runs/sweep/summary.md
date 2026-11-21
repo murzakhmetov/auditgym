@@ -2,7 +2,7 @@
 
 `python tools/organizer_sweep.py OUT_DIR 60 --record`: the closed path (`check --seeds-file --secret-env`) over the stress mix and the boundary mix. The contract battery also ran in-process on every feasible episode (the check itself runs it on one episode per seeds file).
 
-- code: code 1265d019a068c2df0c71a5ffdcb28dade250d4040ca084feb851dccbe26dbec0 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
+- code: code 7b5b6d890732af60a8208fb8adaecf3cc556bd2608df024552f7cb74f448a1a1 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
 - configurations: 423 (418 feasible, 5 infeasible, 0 generation failures)
 - contract battery in-process: 418 of 418 episodes pass
 - feasible by group: random 299, extreme 17, boundary 102

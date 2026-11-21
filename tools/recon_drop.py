@@ -73,7 +73,12 @@ print(json.dumps(out))
 
 
 def measure(commit: str, n_fx: int, n_mix: int) -> dict:
-    data = subprocess.run(["git", "archive", "--format=tar", commit], cwd=ROOT, capture_output=True, check=True).stdout
+    try:
+        data = subprocess.run(["git", "archive", "--format=tar", commit], cwd=ROOT, capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:  # no git, a ZIP download or a shallow clone without the commit
+        detail = exc.stderr.decode("utf-8", "replace").strip().splitlines()[-1:] if getattr(exc, "stderr", None) else [str(exc)]
+        print(f"error: git archive {commit} failed ({' '.join(detail)}); run this in a full git clone", file=sys.stderr)
+        raise SystemExit(2)  # exit 2 with one error line, as the auditgym commands do for bad input
     with tempfile.TemporaryDirectory(prefix="recon_drop_") as tmp:
         with tarfile.open(fileobj=io.BytesIO(data)) as tar:
             tar.extractall(tmp, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))

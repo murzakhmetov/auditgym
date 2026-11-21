@@ -108,7 +108,14 @@ def _probes():
 
     def bad_lines():
         res, _, peak, _ = run_hostile("BadLinesNoRead", time_limit_s=3.0, trace=True)
-        limit = (protocol.QUEUE_LINES + 4) * protocol.MAX_LINE
+        # What the host can hold at once, in lines of MAX_LINE bytes: the QUEUE_LINES queued lines; on the reader's
+        # side the line that waits for room in the queue or the readline result being joined (2); in receive() the
+        # line being decoded (4 while decode("utf-8", "replace") runs: its bytes, the decoder's 1-byte buffer and the
+        # str of 2 bytes per character it widens into; 3 after). That is QUEUE_LINES + 6 by count; one more line is the
+        # margin for the interpreter's own allocations (peaks of 6 to 9.3 lines were measured on Windows). This flood
+        # sends 0xFF bytes only; a line that also holds a character outside the BMP widens to 4 bytes per character
+        # (docs/DESIGN.md section 5 gives that count).
+        limit = (protocol.QUEUE_LINES + 7) * protocol.MAX_LINE
         return (peak < limit and res["agent_error"] is None,
                 f"host peak {peak / MB:.1f} MB (limit {limit / MB:.0f} MB), status {res['grade']['status']}")
 
@@ -119,12 +126,19 @@ def _probes():
             protocol._label_low(d)  # Windows: the Low-integrity child writes the heartbeat here (no-op elsewhere)
             beat = os.path.join(d, "hb.txt")
             run_hostile("Grandchild", HEARTBEAT=beat)
-            a = Path(beat).read_text()
+            # The writer truncates before it writes (open(p, 'w')), so a writer killed between the two leaves an empty
+            # file: the probe needs the file to exist and two later reads, one second apart, to agree. That relies on
+            # the Grandchild policy's 50 ms heartbeat, far below the one-second gap.
+            started = os.path.exists(beat)
             time.sleep(1.0)
-            b = Path(beat).read_text()
+            b = Path(beat).read_text() if started else ""
             time.sleep(1.0)
-            c = Path(beat).read_text()
-            return a != "" and b == c, "heartbeat frozen after close()"
+            c = Path(beat).read_text() if started else ""
+            if not started:
+                return False, "the grandchild never wrote its heartbeat"
+            if b != c:
+                return False, "heartbeat still changing after close()"
+            return True, "heartbeat frozen after close()"
 
     probe("grandchild killed with the agent", grandchild)
     return rows
