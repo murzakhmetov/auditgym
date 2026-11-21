@@ -1,6 +1,6 @@
 {
-  "auditgym_version": "0.3.0",
-  "generator_version": "0.3.0",
+  "auditgym_version": "0.4.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "schema_version": "auditgym/1.0",
   "grade_version": "1",

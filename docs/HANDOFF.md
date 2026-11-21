@@ -75,3 +75,64 @@ For whoever continues this work in another session. Everything needed is in this
 - Docs are plain and factual: every number comes from a record file; README Limitations bullets stay short (detail in
   DESIGN). README.ru.md mirrors README.md.
 - Team: porosyata (Alikhan, coder; Berdiali, speaker; Merey, presentation maker). Deadline: 2026-11-22 23:59 Astana.
+
+## Unattended record cycle on this branch (2026-11-21 22:16 local time)
+
+The record cycle of step 2 ran on commit 3156aee (round 9 before any review) and STOPPED. Last lines of its log:
+
+```text
+=== 21:40:03 build-splits-1
+=== 21:40:07 build-splits-2
+=== 21:40:11 schemas
+=== 21:40:11 train_dev
+=== 21:40:43 train_dev-replay
+=== 21:41:12 budget
+=== 21:41:32 stress
+=== 21:48:11 tells
+=== 21:51:09 mutation-record
+195 of 196 listed mutants killed; 1 survived; 0 equivalent
+FAILED: mutation
+killed     inject-unallocated-prior-flags-ignored
+killed     config-prior-hits-not-deducted
+killed     history-split-remainder-none
+survived   history-paid-slots-ignore-load
+killed     history-credit-dates-business-days
+killed     history-credit-second-share-fixed
+killed     config-prepaid-always-drawn
+killed     history-split-remainder-never-prior
+killed     evidence-fx-future-date
+killed     evidence-period-boundary
+killed     evidence-offset-start
+killed     evidence-half-even
+killed     protocol-max-line
+killed     protocol-max-depth
+killed     protocol-max-nodes
+killed     protocol-separator-count
+killed     protocol-max-digits
+killed     protocol-max-float
+killed     protocol-nonsubmit-size
+killed     protocol-nan
+killed     protocol-echo-length
+killed     protocol-surrogate
+killed     verify-stale-rate-variant
+killed     shift-direction-order
+killed     config-boundary-utc-date-positive
+killed     inject-boundary-fallback
+killed     config-boundary-fallback-refusal
+killed     check-shift-direction-order
+killed     shift-period-lower
+killed     policy-path-append
+killed     cli-keys-refusal
+killed     cli-keys-fallback-unarmed
+killed     protocol-cap-setuid
+killed     check-no-secret-refusal
+killed     env-weak-seed-bound
+killed     inject-utc-wall-clock-dst
+killed     protocol-host-only-info
+killed     verify-key-tolerance
+195 of 196 listed mutants killed; 1 survived; 0 equivalent
+FAILED: mutation
+```
+
+The review of step 1 did not run (the weekly usage limit of the previous account was reached). If the review
+changes code or tests, run step 2 again; otherwise continue with step 3 (these records are already committed).

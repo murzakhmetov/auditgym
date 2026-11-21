@@ -1,10 +1,10 @@
 # Mutation smoke
 
-**183 of 183 listed mutants killed** (0 survived, 0 equivalent, not counted).
+**195 of 196 listed mutants killed** (1 survived, 0 equivalent, not counted).
 
 Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-135 of 183 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
+147 of 196 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
 
 Each mutant is one hand-written change to the core (`auditgym/__main__.py`, `auditgym/agent.py`, `auditgym/auditor.py`, `auditgym/books.py`, `auditgym/check.py`, `auditgym/check_battery.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/history.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/policy.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/tells.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
@@ -156,42 +156,59 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 142 | `history-credit-prepaid-never` | `auditgym/history.py` | distractors: no receipt precedes its invoice, so a single receipt within the total with a 2900 row is always an error | killed | listed tests | test_credit_receipts |
 | 143 | `history-credit-topped-up-never` | `auditgym/history.py` | distractors: no receipt that relieves the rest of a part-paid invoice also credits an excess, so a 1100 and a 2900 row on an invoice with two receipts is always an error | killed | listed tests | test_credit_receipts |
 | 144 | `config-invoice-load-ignored` | `auditgym/config.py` | config: the invoices an error adds come on top of the drawn counts, so the invoice count grows with the errors | killed | listed tests | test_credit_receipts |
-| 145 | `history-open-invoice-never-prior` | `auditgym/history.py` | distractors: no credit receipt and no unallocated receipt is on an opening item, or the other way round: a 2900 credit on an opening item is an error | killed | listed tests | test_credit_receipts |
-| 146 | `inject-unallocated-prior-flags-ignored` | `auditgym/inject.py` | unallocated_payment: the opening items an error brings are not the ones taken out of the prior invoices, so their number grows with the errors | killed | listed tests | test_credit_receipts |
-| 147 | `config-prior-hits-not-deducted` | `auditgym/config.py` | config: the opening items of the unallocated receipts come on top of the prior invoices, so the opening items grow with the errors | killed | listed tests | test_credit_receipts |
-| 148 | `history-split-remainder-none` | `auditgym/history.py` | distractors: no invoice has two receipts that leave a rest open, so such an invoice is always a part-paid unallocated_payment error | killed | listed tests | test_credit_receipts |
-| 149 | `history-paid-slots-ignore-load` | `auditgym/history.py` | history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors | killed | listed tests | test_credit_receipts |
-| 150 | `history-credit-dates-business-days` | `auditgym/history.py` | distractors: every 2900 credit that is not prepaid sits on an invoice of the first days of the period, so a later invoice is an error | killed | listed tests | test_credit_receipts |
-| 151 | `history-credit-second-share-fixed` | `auditgym/history.py` | distractors: the share of credits that follow an earlier receipt is the same in every episode | killed | listed tests | test_credit_receipts |
-| 152 | `config-prepaid-always-drawn` | `auditgym/config.py` | config: every episode has prepaid receipts, so an episode without a receipt dated before its invoice is one with unallocated errors | killed | listed tests | test_credit_receipts |
-| 153 | `history-split-remainder-never-prior` | `auditgym/history.py` | distractors: a part-paid invoice that leaves a rest is never an opening item, so such an opening item is an error | killed | listed tests | test_credit_receipts |
-| 154 | `evidence-fx-future-date` | `auditgym/evidence_check.py` | wrong_fx_rate: a rate dated on the document's own day is rejected | killed | listed tests | test_verify, test_generator |
-| 155 | `evidence-period-boundary` | `auditgym/evidence_check.py` | wrong_period: the period end instant belongs to the period | killed | survivor tests | test_verify, test_generator |
-| 156 | `evidence-offset-start` | `auditgym/evidence_check.py` | local date: the UTC offset change takes effect one instant late | killed | survivor tests | test_verify, test_generator |
-| 157 | `evidence-half-even` | `auditgym/evidence_check.py` | rounding: half_even always rounds the tie up | killed | listed tests | test_verify, test_generator |
-| 158 | `protocol-max-line` | `auditgym/protocol.py` | bound: a line of exactly MAX_LINE characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 159 | `protocol-max-depth` | `auditgym/protocol.py` | bound: nesting of exactly MAX_DEPTH is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 160 | `protocol-max-nodes` | `auditgym/protocol.py` | bound: exactly MAX_NODES parsed nodes is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 161 | `protocol-separator-count` | `auditgym/protocol.py` | bound: commas are not counted against the node limit | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 162 | `protocol-max-digits` | `auditgym/protocol.py` | bound: an integer literal of exactly MAX_NUMBER_CHARS digits is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 163 | `protocol-max-float` | `auditgym/protocol.py` | bound: a float literal of exactly MAX_FLOAT_CHARS characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 164 | `protocol-nonsubmit-size` | `auditgym/protocol.py` | bound: a non-submit line of exactly 2048 characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
-| 165 | `protocol-nan` | `auditgym/protocol.py` | NaN and Infinity are accepted as numbers | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 166 | `protocol-echo-length` | `auditgym/protocol.py` | echo: a malformed line is echoed 257 characters long | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 167 | `protocol-surrogate` | `auditgym/protocol.py` | a lone surrogate in an action is accepted | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
-| 168 | `verify-stale-rate-variant` | `auditgym/verify.py` | provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate | killed | listed tests | test_verify, test_generator |
-| 169 | `shift-direction-order` | `auditgym/transform.py` | shift_direction tries -28 before +28 | killed | listed tests | test_transform_shift |
-| 170 | `config-boundary-utc-date-positive` | `auditgym/config.py` | boundary_fx_payment: a positive offset takes utc_date even when the first day after the period is a weekend (both dates then take one rate and the error has no amount) | killed | listed tests | test_generator |
-| 171 | `inject-boundary-fallback` | `auditgym/inject.py` | boundary_fx_payment: a boundary that gives utc_date no amount still gets a utc_date error | killed | listed tests | test_generator |
-| 172 | `config-boundary-fallback-refusal` | `auditgym/config.py` | boundary_fx_payment: a fixed month without a utc_date amount is refused although stale_rate or transposed is allowed | killed | listed tests | test_generator |
-| 173 | `check-shift-direction-order` | `auditgym/check.py` | D_paired tries the -28 shift before +28 | killed | listed tests | test_transform_shift |
-| 174 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | listed tests | test_transform_shift |
-| 175 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | listed tests | test_windows_hardening, test_redteam, test_isolation |
-| 176 | `cli-keys-refusal` | `auditgym/__main__.py` | a custom policy next to an answer key outside the open splits is neither refused nor warned about | killed | listed tests | test_cli |
-| 177 | `cli-keys-fallback-unarmed` | `auditgym/__main__.py` | a custom policy next to an answer key falls back to the host's user at the fallback point with only a warning | killed | listed tests | test_cli |
-| 178 | `protocol-cap-setuid` | `auditgym/protocol.py` | a root without CAP_SETUID counts as able to switch to the policy user | killed | listed tests | test_cli |
-| 179 | `check-no-secret-refusal` | `auditgym/check.py` | check --seeds-file without a secret and without --no-secret runs | killed | listed tests | test_cli |
-| 180 | `env-weak-seed-bound` | `auditgym/env.py` | eval mode accepts a seed of exactly 40 bits without a secret | killed | listed tests | test_env, test_contract_battery |
-| 181 | `inject-utc-wall-clock-dst` | `auditgym/inject.py` | a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026) | killed | listed tests | test_generator |
-| 182 | `protocol-host-only-info` | `auditgym/protocol.py` | the policy child is sent info['weak_seed'] about its own episode | killed | listed tests | test_env, test_contract_battery |
-| 183 | `verify-key-tolerance` | `auditgym/verify.py` | verify accepts a key whose tolerance_minor lets any amount match | killed | listed tests | test_verify |
+| 145 | `config-target-kinds-invoice-only` | `auditgym/config.py` | config: no standalone wrong_fx_rate or wrong_period error is drawn on a payment, so a policy can skip the payments for both types | killed | listed tests | test_payment_targets |
+| 146 | `config-payment-target-invoice-unpaid-slot` | `auditgym/config.py` | config: the invoice of a disbursement target takes an unpaid slot, so the payments per invoice grow with the errors | killed | listed tests | test_payment_targets |
+| 147 | `config-receipt-target-invoice-unpaid-slot` | `auditgym/config.py` | config: the invoice of a receipt target takes an unpaid slot, so the payments per invoice grow with the errors | killed | listed tests | test_payment_targets |
+| 148 | `config-payment-target-load-as-invoice` | `auditgym/config.py` | config: a payment target's invoice is counted on either side, not on the side of its payment | killed | listed tests | test_payment_targets |
+| 149 | `inject-target-kind-ignored` | `auditgym/inject.py` | inject: the resolved target kinds are ignored and every standalone rate or period error lands on an invoice | killed | listed tests | test_payment_targets |
+| 150 | `inject-fx-payment-posting-ts-on-invoice` | `auditgym/inject.py` | wrong_fx_rate posting_date on a payment: the payment is not posted at the later moment whose rate it carries | killed | listed tests | test_payment_targets |
+| 151 | `inject-fx-payment-partial-on-ordinary-day` | `auditgym/inject.py` | wrong_fx_rate on a payment: the payment exceeds its invoice, so the rate error comes with a credit in 2900 (a second story) | killed | listed tests | test_payment_targets |
+| 152 | `inject-period-payment-no-dst-clearance` | `auditgym/inject.py` | wrong_period utc_wall_clock on a payment: the posting may sit inside the DST change of the boundary night | killed | listed tests | test_payment_targets |
+| 153 | `inject-period-payment-early-posted-late` | `auditgym/inject.py` | wrong_period booked_early on a payment: the payment is posted in its own period, so there is no period error to find | killed | listed tests | test_payment_targets |
+| 154 | `history-lag-ignores-the-clean-moment` | `auditgym/history.py` | posting lags: the invoice of a payment whose posting an error moved may be lagged past the payment's own moment, so the clean books allocate it differently | killed | listed tests | test_payment_targets |
+| 155 | `tells-disbursement-rule-reads-receipts` | `auditgym/tells.py` | tells: the rule on disbursements measures receipts, so a disbursement tell would go unseen | killed | listed tests | test_payment_targets |
+| 156 | `tells-payment-outside-period-reads-the-document` | `auditgym/tells.py` | tells: the rule on payments posted outside the period reads the payment's timestamp, not its rows | killed | listed tests | test_payment_targets |
+| 157 | `tells-payment-error-statistic-counts-every-issue` | `auditgym/tells.py` | tells: the payment-error statistic counts issues that name no payment | killed | listed tests | test_payment_targets |
+| 158 | `history-open-invoice-never-prior` | `auditgym/history.py` | distractors: no credit receipt and no unallocated receipt is on an opening item, or the other way round: a 2900 credit on an opening item is an error | killed | listed tests | test_credit_receipts |
+| 159 | `inject-unallocated-prior-flags-ignored` | `auditgym/inject.py` | unallocated_payment: the opening items an error brings are not the ones taken out of the prior invoices, so their number grows with the errors | killed | listed tests | test_credit_receipts |
+| 160 | `config-prior-hits-not-deducted` | `auditgym/config.py` | config: the opening items of the unallocated receipts come on top of the prior invoices, so the opening items grow with the errors | killed | listed tests | test_credit_receipts |
+| 161 | `history-split-remainder-none` | `auditgym/history.py` | distractors: no invoice has two receipts that leave a rest open, so such an invoice is always a part-paid unallocated_payment error | killed | listed tests | test_credit_receipts |
+| 162 | `history-paid-slots-ignore-load` | `auditgym/history.py` | history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors | survived | - | test_credit_receipts |
+| 163 | `history-credit-dates-business-days` | `auditgym/history.py` | distractors: every 2900 credit that is not prepaid sits on an invoice of the first days of the period, so a later invoice is an error | killed | listed tests | test_credit_receipts |
+| 164 | `history-credit-second-share-fixed` | `auditgym/history.py` | distractors: the share of credits that follow an earlier receipt is the same in every episode | killed | listed tests | test_credit_receipts |
+| 165 | `config-prepaid-always-drawn` | `auditgym/config.py` | config: every episode has prepaid receipts, so an episode without a receipt dated before its invoice is one with unallocated errors | killed | listed tests | test_credit_receipts |
+| 166 | `history-split-remainder-never-prior` | `auditgym/history.py` | distractors: a part-paid invoice that leaves a rest is never an opening item, so such an opening item is an error | killed | listed tests | test_credit_receipts |
+| 167 | `evidence-fx-future-date` | `auditgym/evidence_check.py` | wrong_fx_rate: a rate dated on the document's own day is rejected | killed | listed tests | test_verify, test_generator |
+| 168 | `evidence-period-boundary` | `auditgym/evidence_check.py` | wrong_period: the period end instant belongs to the period | killed | survivor tests | test_verify, test_generator |
+| 169 | `evidence-offset-start` | `auditgym/evidence_check.py` | local date: the UTC offset change takes effect one instant late | killed | survivor tests | test_verify, test_generator |
+| 170 | `evidence-half-even` | `auditgym/evidence_check.py` | rounding: half_even always rounds the tie up | killed | listed tests | test_verify, test_generator |
+| 171 | `protocol-max-line` | `auditgym/protocol.py` | bound: a line of exactly MAX_LINE characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 172 | `protocol-max-depth` | `auditgym/protocol.py` | bound: nesting of exactly MAX_DEPTH is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 173 | `protocol-max-nodes` | `auditgym/protocol.py` | bound: exactly MAX_NODES parsed nodes is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 174 | `protocol-separator-count` | `auditgym/protocol.py` | bound: commas are not counted against the node limit | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 175 | `protocol-max-digits` | `auditgym/protocol.py` | bound: an integer literal of exactly MAX_NUMBER_CHARS digits is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 176 | `protocol-max-float` | `auditgym/protocol.py` | bound: a float literal of exactly MAX_FLOAT_CHARS characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 177 | `protocol-nonsubmit-size` | `auditgym/protocol.py` | bound: a non-submit line of exactly 2048 characters is malformed | killed | survivor tests | test_isolation, test_redteam, test_contract_fuzz |
+| 178 | `protocol-nan` | `auditgym/protocol.py` | NaN and Infinity are accepted as numbers | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 179 | `protocol-echo-length` | `auditgym/protocol.py` | echo: a malformed line is echoed 257 characters long | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 180 | `protocol-surrogate` | `auditgym/protocol.py` | a lone surrogate in an action is accepted | killed | listed tests | test_isolation, test_redteam, test_contract_fuzz |
+| 181 | `verify-stale-rate-variant` | `auditgym/verify.py` | provenance: the stale_rate change.wrong_rate_date is not checked against the fx.csv rate | killed | listed tests | test_verify, test_generator |
+| 182 | `shift-direction-order` | `auditgym/transform.py` | shift_direction tries -28 before +28 | killed | listed tests | test_transform_shift |
+| 183 | `config-boundary-utc-date-positive` | `auditgym/config.py` | boundary_fx_payment: a positive offset takes utc_date even when the first day after the period is a weekend (both dates then take one rate and the error has no amount) | killed | listed tests | test_generator |
+| 184 | `inject-boundary-fallback` | `auditgym/inject.py` | boundary_fx_payment: a boundary that gives utc_date no amount still gets a utc_date error | killed | listed tests | test_generator |
+| 185 | `config-boundary-fallback-refusal` | `auditgym/config.py` | boundary_fx_payment: a fixed month without a utc_date amount is refused although stale_rate or transposed is allowed | killed | listed tests | test_generator |
+| 186 | `check-shift-direction-order` | `auditgym/check.py` | D_paired tries the -28 shift before +28 | killed | listed tests | test_transform_shift |
+| 187 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | listed tests | test_transform_shift |
+| 188 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | listed tests | test_windows_hardening, test_redteam, test_isolation |
+| 189 | `cli-keys-refusal` | `auditgym/__main__.py` | a custom policy next to an answer key outside the open splits is neither refused nor warned about | killed | listed tests | test_cli |
+| 190 | `cli-keys-fallback-unarmed` | `auditgym/__main__.py` | a custom policy next to an answer key falls back to the host's user at the fallback point with only a warning | killed | listed tests | test_cli |
+| 191 | `protocol-cap-setuid` | `auditgym/protocol.py` | a root without CAP_SETUID counts as able to switch to the policy user | killed | listed tests | test_cli |
+| 192 | `check-no-secret-refusal` | `auditgym/check.py` | check --seeds-file without a secret and without --no-secret runs | killed | listed tests | test_cli |
+| 193 | `env-weak-seed-bound` | `auditgym/env.py` | eval mode accepts a seed of exactly 40 bits without a secret | killed | listed tests | test_env, test_contract_battery |
+| 194 | `inject-utc-wall-clock-dst` | `auditgym/inject.py` | a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026) | killed | listed tests | test_generator |
+| 195 | `protocol-host-only-info` | `auditgym/protocol.py` | the policy child is sent info['weak_seed'] about its own episode | killed | listed tests | test_env, test_contract_battery |
+| 196 | `verify-key-tolerance` | `auditgym/verify.py` | verify accepts a key whose tolerance_minor lets any amount match | killed | listed tests | test_verify |
+
+## Survivors
+
+- `history-paid-slots-ignore-load`: history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors

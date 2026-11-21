@@ -1,28 +1,29 @@
 {
-  "listed": 183,
-  "counted": 183,
-  "killed": 183,
-  "survived": 0,
+  "listed": 196,
+  "counted": 196,
+  "killed": 195,
+  "survived": 1,
   "equivalent": 0,
   "not_run_here": 0,
   "recorded_on": "Windows, Python 3.11",
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 135,
+  "killed_by_existing": 147,
   "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
     "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
     "tests.test_cli": "8fe82f20ab433c901b73818fbdb2e6357f6fb52f7fa78cf58571e899e8b23b12",
     "tests.test_contract_battery": "1788930fb9c9d96984d38799d58cf6f640c298b3dfd9c693acbfddfa2882ec7d",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
-    "tests.test_credit_receipts": "3706202e383822c0350fbd68662e71caa78d81d3dc677d3f56aadc0afafa1bb3",
+    "tests.test_credit_receipts": "193f4e66f0fa5c7fa613f4e452b37fa6de3d4476bb4d8161a02c6a2ad1e20759",
     "tests.test_env": "972531a313ee41de84a411a72c1f8c661f890c74fe6e7787361c832f35187d59",
-    "tests.test_generator": "8261cc2a15d65504f80db2c29047c0761132c5ba1bc61ac6feeb7758a67081d3",
+    "tests.test_generator": "685fbefebe1a606673b64218d769de73f8f6e5c23194a9cbae1e7edf18e8b668",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
-    "tests.test_mutation_survivors": "019b38f73238c7198a50bb1b6960b118f6215f3f9723f1e252e4bfaf605e9c1b",
-    "tests.test_posting_lag": "cec911720b097990ad00b23339b122cf83025038a04a55d173afaa695782c4ed",
+    "tests.test_mutation_survivors": "6da27d5be1444304ddbd235bbb1c9b3fd7789989f33e1a623ed4c1cde467711b",
+    "tests.test_payment_targets": "019f65f2fa8aaab1b9a217e3c3e65f3c9444a453e7b25e983d661c6e870feff8",
+    "tests.test_posting_lag": "de35444e191a7a44d27fc4d635c3154cde287e221502abaea0c644ac0c27f4f4",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
@@ -1399,7 +1400,7 @@
       "tests": [
         "tests.test_posting_lag"
       ],
-      "sha256": "f9d797260ae8172d18ea000591434c43fd586cfd3db5fbaaa3ed3dcaf06d8e56"
+      "sha256": "4de99fde6d262472dc4244c0ce265b1d9cf330964b5e516544c4d7b424853322"
     },
     {
       "id": "history-lag-date-change-same-rate",
@@ -1801,7 +1802,150 @@
       "tests": [
         "tests.test_credit_receipts"
       ],
-      "sha256": "db9b760d3c02973bdbc8dbca7047a29c793fd92df440b7329871174394f5d27b"
+      "sha256": "184a042e21f148e4cac8a212ca2b7079946572ccbb0d10bc451fbdfb8a7a40c5"
+    },
+    {
+      "id": "config-target-kinds-invoice-only",
+      "file": "auditgym/config.py",
+      "breaks": "config: no standalone wrong_fx_rate or wrong_period error is drawn on a payment, so a policy can skip the payments for both types",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "f409e509c4e3aa6b4e186f223b276ed99dde7ab0a533ed108bff847bdf8e9282"
+    },
+    {
+      "id": "config-payment-target-invoice-unpaid-slot",
+      "file": "auditgym/config.py",
+      "breaks": "config: the invoice of a disbursement target takes an unpaid slot, so the payments per invoice grow with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "d203ab7d6cd11210a19a9a2f85af8ae286d435e7bf811fab66db720a711e8c6c"
+    },
+    {
+      "id": "config-receipt-target-invoice-unpaid-slot",
+      "file": "auditgym/config.py",
+      "breaks": "config: the invoice of a receipt target takes an unpaid slot, so the payments per invoice grow with the errors",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "6ed509ecaa118a385746e5022219917f635a4fbc595d5a0c318ab9e3ba38dfcf"
+    },
+    {
+      "id": "config-payment-target-load-as-invoice",
+      "file": "auditgym/config.py",
+      "breaks": "config: a payment target's invoice is counted on either side, not on the side of its payment",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "d59269c1a272c39a644416a304a9c2e149dbc9d922143f3d2725b01eae60dcd0"
+    },
+    {
+      "id": "inject-target-kind-ignored",
+      "file": "auditgym/inject.py",
+      "breaks": "inject: the resolved target kinds are ignored and every standalone rate or period error lands on an invoice",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "0068297e3d140ef88a39bdaf11462fc79d6330c9f0168bcb74517bbe8b14c968"
+    },
+    {
+      "id": "inject-fx-payment-posting-ts-on-invoice",
+      "file": "auditgym/inject.py",
+      "breaks": "wrong_fx_rate posting_date on a payment: the payment is not posted at the later moment whose rate it carries",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "781b256e6426eef61a3748f09f6e58dcc4f8b3720027b0f8cba7200e5eababa2"
+    },
+    {
+      "id": "inject-fx-payment-partial-on-ordinary-day",
+      "file": "auditgym/inject.py",
+      "breaks": "wrong_fx_rate on a payment: the payment exceeds its invoice, so the rate error comes with a credit in 2900 (a second story)",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "a3e52d0500114a4664dbd9f53cd5826a1cee3543bfcc33d69b46d14bd3d4578e"
+    },
+    {
+      "id": "inject-period-payment-no-dst-clearance",
+      "file": "auditgym/inject.py",
+      "breaks": "wrong_period utc_wall_clock on a payment: the posting may sit inside the DST change of the boundary night",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "23b9cf2f6e2af51494ea03c17a95f70503d269321c3900f074d354be6637bccf"
+    },
+    {
+      "id": "inject-period-payment-early-posted-late",
+      "file": "auditgym/inject.py",
+      "breaks": "wrong_period booked_early on a payment: the payment is posted in its own period, so there is no period error to find",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "881d6d8002a5c134e8c188220a6d546402c091314420159a3d7431867416804b"
+    },
+    {
+      "id": "history-lag-ignores-the-clean-moment",
+      "file": "auditgym/history.py",
+      "breaks": "posting lags: the invoice of a payment whose posting an error moved may be lagged past the payment's own moment, so the clean books allocate it differently",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "7e896b07b2c4da1a9ed6218a374ce9cab04a6fa40438d564f11f329395a342ce"
+    },
+    {
+      "id": "tells-disbursement-rule-reads-receipts",
+      "file": "auditgym/tells.py",
+      "breaks": "tells: the rule on disbursements measures receipts, so a disbursement tell would go unseen",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "a61a8a57f23fb259a2502b692411c3518f4de3d376c4bb36a00465d06d9e9446"
+    },
+    {
+      "id": "tells-payment-outside-period-reads-the-document",
+      "file": "auditgym/tells.py",
+      "breaks": "tells: the rule on payments posted outside the period reads the payment's timestamp, not its rows",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "0e534f3447dbd2064bfd1c1ef0413a8c97573f16715f92afcd2c708f6e1dfcf4"
+    },
+    {
+      "id": "tells-payment-error-statistic-counts-every-issue",
+      "file": "auditgym/tells.py",
+      "breaks": "tells: the payment-error statistic counts issues that name no payment",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_payment_targets"
+      ],
+      "sha256": "9feca19a878c6077bdaa7dacd84da2c61ae163ace1877b6bb46f9ea4a7c05bd7"
     },
     {
       "id": "history-open-invoice-never-prior",
@@ -1851,8 +1995,8 @@
       "id": "history-paid-slots-ignore-load",
       "file": "auditgym/history.py",
       "breaks": "history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors",
-      "status": "killed",
-      "killed_by": "listed tests",
+      "status": "survived",
+      "killed_by": "",
       "tests": [
         "tests.test_credit_receipts"
       ],
