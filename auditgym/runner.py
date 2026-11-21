@@ -23,7 +23,7 @@ from .diagnostics import run_diagnostics
 from .env import AuditEnv
 from .matcher import normalize_finding, normalize_issue
 from .policies import is_external, make_policy
-from .protocol import run_episode_isolated
+from .protocol import policy_info, run_episode_isolated
 
 TRAJECTORY_FIELDS = ("run_id", "split", "policy", "episode_id", "step", "action", "observation", "reward", "terminated", "truncated")
 
@@ -121,9 +121,9 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
             traj.append({"step": 0, "action": None, "observation": obs, "reward": 0.0, "terminated": False, "truncated": False})
             reward, agent_time = 0.0, 0.0
             while True:
-                t0 = time.monotonic()
-                action = pol.act(obs, reward, info)
-                agent_time += time.monotonic() - t0
+                t0 = time.perf_counter()  # agent time: a fine clock (monotonic ticks every 15.6 ms on Windows)
+                action = pol.act(obs, reward, policy_info(info))
+                agent_time += time.perf_counter() - t0
                 obs, reward, terminated, truncated, info = env.step(action)
                 traj.append({"step": env.steps, "action": action, "observation": obs, "reward": reward,
                              "terminated": terminated, "truncated": truncated})

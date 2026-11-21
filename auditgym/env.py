@@ -123,7 +123,7 @@ class AuditEnv:
                 raise TypeError(f"seed must be an int, got {type(seed).__name__}")
             if (self.mode == "eval" and not self._secret and not self._allow_weak_seed
                     and abs(seed).bit_length() <= MIN_SEED_BITS):
-                weak = True  # generation stays deterministic; the host is told, the policy never sees this
+                weak = True  # generation stays deterministic; host-side only: runners strip it (protocol.HOST_ONLY_INFO_KEYS)
                 if not self._weak_warned:
                     print(f"WARNING: eval mode generates an episode from a seed of {abs(seed).bit_length()} bits (at "
                           f"most {MIN_SEED_BITS}) with no secret: such a seed can be recovered from the public "

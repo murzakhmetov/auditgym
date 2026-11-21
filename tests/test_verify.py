@@ -1186,3 +1186,18 @@ class UnallocatedEvidenceSetTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ToleranceInTheKey(unittest.TestCase):
+    """The matcher trusts the key's tolerance_minor, so verify fails a key whose tolerance is not the published one."""
+
+    def test_an_inflated_tolerance_fails_declared_discrepancies(self):
+        from auditgym.episode import load_episode
+        from auditgym.verify import verify_generated
+
+        ep = load_episode(Path(__file__).resolve().parent.parent / "episodes" / "dev" / "d08_both_interacting_kzt")
+        self.assertTrue(verify_generated(ep)["ok"])
+        ep.truth["issues"][0]["tolerance_minor"] = 10 ** 9
+        res = verify_generated(ep)
+        self.assertFalse(res["ok"])
+        self.assertTrue(any("tolerance_minor" in m for m in res["checks"]["declared_discrepancies"]), res["checks"]["declared_discrepancies"])

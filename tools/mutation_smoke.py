@@ -513,6 +513,11 @@ MUTANTS = [
     M("inject-utc-wall-clock-dst", "auditgym/inject.py", "issued = _minute_time(b, d, lo, _clear_of_dst(b, d, lo, hi, off))",
       "issued = _minute_time(b, d, lo, hi)", GEN,
       "a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026)"),
+    # ---------------------------------------------------------------- round 8.2: host-only info, tolerance in the key
+    M("protocol-host-only-info", "auditgym/protocol.py", 'HOST_ONLY_INFO_KEYS = frozenset({"weak_seed"})',
+      "HOST_ONLY_INFO_KEYS = frozenset()", ENV, "the policy child is sent info['weak_seed'] about its own episode"),
+    M("verify-key-tolerance", "auditgym/verify.py", 'if t.get("tolerance_minor") != TOLERANCE_MINOR:',
+      "if False:", ("tests.test_verify",), "verify accepts a key whose tolerance_minor lets any amount match"),
 ]
 
 

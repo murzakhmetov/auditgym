@@ -72,6 +72,7 @@ from .evidence_check import _local_date, _round_fraction, convert_fraction
 from .evidence_check import derive_from_evidence  # noqa: F401  (re-exported: check.py and tests import it from here)
 from .io import canonical_json, sha256_text
 from .render import apply_ops
+from .task import TOLERANCE_MINOR
 from .timeutil import parse_ts
 
 OP_KEYS = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id"}
@@ -186,6 +187,8 @@ def check_key_consistency(ep: Episode) -> list[str]:
         if want[k] != got[k] and len(errs) < 10:
             errs.append(f"id_aliases maps {k} to {got[k]}, public record says {want[k]}")
     for t in ep.truth.get("issues", []):
+        if t.get("tolerance_minor") != TOLERANCE_MINOR:  # the matcher trusts the key's tolerance, so an inflated one matches anything
+            errs.append(f"issue {t.get('issue_id')}: tolerance_minor {t.get('tolerance_minor')!r} is not the published {TOLERANCE_MINOR}")
         if t.get("variant") not in VARIANTS.get(t.get("type"), ()):
             errs.append(f"issue {t.get('issue_id')}: variant {t.get('variant')!r} is not a known variant of {t.get('type')}")
     return errs

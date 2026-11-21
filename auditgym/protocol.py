@@ -943,6 +943,14 @@ class AgentProcess:
             shutil.rmtree(self._tmp.name, ignore_errors=True)
 
 
+HOST_ONLY_INFO_KEYS = frozenset({"weak_seed"})  # info a host reads and a policy is never sent (env.reset sets weak_seed)
+
+
+def policy_info(info: dict) -> dict:
+    """The info a policy receives: env info without the host-only keys."""
+    return {k: v for k, v in info.items() if k not in HOST_ONLY_INFO_KEYS}
+
+
 def run_episode_isolated(env, reset_kwargs: dict, policy: str, policy_seed: int = 0, on_step=None,
                          policy_path: str | None = None) -> dict:
     """Drive one episode with the env here and the policy in a child process.
@@ -998,7 +1006,7 @@ def run_episode_isolated(env, reset_kwargs: dict, policy: str, policy_seed: int 
             over = terminated or truncated
             agent.write_timeout_s = 2.0 if over else max(0.05, env.time_limit_s - env.elapsed_s())
             if not agent.send({"type": "observation", "observation": obs, "reward": reward,
-                               "terminated": terminated, "truncated": truncated, "info": info}):
+                               "terminated": terminated, "truncated": truncated, "info": policy_info(info)}):
                 if not over:
                     if getattr(agent, "write_timed_out", False):
                         stop("time_limit", "time_limit", "The agent did not read its input in time; an empty answer was recorded.")
@@ -1008,9 +1016,9 @@ def run_episode_isolated(env, reset_kwargs: dict, policy: str, policy_seed: int 
             if over:
                 break
             remaining = env.time_limit_s - env.elapsed_s()
-            t0 = time.monotonic()
+            t0 = time.perf_counter()  # agent time: a fine clock (monotonic ticks every 15.6 ms on Windows)
             kind, action = agent.receive(timeout_s=remaining)
-            agent_time += time.monotonic() - t0
+            agent_time += time.perf_counter() - t0
             if kind == "timeout":
                 stop("time_limit", "time_limit", "No action before the time limit; an empty answer was recorded.")
                 break

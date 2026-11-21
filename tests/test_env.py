@@ -350,6 +350,37 @@ class WeakSeedInEvalMode(unittest.TestCase):
         b, _ib, _l = self.reset(AuditEnv(mode="eval", allow_weak_seed=True), 7)
         self.assertEqual(a, b)
 
+    def test_a_policy_never_receives_the_weak_seed_flag(self):
+        """Juror a's probe: the host reads info["weak_seed"]; the isolated child and an in-process policy are sent the
+        info without it (protocol.HOST_ONLY_INFO_KEYS)."""
+        import tempfile
+        from pathlib import Path
+
+        from auditgym import protocol
+
+        self.assertEqual(protocol.policy_info({"episode_id": "e", "mode": "eval", "max_steps": 9, "weak_seed": True}),
+                         {"episode_id": "e", "mode": "eval", "max_steps": 9})
+        with tempfile.TemporaryDirectory() as d:
+            protocol._label_low(d)  # Windows: the Low-integrity child may write here (no-op elsewhere)
+            out = Path(d) / "seen.txt"
+            spy = ["import json",
+                   "class Spy:",
+                   "    def __init__(self, seed=0):",
+                   "        pass",
+                   "    def act(self, observation, reward=0.0, info=None):",
+                   f"        open({str(out)!r}, 'a').write(json.dumps(sorted((info or {{}}).keys())) + chr(10))",
+                   "        return {'action': 'submit', 'findings': {'episode_id': (info or {}).get('episode_id', ''), 'findings': []}}"]
+            Path(d, "spy_info_mod.py").write_text(chr(10).join(spy) + chr(10), encoding="utf-8")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                res = protocol.run_episode_isolated(AuditEnv(mode="eval"), {"seed": 7, "config": self.CONFIG},
+                                                    "spy_info_mod:Spy", 0, policy_path=d)
+            self.assertIsNone(res["agent_error"], res)
+            seen = [json.loads(ln) for ln in out.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            self.assertTrue(seen)
+            self.assertTrue(all("weak_seed" not in keys for keys in seen), seen)
+            self.assertIn("episode_id", seen[0])
+
     def test_loaded_episodes_are_not_affected(self):
         obs, info, lines = self.reset(AuditEnv(mode="eval"), 7, {"episode": episode()})
         self.assertIn("episode_id", obs["manifest"])

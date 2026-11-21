@@ -1,7 +1,7 @@
 {
   "version": "0.3.0",
   "ok": true,
-  "elapsed_s": 386.7,
+  "elapsed_s": 390.5,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -62,25 +62,25 @@
     }
   },
   "code": {
-    "code_sha256": "5297fe75de8879b9b61bbd1118ea28b7f8a11c3394f913f337d13f72f674396d",
+    "code_sha256": "de70745efbcd5cab7af28a4a3b965ebc77b811fe96d82b1e9ce1c4abc765593f",
     "code_files": 60,
     "python": "3.11.4",
     "platform": "Windows-10-10.0.19045-SP0"
   },
   "section_seconds": {
-    "A_unit_tests": 307.0,
-    "B_committed_episodes": 3.6,
-    "B_replay": 1.3,
-    "C_data": 4.7,
-    "C_reward": 35.8,
-    "D_paired": 33.7,
+    "A_unit_tests": 311.0,
+    "B_committed_episodes": 3.7,
+    "B_replay": 1.2,
+    "C_data": 4.8,
+    "C_reward": 36.3,
+    "D_paired": 33.1,
     "E_leaks": 0.4,
     "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 592 run, 581 passed, 11 skipped",
+        "check": "unittest: 594 run, 583 passed, 11 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -3576,7 +3576,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 31.75,
-      "agent_time_s": 0.0141,
+      "agent_time_s": 0.0162,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3616,7 +3616,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0024,
+      "agent_time_s": 0.0026,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3712,7 +3712,7 @@
       "recall": 0.0,
       "f1": 0.1,
       "steps": 19.5,
-      "agent_time_s": 0.004,
+      "agent_time_s": 0.0033,
       "closed_share": 0.1,
       "invalid": 0,
       "truncated": 0,
@@ -3761,7 +3761,7 @@
       "recall": 0.47,
       "f1": 0.1833,
       "steps": 31.75,
-      "agent_time_s": 0.0148,
+      "agent_time_s": 0.0109,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3815,7 +3815,7 @@
       "recall": 0.0,
       "f1": 0.25,
       "steps": 0.0,
-      "agent_time_s": 0.0,
+      "agent_time_s": 0.0002,
       "closed_share": 0.25,
       "invalid": 0,
       "truncated": 0,
