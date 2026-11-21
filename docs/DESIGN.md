@@ -238,8 +238,20 @@ on episodes whose answer key is shuffled, replaced by another episode's, or empt
 rewards and info are byte-identical (eval mode at every step; train mode up to the terminal step). Timing is not
 covered, because the time limit is part of the contract. `tests/test_redteam.py` and `python -m auditgym.redteam`
 probe hostile behaviour: 256 MB without a newline, 256 MB on stderr, two million short lines, an agent that stops
-reading stdin, a flood of invalid UTF-8 that the agent never reads (host peak under the limit), and a grandchild
-process that must die with the agent.
+reading stdin, a flood of invalid UTF-8 that the agent never reads, and a grandchild process that must die with the
+agent. In the flood (300 lines of 2,000,000 bytes of 0xFF) the host's peak must stay under (`QUEUE_LINES` + 7) ×
+`MAX_LINE` = 22,000,000 bytes (the probe prints 21 MB, in units of 2^20 bytes): the 4 queued lines, up to 2 on the
+reader's side (the line waiting for room in the queue, or the `readline` result being joined), up to 4 while
+`receive()` decodes a line of invalid UTF-8 (its bytes, the decoder's 1-byte buffer and the string of 2 bytes per
+character it widens into; 3 after the decode), which is 10 by count, and 1 line of margin. Peaks of 6 to 9.3 lines were
+measured, on Windows only. A line of invalid bytes that also holds one character outside the Basic Multilingual Plane
+decodes to 4 bytes per character instead (`sys.getsizeof` gives 8,000,068 bytes for a 2,000,000-byte line), and while
+it widens the decoder holds the 2-byte and the 4-byte buffers together; such a flood was measured at up to 12.1 lines
+(13 by count), over the probe's limit, which applies to the 0xFF flood only. For any input the bound stays a fixed number
+of lines and does not grow with how much the agent sends, which is what the probe checks. Until round 7e.1 the probe allowed
+`QUEUE_LINES` + 4 lines, which left out the decode, and failed in 6 of 12 full runs here; with the derived limit, 30 of
+30 idle full runs and 10 of 10 runs alongside the organizer sweep passed. The grandchild probe needs the heartbeat file to exist and two reads one second apart, after the
+agent is closed, to agree (a writer killed between truncating and writing leaves an empty file).
 
 Limits: a child running as the same OS user is not a sandbox. Outside a container it can read files whose path it can
 guess, and its parent's command line. Files the same user can read stay readable in every mode. The host's
@@ -483,7 +495,7 @@ Sections:
 
 Section counts list the checks that applied, and the skips in parentheses: `C_data 3/3 (1 skipped)` means three checks ran and one was skipped. The count appears in stdout, in `report.md` and in the viewer; `report.json` keeps `passed` and `total` and adds `applicable` and `applicable_passed`. The public check has no skips, so its lines did not change.
 
-Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` carries a stamp that starts with `1265d019…` (60 files), which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (656 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
+Each check report (`runs/check/report.md` and `runs/check/report.json`) carries a code stamp, and so do the organizer sweep's `summary.md` and `summary.json`: `code <sha256> (60 files), Python <version>, <platform>`. `code_sha256` is the sha256 of the canonical JSON of `protocol.code_digest()` without bytecode: the sources, configs and schemas under `auditgym/` (`auditgym/viewer/` is left out), `configs/*.json` and `schemas/*.json`. The one-liner `python -c "from auditgym.check import code_stamp; print(code_stamp())"` prints the stamp of the code in its checkout. The stamp holds no git commit, because a commit cannot contain its own hash. The committed `runs/check/report.md` carries a stamp that starts with `7b5b6d89…` (60 files), which a clean checkout of this commit reproduces (`tests/test_hygiene.py` fails on a CR byte in any stamped file, because a local tool that rewrites a file with CRLF line ends changes the stamp). This is a different digest from the run-time hash of section 5, which includes bytecode. With the same code on the same machine only the timing fields of `report.md` and `report.json` change. The report header states the coverage (656 named checks of 79 kinds; a kind is one property, and most run on every episode they apply to) and whether the policy child ran as a separate user.
 
 Unit tests rerun generation under two `PYTHONHASHSEED` values (`tests/test_generator.py`), and the committed schema
 files must stay byte-equal to the generated ones (`tests/test_contract_fuzz.py`, test_committed_schema_files_equal_generated_ones).
@@ -502,7 +514,7 @@ contain the closed answer key. CI runs it in the image with the seeds
 file and the output directory mounted, `--network none` and strict mode. `python tools/organizer_sweep.py DIR 60
 --record` runs it over the stress mix plus one boundary configuration per edge value that `config.py` accepts
 (423 configurations, 418 feasible; 63-bit seeds, a host secret, chunks of 60: six chunks of 60 episodes and one of 58) and runs the contract battery in
-process on every feasible episode. On the code of `b15fa6b` (code stamp `1265d019…`, the same as the check report's) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
+process on every feasible episode. On the code of `9840b89` (code stamp `7b5b6d89…`, the same as the check report's) the sweep ([runs/sweep/summary.md](../runs/sweep/summary.md)) had 7 chunks, all exit 0; every contract battery passed and
 no feasible configuration failed to generate. Date-shift checks are skipped, as the chunk rows of the summary show: the two shift transforms on the boundary configurations `bnd_period_last_supported` and `bnd_period_century_february`, whose dates no 28-year shift in either direction keeps inside 1901-03-01 .. 2099-12-31. In an earlier round a sweep failed one chunk on "no agent process failed" because a package file had been edited while that chunk ran; the line now names the failing runs, and a sweep is recorded only without edits. A sweep takes about 21 minutes on Windows 10 (one local run, with other jobs on the machine); the summary records no time. The 5 infeasible
 configurations (the `UTC` time zone twice and invoice counts at the maximum three times) each raise a ConfigError that names the reason; the three count configurations have a total of 1,651 or more invoices and are rejected at
 once because a full read would need more than 100 steps; section 1 gives the band below that (`config.min_read_pages`: one invoices row and two ledger
@@ -714,37 +726,39 @@ Workflow `.github/workflows/check.yml`, triggered on push, pull request and manu
   secret. The official-check, strict-mode and closed-path steps also fail unless the report written in the image carries the line
   `Policy isolation: separate user (uid N)`. The container logs and the closed-path output are uploaded as artifacts.
 
-Latest run at the time of writing: run 44841936613, commit `b15fa6b67ca5c7731798730c357e5f1101953f80`
-(subject: `Same-user policies next to answer keys are refused; seeds files need a secret or --no-secret; weak eval seeds refused`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44841936613 --log`), which is not
+Latest run at the time of writing: run 44859388346, commit `9840b899d209b22251724f748a4e1e46efcf69d8`
+(subject: `Redteam: the invalid-UTF-8 flood limit is derived from the code; the grandchild probe tolerates an empty heartbeat`), conclusion success, all six jobs. The excerpt was made with `tools/ci_excerpt.py` from the full log (`gh run view 44859388346 --log`), which is not
 committed. The lines cited here are kept in
-[runs/ci/44841936613.txt](../runs/ci/44841936613.txt). The conclusion of every job and step is in [runs/ci/44841936613.jobs.json](../runs/ci/44841936613.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped). It also holds the start and end time of every job. The excerpt shows the container steps of the official check in the default image, of strict mode and of the closed path as organizers run it printing `Policy isolation: separate user (uid 10002).` (the `agent` user of the Dockerfile): the report written in the image says that the policy ran as a separate user. The committed `runs/check/report.md` is from a Windows host and says that the policy ran as the host's user.
+[runs/ci/44859388346.txt](../runs/ci/44859388346.txt). The conclusion of every job and step is in [runs/ci/44859388346.jobs.json](../runs/ci/44859388346.jobs.json) (made from `gh run view --json jobs`, with URLs and IDs dropped). It also holds the start and end time of every job. The excerpt shows the container steps of the official check in the default image, of strict mode and of the closed path as organizers run it printing `Policy isolation: separate user (uid 10002).` (the `agent` user of the Dockerfile): the report written in the image says that the policy ran as a separate user. The committed `runs/check/report.md` is from a Windows host and says that the policy ran as the host's user.
 
-The excerpt also keeps the new step of this round: under `--cap-drop ALL` in default mode, a custom policy on a
+The excerpt also keeps the step added in round 7e: under `--cap-drop ALL` in default mode, a custom policy on a
 generated episode prints one line, `error: custom policy examples.custom_policy:FirstPagePolicy would run as the host's
-user next to answer keys (/tmp/gen/grader): ...`, and the step reports `exit code 2`. The previous run on a code commit, 44814588471 on commit
-`c47af431f3a0da3ab5c0319a6226dbbe909a2b95` (round 7d), was a success on all six jobs; its excerpt stays in [runs/ci/44814588471.txt](../runs/ci/44814588471.txt) and
+user next to answer keys (/tmp/gen/grader): ...`, and the step reports `exit code 2`. The previous run on a code commit,
+44841936613 on `b15fa6b67ca5c7731798730c357e5f1101953f80` (round 7e), was a success on all six jobs; its excerpt stays in [runs/ci/44841936613.txt](../runs/ci/44841936613.txt)
+and [runs/ci/44841936613.jobs.json](../runs/ci/44841936613.jobs.json). Before it, run 44814588471 on commit
+`c47af431f3a0da3ab5c0319a6226dbbe909a2b95` (round 7d) was a success on all six jobs; its excerpt stays in [runs/ci/44814588471.txt](../runs/ci/44814588471.txt) and
 [runs/ci/44814588471.jobs.json](../runs/ci/44814588471.jobs.json). In round 7d, run 44811366128 on `56a11c6` had failed in the container
 job only (one unit test expected the refusal advice of a host that cannot switch to the policy user), and `c47af43` fixed
 that test. An earlier run on a code commit, 44775177143 on commit `03283bdbb73b2b8d04f89c3030ee8351d3d5cda1`, was a success on all six jobs; its excerpt stays
 in [runs/ci/44775177143.txt](../runs/ci/44775177143.txt) and [runs/ci/44775177143.jobs.json](../runs/ci/44775177143.jobs.json). The
-table and the skip counts below are from run 44841936613 (494 unit tests). The excerpt of the previous round's run, 44712065782 on commit `c9c7ab4`, stays in [runs/ci/44712065782.txt](../runs/ci/44712065782.txt).
+table and the skip counts below are from run 44859388346 (494 unit tests). The excerpt of the previous round's run, 44712065782 on commit `c9c7ab4`, stays in [runs/ci/44712065782.txt](../runs/ci/44712065782.txt).
 
 | Job | Result | Unit tests (run, passed, skipped) | Time reported by the job |
 |---|---|---|---|
-| check (ubuntu-latest, Python 3.11) | success | 494, 471, 23 | `PASS in 117 s` |
-| check (ubuntu-latest, Python 3.12) | success | 494, 471, 23 | `PASS in 104 s` |
-| check (ubuntu-latest, Python 3.13) | success | 494, 471, 23 | `PASS in 87 s` |
-| check (windows-latest, Python 3.11) | success | 494, 483, 11 | `PASS in 158 s` |
-| check (macos-latest, Python 3.11) | success | 494, 468, 26 | `PASS in 79 s` |
-| container (network none, 2 CPU, 4 GB) | success; image 236 MB | 494, 476, 18 | `PASS in 166 s`; `time` reports 167.4 s; `Policy isolation: separate user (uid 10002).`; the 9 tests in `tests/test_container.py` ran, none skipped |
-| container, `--user 10001` | success | 494, 470, 24 | `PASS in 163 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, `--cap-drop ALL` | success | 494, 468, 26 | `PASS in 163 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
-| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 494, 476, 18 | `PASS in 169 s`; `Policy isolation: separate user (uid 10002).`; the 9 container tests `OK` |
+| check (ubuntu-latest, Python 3.11) | success | 494, 471, 23 | `PASS in 93 s` |
+| check (ubuntu-latest, Python 3.12) | success | 494, 471, 23 | `PASS in 133 s` |
+| check (ubuntu-latest, Python 3.13) | success | 494, 471, 23 | `PASS in 127 s` |
+| check (windows-latest, Python 3.11) | success | 494, 483, 11 | `PASS in 154 s` |
+| check (macos-latest, Python 3.11) | success | 494, 468, 26 | `PASS in 92 s` |
+| container (network none, 2 CPU, 4 GB) | success; image 236 MB | 494, 476, 18 | `PASS in 167 s`; `time` reports 168.6 s; `Policy isolation: separate user (uid 10002).`; the 9 tests in `tests/test_container.py` ran, none skipped |
+| container, `--user 10001` | success | 494, 470, 24 | `PASS in 165 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, `--cap-drop ALL` | success | 494, 468, 26 | `PASS in 164 s`; the fallback warning line is printed; the 8 container-only tests are skipped |
+| container, strict mode (`AUDITGYM_REQUIRE_AGENT_USER=1`) | success | 494, 476, 18 | `PASS in 171 s`; `Policy isolation: separate user (uid 10002).`; the 9 container tests `OK` |
 | container, strict mode with `--cap-drop ALL` | success | not run | `exit code 2`, one `error:` line |
 | container, custom policy next to an answer key under `--cap-drop ALL` (default mode) | success | not run | `exit code 2`, one `error: custom policy ...` line |
 | container, closed path (mounted seeds file and output, strict) | success | not run | `PASS in 4 s`; `Policy isolation: separate user (uid 10002).`; `C_data 3/3 (1 skipped)`, `C_reward 45/45`, `D_paired 20/20`, `E_leaks 3/3`, `F_contract 20/20`, `B_replay 5/5` (97 named checks of 76 kinds) |
 
-In run 44841936613, as in 44814588471, every skip was platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image and under `--user 10001` and `--cap-drop ALL`; 15 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 23 (the 8 container-only tests and the 15 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 26 (the 8, the 15 and the 3); the default image 18 (the 15, the workflow-label test and the 2 negative assertions under root); `--user 10001` 24 (the 8, the 15 and the workflow-label test); `--cap-drop ALL` 26 (the 8, the 15, the workflow-label test and the 2 negative assertions under root).
+In run 44859388346, as in 44841936613, every skip was platform-only or image-only: 8 container-only tests of `tests/test_container.py` outside the image and under `--user 10001` and `--cap-drop ALL`; 15 Windows-only tests off Windows (the Low-integrity child, parent-PID, report-line and secret-hygiene tests of `tests/test_windows_hardening.py` and `tests/test_redteam.py`); the 3 Linux-only hardening tests of `tests/test_linux_hardening.py` off Linux; the 2 negative hardening assertions when the test process runs as root (inside the image and under `--cap-drop ALL`); and the workflow-label test in `tests/test_linux_hardening.py`, which skips inside the image because `.dockerignore` leaves `.github` out. Per run: ubuntu 23 (the 8 container-only tests and the 15 Windows-only tests); Windows 11 (the 8 and the 3 Linux-only hardening tests); macOS 26 (the 8, the 15 and the 3); the default image 18 (the 15, the workflow-label test and the 2 negative assertions under root); `--user 10001` 24 (the 8, the 15 and the workflow-label test); `--cap-drop ALL` 26 (the 8, the 15, the workflow-label test and the 2 negative assertions under root).
 
 The `redteam --parent` step prints, on ubuntu (3.11, 3.12 and 3.13), "host hardening: applied: PR_SET_DUMPABLE 0" and "same user as the host: the parent's environment is not readable"; on windows, "host hardening: Windows: no host-side hardening; the policy child lowers its own token to Low integrity", "same user as the host: child at Low integrity, the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)" and "--secret-env: the parent's environment is not readable (OpenProcess(PROCESS_VM_READ) error 5)", while the control with the lowering off reads the variable ("child at the host's integrity level (off: control run), parent's environment readable, host variable found there"); on macOS, "same user as the host: not measured on this platform (no /proc)". In run 44712065782 (commit `c9c7ab4`, before the lowering) windows printed "same user as the host: parent's environment readable, host variable found there". The container job runs the same probe in three modes (the step "What a policy child sees of its parent in each container mode"). In the default image the parent's environment is not readable, also in the control with hardening off, because the separate uid blocks the read by itself. Under `--user 10001` and under `--cap-drop ALL` hardening is applied, the parent's environment is not readable, and the control with hardening off reads the variable ("host variable found there"). The `--secret-env` variable is not readable in any mode.
 
@@ -754,7 +768,7 @@ Python 3.12 and 3.13 run only the check job, on ubuntu. The job conclusion cover
 ## 14. Open items at this version
 
 - Blank or over-long IDs make a submission invalid, as documented (section 4).
-- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `1265d019…`; its timings differ from the CI logs.
+- `runs/check/report.md` is a Windows 10 run (Python 3.11.4) with the code stamp `7b5b6d89…`; its timings differ from the CI logs.
 - Code gaps from the review of commit `849d0da` that are still open (the
   invoice count band, the sweep's invoice counts, purchase-only duplicates) are listed in [TASKS.md](TASKS.md).
 
