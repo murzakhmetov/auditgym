@@ -2,7 +2,7 @@
 
 `python tools/organizer_sweep.py OUT_DIR 60 --record`: the closed path (`check --seeds-file --secret-env`) over the stress mix and the boundary mix. The contract battery also ran in-process on every feasible episode (the check itself runs it on one episode per seeds file).
 
-- code: code 5ca9203f885bcf6321afa9bd1b516b956599ddb08ee835ec6a79dcc5fc4f7134 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
+- code: code 1265d019a068c2df0c71a5ffdcb28dade250d4040ca084feb851dccbe26dbec0 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
 - configurations: 423 (418 feasible, 5 infeasible, 0 generation failures)
 - contract battery in-process: 418 of 418 episodes pass
 - feasible by group: random 299, extreme 17, boundary 102
@@ -12,13 +12,13 @@
 
 | chunk | episodes | exit code | summary |
 |---|---|---|---|
-| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 70 kinds) |
-| 1 | 60 | 0 | summary: C_data 62/62, C_reward 1428/1428, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1891 named checks of 80 kinds) |
-| 2 | 60 | 0 | summary: C_data 62/62, C_reward 1437/1437 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1899 named checks of 70 kinds) |
-| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds) |
-| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 70 kinds) |
-| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1200/1200 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1665 named checks of 81 kinds) |
-| 6 | 58 | 0 | summary: C_data 60/60, C_reward 1160/1160, D_paired 357/357 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1609 named checks of 81 kinds) |
+| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1444/1444 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1906 named checks of 66 kinds) |
+| 1 | 60 | 0 | summary: C_data 62/62, C_reward 1428/1428, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1891 named checks of 76 kinds) |
+| 2 | 60 | 0 | summary: C_data 62/62, C_reward 1437/1437 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1899 named checks of 66 kinds) |
+| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 66 kinds) |
+| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1445/1445 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1907 named checks of 66 kinds) |
+| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1200/1200 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1665 named checks of 77 kinds) |
+| 6 | 58 | 0 | summary: C_data 60/60, C_reward 1160/1160, D_paired 357/357 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1609 named checks of 77 kinds) |
 
 ## Generation failures (accepted by config.py, GenerationError in the generator)
 

@@ -77,8 +77,10 @@ def measure(commit: str, n_fx: int, n_mix: int) -> dict:
     with tempfile.TemporaryDirectory(prefix="recon_drop_") as tmp:
         with tarfile.open(fileobj=io.BytesIO(data)) as tar:
             tar.extractall(tmp, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
-        env = dict(os.environ, PYTHONHASHSEED="0", PYTHONDONTWRITEBYTECODE="1")
-        res = subprocess.run([sys.executable, "-I", "-c", INNER, tmp, str(n_fx), str(n_mix)], cwd=tmp, env=env,
+        # no -I: it would ignore PYTHONHASHSEED; inherited PYTHON* variables (PYTHONPATH among them) are dropped instead
+        env = {k: v for k, v in os.environ.items() if not k.upper().startswith("PYTHON")}
+        env.update(PYTHONHASHSEED="0", PYTHONDONTWRITEBYTECODE="1", PYTHONIOENCODING="utf-8")
+        res = subprocess.run([sys.executable, "-s", "-B", "-c", INNER, tmp, str(n_fx), str(n_mix)], cwd=tmp, env=env,
                              capture_output=True, text=True, encoding="utf-8")
         if res.returncode:
             raise SystemExit(f"error: measuring {commit} failed:\n{res.stderr[-2000:]}")
