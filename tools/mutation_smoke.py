@@ -69,6 +69,7 @@ POSTING_LAG = ("tests.test_posting_lag",)
 CRED = ("tests.test_credit_receipts",)
 CLI = ("tests.test_cli",)
 PAYTGT = ("tests.test_payment_targets",)
+REGEN = ("tests.test_verify_regenerate",)
 
 
 def M(id, file, old, new, modules, breaks, equivalent="", only_on=""):
@@ -559,6 +560,17 @@ MUTANTS = [
       "HOST_ONLY_INFO_KEYS = frozenset()", ENV, "the policy child is sent info['weak_seed'] about its own episode"),
     M("verify-key-tolerance", "auditgym/verify.py", 'if t.get("tolerance_minor") != TOLERANCE_MINOR:',
       "if False:", ("tests.test_verify",), "verify accepts a key whose tolerance_minor lets any amount match"),
+    # ---------------------------------------------------------------- round 9.3: verify DIR --regenerate
+    M("cli-regenerate-grader-files-skipped", "auditgym/__main__.py",
+      'for sub, texts in (("public", gen.episode.public_texts()), ("grader", gen.episode.grader_texts())):',
+      'for sub, texts in (("public", gen.episode.public_texts()),):', REGEN,
+      "verify --regenerate compares only the public files, so an edited provenance.json or truth.json passes"),
+    M("cli-regenerate-secret-not-skipped", "auditgym/__main__.py", '    if prov.get("secret_used"):', "    if False:", REGEN,
+      "verify --regenerate of an episode written with a host secret regenerates without the secret and fails instead of skipping"),
+    M("cli-regenerate-version-not-skipped", "auditgym/__main__.py", '    if prov.get("generator_version") != GENERATOR_VERSION:',
+      "    if False:", REGEN, "verify --regenerate of an episode written by another generator version fails instead of skipping"),
+    M("cli-regenerate-failure-not-fatal", "auditgym/__main__.py", '            rep["ok"] = False\n    if args.json:',
+      '            pass\n    if args.json:', REGEN, "a failed regeneration is printed but verify DIR still exits 0"),
 ]
 
 

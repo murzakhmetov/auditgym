@@ -1,7 +1,7 @@
 {
-  "listed": 196,
-  "counted": 196,
-  "killed": 196,
+  "listed": 200,
+  "counted": 200,
+  "killed": 200,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,7 +9,7 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 148,
+  "killed_by_existing": 152,
   "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
     "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
@@ -30,6 +30,7 @@
     "tests.test_tells": "4b6cf101e96cc8a73b86dd712c7c3850590eb9857a97aa1d34ad1db489dfdbe7",
     "tests.test_transform_shift": "857b9fa817a8fbaefbcfd4645a209ea0594bf8f6ef7bd2d69ff51ffbdf2d9a64",
     "tests.test_verify": "9c57d37d644c478ab80e743d2ce641fa2483d7d284d05e0966e83af12e1e5d3a",
+    "tests.test_verify_regenerate": "e42b48c08ed1f78aff10b4d9c08343e3d7d715012db42f6d25ac3e53885ff66d",
     "tests.test_windows_hardening": "29247373d21201b452658db381426f447f3670f460c72b58e5b608dfd0129038"
   },
   "mutants": [
@@ -2404,6 +2405,50 @@
         "tests.test_verify"
       ],
       "sha256": "8d9c194e83014224d721e7bb131735a87a4fb80cb62cedfd9db1ce0aa63f7f08"
+    },
+    {
+      "id": "cli-regenerate-grader-files-skipped",
+      "file": "auditgym/__main__.py",
+      "breaks": "verify --regenerate compares only the public files, so an edited provenance.json or truth.json passes",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify_regenerate"
+      ],
+      "sha256": "67fba36a13ae1ac02d2f21c6ffcdb82c858722b391150f0ab0e906256317edd0"
+    },
+    {
+      "id": "cli-regenerate-secret-not-skipped",
+      "file": "auditgym/__main__.py",
+      "breaks": "verify --regenerate of an episode written with a host secret regenerates without the secret and fails instead of skipping",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify_regenerate"
+      ],
+      "sha256": "6e037d4204aa3a3121dfae0284df5cfac783b1eca0db6c8b08461ae0b8293638"
+    },
+    {
+      "id": "cli-regenerate-version-not-skipped",
+      "file": "auditgym/__main__.py",
+      "breaks": "verify --regenerate of an episode written by another generator version fails instead of skipping",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify_regenerate"
+      ],
+      "sha256": "556e57911812983c3cee8f61edd4fef381c0db3c98d966626023e4d91a8b993e"
+    },
+    {
+      "id": "cli-regenerate-failure-not-fatal",
+      "file": "auditgym/__main__.py",
+      "breaks": "a failed regeneration is printed but verify DIR still exits 0",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify_regenerate"
+      ],
+      "sha256": "d0f3f6e8b5c5652d1572e1868f075c24b9ffc9965f27db8701840a5f1346c55d"
     }
   ]
 }

@@ -294,6 +294,42 @@ def cmd_generate(args) -> int:
     return 0
 
 
+def _regeneration_status(ep, directory: Path):
+    """`verify DIR --regenerate`: regenerate the episode from provenance.json (seed, config, generator version) and compare every
+    public and grader file byte for byte. Returns "pass", a list of failure lines, or "skip: <reason>" when the episode cannot
+    be regenerated here (a host secret was used, or another generator version wrote it)."""
+    import re
+
+    from .generator import GENERATOR_VERSION, generate_episode
+
+    prov = ep.provenance
+    if not isinstance(prov, dict):
+        return ["provenance.json is not an object"]
+    if prov.get("secret_used"):
+        return "skip: generated with a host secret, which verify DIR does not have"
+    if prov.get("generator_version") != GENERATOR_VERSION:
+        return f"skip: written by generator {prov.get('generator_version')}, this is {GENERATOR_VERSION}"
+    seed, config = prov.get("seed"), prov.get("config")
+    if not isinstance(config, dict) or not isinstance(seed, (str, int)) or isinstance(seed, bool):
+        return ["provenance.json has no usable seed and config"]
+    if isinstance(seed, str) and re.fullmatch(r"-?\d+", seed):
+        seed = int(seed)
+    try:
+        gen = generate_episode(seed, config)
+    except Exception as exc:  # a hand-edited seed or config may be refused or crash the generator: a failure line, not a traceback
+        return [f"regeneration from the provenance raised {type(exc).__name__}: {exc}"]
+    differing = []
+    for sub, texts in (("public", gen.episode.public_texts()), ("grader", gen.episode.grader_texts())):
+        for name, text in texts.items():
+            try:
+                same = aio.read_text(directory / sub / name) == text
+            except OSError:
+                same = False
+            if not same:
+                differing.append(f"{sub}/{name}")
+    return "pass" if not differing else [f"differs from the regeneration from provenance.json: {', '.join(differing[:4])}"]
+
+
 def cmd_verify(args) -> int:
     from .episode import load_episode
     from .verify import verify_generated
@@ -301,10 +337,19 @@ def cmd_verify(args) -> int:
     with _input(broad=True):
         ep = load_episode(Path(args.dir))
     rep = verify_generated(ep)
+    if args.regenerate:
+        status = _regeneration_status(ep, Path(args.dir))
+        rep["checks"]["regenerates_from_provenance"] = status
+        if isinstance(status, list):
+            rep["failures"] += [f"regenerates_from_provenance: {m}" for m in status]
+            rep["ok"] = False
     if args.json:
         print(json.dumps(rep, indent=2))
     else:
         for name, status in rep["checks"].items():
+            if isinstance(status, str) and status.startswith("skip"):
+                print(f"SKIP  {name}: {status[5:].strip()}")
+                continue
             print(f"{'PASS' if status == 'pass' else 'FAIL'}  {name}" + ("" if status == "pass" else f": {status[:3]}"))
         for t in ep.truth.get("issues", []):
             print(f"      declared {t['issue_id']} {t['type']} ids={t['affected_ids']} amount={t['expected_amount_minor']} {t['currency']}"
@@ -551,6 +596,9 @@ def main(argv=None) -> int:
     v = sub.add_parser("verify")
     v.add_argument("dir")
     v.add_argument("--json", action="store_true")
+    v.add_argument("--regenerate", action="store_true",
+                   help="also regenerate the episode from provenance.json and compare every file byte for byte "
+                        "(a skip when a host secret was used or another generator version wrote it)")
     v.set_defaults(func=cmd_verify)
     r = sub.add_parser("run")
     r.add_argument("--episodes", nargs="*", help="episode directories or folders of them")
