@@ -1,4 +1,10 @@
-# Handoff: round 9 (work in progress)
+# Handoff: round 9 (finished; the text below is the history of how it got there)
+
+Final state: the surviving mutant `history-paid-slots-ignore-load` is killed (a new test in `tests/test_credit_receipts.py`), the
+mutation record reads 196 of 196, every record under `runs/` is re-recorded for 0.4.0 on commit `6703108`, round 9 was reviewed
+(payment-side keys recomputed independently on 14 committed and 183 generated issues; stress 299 of 299 verified), `round7`
+was fast-forwarded to `d31013c` (a merge of the round-8.2 docs into `round9`) and CI run 44942345162 is green on all six jobs.
+The four docs and `runs/ci/44942345162.*` describe 0.4.0. The notes below are from before that work.
 
 For whoever continues this work in another session. Everything needed is in this branch and on GitHub.
 
