@@ -1,0 +1,40 @@
+{
+  "by_type_and_side": {
+    "duplicate_invoice / pair": {
+      "issues": 64,
+      "recomputed": 64
+    },
+    "unallocated_payment / receipt": {
+      "issues": 82,
+      "recomputed": 82
+    },
+    "wrong_fx_rate / disbursement": {
+      "issues": 11,
+      "recomputed": 11
+    },
+    "wrong_fx_rate / invoice": {
+      "issues": 32,
+      "recomputed": 32
+    },
+    "wrong_fx_rate / receipt": {
+      "issues": 36,
+      "recomputed": 36
+    },
+    "wrong_period / disbursement": {
+      "issues": 17,
+      "recomputed": 17
+    },
+    "wrong_period / invoice": {
+      "issues": 21,
+      "recomputed": 21
+    },
+    "wrong_period / receipt": {
+      "issues": 44,
+      "recomputed": 44
+    }
+  },
+  "differing": 0,
+  "episodes": 120,
+  "issues": 307,
+  "recomputed": 307
+}
