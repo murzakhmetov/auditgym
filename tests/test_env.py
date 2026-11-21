@@ -283,3 +283,58 @@ class Termination(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WeakSeedInEvalMode(unittest.TestCase):
+    """A small seed without a secret can be recovered from the public episode_id, so eval mode refuses to generate
+    from one unless the env was built with allow_weak_seed=True. Train mode is unchanged."""
+
+    CONFIG = {"size": "small"}
+
+    def test_jurors_probe_recover_a_13_bit_seed_from_the_episode_id(self):
+        """Juror b's probe: reset an env with examples/config_mixed.json, read info['episode_id'], recover the seed by
+        brute force with episode_id_for. In eval mode the reset itself now refuses the small seed."""
+        from pathlib import Path
+
+        from auditgym.generator import episode_id_for
+
+        cfg = json.loads((Path(__file__).resolve().parent.parent / "examples" / "config_mixed.json").read_text(encoding="utf-8"))
+        hidden = 4242  # 13 bits
+        _obs, info = AuditEnv(mode="train").reset(seed=hidden, config=cfg)  # train mode is unchanged
+        recovered = next(s for s in range(2 ** 13) if episode_id_for(s, cfg) == info["episode_id"])
+        self.assertEqual(recovered, hidden)
+        with self.assertRaises(ValueError) as cm:
+            AuditEnv(mode="eval").reset(seed=hidden, config=cfg)
+        for word in ("eval mode", "13 bits", "secret", "allow_weak_seed"):
+            self.assertIn(word, str(cm.exception))
+        with self.assertRaises(ValueError):
+            AuditEnv(mode="eval").reset(seed=recovered, config=cfg)
+        with self.assertRaises(ValueError):
+            AuditEnv(mode="eval", secret="").reset(seed=hidden, config=cfg)  # an empty secret is no secret
+
+    def test_boundary_is_two_to_the_40(self):
+        env = AuditEnv(mode="eval")
+        with self.assertRaises(ValueError):
+            env.reset(seed=2 ** 40 - 1, config=self.CONFIG)
+        with self.assertRaises(ValueError):
+            env.reset(seed=-(2 ** 40 - 1), config=self.CONFIG)
+        obs, _ = env.reset(seed=2 ** 40, config=self.CONFIG)
+        self.assertIn("episode_id", obs["manifest"])
+
+    def test_a_secret_the_override_and_train_mode_keep_small_seeds_working(self):
+        for env in (AuditEnv(mode="eval", secret="host-secret"), AuditEnv(mode="eval", allow_weak_seed=True),
+                    AuditEnv(mode="train")):
+            obs, _ = env.reset(seed=7, config=self.CONFIG)
+            self.assertIn("episode_id", obs["manifest"])
+
+    def test_loaded_episodes_are_not_affected(self):
+        obs, _ = AuditEnv(mode="eval").reset(seed=7, config={"episode": episode()})
+        self.assertIn("episode_id", obs["manifest"])
+
+    def test_the_limit_matches_the_run_command(self):
+        from auditgym import __main__ as cli_mod
+        from auditgym import check as check_mod
+        from auditgym import env as env_mod
+
+        self.assertEqual(env_mod.MIN_SEED_BITS, cli_mod.MIN_SEED_BITS)
+        self.assertEqual(env_mod.MIN_SEED_BITS, check_mod.MIN_SEED_BITS)

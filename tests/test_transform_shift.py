@@ -292,7 +292,7 @@ class ShiftClosedPathTest(unittest.TestCase):
             f.write_text(json.dumps(seeds), encoding="utf-8")
             out, err = io.StringIO(), io.StringIO()
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-                rc = check_mod.main(["--seeds-file", str(f), "--out", str(Path(tmp) / "o")])
+                rc = check_mod.main(["--seeds-file", str(f), "--no-secret", "--out", str(Path(tmp) / "o")])
             self.assertEqual(rc, 0, out.getvalue()[-1500:] + err.getvalue())
             self.assertIn("'shift_years': -28", out.getvalue())
 
@@ -306,7 +306,7 @@ class ShiftClosedPathTest(unittest.TestCase):
             f.write_text(json.dumps(seeds), encoding="utf-8")
             out, err = io.StringIO(), io.StringIO()
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-                rc = check_mod.main(["--seeds-file", str(f), "--out", str(Path(tmp) / "o")])
+                rc = check_mod.main(["--seeds-file", str(f), "--no-secret", "--out", str(Path(tmp) / "o")])
             self.assertEqual(rc, 0, out.getvalue()[-1500:] + err.getvalue())
             self.assertIn("[SKIP] c01 {'shift_years': 28}: oracle answer and reward preserved - "
                           "no 28-year shift keeps the dates inside 1901-03-01 .. 2099-12-31", out.getvalue())

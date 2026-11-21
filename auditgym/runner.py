@@ -22,7 +22,7 @@ from pathlib import Path
 from .diagnostics import run_diagnostics
 from .env import AuditEnv
 from .matcher import normalize_finding, normalize_issue
-from .policies import make_policy
+from .policies import is_external, make_policy
 from .protocol import run_episode_isolated
 
 TRAJECTORY_FIELDS = ("run_id", "split", "policy", "episode_id", "step", "action", "observation", "reward", "terminated", "truncated")
@@ -94,6 +94,8 @@ def run_one(episode, policy: str, *, split: str = "adhoc", mode: str = "eval", i
             policy_seed: int = 0, max_steps: int = 100, time_limit_s: float = 60.0, policy_path: str | None = None):
     """Returns (trajectory records or None for the oracle, grade record)."""
     env = AuditEnv(mode=mode, max_steps=max_steps, time_limit_s=time_limit_s)
+    if not is_external(policy):
+        policy_path = None  # a built-in policy never sees the directory: a file there (random.py) would shadow the standard library
     run_id = f"{split}:{policy}:{policy_seed}"
     traj = []
     submission = None

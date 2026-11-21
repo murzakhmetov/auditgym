@@ -287,6 +287,34 @@ class SilentBaseline(unittest.TestCase):
         self.assertEqual(action, {"action": "submit", "findings": {"episode_id": "ep_x", "findings": []}})
 
 
+class ResampleRateCheck(unittest.TestCase):
+    """C_data `sampling resamples ... stay rare` counts only SampleRetry/BooksError rejections and rejections by a
+    sampling check; a rejection by a correctness check belongs to the next line only."""
+
+    def test_a_correctness_rejection_is_not_counted_here(self):
+        from auditgym.check import resample_rate_check
+
+        label, ok = resample_rate_check({"exception": 0, "sampling_check": 0, "correctness": 5}, 2)
+        self.assertTrue(ok)
+        self.assertIn("(0 over 2 episodes)", label)
+
+    def test_sampling_rejections_are_counted_and_bounded_by_half_the_episodes(self):
+        from auditgym.check import resample_rate_check
+
+        label, ok = resample_rate_check({"exception": 1, "sampling_check": 1, "correctness": 0}, 4)
+        self.assertTrue(ok)
+        self.assertIn("(2 over 4 episodes)", label)
+        self.assertFalse(resample_rate_check({"exception": 2, "sampling_check": 1, "correctness": 0}, 4)[1])
+        self.assertFalse(resample_rate_check({"exception": 3, "sampling_check": 0, "correctness": 0}, 2)[1])
+
+    def test_the_label_says_what_it_counts(self):
+        from auditgym.check import resample_rate_check
+
+        label, _ok = resample_rate_check({"exception": 0, "sampling_check": 0, "correctness": 0}, 1)
+        for word in ("sampling", "SampleRetry", "BooksError"):
+            self.assertIn(word, label)
+
+
 class CoverageLine(unittest.TestCase):
     """The report's 'N named checks of K kinds' must not count an organizer's episode names as kinds."""
 

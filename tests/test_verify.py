@@ -87,6 +87,82 @@ class DirectoryModeTests(unittest.TestCase):
             self.assertNotIn("Traceback", r.stderr, value[:12])
             self.assertIn("FAIL  records_schema", r.stdout, value[:12])
 
+    def _drop_field(self, name, field, value="__drop__"):
+        p = self.dir / "public" / name
+        rows = [json.loads(ln) for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        if value == "__drop__":
+            rows[0].pop(field)
+        else:
+            rows[0][field] = value
+        p.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    def test_an_id_that_is_a_list_or_an_object_fails_without_a_traceback(self):
+        for name, field in (("payments.jsonl", "payment_id"), ("invoices.jsonl", "invoice_id"),
+                            ("payments.jsonl", "doc_id"), ("invoices.jsonl", "doc_id")):
+            for value in ([], {}, 5):
+                with self.subTest(name=name, field=field, value=value):
+                    shutil.rmtree(self.dir)
+                    shutil.copytree(D08, self.dir)
+                    self._drop_field(name, field, value)
+                    r = run_verify(self.dir)
+                    self.assertEqual(r.returncode, 1, r.stdout + r.stderr[-500:])
+                    self.assertNotIn("Traceback", r.stderr)
+                    self.assertIn("FAIL  records_schema", r.stdout)
+
+    def test_a_record_without_its_id_field_fails_without_a_traceback(self):
+        # check_ids and check_key_consistency (and every later check) index the ID fields of a public record
+        for label, name, field in (("payment without payment_id", "payments.jsonl", "payment_id"),
+                                   ("invoice without invoice_id", "invoices.jsonl", "invoice_id"),
+                                   ("payment without doc_id", "payments.jsonl", "doc_id"),
+                                   ("invoice without doc_id", "invoices.jsonl", "doc_id")):
+            with self.subTest(label):
+                shutil.rmtree(self.dir)
+                shutil.copytree(D08, self.dir)
+                self._drop_field(name, field)
+                r = run_verify(self.dir)
+                self.assertEqual(r.returncode, 1, r.stdout + r.stderr[-500:])
+                self.assertNotIn("Traceback", r.stderr)
+                self.assertIn("FAIL  records_schema", r.stdout)
+                self.assertIn("FAIL  ids_unique", r.stdout)  # check_ids names the record that lacks its ID
+                self.assertIn(f"record without {field}", r.stdout)
+                self.assertGreaterEqual(r.stdout.count("FAIL  "), 3, r.stdout)
+
+    def test_the_id_checks_themselves_tolerate_a_missing_id(self):
+        from auditgym.verify import check_ids, check_key_consistency
+
+        ep = load_episode(self.dir)
+        ep.payments[0].pop("payment_id")
+        ep.invoices[0].pop("invoice_id")
+        ep.ledger[0].pop("row_id")
+        errs = check_ids(ep)  # no KeyError
+        self.assertEqual(sorted(e for e in errs if "record without" in e),
+                         ["invoice record without invoice_id", "ledger record without row_id",
+                          "payment record without payment_id"])
+        self.assertIsInstance(check_key_consistency(ep), list)
+        self.assertTrue(verify_generated(ep)["failures"])
+
+    def test_a_ledger_row_without_a_row_id_fails_without_a_traceback(self):
+        p = self.dir / "public" / "ledger.csv"
+        lines = p.read_text(encoding="utf-8").splitlines()
+        header = lines[0].split(",")
+        col = header.index("row_id")
+        cells = lines[1].split(",")
+        cells[col] = ""
+        lines[1] = ",".join(cells)
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        r = run_verify(self.dir)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr[-500:])
+        self.assertIn("FAIL  ", r.stdout)
+        keep = list(lines)
+        keep[0] = ",".join(h for h in header if h != "row_id")  # the whole column gone: the loader refuses it, cleanly
+        keep[1:] = [",".join(c for i, c in enumerate(ln.split(",")) if i != col) for ln in lines[1:]]
+        p.write_text("\n".join(keep) + "\n", encoding="utf-8")
+        r = run_verify(self.dir)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr[-500:])
+        self.assertTrue(r.stderr.startswith("error:"), r.stderr)
+
     def test_deleted_op_fails_roundtrip(self):
         del self.prov["ops"][0]
         self.save()

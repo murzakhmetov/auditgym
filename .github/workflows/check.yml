@@ -98,6 +98,21 @@ jobs:
           test "${PIPESTATUS[0]}" -eq 0
           grep -q "^PASS in" capdrop.log
           docker run --rm --network none --cap-drop ALL auditgym python -m unittest tests.test_container -v
+      - name: A custom policy next to an answer key under --cap-drop ALL (default mode, must refuse with exit code 2 and one error line)
+        run: |
+          docker run --rm --network none --cap-drop ALL auditgym sh -c '
+            python -m auditgym generate --seed 1 --out /tmp/gen > /dev/null || exit 99
+            python -m auditgym run --episodes /tmp/gen --policies examples.custom_policy:FirstPagePolicy --out /tmp/out
+            rc=$?
+            test ! -e /tmp/out || exit 98
+            exit $rc' > capdrop_custom.log 2>&1 && rc=0 || rc=$?
+          cat capdrop_custom.log
+          echo "exit code $rc"
+          test "$rc" -eq 2
+          test "$(grep -c . capdrop_custom.log)" -eq 1
+          test "$(grep -c '^error: custom policy' capdrop_custom.log)" -eq 1
+          grep -q -- "--allow-same-user" capdrop_custom.log
+        shell: bash
       - name: What a policy child sees of its parent in each container mode (measured, not asserted; see the logs)
         run: |
           set -o pipefail

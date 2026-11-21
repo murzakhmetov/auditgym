@@ -103,6 +103,12 @@ def check_records_schema(ep: Episode) -> list[str]:
     for t in ("ledger", "invoices", "payments", "fx"):
         if counts.get(t) != len(ep.table(t)):
             errs.append(f"manifest record_counts.{t} mismatch")
+    for table, field in (("ledger", "row_id"), ("invoices", "doc_id"), ("invoices", "invoice_id"),
+                         ("payments", "doc_id"), ("payments", "payment_id")):
+        for r in ep.table(table):  # an ID that is not text (a list, an object) cannot be indexed by the later checks
+            if field in r and not isinstance(r[field], str):
+                errs.append(f"{table} {field} must be text, got {type(r[field]).__name__}")
+                break
     for r in ep.ledger:
         if not (_is_int(r["debit_minor"]) and _is_int(r["credit_minor"])):
             errs.append(f"ledger {r['row_id']} amounts not integers")
@@ -135,7 +141,7 @@ def check_ids(ep: Episode) -> list[str]:
     seen, errs = {}, []
 
     def add(i, where):
-        if i is None:
+        if not isinstance(i, str):  # a missing id is reported by need(); a None or non-text one by the other checks
             return
         if ":" in i:
             errs.append(f"id {i} contains ':'")
@@ -143,16 +149,22 @@ def check_ids(ep: Episode) -> list[str]:
             errs.append(f"id {i} used in {seen[i]} and {where}")
         seen.setdefault(i, where)
 
+    def need(rec, field, where):
+        if field not in rec:  # reported here, so the line is not left to records_schema (which may pass a blank value)
+            errs.append(f"{where} record without {field}")
+        return rec.get(field)
+
     for r in ep.ledger:
-        if r["row_id"] in seen:
-            errs.append(f"duplicate row_id {r['row_id']}")
-        add(r["row_id"], "ledger")
+        row_id = need(r, "row_id", "ledger")
+        if row_id in seen:
+            errs.append(f"duplicate row_id {row_id}")
+        add(row_id, "ledger")
     for d in ep.invoices:
-        add(d["doc_id"], "doc")
-        add(d["invoice_id"], "invoice")
+        add(need(d, "doc_id", "invoice"), "doc")
+        add(need(d, "invoice_id", "invoice"), "invoice")
     for d in ep.payments:
-        add(d["doc_id"], "doc")
-        add(d["payment_id"], "payment")
+        add(need(d, "doc_id", "payment"), "doc")
+        add(need(d, "payment_id", "payment"), "payment")
     return errs[:20]
 
 
@@ -160,8 +172,8 @@ def check_key_consistency(ep: Episode) -> list[str]:
     """Answer-key rules the auditor does not exercise: id_aliases is exactly {doc_id: invoice_id or payment_id}
     over the public invoices and payments, and every issue variant is one the config knows for its type."""
     errs = []
-    want = {d["doc_id"]: d["invoice_id"] for d in ep.invoices}
-    want.update({d["doc_id"]: d["payment_id"] for d in ep.payments})
+    want = {d["doc_id"]: d["invoice_id"] for d in ep.invoices if "doc_id" in d and "invoice_id" in d}
+    want.update({d["doc_id"]: d["payment_id"] for d in ep.payments if "doc_id" in d and "payment_id" in d})  # a record without its ids is a records_schema FAIL
     got = ep.truth.get("id_aliases", {})
     for k in sorted(set(want) - set(got))[:5]:
         errs.append(f"id_aliases missing {k}")
@@ -803,20 +815,33 @@ def _clean_book_errors(ep: Episode, clean: Episode | None) -> list[str]:
 def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks = {}
     checks["records_schema"] = check_records_schema(ep)
-    checks["ids_unique"] = check_ids(ep)
-    checks["clean_equalities"] = _clean_book_errors(ep, clean)
-    checks["provenance_roundtrip"] = check_roundtrip(ep, clean)
+    # A record without its ID fields fails records_schema and ids_unique; the later checks index those IDs, so on such an episode a
+    # check that cannot read a record is a FAIL line of its own, not a traceback. With a valid schema nothing is
+    # swallowed: a KeyError there is a bug and propagates.
+    broken = bool(checks["records_schema"])
+
+    def run(fn, *args):
+        if not broken:
+            return fn(*args)
+        try:
+            return fn(*args)
+        except REPLAY_ERRORS as exc:
+            return [f"cannot run on records that fail records_schema: {type(exc).__name__}: {exc}"]
+
+    checks["ids_unique"] = run(check_ids, ep)
+    checks["clean_equalities"] = run(_clean_book_errors, ep, clean)
+    checks["provenance_roundtrip"] = run(check_roundtrip, ep, clean)
     try:
         found = audit(ep.manifest, ep.policy, ep.ledger, ep.invoices, ep.payments, ep.fx)
         declared = compare_with_truth(found, ep.truth)
     except REPLAY_ERRORS as exc:  # the auditor cannot read a hand-edited record: a FAIL line, not a traceback
         declared = [f"the independent auditor cannot run: {type(exc).__name__}: {exc}"]
-    checks["declared_discrepancies"] = declared + check_key_consistency(ep)
-    checks["evidence_sufficient"] = check_evidence(ep)
-    checks["budget_feasible"] = check_budget(ep)
+    checks["declared_discrepancies"] = declared + run(check_key_consistency, ep)
+    checks["evidence_sufficient"] = run(check_evidence, ep)
+    checks["budget_feasible"] = run(check_budget, ep)
     checks["no_surface_tells"] = (["provenance is malformed, so the surface cannot be checked"]
-                                  if provenance_shape_errors(ep) else check_surface(ep, strict=clean is None))
-    checks["no_leaks"] = check_leaks(ep)
+                                  if provenance_shape_errors(ep) else run(check_surface, ep, clean is None))
+    checks["no_leaks"] = run(check_leaks, ep)
     failures = [f"{name}: {msg}" for name, msgs in checks.items() for msg in msgs]
     return {
         "ok": not failures,

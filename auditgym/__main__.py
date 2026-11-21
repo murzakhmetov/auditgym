@@ -29,6 +29,8 @@ so a child reading the parent's environment block no longer finds it. The value 
 which a same-user child can read on Windows. On Linux every command first makes the host non-dumpable
 (protocol.harden_host), so a same-user child without CAP_SYS_PTRACE cannot read /proc/<host>/environ, where the
 start-up copy stays, or the host's memory. Elsewhere only the image's separate policy uid protects the secret.
+`run --seeds-file` and `check --seeds-file` without --secret-env exit 2 unless --no-secret is given (the episode_id of a
+small seed can be brute-forced; the opt-out is recorded in meta.json and in the check report header).
 """
 
 from __future__ import annotations
@@ -46,6 +48,9 @@ from . import io as aio
 from .episode import EpisodeFormatError
 
 MAX_STEPS = 100  # env.DEFAULT_MAX_STEPS: the largest action budget
+NO_SECRET_MESSAGE = ("--seeds-file without --secret-env: anyone who knows the public records can recover a small seed "
+                     "from the episode_id; give --secret-env VAR (a host secret in that environment variable) or, for "
+                     "seeds that are public by design, --no-secret")
 MIN_SEED_BITS = 40  # seeds below 2**40 (bit length <= 40) are guessable from public records; see README limitations
 
 
@@ -128,6 +133,7 @@ def _run_meta(args, secret: str | None, min_bits: int | None, n_episodes: int, r
         "episodes": n_episodes,
         "secret_used": bool(secret),
         "min_seed_bits": min_bits,
+        "no_secret": bool(getattr(args, "no_secret", False) and args.seeds_file),  # the explicit opt-out was used
         "allow_same_user": bool(getattr(args, "same_user_accepted", False)),
         "refused_entries": [{"name": n, "reason": r} for n, r in refused],
         "command": cmd,
@@ -155,11 +161,23 @@ def _load_config(arg: str | None) -> dict:
     return cfg
 
 
+def _committed_episode_dirs() -> set:
+    """Resolved paths of the episodes listed in episodes/index.json (the open train/dev splits)."""
+    from . import protocol
+
+    root = protocol.PROJECT_ROOT / "episodes"
+    try:
+        entries = aio.read_json(root / "index.json")["episodes"]
+        return {(root / e["split"] / e["name"]).resolve() for e in entries if e["split"] in ("train", "dev")}
+    except (OSError, ValueError, KeyError, TypeError):
+        return set()
+
+
 def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
     """Custom module:Class policies are foreign code. Strict mode refuses to run them in this process. When they would
     run as the host's user on closed episodes (a seeds file or a host secret) the run is refused unless
-    --allow-same-user is given; next to an answer key on disk (an episode directory with grader/) one warning line
-    says that they can read it."""
+    --allow-same-user is given; so is a run next to an answer key on disk (an episode directory with grader/ outside
+    episodes/train and episodes/dev). With the flag one WARNING line says what the policy can read."""
     from . import protocol
     from .policies import is_external
 
@@ -171,7 +189,7 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
                          f"({custom[0]}): it would run in the host process; drop --in-process")
     if protocol.require_agent_user():
         return  # strict mode either switches user or refuses later
-    switch = aio.agent_identity() is not None and protocol._proc_listable()
+    switch = protocol._can_switch_user()
     if not args.in_process and switch:
         return  # the child runs as the separate policy user
     advice = ("drop --in-process" if switch  # this host can switch to the policy user once the policy leaves the process
@@ -185,13 +203,17 @@ def _custom_policy_guard(policies: list, args, answer_key_dirs=()) -> None:
               f"it can read the seeds file and any file that user can read", file=sys.stderr)
         args.same_user_accepted = True  # meta.json records the override only when it took effect
         return
-    open_splits = [(protocol.PROJECT_ROOT / "episodes" / s).resolve() for s in ("train", "dev")]  # public by design
-    keys = [str(d) for d in answer_key_dirs
-            if (Path(d) / "grader").exists() and not any(Path(d).resolve().is_relative_to(o) for o in open_splits)]
+    committed = _committed_episode_dirs()  # public by design: the committed train/dev episodes, not any new folder under them
+    keys = [str(d) for d in answer_key_dirs if (Path(d) / "grader").exists() and Path(d).resolve() not in committed]
     if keys:
-        print(f"WARNING: custom policy {custom[0]} runs as the host's user next to answer keys ({keys[0]}/grader"
-              f"{' and %d more' % (len(keys) - 1) if len(keys) > 1 else ''}): it can read them; for closed episodes "
-              f"use --seeds-file and {advice}", file=sys.stderr)
+        more = f" and {len(keys) - 1} more" if len(keys) > 1 else ""
+        if not getattr(args, "allow_same_user", False):
+            raise InputError(f"custom policy {custom[0]} would run as the host's user next to answer keys ({keys[0]}/grader"
+                             f"{more}): it can read them; {advice}, or pass --allow-same-user to accept that "
+                             f"(recorded in meta.json)")
+        print(f"WARNING: custom policy {custom[0]} runs as the host's user next to answer keys ({keys[0]}/grader{more}) "
+              f"(--allow-same-user): it can read them", file=sys.stderr)
+        args.same_user_accepted = True
 
 
 def _require_agent_user() -> None:
@@ -215,6 +237,8 @@ def cmd_check(args) -> int:
     for flag, value in (("--seeds-file", args.seeds_file), ("--secret-env", args.secret_env), ("--out", args.out)):
         if value is not None:
             argv += [flag, value]
+    if args.no_secret:
+        argv.append("--no-secret")
     if args.keep_runs:
         argv.append("--keep-runs")
     return main(argv)
@@ -268,6 +292,12 @@ def cmd_run(args) -> int:
 
     if args.secret_env and not args.seeds_file:
         raise InputError("--secret-env only applies with --seeds-file (the secret is used to generate the episodes)")
+    if args.no_secret and not args.seeds_file:
+        raise InputError("--no-secret only applies with --seeds-file")
+    if args.no_secret and args.secret_env:
+        raise InputError("--no-secret and --secret-env contradict each other; give one of them")
+    if args.seeds_file and not args.secret_env and not args.no_secret:
+        raise InputError(NO_SECRET_MESSAGE)
     episodes, episode_dirs, refused = [], [], []
     with _input(broad=True):
         for d in args.episodes or []:
@@ -469,6 +499,8 @@ def main(argv=None) -> int:
     ck = sub.add_parser("check", help="the single offline check; --seeds-file runs it on organizer episodes")
     ck.add_argument("--seeds-file", help='JSON {"split": "...", "episodes": [{"name", "seed", "config"}]}; sections C, D, E, F run on these episodes')
     ck.add_argument("--secret-env", help="name of an environment variable holding the host secret (with --seeds-file)")
+    ck.add_argument("--no-secret", action="store_true",
+                    help="with --seeds-file and no --secret-env: accept that small seeds can be recovered from the episode_id")
     ck.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
     ck.add_argument("--keep-runs", action="store_true", help="with --seeds-file: also write trajectories and grades (they contain the closed answer key)")
     ck.set_defaults(func=cmd_check)
@@ -487,6 +519,8 @@ def main(argv=None) -> int:
     r.add_argument("--episodes", nargs="*", help="episode directories or folders of them")
     r.add_argument("--seeds-file", help='JSON {"split": "...", "episodes": [{"seed": ..., "config": {...}}]}')
     r.add_argument("--secret-env")
+    r.add_argument("--no-secret", action="store_true",
+                   help="with --seeds-file and no --secret-env: accept that small seeds can be recovered from the episode_id (recorded in meta.json)")
     r.add_argument("--policies", default="random,recon,flag_all,oracle")
     r.add_argument("--mode", default="eval", choices=["eval", "train"])
     r.add_argument("--max-steps", type=int, default=100)
@@ -494,7 +528,7 @@ def main(argv=None) -> int:
     r.add_argument("--in-process", action="store_true", help="run agent policies in this process (open training only)")
     r.add_argument("--policy-path", help="extra import path for module:Class policies outside this repository")
     r.add_argument("--allow-same-user", action="store_true",
-                   help="with a seeds file or --secret-env: let a module:Class policy run as the host's user (recorded in meta.json)")
+                   help="let a module:Class policy run as the host's user on closed episodes (a seeds file, --secret-env) or next to an answer key (an --episodes directory with grader/ outside episodes/train and episodes/dev); recorded in meta.json")
     r.add_argument("--out", required=True)
     r.set_defaults(func=cmd_run)
     gr = sub.add_parser("grade")

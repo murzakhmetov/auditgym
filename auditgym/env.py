@@ -29,6 +29,7 @@ DEFAULT_MAX_STEPS = 100
 DEFAULT_TIME_LIMIT_S = 60.0
 ECHO_CHARS = 64
 RESET_KEYS = {"episode_dir", "episode", "generator", "transform"}
+MIN_SEED_BITS = 40  # a seed of at most this many bits can be recovered from the public episode_id (see README limitations)
 
 
 def _echo(value) -> str:
@@ -59,8 +60,12 @@ def _err(code: str, message: str) -> dict:
 
 
 class AuditEnv:
+    """allow_weak_seed: in eval mode, generating from a seed of at most MIN_SEED_BITS bits without a secret raises
+    ValueError unless this is True (the seed is public by design, as in tests and demos). Train mode is unchanged."""
+
     def __init__(self, mode: str = "train", max_steps: int = DEFAULT_MAX_STEPS,
-                 time_limit_s: float = DEFAULT_TIME_LIMIT_S, clock=time.monotonic, secret: str | None = None):
+                 time_limit_s: float = DEFAULT_TIME_LIMIT_S, clock=time.monotonic, secret: str | None = None,
+                 allow_weak_seed: bool = False):
         if mode not in MODES:
             raise ValueError(f"mode must be one of {MODES}")
         if not 1 <= int(max_steps) <= DEFAULT_MAX_STEPS:
@@ -70,6 +75,7 @@ class AuditEnv:
         self.time_limit_s = float(time_limit_s)
         self._clock = clock
         self._secret = secret
+        self._allow_weak_seed = bool(allow_weak_seed)
         self._episode: Episode | None = None
         self._grader: Grader | None = None
         self._index: dict = {}
@@ -109,6 +115,13 @@ class AuditEnv:
 
             if not isinstance(seed, int) or isinstance(seed, bool):
                 raise TypeError(f"seed must be an int, got {type(seed).__name__}")
+            if (self.mode == "eval" and not self._secret and not self._allow_weak_seed
+                    and abs(seed).bit_length() <= MIN_SEED_BITS):
+                raise ValueError(
+                    f"eval mode would generate an episode from a seed of {abs(seed).bit_length()} bits (at most "
+                    f"{MIN_SEED_BITS}) with no secret: such a seed can be recovered from the public episode_id and "
+                    f"the answer key computed. Give the env a secret (AuditEnv(secret=...)), use a seed of more than "
+                    f"{MIN_SEED_BITS} bits, or build it with allow_weak_seed=True when the seed is public by design")
             gen_cfg = _generator_config(config)
             episode = generate_episode(seed, gen_cfg, secret=self._secret).episode
         if config.get("transform"):

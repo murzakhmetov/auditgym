@@ -1170,7 +1170,7 @@ var RUB_CMDS = {
   F_contract: [['rc_1a', 'python -m auditgym check'], ['rc_1b', 'python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom']],
   E_leaks: [['rc_1a', 'python -m auditgym check'], ['rc_1b', 'python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom']],
   B_committed_episodes: [['rc_2a', 'python -m auditgym verify episodes/dev/d08_both_interacting_kzt'], ['rc_2b', 'python -m auditgym check']],
-  C_reward: [['rc_3a', 'python -m auditgym check --seeds-file examples/closed_seeds_example.json'], ['rc_3b', 'python -m auditgym run --episodes episodes/dev --policies random,recon,flag_all,oracle --out runs/dev']],
+  C_reward: [['rc_3a', 'python -m auditgym check --seeds-file examples/closed_seeds_example.json --no-secret'], ['rc_3b', 'python -m auditgym run --episodes episodes/dev --policies random,recon,flag_all,oracle --out runs/dev']],
   B_replay: [['rc_4a', 'python -m auditgym transform --in episodes/dev/d08_both_interacting_kzt --out runs/d08_paired --permute-seed 1 --remap-seed 2 --ts-repr utc'], ['rc_4b', 'python -m auditgym check'],
       ['rc_4c', 'docker run --rm --network none --cpus 2 --memory 4g auditgym']],
   A_unit_tests: [['rc_5a', 'python -m auditgym check'], ['rc_5b', 'python -m auditgym schemas']]

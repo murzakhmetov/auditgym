@@ -181,7 +181,7 @@ class CheckMainEntry(unittest.TestCase):
                   mock.patch.object(protocol, "AgentProcess", refuse),
                   mock.patch.object(check, "generate_episode") as gen,
                   redirect_stderr(err)):
-                rc = check.main(["--seeds-file", self._seeds(d), "--out", str(out)])
+                rc = check.main(["--seeds-file", self._seeds(d), "--no-secret", "--out", str(out)])
             self.assertEqual(rc, 2)
             lines = [ln for ln in err.getvalue().splitlines() if ln.strip()]
             self.assertEqual(len(lines), 1, lines)

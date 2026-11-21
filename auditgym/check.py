@@ -16,10 +16,11 @@ Sections (each a list of named pass/fail checks, see report.md):
   F. in-process contract checks of the environment (contract_battery)
 Exit code 0 only if every check passes (a SKIP does not fail it; counts read passed/applicable plus the skips). No network, GPU or paid API is used.
 
-Organizer seeds: `python -m auditgym.check --seeds-file FILE [--secret-env VAR] [--out DIR]`
+Organizer seeds: `python -m auditgym.check --seeds-file FILE (--secret-env VAR | --no-secret) [--out DIR]`
 runs C, D, E, F (and the replay of its own runs) on the episodes of a seeds file
 {"split": label, "episodes": [{"name", "seed", "config"}, ...]}. Output goes to
-runs/check_closed by default and never to runs/check.
+runs/check_closed by default and never to runs/check. A seeds file needs --secret-env, or --no-secret to accept
+that a small seed can be recovered from the episode_id.
 """
 
 from __future__ import annotations
@@ -150,6 +151,15 @@ def rejection_classes(gens: list) -> dict:
             else:
                 out["correctness"] += 1
     return out
+
+
+def resample_rate_check(classes: dict, n_episodes: int) -> tuple:
+    """The C_data check that sampling resamples stay rare: (label, ok). It counts only the rejections by exception
+    (SampleRetry or BooksError) and by a SAMPLING_CHECKS verify check; a rejection by a correctness check is counted
+    by correctness_rejection_check only."""
+    resampled = classes["exception"] + classes["sampling_check"]
+    label = f"sampling resamples (SampleRetry, BooksError or a sampling check) stay rare ({resampled} over {n_episodes} episodes)"
+    return label, resampled <= n_episodes // 2
 
 
 def correctness_rejection_check(rejected: int, classes: dict) -> tuple:
@@ -341,12 +351,12 @@ def section_hidden_like(rep: Report, entries: list, label: str, secret: str | No
         eps.append((label, e["name"], gen.episode))
         gens.append(gen)
     rejected = sum(1 for _s, _n, ep in eps for _ in ep.provenance.get("rejected_attempts", []))
-    if closed and len(eps) < 4:
-        rep.skip("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)",
-                 "too few episodes for a rate; measurement only")
-    else:
-        rep.add("C_data", f"resampled attempts stay rare ({rejected} over {len(eps)} episodes)", rejected <= len(eps) // 2)
     classes = rejection_classes(gens)
+    rate_label, rare = resample_rate_check(classes, len(eps))  # verification failures are counted by the next check only
+    if closed and len(eps) < 4:
+        rep.skip("C_data", rate_label, "too few episodes for a rate; measurement only")
+    else:
+        rep.add("C_data", rate_label, rare)
     rep.add("C_data", *correctness_rejection_check(rejected, classes))
     gen_time = time.monotonic() - t0
     rep.seconds["C_data"] = gen_time
@@ -628,6 +638,8 @@ def _main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m auditgym.check", description="Single offline check (tests, data, rewards, reproducibility, contract, leaks).")
     ap.add_argument("--seeds-file", help="run sections C, D, E, F on the episodes of this JSON file instead of the public master string")
     ap.add_argument("--secret-env", help="name of the environment variable that holds the host secret for the seeds file")
+    ap.add_argument("--no-secret", action="store_true",
+                    help="with --seeds-file and no --secret-env: accept that small seeds can be recovered from the episode_id")
     ap.add_argument("--out", help="output directory (default runs/check, or runs/check_closed with --seeds-file)")
     ap.add_argument("--keep-runs", action="store_true",
                     help="with --seeds-file: also write trajectories.jsonl and grades.jsonl (they contain the answer key of the closed set)")
@@ -646,6 +658,17 @@ def _main(argv=None) -> int:
         return 2
     if args.secret_env and not closed:
         print("error: --secret-env needs --seeds-file", file=sys.stderr)
+        return 2
+    if args.no_secret and not closed:
+        print("error: --no-secret needs --seeds-file", file=sys.stderr)
+        return 2
+    if args.no_secret and args.secret_env:
+        print("error: --no-secret and --secret-env contradict each other; give one of them", file=sys.stderr)
+        return 2
+    if closed and not args.secret_env and not args.no_secret:
+        print("error: --seeds-file without --secret-env: anyone who knows the public records can recover a small seed "
+              "from the episode_id; give --secret-env VAR (a host secret in that environment variable) or, for seeds "
+              "that are public by design, --no-secret", file=sys.stderr)
         return 2
     out_dir = Path(args.out) if args.out else (CLOSED_OUT if closed else DEFAULT_OUT)
     if closed and out_dir.resolve() == DEFAULT_OUT.resolve():
@@ -674,9 +697,9 @@ def _main(argv=None) -> int:
         if len(refused) == len(entries):
             print(f"error: no entry of the seeds file can be generated; {refused[0][0]}: {refused[0][1]}", file=sys.stderr)
             return 2
-        source = (f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no'})" if not refused else
+        source = (f"seeds file {label} ({len(entries)} episodes, secret: {'yes' if secret else 'no, --no-secret'})" if not refused else
                   f"seeds file {label} ({len(entries)} entries: {len(entries) - len(refused)} generated, "
-                  f"{len(refused)} refused, secret: {'yes' if secret else 'no'})")
+                  f"{len(refused)} refused, secret: {'yes' if secret else 'no, --no-secret'})")
         entries = [e for e in entries if e["name"] in pregen]
         bits = min(abs(e["seed"]).bit_length() for e in entries)  # generated entries only
         if secret is None and bits <= MIN_SEED_BITS:
@@ -710,6 +733,8 @@ def _main(argv=None) -> int:
         rep.seconds["B_replay"] = time.monotonic() - t1
     elapsed = time.monotonic() - t0
     names = [n for _s, n, _ep in eps] + [n for n, _why in refused]
+    if closed:  # the B_replay labels "<split label>/<policy>" are one kind, as "train/<policy>" and "dev/<policy>" are
+        names += [f"{label}/{p}" for p in REPLAY_POLICIES]
     _write_report(out_dir, rep, summary, traj, grades, elapsed, source, label, len(eps), keep_runs=(not closed) or args.keep_runs,
                   names=names)
     print(summary_line(rep, names), flush=True)

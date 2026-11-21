@@ -1,12 +1,12 @@
 # Mutation smoke
 
-**122 of 122 listed mutants killed** (0 survived, 0 equivalent, not counted).
+**126 of 126 listed mutants killed** (0 survived, 0 equivalent, not counted).
 
 Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-78 of 122 are killed by the test modules listed for them. The other 44 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
+82 of 126 are killed by the test modules listed for them. The other 44 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
 
-Each mutant is one hand-written change to the core (`auditgym/agent.py`, `auditgym/check.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
+Each mutant is one hand-written change to the core (`auditgym/__main__.py`, `auditgym/agent.py`, `auditgym/check.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
 Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 
@@ -134,3 +134,7 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 120 | `check-shift-direction-order` | `auditgym/check.py` | D_paired tries the -28 shift before +28 | killed | listed tests | test_transform_shift |
 | 121 | `shift-period-lower` | `auditgym/transform.py` | shift: a period landing exactly on 2000 is refused | killed | listed tests | test_transform_shift |
 | 122 | `policy-path-append` | `auditgym/agent.py` | Windows child: the policy directory goes last on sys.path, not after the staged code | killed | listed tests | test_windows_hardening, test_redteam, test_isolation |
+| 123 | `cli-keys-refusal` | `auditgym/__main__.py` | a custom policy next to an answer key outside the open splits is neither refused nor warned about | killed | listed tests | test_cli |
+| 124 | `protocol-cap-setuid` | `auditgym/protocol.py` | a root without CAP_SETUID counts as able to switch to the policy user | killed | listed tests | test_cli |
+| 125 | `check-no-secret-refusal` | `auditgym/check.py` | check --seeds-file without a secret and without --no-secret runs | killed | listed tests | test_cli |
+| 126 | `env-weak-seed-bound` | `auditgym/env.py` | eval mode accepts a seed of exactly 40 bits without a secret | killed | listed tests | test_env, test_contract_battery |

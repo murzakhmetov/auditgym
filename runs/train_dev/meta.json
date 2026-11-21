@@ -21,6 +21,7 @@
   "episodes": 20,
   "secret_used": false,
   "min_seed_bits": null,
+  "no_secret": false,
   "allow_same_user": false,
   "refused_entries": [],
   "command": [

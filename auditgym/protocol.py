@@ -564,6 +564,31 @@ def _proc_listable() -> bool:
     return True
 
 
+_CAPS_TO_SWITCH = {"CAP_CHOWN": 0, "CAP_SETGID": 6, "CAP_SETUID": 7}
+
+
+def _caps_allow_switch() -> bool:
+    """True when this process holds CAP_CHOWN, CAP_SETGID and CAP_SETUID (CapEff in /proc/self/status). Root under
+    docker --cap-drop ALL has none of them: it cannot chown the staging directory or switch to the policy user."""
+    if os.name != "posix":
+        return False
+    try:
+        with open("/proc/self/status", encoding="ascii", errors="replace") as fh:
+            for line in fh:
+                if line.startswith("CapEff:"):
+                    eff = int(line.split()[1], 16)
+                    return all(eff >> bit & 1 for bit in _CAPS_TO_SWITCH.values())
+    except (OSError, ValueError, IndexError):
+        return False
+    return False
+
+
+def _can_switch_user() -> bool:
+    """True when a policy child can run as the separate agent user on this host: an account to switch to, a listable
+    /proc, and the capabilities the switch needs."""
+    return aio.agent_identity() is not None and _proc_listable() and _caps_allow_switch()
+
+
 def _no_switch_reason() -> str:
     """Why aio.agent_identity() found no account to switch to."""
     if not os.environ.get("AUDITGYM_AGENT_USER", "").strip():
@@ -619,6 +644,10 @@ class AgentProcess:
 
     def __init__(self, policy: str, policy_seed: int = 0, policy_path: str | None = None):
         harden_host()
+        from .policies import is_external
+
+        if not is_external(policy):
+            policy_path = None  # a built-in policy never gets the directory: a file there (random.py) would shadow the standard library
         self._tmp = tempfile.TemporaryDirectory(prefix="auditgym_agent_", ignore_cleanup_errors=True)
         self.write_timeout_s = WRITE_TIMEOUT_S
         self.write_timed_out = False

@@ -7,6 +7,10 @@ in the child process and sees observations only. Run it with:
     python -m auditgym run --episodes episodes/dev --policies examples.custom_policy:FirstPagePolicy --out runs/custom
 
 A module outside this repository can be loaded with --policy-path DIR.
+
+On an episode directory that holds grader/ outside episodes/train and episodes/dev, or on a seeds file or
+--secret-env, the policy runs as a separate user only inside the official image. Where it would run as the host's
+user, `run` refuses (exit 2) unless you add --allow-same-user.
 """
 
 from __future__ import annotations

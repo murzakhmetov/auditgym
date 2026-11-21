@@ -166,7 +166,7 @@ class BadInput(unittest.TestCase):
             for label, spec in cases.items():
                 f.write_text(json.dumps(spec), encoding="utf-8")
                 with self.subTest(label):
-                    self.assert_clean_error(cli("run", "--seeds-file", str(f), "--policies", "flag_all", "--out", str(Path(d) / "o")))
+                    self.assert_clean_error(cli("run", "--seeds-file", str(f), "--no-secret", "--policies", "flag_all", "--out", str(Path(d) / "o")))
 
     def test_secret_env_needs_seeds_file(self):
         with tempfile.TemporaryDirectory() as d:
@@ -250,7 +250,7 @@ class StrictAgentUser(unittest.TestCase):
 
 
 class CustomPolicyInProcess(unittest.TestCase):
-    """--policy-path reaches the in-process runner; a custom policy next to a seeds file or a secret is warned about.
+    """--policy-path reaches the in-process runner; a custom policy next to a seeds file, a secret or an answer key is refused unless --allow-same-user.
     These are the non-strict behaviours: strict mode refuses a custom policy in process (StrictAgentUser), and CI runs
     the whole suite once with AUDITGYM_REQUIRE_AGENT_USER=1 set, so every call here switches it off."""
 
@@ -287,9 +287,7 @@ class CustomPolicyInProcess(unittest.TestCase):
             self.assertEqual(len(lines), 1, err)
             # the advice names what works on this host: where the child can switch to the separate policy user (the
             # official image), dropping --in-process; elsewhere, running it in the official image
-            from auditgym import io as aio
-
-            switch = aio.agent_identity() is not None and protocol._proc_listable()
+            switch = protocol._can_switch_user()
             advice = "drop --in-process" if switch else "official image"
             for word in ("error: custom policy", "host's user", "closed episodes", advice, "--allow-same-user"):
                 self.assertIn(word, lines[0])
@@ -306,17 +304,105 @@ class CustomPolicyInProcess(unittest.TestCase):
             meta = json.loads((Path(d) / "o" / "meta.json").read_text(encoding="utf-8"))
             self.assertIs(meta["allow_same_user"], True)
 
-    def test_warning_next_to_answer_keys_outside_the_open_splits(self):
+    def test_next_to_answer_keys_outside_the_open_splits_the_run_is_refused_unless_allowed(self):
         with tempfile.TemporaryDirectory() as d:
             closed = Path(d) / "closed_ep"
             shutil.copytree(self.EP, closed)
             rc, _o, err = self.run_custom(d, "--episodes", str(closed))
+            self.assertEqual(rc, 2, err)
+            lines = [ln for ln in err.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, err)
+            for word in ("error: custom policy", "host's user", "answer keys", "grader", "--allow-same-user"):
+                self.assertIn(word, lines[0])
+            self.assertFalse((Path(d) / "o").exists(), "a refused run writes nothing")
+            rc, _o, err = self.run_custom(d, "--episodes", str(closed), "--allow-same-user")
             self.assertEqual(rc, 0, err)
             lines = [ln for ln in err.splitlines() if "custom policy" in ln]
             self.assertEqual(len(lines), 1, err)
             self.assertTrue(lines[0].startswith("WARNING:"), lines[0])
-            for word in ("host's user", "answer keys", "grader", "--seeds-file"):
+            for word in ("host's user", "answer keys", "grader", "--allow-same-user"):
                 self.assertIn(word, lines[0])
+            meta = json.loads((Path(d) / "o" / "meta.json").read_text(encoding="utf-8"))
+            self.assertIs(meta["allow_same_user"], True)
+
+    def test_jurors_probe_a_policy_that_globs_for_truth_json(self):
+        """The jurors' probe: a custom policy on a freshly generated episode (outside the open splits) that globs for
+        truth.json and submits from it. Refused before it starts; with --allow-same-user it scores a perfect reward,
+        which is why the override is recorded."""
+        probe = ["import glob, json, os",
+                 "class Thief:",
+                 "    def __init__(self, seed=0):",
+                 "        self.truth = None",
+                 "    def act(self, observation, reward=0.0, info=None):",
+                 "        here = os.path.dirname(os.path.abspath(__file__))",
+                 "        path = glob.glob(os.path.join(here, '**', 'truth.json'), recursive=True)[0]",
+                 "        truth = json.load(open(path, encoding='utf-8'))",
+                 "        findings = [{'type': t['type'], 'affected_ids': t['affected_ids'],",
+                 "                     'claimed_amount_minor': t['expected_amount_minor'], 'currency': t['currency'],",
+                 "                     'evidence_ids': t['evidence_sets'][0], 'explanation': ''} for t in truth['issues']]",
+                 "        return {'action': 'submit', 'findings': {'episode_id': truth['episode_id'], 'findings': findings}}"]
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, "probe_thief_mod.py").write_text("\n".join(probe) + "\n", encoding="utf-8")
+            ep = Path(d) / "closed" / "e1"
+            rc, _o, err = cli("generate", "--seed", "987654321987", "--config", str(ROOT / "examples" / "config_mixed.json"),
+                              "--out", str(ep))
+            self.assertEqual(rc, 0, err)
+            args = ("run", "--episodes", str(Path(d) / "closed"), "--policies", "probe_thief_mod:Thief", "--policy-path", d,
+                    "--in-process", "--out", str(Path(d) / "o"))
+            rc, _o, err = cli(*args, env_extra=self.NONSTRICT)
+            self.assertEqual(rc, 2, err)
+            self.assertEqual(len([ln for ln in err.splitlines() if ln.strip()]), 1, err)
+            self.assertTrue(err.startswith("error:"), err)
+            self.assertFalse((Path(d) / "o").exists())
+            rc, _o, err = cli(*args, "--allow-same-user", env_extra=self.NONSTRICT)
+            self.assertEqual(rc, 0, err)
+            meta = json.loads((Path(d) / "o" / "meta.json").read_text(encoding="utf-8"))
+            self.assertIs(meta["allow_same_user"], True)
+            grades = [json.loads(ln) for ln in (Path(d) / "o" / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(grades), 1)
+            self.assertGreater(grades[0]["n_issues"], 0)
+            self.assertEqual((grades[0]["tp"], grades[0]["fp"], grades[0]["fn"]), (grades[0]["n_issues"], 0, 0),
+                             "the override is what lets the policy read the key")
+
+    def test_switching_needs_the_capabilities_not_only_an_account_and_proc(self):
+        status = "Name:\tx\nCapEff:\t{:016x}\n"
+        need = (1 << 0) | (1 << 6) | (1 << 7)  # CAP_CHOWN, CAP_SETGID, CAP_SETUID
+        cases = ((need, True), (0, False), (need & ~(1 << 7), False), (need & ~(1 << 0), False),
+                 (need & ~(1 << 6), False), ((1 << 41) | need, True))
+        for eff, expected in cases:
+            with self.subTest(eff=hex(eff)), mock.patch.object(protocol.os, "name", "posix"), \
+                    mock.patch("builtins.open", mock.mock_open(read_data=status.format(eff))):
+                self.assertIs(protocol._caps_allow_switch(), expected)
+        with mock.patch.object(protocol.os, "name", "posix"), mock.patch("builtins.open", side_effect=OSError):
+            self.assertIs(protocol._caps_allow_switch(), False)
+        with mock.patch.object(protocol.os, "name", "nt"):
+            self.assertIs(protocol._caps_allow_switch(), False)
+        ident = ("agent", 10001, 10001)
+        for caps, expected in ((True, True), (False, False)):
+            with mock.patch.object(protocol.aio, "agent_identity", return_value=ident), \
+                    mock.patch.object(protocol, "_proc_listable", return_value=True), \
+                    mock.patch.object(protocol, "_caps_allow_switch", return_value=caps):
+                self.assertIs(protocol._can_switch_user(), expected)
+        with mock.patch.object(protocol.aio, "agent_identity", return_value=None), \
+                mock.patch.object(protocol, "_proc_listable", return_value=True), \
+                mock.patch.object(protocol, "_caps_allow_switch", return_value=True):
+            self.assertIs(protocol._can_switch_user(), False)
+
+    def test_a_cap_dropped_root_does_not_skip_the_guard(self):
+        """An account and a listable /proc but no CAP_SETUID: the child would fall back to the host's user, so the
+        guard must not return early, and its advice names the official image."""
+        with tempfile.TemporaryDirectory() as d:
+            closed = Path(d) / "closed_ep"
+            shutil.copytree(self.EP, closed)
+            with mock.patch.object(protocol.aio, "agent_identity", return_value=("agent", 10001, 10001)), \
+                    mock.patch.object(protocol, "_proc_listable", return_value=True), \
+                    mock.patch.object(protocol, "_caps_allow_switch", return_value=False):
+                rc, _o, err = cli("run", "--episodes", str(closed), "--policies",
+                                  "examples.custom_policy:FirstPagePolicy", "--out", str(Path(d) / "o"),
+                                  env_extra=self.NONSTRICT)
+            self.assertEqual(rc, 2, err)
+            self.assertIn("official image", err)
+            self.assertFalse((Path(d) / "o").exists())
 
     def test_only_the_committed_open_splits_are_exempt(self):
         from auditgym import protocol
@@ -325,13 +411,31 @@ class CustomPolicyInProcess(unittest.TestCase):
             root = Path(d)
             for split in ("train", "hidden"):
                 shutil.copytree(self.EP, root / "episodes" / split / "ep")
+            shutil.copytree(self.EP, root / "episodes" / "train" / "new_ep")  # under an open split, but not committed
+            (root / "episodes" / "index.json").write_text(
+                json.dumps({"episodes": [{"split": "train", "name": "ep"}]}), encoding="utf-8")
             with mock.patch.object(protocol, "PROJECT_ROOT", root):
+                rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "train" / "new_ep"))
+                self.assertEqual(rc, 2, err)
+                self.assertIn("answer keys", err)  # a new folder under episodes/train is not a committed episode
                 rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "train" / "ep"))
                 self.assertEqual(rc, 0, err)
                 self.assertNotIn("answer keys", err)  # an open split: public by design
                 rc, _o, err = self.run_custom(d, "--episodes", str(root / "episodes" / "hidden" / "ep"))
-                self.assertEqual(rc, 0, err)
-                self.assertIn("answer keys", err)  # a closed folder under episodes/ is warned about
+                self.assertEqual(rc, 2, err)
+                self.assertIn("answer keys", err)  # a closed folder under episodes/ is refused
+
+    def test_a_built_in_policy_never_sees_the_policy_path(self):
+        """A file named like a standard-library module in --policy-path must not run for a built-in policy."""
+        with tempfile.TemporaryDirectory() as d:
+            marker = str(Path(d) / "marker")
+            Path(d, "random.py").write_text(f"open({marker!r}, 'w').write('ran')\nraise SystemExit(0)\n", encoding="utf-8")
+            for extra in ((), ("--in-process",)):
+                with self.subTest(extra=extra):
+                    rc, _o, err = cli("run", "--episodes", self.EP, "--policies", "random", "--policy-path", d, *extra,
+                                      "--out", str(Path(d) / "o"), env_extra=self.NONSTRICT)
+                    self.assertEqual(rc, 0, err)
+                    self.assertFalse((Path(d) / "marker").exists(), "the shadowing module ran")
 
     def test_no_warning_for_open_runs_and_built_in_policies(self):
         seeds = str(ROOT / "examples" / "closed_seeds_example.json")
@@ -339,8 +443,8 @@ class CustomPolicyInProcess(unittest.TestCase):
             rc, _o, err = self.run_custom(d, "--episodes", self.EP)
             self.assertEqual(rc, 0, err)
             self.assertNotIn("custom policy", err)
-            rc, _o, err = cli("run", "--seeds-file", seeds, "--policies", "flag_all", "--in-process", "--out",
-                              str(Path(d) / "o2"), env_extra=self.NONSTRICT)
+            rc, _o, err = cli("run", "--seeds-file", seeds, "--no-secret", "--policies", "flag_all", "--in-process",
+                              "--out", str(Path(d) / "o2"), env_extra=self.NONSTRICT)
             self.assertEqual(rc, 0, err)
             self.assertNotIn("custom policy", err)
 
@@ -357,11 +461,12 @@ class ClosedRun(unittest.TestCase):
 
     def test_small_seed_warns_and_runs(self):
         with tempfile.TemporaryDirectory() as d:
-            (rc, _o, err), out = self.run_seeds(d, [7])
+            (rc, _o, err), out = self.run_seeds(d, [7], None, "--no-secret")
             self.assertEqual(rc, 0, err)
             self.assertIn("WARNING", err)
             meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
             self.assertIs(meta["secret_used"], False)
+            self.assertIs(meta["no_secret"], True)  # the opt-out is recorded
             self.assertEqual(meta["min_seed_bits"], 3)
             for key in ("auditgym_version", "generator_version", "config_version", "schema_version", "grade_version",
                         "python", "platform", "mode", "isolated", "policy_seed", "max_steps", "command"):
@@ -369,6 +474,50 @@ class ClosedRun(unittest.TestCase):
             first = json.loads((out / "trajectories.jsonl").read_text(encoding="utf-8").splitlines()[0])
             self.assertEqual(sorted(first), sorted(["run_id", "split", "policy", "episode_id", "step", "action",
                                                     "observation", "reward", "terminated", "truncated"]))
+
+    def test_seeds_file_without_a_secret_is_refused_unless_no_secret_is_given(self):
+        """Juror probe: a 13-bit seed in a closed run is recoverable from the episode_id, so the run needs a secret
+        or an explicit opt-out; run and check both refuse with one error line and write nothing."""
+        with tempfile.TemporaryDirectory() as d:
+            (rc, _o, err), out = self.run_seeds(d, [7])
+            self.assertEqual(rc, 2, err)
+            lines = [ln for ln in err.splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 1, err)
+            self.assertTrue(lines[0].startswith("error:"), lines[0])
+            for word in ("--secret-env", "--no-secret", "episode_id"):
+                self.assertIn(word, lines[0])
+            self.assertFalse(out.exists())
+            (rc, _o, err), out = self.run_seeds(d, [7], {"AUDITGYM_TEST_SECRET": "x"}, "--no-secret", "--secret-env",
+                                                "AUDITGYM_TEST_SECRET")
+            self.assertEqual(rc, 2, err)
+            self.assertIn("contradict", err)
+            (rc, _o, err), out = self.run_seeds(d, [6602239917354212077], {"AUDITGYM_TEST_SECRET": "x"}, "--secret-env",
+                                                "AUDITGYM_TEST_SECRET")
+            self.assertEqual(rc, 0, err)
+            self.assertIs(json.loads((out / "meta.json").read_text(encoding="utf-8"))["no_secret"], False)
+            res = cli("run", "--episodes", str(ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"), "--policies",
+                      "flag_all", "--in-process", "--no-secret", "--out", str(Path(d) / "o3"))
+            self.assertEqual(res[0], 2, res[2])
+            self.assertIn("--seeds-file", res[2])
+        from auditgym import check as check_mod
+
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "s.json"
+            f.write_text(json.dumps({"split": "t", "episodes": [{"name": "e", "seed": 7, "config": {"size": "small"}}]}),
+                         encoding="utf-8")
+            for extra, word in (([], "--no-secret"), (["--no-secret", "--secret-env", "X"], "contradict")):
+                e = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(e):
+                    rc = check_mod.main(["--seeds-file", str(f), "--out", str(Path(d) / "o"), *extra])
+                lines = [ln for ln in e.getvalue().splitlines() if ln.strip()]
+                self.assertEqual((rc, len(lines)), (2, 1), e.getvalue())
+                self.assertIn(word, lines[0])
+                self.assertFalse((Path(d) / "o").exists())
+            e = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(e):
+                rc = check_mod.main(["--no-secret", "--out", str(Path(d) / "o")])
+            self.assertEqual(rc, 2)
+            self.assertIn("--no-secret needs --seeds-file", e.getvalue())
 
     def test_secret_and_large_seed_no_warning_and_secret_not_recorded(self):
         secret = "s3cret-value-for-test-9f2c"
@@ -396,14 +545,14 @@ class ClosedRun(unittest.TestCase):
     def test_run_skips_a_refused_entry_and_records_it(self):
         with tempfile.TemporaryDirectory() as d:
             out = Path(d) / "out"
-            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--policies",
+            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--no-secret", "--policies",
                               "flag_all", "--in-process", "--out", str(out))
             self.assertEqual(rc, 0, err)
             self.assertIn("WARNING: entry c_refused refused, ConfigError: boundary_fx_payment", err)
             meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
             self.assertEqual(meta["episodes"], 1)
             self.assertEqual([r["name"] for r in meta["refused_entries"]], ["c_refused"])
-            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--policies", "flag_all",
+            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--no-secret", "--policies", "flag_all",
                               "--in-process", "--out", str(Path(d) / "out2"))
             self.assertEqual(rc, 2, err)
             self.assertIn("error: no entry of the seeds file can be generated; c_refused: ConfigError", err)
@@ -415,17 +564,17 @@ class ClosedRun(unittest.TestCase):
             out = Path(d) / "out"
             o, e = io.StringIO(), io.StringIO()
             with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
-                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--out", str(out)])
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE, self.FEASIBLE]), "--no-secret", "--out", str(out)])
             self.assertEqual(rc, 0, o.getvalue()[-1500:] + e.getvalue())
             text = o.getvalue()
-            self.assertIn("(2 entries: 1 generated, 1 refused, secret: no)", text)
+            self.assertIn("(2 entries: 1 generated, 1 refused, secret: no, --no-secret)", text)
             self.assertIn("[SKIP] c_refused: generated from its seed and config - refused, ConfigError: boundary_fx_payment", text)
             self.assertIn("C_data", [ln for ln in text.splitlines() if ln.startswith("summary:")][0])
             self.assertTrue((out / "report.md").is_file())
             self.assertIn("1 refused", (out / "report.md").read_text(encoding="utf-8"))
             o, e = io.StringIO(), io.StringIO()
             with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
-                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--out", str(Path(d) / "o2")])
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.INFEASIBLE]), "--no-secret", "--out", str(Path(d) / "o2")])
             self.assertEqual(rc, 2)
             lines = [ln for ln in e.getvalue().splitlines() if ln.strip()]
             self.assertEqual(len(lines), 1, lines)
@@ -437,7 +586,7 @@ class ClosedRun(unittest.TestCase):
         def kinds(entries, d, tag):
             o, e = io.StringIO(), io.StringIO()
             with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
-                rc = check_mod.main(["--seeds-file", self.seeds_file(d, entries), "--out", str(Path(d) / tag)])
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, entries), "--no-secret", "--out", str(Path(d) / tag)])
             self.assertEqual(rc, 0, o.getvalue()[-800:] + e.getvalue())
             line = [ln for ln in o.getvalue().splitlines() if ln.startswith("summary:")][0]
             return line.rsplit("of ", 1)[1], e.getvalue()
@@ -449,10 +598,31 @@ class ClosedRun(unittest.TestCase):
             self.assertEqual(one, two)  # the coverage count does not grow with the number of refused entries
             self.assertNotIn("small seeds", err)  # only generated entries count for the seed warning
 
+    def test_closed_run_kinds_do_not_count_the_split_label(self):
+        """The B_replay checks of a closed run are labelled <split label>/<policy>; like train/<policy> and
+        dev/<policy> in the full check they are one kind, not one per policy."""
+        from auditgym import check as check_mod
+
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "out"
+            o, e = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(o), contextlib.redirect_stderr(e):
+                rc = check_mod.main(["--seeds-file", self.seeds_file(d, [self.FEASIBLE]), "--no-secret", "--out", str(out)])
+            self.assertEqual(rc, 0, o.getvalue()[-800:] + e.getvalue())
+            line = [ln for ln in o.getvalue().splitlines() if ln.startswith("summary:")][0]
+            printed = int(line.rsplit("of ", 1)[1].split(" ")[0])
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            checks = [c["check"] for cs in report["sections"].values() for c in cs]
+            replay = [c["check"] for c in report["sections"]["B_replay"]]
+            self.assertEqual(len(replay), len(check_mod.REPLAY_POLICIES))
+            self.assertTrue(all(c.startswith("t/") for c in replay), replay)  # the seeds file's split label is "t"
+            without_label = len({check_mod.check_kind(c, ["c_ok"]) for c in checks})
+            self.assertEqual(without_label - printed, len(check_mod.REPLAY_POLICIES) - 1)
+
     def test_allow_same_user_is_recorded_only_when_it_took_effect(self):
         with tempfile.TemporaryDirectory() as d:
             out = Path(d) / "out"
-            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.FEASIBLE]), "--policies", "flag_all",
+            rc, _o, err = cli("run", "--seeds-file", self.seeds_file(d, [self.FEASIBLE]), "--no-secret", "--policies", "flag_all",
                               "--in-process", "--allow-same-user", "--out", str(out))
             self.assertEqual(rc, 0, err)
             self.assertIs(json.loads((out / "meta.json").read_text(encoding="utf-8"))["allow_same_user"], False)

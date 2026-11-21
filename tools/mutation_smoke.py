@@ -65,6 +65,7 @@ SHIFT = ("tests.test_transform_shift",)
 WINHARD = ("tests.test_windows_hardening", "tests.test_redteam", "tests.test_isolation")
 PROTO = ("tests.test_isolation", "tests.test_redteam", "tests.test_contract_fuzz")
 GEN = ("tests.test_generator",)
+CLI = ("tests.test_cli",)
 
 
 def M(id, file, old, new, modules, breaks, equivalent="", only_on=""):
@@ -349,6 +350,15 @@ MUTANTS = [
     M("policy-path-append", "auditgym/agent.py", "at = sys.path.index(staged) + 1 if staged in sys.path else len(sys.path)",
       "at = len(sys.path)", WINHARD, "Windows child: the policy directory goes last on sys.path, not after the staged code",
       only_on="nt"),
+    # ---------------------------------------------------------------- round 7e: same-user refusal, no-secret opt-out, weak seeds
+    M("cli-keys-refusal", "auditgym/__main__.py", "    if keys:", "    if False:", CLI,
+      "a custom policy next to an answer key outside the open splits is neither refused nor warned about"),
+    M("protocol-cap-setuid", "auditgym/protocol.py", '{"CAP_CHOWN": 0, "CAP_SETGID": 6, "CAP_SETUID": 7}',
+      '{"CAP_CHOWN": 0, "CAP_SETGID": 6}', CLI, "a root without CAP_SETUID counts as able to switch to the policy user"),
+    M("check-no-secret-refusal", "auditgym/check.py", "if closed and not args.secret_env and not args.no_secret:",
+      "if False:", CLI, "check --seeds-file without a secret and without --no-secret runs"),
+    M("env-weak-seed-bound", "auditgym/env.py", "and abs(seed).bit_length() <= MIN_SEED_BITS):",
+      "and abs(seed).bit_length() < MIN_SEED_BITS):", ENV, "eval mode accepts a seed of exactly 40 bits without a secret"),
 ]
 
 
