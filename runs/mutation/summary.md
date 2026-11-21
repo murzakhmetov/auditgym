@@ -1,10 +1,10 @@
 # Mutation smoke
 
-**195 of 196 listed mutants killed** (1 survived, 0 equivalent, not counted).
+**196 of 196 listed mutants killed** (0 survived, 0 equivalent, not counted).
 
 Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-147 of 196 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
+148 of 196 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
 
 Each mutant is one hand-written change to the core (`auditgym/__main__.py`, `auditgym/agent.py`, `auditgym/auditor.py`, `auditgym/books.py`, `auditgym/check.py`, `auditgym/check_battery.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/history.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/policy.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/tells.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
@@ -173,7 +173,7 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 159 | `inject-unallocated-prior-flags-ignored` | `auditgym/inject.py` | unallocated_payment: the opening items an error brings are not the ones taken out of the prior invoices, so their number grows with the errors | killed | listed tests | test_credit_receipts |
 | 160 | `config-prior-hits-not-deducted` | `auditgym/config.py` | config: the opening items of the unallocated receipts come on top of the prior invoices, so the opening items grow with the errors | killed | listed tests | test_credit_receipts |
 | 161 | `history-split-remainder-none` | `auditgym/history.py` | distractors: no invoice has two receipts that leave a rest open, so such an invoice is always a part-paid unallocated_payment error | killed | listed tests | test_credit_receipts |
-| 162 | `history-paid-slots-ignore-load` | `auditgym/history.py` | history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors | survived | - | test_credit_receipts |
+| 162 | `history-paid-slots-ignore-load` | `auditgym/history.py` | history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors | killed | listed tests | test_credit_receipts |
 | 163 | `history-credit-dates-business-days` | `auditgym/history.py` | distractors: every 2900 credit that is not prepaid sits on an invoice of the first days of the period, so a later invoice is an error | killed | listed tests | test_credit_receipts |
 | 164 | `history-credit-second-share-fixed` | `auditgym/history.py` | distractors: the share of credits that follow an earlier receipt is the same in every episode | killed | listed tests | test_credit_receipts |
 | 165 | `config-prepaid-always-drawn` | `auditgym/config.py` | config: every episode has prepaid receipts, so an episode without a receipt dated before its invoice is one with unallocated errors | killed | listed tests | test_credit_receipts |
@@ -208,7 +208,3 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 194 | `inject-utc-wall-clock-dst` | `auditgym/inject.py` | a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026) | killed | listed tests | test_generator |
 | 195 | `protocol-host-only-info` | `auditgym/protocol.py` | the policy child is sent info['weak_seed'] about its own episode | killed | listed tests | test_env, test_contract_battery |
 | 196 | `verify-key-tolerance` | `auditgym/verify.py` | verify accepts a key whose tolerance_minor lets any amount match | killed | listed tests | test_verify |
-
-## Survivors
-
-- `history-paid-slots-ignore-load`: history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors

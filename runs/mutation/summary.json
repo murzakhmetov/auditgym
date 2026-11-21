@@ -1,22 +1,22 @@
 {
   "listed": 196,
   "counted": 196,
-  "killed": 195,
-  "survived": 1,
+  "killed": 196,
+  "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
   "recorded_on": "Windows, Python 3.11",
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 147,
+  "killed_by_existing": 148,
   "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
     "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
     "tests.test_cli": "8fe82f20ab433c901b73818fbdb2e6357f6fb52f7fa78cf58571e899e8b23b12",
     "tests.test_contract_battery": "1788930fb9c9d96984d38799d58cf6f640c298b3dfd9c693acbfddfa2882ec7d",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
-    "tests.test_credit_receipts": "193f4e66f0fa5c7fa613f4e452b37fa6de3d4476bb4d8161a02c6a2ad1e20759",
+    "tests.test_credit_receipts": "8533b59160d590f0a179cca15aab01c6ca293ee03187152e130da1fcd6bf32a4",
     "tests.test_env": "972531a313ee41de84a411a72c1f8c661f890c74fe6e7787361c832f35187d59",
     "tests.test_generator": "685fbefebe1a606673b64218d769de73f8f6e5c23194a9cbae1e7edf18e8b668",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
@@ -1995,8 +1995,8 @@
       "id": "history-paid-slots-ignore-load",
       "file": "auditgym/history.py",
       "breaks": "history: the invoices an error adds are never paid and come out of the count, so the payments per invoice fall with the errors",
-      "status": "survived",
-      "killed_by": "",
+      "status": "killed",
+      "killed_by": "listed tests",
       "tests": [
         "tests.test_credit_receipts"
       ],

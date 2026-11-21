@@ -2,24 +2,24 @@
 
 `python tools/organizer_sweep.py OUT_DIR 60 --record`: the closed path (`check --seeds-file --secret-env`) over the stress mix and the boundary mix. The contract battery also ran in-process on every feasible episode (the check itself runs it on one episode per seeds file).
 
-- code: code de70745efbcd5cab7af28a4a3b965ebc77b811fe96d82b1e9ce1c4abc765593f (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
-- configurations: 428 (422 feasible, 6 infeasible, 0 generation failures)
-- contract battery in-process: 422 of 422 episodes pass
-- feasible by group: random 299, extreme 17, boundary 106
+- code: code 88d12bd70afbbf076418de18b1f91b9600d5ade06b4213ef721d5e8ff91494fa (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0
+- configurations: 428 (423 feasible, 5 infeasible, 0 generation failures)
+- contract battery in-process: 423 of 423 episodes pass
+- feasible by group: random 299, extreme 17, boundary 107
 - chunks of 60: 8; every exit code 0: yes
 
 ## Chunks
 
 | chunk | episodes | exit code | summary |
 |---|---|---|---|
-| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1562/1562 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2024 named checks of 68 kinds) |
-| 1 | 60 | 0 | summary: C_data 62/62, C_reward 1547/1547, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2010 named checks of 80 kinds) |
-| 2 | 60 | 0 | summary: C_data 62/62, C_reward 1557/1557 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2019 named checks of 68 kinds) |
-| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1555/1555 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2017 named checks of 68 kinds) |
-| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1562/1562 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2024 named checks of 68 kinds) |
-| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1287/1287 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1752 named checks of 81 kinds) |
-| 6 | 60 | 0 | summary: C_data 62/62, C_reward 1326/1326, D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1789 named checks of 81 kinds) |
-| 7 | 2 | 0 | summary: C_data 3/3 (1 skipped), C_reward 34/34 (4 skipped), D_paired 15/15 (1 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (86 named checks of 57 kinds) |
+| 0 | 60 | 0 | summary: C_data 62/62, C_reward 1564/1564 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2026 named checks of 68 kinds) |
+| 1 | 60 | 0 | summary: C_data 62/62, C_reward 1548/1548, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2011 named checks of 80 kinds) |
+| 2 | 60 | 0 | summary: C_data 62/62, C_reward 1555/1555 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2017 named checks of 68 kinds) |
+| 3 | 60 | 0 | summary: C_data 62/62, C_reward 1563/1563 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2025 named checks of 68 kinds) |
+| 4 | 60 | 0 | summary: C_data 62/62, C_reward 1560/1560 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2022 named checks of 68 kinds) |
+| 5 | 60 | 0 | summary: C_data 62/62, C_reward 1291/1291 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1756 named checks of 81 kinds) |
+| 6 | 60 | 0 | summary: C_data 62/62, C_reward 1339/1339, D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1802 named checks of 81 kinds) |
+| 7 | 3 | 0 | summary: C_data 4/4 (1 skipped), C_reward 48/48 (4 skipped), D_paired 21/21 (1 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (107 named checks of 57 kinds) |
 
 ## Generation failures (accepted by config.py, GenerationError in the generator)
 
@@ -33,10 +33,9 @@
 
 - `random_271`: timezone UTC never has a UTC offset, but the requested errors need one
 - `bnd_tz_UTC_utc_wall_clock`: timezone UTC never has a UTC offset, but the requested errors need one
-- `bnd_tz_Europe/London_utc_wall_clock`: no feasible variant of wrong_fx_rate for this configuration
-- `bnd_counts_sales_invoices_max`: counts too large for the 100-step budget: 2015 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts
-- `bnd_counts_purchase_invoices_max`: counts too large for the 100-step budget: 2020 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts
-- `bnd_counts_prior_invoices_max`: counts too large for the 100-step budget: 2029 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts
+- `bnd_counts_sales_invoices_max`: counts too large for the 100-step budget: 2014 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts
+- `bnd_counts_purchase_invoices_max`: counts too large for the 100-step budget: 2023 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts
+- `bnd_counts_prior_invoices_max`: counts too large for the 100-step budget: 2031 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts
 
 ## Boundary configurations that ran
 
@@ -114,6 +113,7 @@
 - `bnd_tz_Asia/Kuwait_utc_wall_clock`
 - `bnd_tz_America/Sao_Paulo_utc_wall_clock`
 - `bnd_tz_Europe/Berlin_utc_wall_clock`
+- `bnd_tz_Europe/London_utc_wall_clock`
 - `bnd_tz_America/New_York_utc_wall_clock`
 - `bnd_tz_Australia/Sydney_utc_wall_clock`
 - `bnd_tz_half_hour_offset_kolkata`

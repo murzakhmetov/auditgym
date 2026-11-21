@@ -1,53 +1,53 @@
 # auditgym check report
 
-Result: **PASS** in 379 s, version 0.3.0.
+Result: **PASS** in 435 s, version 0.4.0.
 
 Episodes: public master string auditgym-check-v1.
 
 Policy isolation: the host's user (no uid switch on this machine).
 
-Code: code de70745efbcd5cab7af28a4a3b965ebc77b811fe96d82b1e9ce1c4abc765593f (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
+Code: code 88d12bd70afbbf076418de18b1f91b9600d5ade06b4213ef721d5e8ff91494fa (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
 
-Coverage: 694 named checks of 83 kinds (a kind is one property; most run on every episode they apply to).
+Coverage: 697 named checks of 83 kinds (a kind is one property; most run on every episode they apply to).
 
 ## Checks (grouped by rubric criterion)
 
 ### 1. Contract and isolation (25)
 
-Run time: F_contract 0.1 s, E_leaks 0.4 s
+Run time: F_contract 0.0 s, E_leaks 0.4 s
 
 #### F_contract (20/20)
 
-- PASS: ep_dc5556b3932920fd: reset returns exactly task, manifest, policy and remaining_steps
-- PASS: ep_dc5556b3932920fd: every later observation has only result, error and remaining_steps
-- PASS: ep_dc5556b3932920fd: a page holds at most 50 rows and paging reaches every row once, in order (ledger)
-- PASS: ep_dc5556b3932920fd: the cursor is stable: the same cursor returns the same page, also in a fresh environment
-- PASS: ep_dc5556b3932920fd: a page limit above the maximum is refused with a bounded error
-- PASS: ep_dc5556b3932920fd: an unknown ID gives a bounded error and spends a step
-- PASS: ep_dc5556b3932920fd: an unknown action gives a bounded error and spends a step
-- PASS: ep_dc5556b3932920fd: the calculator evaluates a valid expression
-- PASS: ep_dc5556b3932920fd: the calculator rejects __import__('os')
-- PASS: ep_dc5556b3932920fd: the calculator rejects 2**8
-- PASS: ep_dc5556b3932920fd: the calculator rejects 1/0
-- PASS: ep_dc5556b3932920fd: after submit the episode is finished and further steps change nothing
-- PASS: ep_dc5556b3932920fd: at step 100 (not before) the episode truncates with an empty answer
-- PASS: ep_dc5556b3932920fd: the time limit on a frozen clock truncates with an empty answer
-- PASS: ep_dc5556b3932920fd: eval mode returns reward 0 on every step, including the last
-- PASS: ep_dc5556b3932920fd: info carries only episode_id in eval mode, also at the end
-- PASS: ep_dc5556b3932920fd: an invalid submission scores -1
-- PASS: ep_dc5556b3932920fd: a foreign episode_id scores -1
-- PASS: ep_dc5556b3932920fd: all 10 sampled observations validate against observation.schema.json
-- PASS: ep_dc5556b3932920fd: seeded contract fuzz (300 actions, reset every episode end) has 0 invariant violations
+- PASS: ep_47d65a6da3a8d4ad: reset returns exactly task, manifest, policy and remaining_steps
+- PASS: ep_47d65a6da3a8d4ad: every later observation has only result, error and remaining_steps
+- PASS: ep_47d65a6da3a8d4ad: a page holds at most 50 rows and paging reaches every row once, in order (ledger)
+- PASS: ep_47d65a6da3a8d4ad: the cursor is stable: the same cursor returns the same page, also in a fresh environment
+- PASS: ep_47d65a6da3a8d4ad: a page limit above the maximum is refused with a bounded error
+- PASS: ep_47d65a6da3a8d4ad: an unknown ID gives a bounded error and spends a step
+- PASS: ep_47d65a6da3a8d4ad: an unknown action gives a bounded error and spends a step
+- PASS: ep_47d65a6da3a8d4ad: the calculator evaluates a valid expression
+- PASS: ep_47d65a6da3a8d4ad: the calculator rejects __import__('os')
+- PASS: ep_47d65a6da3a8d4ad: the calculator rejects 2**8
+- PASS: ep_47d65a6da3a8d4ad: the calculator rejects 1/0
+- PASS: ep_47d65a6da3a8d4ad: after submit the episode is finished and further steps change nothing
+- PASS: ep_47d65a6da3a8d4ad: at step 100 (not before) the episode truncates with an empty answer
+- PASS: ep_47d65a6da3a8d4ad: the time limit on a frozen clock truncates with an empty answer
+- PASS: ep_47d65a6da3a8d4ad: eval mode returns reward 0 on every step, including the last
+- PASS: ep_47d65a6da3a8d4ad: info carries only episode_id in eval mode, also at the end
+- PASS: ep_47d65a6da3a8d4ad: an invalid submission scores -1
+- PASS: ep_47d65a6da3a8d4ad: a foreign episode_id scores -1
+- PASS: ep_47d65a6da3a8d4ad: all 10 sampled observations validate against observation.schema.json
+- PASS: ep_47d65a6da3a8d4ad: seeded contract fuzz (300 actions, reset every episode end) has 0 invariant violations
 
 #### E_leaks (3/3)
 
-- PASS: 1920 observations contain only the allowed fields
+- PASS: 2093 observations contain only the allowed fields
 - PASS: no answer-key markers in any observation
 - PASS: oracle trajectories are never published
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 3.5 s, C_data 4.6 s
+Run time: B_committed_episodes 4.0 s, C_data 4.7 s
 
 #### B_committed_episodes (40/40)
 
@@ -98,30 +98,30 @@ Run time: B_committed_episodes 3.5 s, C_data 4.6 s
 - PASS: h02_clean verifies (0 issues, 1 attempt(s))
 - PASS: h03_clean verifies (0 issues, 1 attempt(s))
 - PASS: h04_clean verifies (0 issues, 1 attempt(s))
-- PASS: h05_clean verifies (0 issues, 2 attempt(s))
+- PASS: h05_clean verifies (0 issues, 1 attempt(s))
 - PASS: h06_interacting verifies (2 issues, 1 attempt(s))
 - PASS: h07_interacting verifies (2 issues, 1 attempt(s))
 - PASS: h08_interacting verifies (4 issues, 1 attempt(s))
 - PASS: h09_interacting verifies (4 issues, 1 attempt(s))
 - PASS: h10_interacting verifies (4 issues, 1 attempt(s))
-- PASS: h11_mixed verifies (4 issues, 1 attempt(s))
-- PASS: h12_mixed verifies (4 issues, 1 attempt(s))
+- PASS: h11_mixed verifies (4 issues, 2 attempt(s))
+- PASS: h12_mixed verifies (4 issues, 2 attempt(s))
 - PASS: h13_mixed verifies (6 issues, 1 attempt(s))
 - PASS: h14_mixed verifies (3 issues, 1 attempt(s))
 - PASS: h15_mixed verifies (4 issues, 1 attempt(s))
 - PASS: h16_mixed verifies (5 issues, 1 attempt(s))
 - PASS: h17_mixed verifies (2 issues, 1 attempt(s))
 - PASS: h18_mixed verifies (3 issues, 1 attempt(s))
-- PASS: h19_mixed verifies (4 issues, 1 attempt(s))
+- PASS: h19_mixed verifies (4 issues, 2 attempt(s))
 - PASS: h20_mixed verifies (5 issues, 1 attempt(s))
-- PASS: sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (2 over 20 episodes)
-- PASS: no candidate episode was rejected by a correctness check (2 resampled, all for sampling reasons)
+- PASS: sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (4 over 20 episodes)
+- PASS: no candidate episode was rejected by a correctness check (4 resampled, all for sampling reasons)
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 33.1 s
+Run time: C_reward 26.4 s
 
-#### C_reward (465/465)
+#### C_reward (468/468)
 
 - PASS: oracle reaches reward 1.0 on all 20 episodes
 - PASS: flag-everything attack scores poorly (mean return <= -0.9)
@@ -132,466 +132,469 @@ Run time: C_reward 33.1 s
 - PASS: ordering: auditor > silent
 - PASS: every run finishes inside 100 steps and 60 s
 - PASS: no agent process failed
-- PASS: ep_e71acf0f9722b264: silence beats a false accusation on a clean ledger
-- PASS: ep_e71acf0f9722b264: 3 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 3 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 6 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 3 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: 19 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e71acf0f9722b264: saving steps separates equal answers only slightly
-- PASS: ep_300bc86ce23d28f1: silence beats a false accusation on a clean ledger
-- PASS: ep_300bc86ce23d28f1: 5 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 3 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 4 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 8 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 4 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 3 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: 36 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_300bc86ce23d28f1: saving steps separates equal answers only slightly
-- PASS: ep_e6a7c68fd3135cea: silence beats a false accusation on a clean ledger
-- PASS: ep_e6a7c68fd3135cea: 4 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 3 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 5 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 2 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 3 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 4 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 5 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 4 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 4 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 3 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: 29 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_e6a7c68fd3135cea: saving steps separates equal answers only slightly
-- PASS: ep_f05a4b1598505207: silence beats a false accusation on a clean ledger
-- PASS: ep_f05a4b1598505207: 4 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 2 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 1 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 2 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 7 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 2 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: 11 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_f05a4b1598505207: saving steps separates equal answers only slightly
-- PASS: ep_cd697f0b3e81eecb: silence beats a false accusation on a clean ledger
-- PASS: ep_cd697f0b3e81eecb: 3 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 7 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 2 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 7 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 8 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: 35 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_cd697f0b3e81eecb: saving steps separates equal answers only slightly
-- PASS: ep_dc5556b3932920fd: correct answer with evidence beats silence
-- PASS: ep_dc5556b3932920fd: repeating findings gains nothing
-- PASS: ep_dc5556b3932920fd: guessed ids is not a true positive
-- PASS: ep_dc5556b3932920fd: unsupported evidence is not a true positive
-- PASS: ep_dc5556b3932920fd: wrong currency is not a true positive
-- PASS: ep_dc5556b3932920fd: amount off by 3 tolerances is not a true positive
-- PASS: ep_dc5556b3932920fd: wrong type is not a true positive
-- PASS: ep_dc5556b3932920fd: citing documents by alias keeps full credit
-- PASS: ep_dc5556b3932920fd: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_dc5556b3932920fd: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_dc5556b3932920fd: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_dc5556b3932920fd: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_dc5556b3932920fd: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_dc5556b3932920fd: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 4 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 6 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: 27 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_dc5556b3932920fd: saving steps separates equal answers only slightly
-- PASS: ep_8c6483dc3e4ed008: correct answer with evidence beats silence
-- PASS: ep_8c6483dc3e4ed008: repeating findings gains nothing
-- PASS: ep_8c6483dc3e4ed008: guessed ids is not a true positive
-- PASS: ep_8c6483dc3e4ed008: unsupported evidence is not a true positive
-- PASS: ep_8c6483dc3e4ed008: wrong currency is not a true positive
-- PASS: ep_8c6483dc3e4ed008: amount off by 3 tolerances is not a true positive
-- PASS: ep_8c6483dc3e4ed008: wrong type is not a true positive
-- PASS: ep_8c6483dc3e4ed008: citing documents by alias keeps full credit
-- PASS: ep_8c6483dc3e4ed008: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_8c6483dc3e4ed008: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_8c6483dc3e4ed008: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_8c6483dc3e4ed008: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_8c6483dc3e4ed008: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_8c6483dc3e4ed008: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 4 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 6 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: 37 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8c6483dc3e4ed008: saving steps separates equal answers only slightly
-- PASS: ep_46eab81f557cba5d: correct answer with evidence beats silence
-- PASS: ep_46eab81f557cba5d: repeating findings gains nothing
-- PASS: ep_46eab81f557cba5d: guessed ids is not a true positive
-- PASS: ep_46eab81f557cba5d: unsupported evidence is not a true positive
-- PASS: ep_46eab81f557cba5d: wrong currency is not a true positive
-- PASS: ep_46eab81f557cba5d: amount off by 3 tolerances is not a true positive
-- PASS: ep_46eab81f557cba5d: wrong type is not a true positive
-- PASS: ep_46eab81f557cba5d: citing documents by alias keeps full credit
-- PASS: ep_46eab81f557cba5d: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_46eab81f557cba5d: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_46eab81f557cba5d: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_46eab81f557cba5d: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_46eab81f557cba5d: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_46eab81f557cba5d: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 4 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 1 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 2 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: 10 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_46eab81f557cba5d: saving steps separates equal answers only slightly
-- PASS: ep_452ad96041112bc7: correct answer with evidence beats silence
-- PASS: ep_452ad96041112bc7: repeating findings gains nothing
-- PASS: ep_452ad96041112bc7: guessed ids is not a true positive
-- PASS: ep_452ad96041112bc7: unsupported evidence is not a true positive
-- PASS: ep_452ad96041112bc7: wrong currency is not a true positive
-- PASS: ep_452ad96041112bc7: amount off by 3 tolerances is not a true positive
-- PASS: ep_452ad96041112bc7: wrong type is not a true positive
-- PASS: ep_452ad96041112bc7: citing documents by alias keeps full credit
-- PASS: ep_452ad96041112bc7: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_452ad96041112bc7: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_452ad96041112bc7: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_452ad96041112bc7: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_452ad96041112bc7: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_452ad96041112bc7: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 5 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: 29 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_452ad96041112bc7: saving steps separates equal answers only slightly
-- PASS: ep_c5dfbaa2f9249949: correct answer with evidence beats silence
-- PASS: ep_c5dfbaa2f9249949: repeating findings gains nothing
-- PASS: ep_c5dfbaa2f9249949: guessed ids is not a true positive
-- PASS: ep_c5dfbaa2f9249949: unsupported evidence is not a true positive
-- PASS: ep_c5dfbaa2f9249949: wrong currency is not a true positive
-- PASS: ep_c5dfbaa2f9249949: amount off by 3 tolerances is not a true positive
-- PASS: ep_c5dfbaa2f9249949: wrong type is not a true positive
-- PASS: ep_c5dfbaa2f9249949: citing documents by alias keeps full credit
-- PASS: ep_c5dfbaa2f9249949: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_c5dfbaa2f9249949: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_c5dfbaa2f9249949: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_c5dfbaa2f9249949: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_c5dfbaa2f9249949: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_c5dfbaa2f9249949: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 5 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: 29 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_c5dfbaa2f9249949: saving steps separates equal answers only slightly
-- PASS: ep_69bece5a156e3b4c: correct answer with evidence beats silence
-- PASS: ep_69bece5a156e3b4c: repeating findings gains nothing
-- PASS: ep_69bece5a156e3b4c: guessed ids is not a true positive
-- PASS: ep_69bece5a156e3b4c: unsupported evidence is not a true positive
-- PASS: ep_69bece5a156e3b4c: wrong currency is not a true positive
-- PASS: ep_69bece5a156e3b4c: amount off by 3 tolerances is not a true positive
-- PASS: ep_69bece5a156e3b4c: wrong type is not a true positive
-- PASS: ep_69bece5a156e3b4c: citing documents by alias keeps full credit
-- PASS: ep_69bece5a156e3b4c: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_69bece5a156e3b4c: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_69bece5a156e3b4c: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_69bece5a156e3b4c: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_69bece5a156e3b4c: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_69bece5a156e3b4c: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 7 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: 46 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_69bece5a156e3b4c: saving steps separates equal answers only slightly
-- PASS: ep_2f9b9966254f25f6: correct answer with evidence beats silence
-- PASS: ep_2f9b9966254f25f6: repeating findings gains nothing
-- PASS: ep_2f9b9966254f25f6: guessed ids is not a true positive
-- PASS: ep_2f9b9966254f25f6: unsupported evidence is not a true positive
-- PASS: ep_2f9b9966254f25f6: wrong currency is not a true positive
-- PASS: ep_2f9b9966254f25f6: amount off by 3 tolerances is not a true positive
-- PASS: ep_2f9b9966254f25f6: wrong type is not a true positive
-- PASS: ep_2f9b9966254f25f6: citing documents by alias keeps full credit
-- PASS: ep_2f9b9966254f25f6: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_2f9b9966254f25f6: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_2f9b9966254f25f6: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_2f9b9966254f25f6: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_2f9b9966254f25f6: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_2f9b9966254f25f6: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 3 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: 20 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_2f9b9966254f25f6: saving steps separates equal answers only slightly
-- PASS: ep_14fdf811999d8e23: correct answer with evidence beats silence
-- PASS: ep_14fdf811999d8e23: repeating findings gains nothing
-- PASS: ep_14fdf811999d8e23: guessed ids is not a true positive
-- PASS: ep_14fdf811999d8e23: unsupported evidence is not a true positive
-- PASS: ep_14fdf811999d8e23: wrong currency is not a true positive
-- PASS: ep_14fdf811999d8e23: amount off by 3 tolerances is not a true positive
-- PASS: ep_14fdf811999d8e23: wrong type is not a true positive
-- PASS: ep_14fdf811999d8e23: citing documents by alias keeps full credit
-- PASS: ep_14fdf811999d8e23: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_14fdf811999d8e23: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_14fdf811999d8e23: 24 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_14fdf811999d8e23: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_14fdf811999d8e23: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_14fdf811999d8e23: 1 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: 9 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_14fdf811999d8e23: saving steps separates equal answers only slightly
-- PASS: ep_68dd47e94aaf8a48: correct answer with evidence beats silence
-- PASS: ep_68dd47e94aaf8a48: repeating findings gains nothing
-- PASS: ep_68dd47e94aaf8a48: guessed ids is not a true positive
-- PASS: ep_68dd47e94aaf8a48: unsupported evidence is not a true positive
-- PASS: ep_68dd47e94aaf8a48: wrong currency is not a true positive
-- PASS: ep_68dd47e94aaf8a48: amount off by 3 tolerances is not a true positive
-- PASS: ep_68dd47e94aaf8a48: wrong type is not a true positive
-- PASS: ep_68dd47e94aaf8a48: citing documents by alias keeps full credit
-- PASS: ep_68dd47e94aaf8a48: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_68dd47e94aaf8a48: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_68dd47e94aaf8a48: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_68dd47e94aaf8a48: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_68dd47e94aaf8a48: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_68dd47e94aaf8a48: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: 31 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_68dd47e94aaf8a48: saving steps separates equal answers only slightly
-- PASS: ep_6a90d70344927f55: correct answer with evidence beats silence
-- PASS: ep_6a90d70344927f55: repeating findings gains nothing
-- PASS: ep_6a90d70344927f55: guessed ids is not a true positive
-- PASS: ep_6a90d70344927f55: unsupported evidence is not a true positive
-- PASS: ep_6a90d70344927f55: wrong currency is not a true positive
-- PASS: ep_6a90d70344927f55: amount off by 3 tolerances is not a true positive
-- PASS: ep_6a90d70344927f55: wrong type is not a true positive
-- PASS: ep_6a90d70344927f55: citing documents by alias keeps full credit
-- PASS: ep_6a90d70344927f55: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_6a90d70344927f55: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_6a90d70344927f55: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_6a90d70344927f55: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_6a90d70344927f55: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_6a90d70344927f55: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 6 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 7 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: 31 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6a90d70344927f55: saving steps separates equal answers only slightly
-- PASS: ep_954dd67e52464c07: correct answer with evidence beats silence
-- PASS: ep_954dd67e52464c07: repeating findings gains nothing
-- PASS: ep_954dd67e52464c07: guessed ids is not a true positive
-- PASS: ep_954dd67e52464c07: unsupported evidence is not a true positive
-- PASS: ep_954dd67e52464c07: wrong currency is not a true positive
-- PASS: ep_954dd67e52464c07: amount off by 3 tolerances is not a true positive
-- PASS: ep_954dd67e52464c07: wrong type is not a true positive
-- PASS: ep_954dd67e52464c07: citing documents by alias keeps full credit
-- PASS: ep_954dd67e52464c07: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_954dd67e52464c07: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_954dd67e52464c07: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_954dd67e52464c07: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_954dd67e52464c07: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_954dd67e52464c07: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 10 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: 44 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_954dd67e52464c07: saving steps separates equal answers only slightly
-- PASS: ep_57c6a292b0392e44: correct answer with evidence beats silence
-- PASS: ep_57c6a292b0392e44: repeating findings gains nothing
-- PASS: ep_57c6a292b0392e44: guessed ids is not a true positive
-- PASS: ep_57c6a292b0392e44: unsupported evidence is not a true positive
-- PASS: ep_57c6a292b0392e44: wrong currency is not a true positive
-- PASS: ep_57c6a292b0392e44: amount off by 3 tolerances is not a true positive
-- PASS: ep_57c6a292b0392e44: wrong type is not a true positive
-- PASS: ep_57c6a292b0392e44: citing documents by alias keeps full credit
-- PASS: ep_57c6a292b0392e44: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_57c6a292b0392e44: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_57c6a292b0392e44: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_57c6a292b0392e44: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_57c6a292b0392e44: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_57c6a292b0392e44: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: 45 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_57c6a292b0392e44: saving steps separates equal answers only slightly
-- PASS: ep_5047ed25c1976188: correct answer with evidence beats silence
-- PASS: ep_5047ed25c1976188: repeating findings gains nothing
-- PASS: ep_5047ed25c1976188: guessed ids is not a true positive
-- PASS: ep_5047ed25c1976188: unsupported evidence is not a true positive
-- PASS: ep_5047ed25c1976188: wrong currency is not a true positive
-- PASS: ep_5047ed25c1976188: amount off by 3 tolerances is not a true positive
-- PASS: ep_5047ed25c1976188: wrong type is not a true positive
-- PASS: ep_5047ed25c1976188: citing documents by alias keeps full credit
-- PASS: ep_5047ed25c1976188: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_5047ed25c1976188: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_5047ed25c1976188: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_5047ed25c1976188: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_5047ed25c1976188: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_5047ed25c1976188: 6 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 10 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: 37 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_5047ed25c1976188: saving steps separates equal answers only slightly
-- PASS: ep_f0c55f627fe79f76: correct answer with evidence beats silence
-- PASS: ep_f0c55f627fe79f76: repeating findings gains nothing
-- PASS: ep_f0c55f627fe79f76: guessed ids is not a true positive
-- PASS: ep_f0c55f627fe79f76: unsupported evidence is not a true positive
-- PASS: ep_f0c55f627fe79f76: wrong currency is not a true positive
-- PASS: ep_f0c55f627fe79f76: amount off by 3 tolerances is not a true positive
-- PASS: ep_f0c55f627fe79f76: wrong type is not a true positive
-- PASS: ep_f0c55f627fe79f76: citing documents by alias keeps full credit
-- PASS: ep_f0c55f627fe79f76: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_f0c55f627fe79f76: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_f0c55f627fe79f76: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_f0c55f627fe79f76: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_f0c55f627fe79f76: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_f0c55f627fe79f76: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 6 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 8 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: 44 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_f0c55f627fe79f76: saving steps separates equal answers only slightly
-- PASS: ep_6bea096f5619457c: correct answer with evidence beats silence
-- PASS: ep_6bea096f5619457c: repeating findings gains nothing
-- PASS: ep_6bea096f5619457c: guessed ids is not a true positive
-- PASS: ep_6bea096f5619457c: unsupported evidence is not a true positive
-- PASS: ep_6bea096f5619457c: wrong currency is not a true positive
-- PASS: ep_6bea096f5619457c: amount off by 3 tolerances is not a true positive
-- PASS: ep_6bea096f5619457c: wrong type is not a true positive
-- PASS: ep_6bea096f5619457c: citing documents by alias keeps full credit
-- PASS: ep_6bea096f5619457c: type shotgun (copies under 3 other types) costs exactly 3 false positives
-- PASS: ep_6bea096f5619457c: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
-- PASS: ep_6bea096f5619457c: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
-- PASS: ep_6bea096f5619457c: evidence padded to 10 IDs stays a true positive (published rule)
-- PASS: ep_6bea096f5619457c: right amount with the ID of an unrelated real invoice is not a true positive
-- PASS: ep_6bea096f5619457c: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 5 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: 45 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_6bea096f5619457c: saving steps separates equal answers only slightly
+- PASS: ep_246d30ec6c013247: silence beats a false accusation on a clean ledger
+- PASS: ep_246d30ec6c013247: 3 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 3 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 3 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 1 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 7 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 4 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 2 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: 16 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_246d30ec6c013247: saving steps separates equal answers only slightly
+- PASS: ep_64f9b5b7d0795025: silence beats a false accusation on a clean ledger
+- PASS: ep_64f9b5b7d0795025: 5 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 4 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 5 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 7 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 3 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: 30 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_64f9b5b7d0795025: saving steps separates equal answers only slightly
+- PASS: ep_a440890457b68488: silence beats a false accusation on a clean ledger
+- PASS: ep_a440890457b68488: 6 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 3 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 5 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 2 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 3 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 2 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 3 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 4 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 12 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 4 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 3 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 30 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: saving steps separates equal answers only slightly
+- PASS: ep_f27513fc59411601: silence beats a false accusation on a clean ledger
+- PASS: ep_f27513fc59411601: 2 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 5 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 7 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 2 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 1 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: 15 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_f27513fc59411601: saving steps separates equal answers only slightly
+- PASS: ep_d4638527facc7e14: silence beats a false accusation on a clean ledger
+- PASS: ep_d4638527facc7e14: 5 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 2 recurring accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 4 split_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 1 multi_invoice_payment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 2 underpayment accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 3 overpayment_refund accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 2 null_ref_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 3 boundary_doc accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 5 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 3 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 2 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: 33 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_d4638527facc7e14: saving steps separates equal answers only slightly
+- PASS: ep_47d65a6da3a8d4ad: correct answer with evidence beats silence
+- PASS: ep_47d65a6da3a8d4ad: repeating findings gains nothing
+- PASS: ep_47d65a6da3a8d4ad: guessed ids is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: unsupported evidence is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: wrong currency is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: amount off by 3 tolerances is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: wrong type is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: citing documents by alias keeps full credit
+- PASS: ep_47d65a6da3a8d4ad: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_47d65a6da3a8d4ad: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_47d65a6da3a8d4ad: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_47d65a6da3a8d4ad: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_47d65a6da3a8d4ad: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_47d65a6da3a8d4ad: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 8 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: 28 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_47d65a6da3a8d4ad: saving steps separates equal answers only slightly
+- PASS: ep_7bdf200f1642db5a: correct answer with evidence beats silence
+- PASS: ep_7bdf200f1642db5a: repeating findings gains nothing
+- PASS: ep_7bdf200f1642db5a: guessed ids is not a true positive
+- PASS: ep_7bdf200f1642db5a: unsupported evidence is not a true positive
+- PASS: ep_7bdf200f1642db5a: wrong currency is not a true positive
+- PASS: ep_7bdf200f1642db5a: amount off by 3 tolerances is not a true positive
+- PASS: ep_7bdf200f1642db5a: wrong type is not a true positive
+- PASS: ep_7bdf200f1642db5a: citing documents by alias keeps full credit
+- PASS: ep_7bdf200f1642db5a: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_7bdf200f1642db5a: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_7bdf200f1642db5a: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_7bdf200f1642db5a: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_7bdf200f1642db5a: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_7bdf200f1642db5a: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 9 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 4 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 7 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: saving steps separates equal answers only slightly
+- PASS: ep_3121f32838090bda: correct answer with evidence beats silence
+- PASS: ep_3121f32838090bda: repeating findings gains nothing
+- PASS: ep_3121f32838090bda: guessed ids is not a true positive
+- PASS: ep_3121f32838090bda: unsupported evidence is not a true positive
+- PASS: ep_3121f32838090bda: wrong currency is not a true positive
+- PASS: ep_3121f32838090bda: amount off by 3 tolerances is not a true positive
+- PASS: ep_3121f32838090bda: wrong type is not a true positive
+- PASS: ep_3121f32838090bda: citing documents by alias keeps full credit
+- PASS: ep_3121f32838090bda: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_3121f32838090bda: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_3121f32838090bda: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_3121f32838090bda: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_3121f32838090bda: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_3121f32838090bda: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 2 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 1 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 5 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 2 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: 13 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_3121f32838090bda: saving steps separates equal answers only slightly
+- PASS: ep_41a1c2e49f27c335: correct answer with evidence beats silence
+- PASS: ep_41a1c2e49f27c335: repeating findings gains nothing
+- PASS: ep_41a1c2e49f27c335: guessed ids is not a true positive
+- PASS: ep_41a1c2e49f27c335: unsupported evidence is not a true positive
+- PASS: ep_41a1c2e49f27c335: wrong currency is not a true positive
+- PASS: ep_41a1c2e49f27c335: amount off by 3 tolerances is not a true positive
+- PASS: ep_41a1c2e49f27c335: wrong type is not a true positive
+- PASS: ep_41a1c2e49f27c335: citing documents by alias keeps full credit
+- PASS: ep_41a1c2e49f27c335: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_41a1c2e49f27c335: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_41a1c2e49f27c335: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_41a1c2e49f27c335: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_41a1c2e49f27c335: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_41a1c2e49f27c335: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: 25 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_41a1c2e49f27c335: saving steps separates equal answers only slightly
+- PASS: ep_0316288cdafe6200: correct answer with evidence beats silence
+- PASS: ep_0316288cdafe6200: repeating findings gains nothing
+- PASS: ep_0316288cdafe6200: guessed ids is not a true positive
+- PASS: ep_0316288cdafe6200: unsupported evidence is not a true positive
+- PASS: ep_0316288cdafe6200: wrong currency is not a true positive
+- PASS: ep_0316288cdafe6200: amount off by 3 tolerances is not a true positive
+- PASS: ep_0316288cdafe6200: wrong type is not a true positive
+- PASS: ep_0316288cdafe6200: citing documents by alias keeps full credit
+- PASS: ep_0316288cdafe6200: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_0316288cdafe6200: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_0316288cdafe6200: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_0316288cdafe6200: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_0316288cdafe6200: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_0316288cdafe6200: 6 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 8 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: 38 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_0316288cdafe6200: saving steps separates equal answers only slightly
+- PASS: ep_932585a5673f7be6: correct answer with evidence beats silence
+- PASS: ep_932585a5673f7be6: repeating findings gains nothing
+- PASS: ep_932585a5673f7be6: guessed ids is not a true positive
+- PASS: ep_932585a5673f7be6: unsupported evidence is not a true positive
+- PASS: ep_932585a5673f7be6: wrong currency is not a true positive
+- PASS: ep_932585a5673f7be6: amount off by 3 tolerances is not a true positive
+- PASS: ep_932585a5673f7be6: wrong type is not a true positive
+- PASS: ep_932585a5673f7be6: citing documents by alias keeps full credit
+- PASS: ep_932585a5673f7be6: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_932585a5673f7be6: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_932585a5673f7be6: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_932585a5673f7be6: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_932585a5673f7be6: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_932585a5673f7be6: 6 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 9 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 7 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 35 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: saving steps separates equal answers only slightly
+- PASS: ep_32d76d1530a9f2e6: correct answer with evidence beats silence
+- PASS: ep_32d76d1530a9f2e6: repeating findings gains nothing
+- PASS: ep_32d76d1530a9f2e6: guessed ids is not a true positive
+- PASS: ep_32d76d1530a9f2e6: unsupported evidence is not a true positive
+- PASS: ep_32d76d1530a9f2e6: wrong currency is not a true positive
+- PASS: ep_32d76d1530a9f2e6: amount off by 3 tolerances is not a true positive
+- PASS: ep_32d76d1530a9f2e6: wrong type is not a true positive
+- PASS: ep_32d76d1530a9f2e6: citing documents by alias keeps full credit
+- PASS: ep_32d76d1530a9f2e6: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_32d76d1530a9f2e6: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_32d76d1530a9f2e6: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_32d76d1530a9f2e6: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_32d76d1530a9f2e6: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_32d76d1530a9f2e6: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: 19 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_32d76d1530a9f2e6: saving steps separates equal answers only slightly
+- PASS: ep_73fb7991086b4580: correct answer with evidence beats silence
+- PASS: ep_73fb7991086b4580: repeating findings gains nothing
+- PASS: ep_73fb7991086b4580: guessed ids is not a true positive
+- PASS: ep_73fb7991086b4580: unsupported evidence is not a true positive
+- PASS: ep_73fb7991086b4580: wrong currency is not a true positive
+- PASS: ep_73fb7991086b4580: amount off by 3 tolerances is not a true positive
+- PASS: ep_73fb7991086b4580: wrong type is not a true positive
+- PASS: ep_73fb7991086b4580: citing documents by alias keeps full credit
+- PASS: ep_73fb7991086b4580: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_73fb7991086b4580: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_73fb7991086b4580: 24 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_73fb7991086b4580: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_73fb7991086b4580: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_73fb7991086b4580: 1 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 1 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 4 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 1 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 1 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 6 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 2 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 1 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: 8 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_73fb7991086b4580: saving steps separates equal answers only slightly
+- PASS: ep_86fbb4292cb21eff: correct answer with evidence beats silence
+- PASS: ep_86fbb4292cb21eff: repeating findings gains nothing
+- PASS: ep_86fbb4292cb21eff: guessed ids is not a true positive
+- PASS: ep_86fbb4292cb21eff: unsupported evidence is not a true positive
+- PASS: ep_86fbb4292cb21eff: wrong currency is not a true positive
+- PASS: ep_86fbb4292cb21eff: amount off by 3 tolerances is not a true positive
+- PASS: ep_86fbb4292cb21eff: wrong type is not a true positive
+- PASS: ep_86fbb4292cb21eff: citing documents by alias keeps full credit
+- PASS: ep_86fbb4292cb21eff: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_86fbb4292cb21eff: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_86fbb4292cb21eff: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_86fbb4292cb21eff: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_86fbb4292cb21eff: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_86fbb4292cb21eff: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 2 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 1 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 2 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 3 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 2 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: 30 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_86fbb4292cb21eff: saving steps separates equal answers only slightly
+- PASS: ep_8a75ee87b2b417f0: correct answer with evidence beats silence
+- PASS: ep_8a75ee87b2b417f0: repeating findings gains nothing
+- PASS: ep_8a75ee87b2b417f0: guessed ids is not a true positive
+- PASS: ep_8a75ee87b2b417f0: unsupported evidence is not a true positive
+- PASS: ep_8a75ee87b2b417f0: wrong currency is not a true positive
+- PASS: ep_8a75ee87b2b417f0: amount off by 3 tolerances is not a true positive
+- PASS: ep_8a75ee87b2b417f0: wrong type is not a true positive
+- PASS: ep_8a75ee87b2b417f0: citing documents by alias keeps full credit
+- PASS: ep_8a75ee87b2b417f0: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_8a75ee87b2b417f0: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_8a75ee87b2b417f0: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_8a75ee87b2b417f0: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_8a75ee87b2b417f0: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_8a75ee87b2b417f0: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 3 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 13 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 39 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: saving steps separates equal answers only slightly
+- PASS: ep_a661f328eb0b8e1f: correct answer with evidence beats silence
+- PASS: ep_a661f328eb0b8e1f: repeating findings gains nothing
+- PASS: ep_a661f328eb0b8e1f: guessed ids is not a true positive
+- PASS: ep_a661f328eb0b8e1f: unsupported evidence is not a true positive
+- PASS: ep_a661f328eb0b8e1f: wrong currency is not a true positive
+- PASS: ep_a661f328eb0b8e1f: amount off by 3 tolerances is not a true positive
+- PASS: ep_a661f328eb0b8e1f: wrong type is not a true positive
+- PASS: ep_a661f328eb0b8e1f: citing documents by alias keeps full credit
+- PASS: ep_a661f328eb0b8e1f: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_a661f328eb0b8e1f: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_a661f328eb0b8e1f: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_a661f328eb0b8e1f: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_a661f328eb0b8e1f: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_a661f328eb0b8e1f: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 7 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: saving steps separates equal answers only slightly
+- PASS: ep_2a1ad532de9525dc: correct answer with evidence beats silence
+- PASS: ep_2a1ad532de9525dc: repeating findings gains nothing
+- PASS: ep_2a1ad532de9525dc: guessed ids is not a true positive
+- PASS: ep_2a1ad532de9525dc: unsupported evidence is not a true positive
+- PASS: ep_2a1ad532de9525dc: wrong currency is not a true positive
+- PASS: ep_2a1ad532de9525dc: amount off by 3 tolerances is not a true positive
+- PASS: ep_2a1ad532de9525dc: wrong type is not a true positive
+- PASS: ep_2a1ad532de9525dc: citing documents by alias keeps full credit
+- PASS: ep_2a1ad532de9525dc: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_2a1ad532de9525dc: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_2a1ad532de9525dc: 28 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_2a1ad532de9525dc: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_2a1ad532de9525dc: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_2a1ad532de9525dc: 2 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 9 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 3 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 4 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: 46 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_2a1ad532de9525dc: saving steps separates equal answers only slightly
+- PASS: ep_b8290c0bdc13231f: correct answer with evidence beats silence
+- PASS: ep_b8290c0bdc13231f: repeating findings gains nothing
+- PASS: ep_b8290c0bdc13231f: guessed ids is not a true positive
+- PASS: ep_b8290c0bdc13231f: unsupported evidence is not a true positive
+- PASS: ep_b8290c0bdc13231f: wrong currency is not a true positive
+- PASS: ep_b8290c0bdc13231f: amount off by 3 tolerances is not a true positive
+- PASS: ep_b8290c0bdc13231f: wrong type is not a true positive
+- PASS: ep_b8290c0bdc13231f: citing documents by alias keeps full credit
+- PASS: ep_b8290c0bdc13231f: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_b8290c0bdc13231f: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_b8290c0bdc13231f: 27 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_b8290c0bdc13231f: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_b8290c0bdc13231f: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_b8290c0bdc13231f: 3 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 5 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 4 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 8 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 6 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: 31 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_b8290c0bdc13231f: saving steps separates equal answers only slightly
+- PASS: ep_de4c3d331f6ab09f: correct answer with evidence beats silence
+- PASS: ep_de4c3d331f6ab09f: repeating findings gains nothing
+- PASS: ep_de4c3d331f6ab09f: guessed ids is not a true positive
+- PASS: ep_de4c3d331f6ab09f: unsupported evidence is not a true positive
+- PASS: ep_de4c3d331f6ab09f: wrong currency is not a true positive
+- PASS: ep_de4c3d331f6ab09f: amount off by 3 tolerances is not a true positive
+- PASS: ep_de4c3d331f6ab09f: wrong type is not a true positive
+- PASS: ep_de4c3d331f6ab09f: citing documents by alias keeps full credit
+- PASS: ep_de4c3d331f6ab09f: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_de4c3d331f6ab09f: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_de4c3d331f6ab09f: 26 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_de4c3d331f6ab09f: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_de4c3d331f6ab09f: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_de4c3d331f6ab09f: 4 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 8 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 4 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 4 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 6 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: 30 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_de4c3d331f6ab09f: saving steps separates equal answers only slightly
+- PASS: ep_81239a83867a382e: correct answer with evidence beats silence
+- PASS: ep_81239a83867a382e: repeating findings gains nothing
+- PASS: ep_81239a83867a382e: guessed ids is not a true positive
+- PASS: ep_81239a83867a382e: unsupported evidence is not a true positive
+- PASS: ep_81239a83867a382e: wrong currency is not a true positive
+- PASS: ep_81239a83867a382e: amount off by 3 tolerances is not a true positive
+- PASS: ep_81239a83867a382e: wrong type is not a true positive
+- PASS: ep_81239a83867a382e: citing documents by alias keeps full credit
+- PASS: ep_81239a83867a382e: type shotgun (copies under 3 other types) costs exactly 3 false positives
+- PASS: ep_81239a83867a382e: amount ladder (4 neighbouring amounts) costs exactly 4 false positives
+- PASS: ep_81239a83867a382e: 25 junk findings on top of the answer give exactly clip(2F1-1) and stay below the answer alone
+- PASS: ep_81239a83867a382e: evidence padded to 10 IDs stays a true positive (published rule)
+- PASS: ep_81239a83867a382e: right amount with the ID of an unrelated real invoice is not a true positive
+- PASS: ep_81239a83867a382e: 5 legit_repeat accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 3 recurring accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 9 split_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 2 multi_invoice_payment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 3 underpayment accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 2 overpayment_refund accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 2 null_ref_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 4 boundary_doc accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 40 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: saving steps separates equal answers only slightly
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.5 s, D_paired 33.1 s
+Run time: B_replay 1.3 s, D_paired 32.5 s
 
 #### B_replay (10/10)
 
@@ -744,21 +747,21 @@ Run time: B_replay 1.5 s, D_paired 33.1 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 302.5 s
+Run time: A_unit_tests 366.2 s
 
 #### A_unit_tests (1/1)
 
-- PASS: unittest: 594 run, 583 passed, 11 skipped
+- PASS: unittest: 611 run, 600 passed, 11 skipped
 
 ## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9365 | 0.9365 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 31.75 | 0.0143 | 1.0 | 0.9528 | 0.9311 | 0 | 0.0 |
-| hidden_like | flag_all | 20 | -1.0 | -1.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 3.0 | 0.0024 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
+| hidden_like | auditor | 20 | 0.9349 | 0.9349 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.55 | 0.016 | 1.0 | 0.9512 | 0.9295 | 0 | 0.0 |
+| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0025 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.8042 | -0.8042 | 0.0 | 0.0 | 0.0 | 0.0 | 0.1 | 0.1 | 19.5 | 0.0032 | 0.1 | -0.2168 | -1.0 | 7 | 0.0 |
-| hidden_like | recon | 20 | -0.6783 | -0.6783 | 0.119 | 0.47 | 0.1028 | 0.6607 | 0.1833 | 0.1833 | 31.75 | 0.0098 | 0.0 | -1.0 | -0.5711 | 78 | 0.0 |
+| hidden_like | random | 20 | -0.715 | -0.715 | 0.0 | 0.0 | 0.0 | 0.0 | 0.15 | 0.15 | 26.55 | 0.0053 | 0.15 | 0.14 | -1.0 | 3 | 0.0 |
+| hidden_like | recon | 20 | -0.6835 | -0.6835 | 0.1174 | 0.4983 | 0.1008 | 0.7143 | 0.1835 | 0.1835 | 32.55 | 0.0098 | 0.0 | -1.0 | -0.578 | 87 | 0.0 |
 | hidden_like | silent | 20 | -0.5 | -0.5 | 0.0 | 0.0 | n/a | 0.0 | 0.25 | 0.25 | 0.0 | 0.0002 | 0.25 | 1.0 | -1.0 | 0 | n/a |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
@@ -768,31 +771,31 @@ P and R are macro means over episodes. A clean episode has no TP, so even a corr
 | split | policy | recall by type | miss reasons |
 |---|---|---|---|
 | hidden_like | auditor | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=1.0, wrong_period=1.0 | - |
-| hidden_like | flag_all | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
+| hidden_like | flag_all | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | amount=1, search=55 |
 | hidden_like | oracle | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=1.0, wrong_period=1.0 | - |
 | hidden_like | random | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
-| hidden_like | recon | duplicate_invoice=0.0, unallocated_payment=1.0, wrong_fx_rate=0.75, wrong_period=0.6875 | not_flagged=19 |
+| hidden_like | recon | duplicate_invoice=0.3333, unallocated_payment=1.0, wrong_fx_rate=0.65, wrong_period=0.8125 | not_flagged=16 |
 | hidden_like | silent | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
 
 **Common vs experimental reward**
 
 | split | policy | common return | experimental (soft) return | difference | F1 | soft F1 |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0.9365 | 0.9365 | 0.0 | 1.0 | 1.0 |
-| hidden_like | flag_all | -1.0 | -1.0 | 0.0 | 0.0 | 0.0 |
+| hidden_like | auditor | 0.9349 | 0.9349 | 0.0 | 1.0 | 1.0 |
+| hidden_like | flag_all | -1.0 | -0.9974 | 0.0026 | 0.0 | 0.0015 |
 | hidden_like | oracle | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
-| hidden_like | random | -0.8042 | -0.8042 | 0.0 | 0.1 | 0.1 |
-| hidden_like | recon | -0.6783 | -0.6783 | 0.0 | 0.1833 | 0.1833 |
+| hidden_like | random | -0.715 | -0.715 | 0.0 | 0.15 | 0.15 |
+| hidden_like | recon | -0.6835 | -0.6835 | 0.0 | 0.1835 | 0.1835 |
 | hidden_like | silent | -0.5 | -0.5 | 0.0 | 0.25 | 0.25 |
 
 **False positives, evidence timing, unobserved citations**
 
 | split | policy | FP | FP causes | mean first full evidence step | issues seen, not flagged | unobserved citations (n / cited) |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0 | - | 21.9107 | 0 / 56 (0.0) | 0 / 248 |
-| hidden_like | flag_all | 600 | boundary_doc=20, credit_receipt=88, legit_repeat=15, midnight_fx=9, multi_invoice_payment=11, near_issue=6, overpayment_refund=36, posting_lag=44, recurring=91, split_payment=35, underpayment=7, unrelated=223, weekend_fx=15 | - | 0 / 56 (0.0) | 0 / 380 |
-| hidden_like | oracle | 0 | - | - | - | 248 / 248 |
-| hidden_like | random | 22 | credit_receipt=1, legit_repeat=2, overpayment_refund=1, posting_lag=1, split_payment=2, unrelated=15 | - | 0 / 56 (0.0) | 0 / 86 |
-| hidden_like | recon | 323 | boundary_doc=32, credit_receipt=125, legit_repeat=23, midnight_fx=21, near_issue=1, overpayment_refund=60, posting_lag=9, recurring=5, split_payment=7, underpayment=1, unrelated=39 | 21.9107 | 19 / 56 (0.3393) | 0 / 1925 |
+| hidden_like | auditor | 0 | - | 24.3929 | 0 / 56 (0.0) | 0 / 249 |
+| hidden_like | flag_all | 600 | boundary_doc=36, credit_receipt=58, legit_repeat=29, midnight_fx=18, multi_invoice_payment=10, near_issue=3, overpayment_refund=12, posting_lag=63, recurring=66, split_payment=44, underpayment=3, unrelated=257, weekend_fx=1 | - | 0 / 56 (0.0) | 0 / 380 |
+| hidden_like | oracle | 0 | - | - | - | 249 / 249 |
+| hidden_like | random | 28 | boundary_doc=1, credit_receipt=2, null_ref_receipt=1, recurring=1, unrelated=23 | - | 0 / 56 (0.0) | 0 / 89 |
+| hidden_like | recon | 357 | boundary_doc=48, credit_receipt=136, legit_repeat=21, midnight_fx=28, multi_invoice_payment=1, near_issue=3, overpayment_refund=50, posting_lag=8, recurring=7, split_payment=9, unrelated=45, weekend_fx=1 | 24.3929 | 16 / 56 (0.2857) | 0 / 2052 |
 | hidden_like | silent | 0 | - | - | 0 / 56 (0.0) | 0 / 0 |
 

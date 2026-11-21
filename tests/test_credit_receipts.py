@@ -244,6 +244,24 @@ class CreditReceiptTests(unittest.TestCase):
             means[label] = sum(vals) / len(vals)
         self.assertLess(abs(means["none"] - means["many"]), 0.03, means)  # before: 6 unpaid invoices of about 64, 0.7 each
 
+    def test_the_paid_slots_of_a_side_always_number_the_drawn_invoices_and_keep_the_paid_share(self):
+        # The invoices an error adds were already taken out of the drawn count in the config, so the slots that are left must
+        # number exactly the drawn ordinary invoices, whatever the load; and the paid share of those slots must not fall with
+        # the load (the unpaid slots go first). Both sides: sales (share 0.7) and purchases (share 0.6).
+        from auditgym.history import HistoryBuilder
+
+        cfg = cfgmod.resolve({"size": "small"}, Rng("slots"))
+        b = HistoryBuilder(Rng("slots").fork("history"), cfg)
+        for share in (0.7, 0.6):
+            for removed, removed_paid in ((0, 0), (3, 0), (6, 0), (6, 1)):
+                paid = total = 0
+                for _ in range(200):
+                    slots = b.paid_slots(40, removed, removed_paid, share)
+                    self.assertEqual(len(slots), 40, (share, removed, removed_paid))
+                    paid += sum(slots)
+                    total += len(slots)
+                self.assertGreater(paid / total, share - 0.05, (share, removed, removed_paid, paid / total))
+
     def test_the_load_is_carried_in_the_resolved_config_and_an_explicit_count_stays_exact(self):
         cfg = cfgmod.resolve({"size": "small", "errors": {"wrong_fx_rate": 2, "wrong_period": 1}}, Rng("l"))
         self.assertEqual(cfg["error_invoice_load"]["sales"] + cfg["error_invoice_load"]["purchase"], 3)
