@@ -1,6 +1,8 @@
 """Environment contract: reset/step, limits, termination, invalid input, bounded errors, modes."""
 
 import json
+import contextlib
+import io
 import unittest
 
 from auditgym.env import AuditEnv
@@ -286,14 +288,21 @@ if __name__ == "__main__":
 
 
 class WeakSeedInEvalMode(unittest.TestCase):
-    """A small seed without a secret can be recovered from the public episode_id, so eval mode refuses to generate
-    from one unless the env was built with allow_weak_seed=True. Train mode is unchanged."""
+    """A small seed without a secret can be recovered from the public episode_id. Eval mode still returns
+    (observation, info), as the contract requires, but warns once per env on stderr and sets info["weak_seed"];
+    allow_weak_seed=True silences it for seeds that are public by design. Train mode is unchanged."""
 
     CONFIG = {"size": "small"}
 
+    def reset(self, env, seed, config=None):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            obs, info = env.reset(seed=seed, config=config or self.CONFIG)
+        return obs, info, [ln for ln in err.getvalue().splitlines() if ln.strip()]
+
     def test_jurors_probe_recover_a_13_bit_seed_from_the_episode_id(self):
         """Juror b's probe: reset an env with examples/config_mixed.json, read info['episode_id'], recover the seed by
-        brute force with episode_id_for. In eval mode the reset itself now refuses the small seed."""
+        brute force with episode_id_for. Eval mode returns the episode but flags the weak seed and tells the host."""
         from pathlib import Path
 
         from auditgym.generator import episode_id_for
@@ -303,33 +312,49 @@ class WeakSeedInEvalMode(unittest.TestCase):
         _obs, info = AuditEnv(mode="train").reset(seed=hidden, config=cfg)  # train mode is unchanged
         recovered = next(s for s in range(2 ** 13) if episode_id_for(s, cfg) == info["episode_id"])
         self.assertEqual(recovered, hidden)
-        with self.assertRaises(ValueError) as cm:
-            AuditEnv(mode="eval").reset(seed=hidden, config=cfg)
-        for word in ("eval mode", "13 bits", "secret", "allow_weak_seed"):
-            self.assertIn(word, str(cm.exception))
-        with self.assertRaises(ValueError):
-            AuditEnv(mode="eval").reset(seed=recovered, config=cfg)
-        with self.assertRaises(ValueError):
-            AuditEnv(mode="eval", secret="").reset(seed=hidden, config=cfg)  # an empty secret is no secret
-
-    def test_boundary_is_two_to_the_40(self):
-        env = AuditEnv(mode="eval")
-        with self.assertRaises(ValueError):
-            env.reset(seed=2 ** 40 - 1, config=self.CONFIG)
-        with self.assertRaises(ValueError):
-            env.reset(seed=-(2 ** 40 - 1), config=self.CONFIG)
-        obs, _ = env.reset(seed=2 ** 40, config=self.CONFIG)
+        self.assertNotIn("weak_seed", info)
+        obs, info, lines = self.reset(AuditEnv(mode="eval"), hidden, cfg)
         self.assertIn("episode_id", obs["manifest"])
+        self.assertIs(info["weak_seed"], True)
+        self.assertEqual(len(lines), 1, lines)
+        for word in ("WARNING", "eval mode", "13 bits", "secret", "weak_seed"):
+            self.assertIn(word, lines[0])
+        _obs, info, lines = self.reset(AuditEnv(mode="eval", secret=""), hidden, cfg)  # an empty secret is no secret
+        self.assertIs(info["weak_seed"], True)
+        self.assertEqual(len(lines), 1, lines)
 
-    def test_a_secret_the_override_and_train_mode_keep_small_seeds_working(self):
+    def test_boundary_is_two_to_the_40_and_the_warning_comes_once_per_env(self):
+        env = AuditEnv(mode="eval")
+        _obs, info, lines = self.reset(env, 2 ** 40 - 1)
+        self.assertIs(info.get("weak_seed"), True)
+        self.assertEqual(len(lines), 1, lines)
+        _obs, info, lines = self.reset(env, -(2 ** 40 - 1))
+        self.assertIs(info.get("weak_seed"), True)
+        self.assertEqual(lines, [], "the warning is printed once per env")
+        obs, info, lines = self.reset(AuditEnv(mode="eval"), 2 ** 40)
+        self.assertIn("episode_id", obs["manifest"])
+        self.assertNotIn("weak_seed", info)
+        self.assertEqual(lines, [])
+
+    def test_a_secret_the_override_and_train_mode_keep_small_seeds_quiet(self):
         for env in (AuditEnv(mode="eval", secret="host-secret"), AuditEnv(mode="eval", allow_weak_seed=True),
                     AuditEnv(mode="train")):
-            obs, _ = env.reset(seed=7, config=self.CONFIG)
+            obs, info, lines = self.reset(env, 7)
             self.assertIn("episode_id", obs["manifest"])
+            self.assertNotIn("weak_seed", info)
+            self.assertEqual(lines, [])
+
+    def test_the_weak_seed_episode_is_the_same_episode(self):
+        """Determinism (CASE section 04): the flag changes nothing in the records."""
+        a, _ia, _l = self.reset(AuditEnv(mode="eval"), 7)
+        b, _ib, _l = self.reset(AuditEnv(mode="eval", allow_weak_seed=True), 7)
+        self.assertEqual(a, b)
 
     def test_loaded_episodes_are_not_affected(self):
-        obs, _ = AuditEnv(mode="eval").reset(seed=7, config={"episode": episode()})
+        obs, info, lines = self.reset(AuditEnv(mode="eval"), 7, {"episode": episode()})
         self.assertIn("episode_id", obs["manifest"])
+        self.assertNotIn("weak_seed", info)
+        self.assertEqual(lines, [])
 
     def test_the_limit_matches_the_run_command(self):
         from auditgym import __main__ as cli_mod

@@ -59,8 +59,9 @@ def _minute_time(b: HistoryBuilder, d: date, m_lo: int, m_hi: int) -> datetime:
 
 
 def _clear_of_dst(b: HistoryBuilder, d: date, m_lo: int, m_hi: int, off: int) -> int:
-    """The latest minute of day `d`, at most m_hi, at which a receipt's UTC-wall-clock posting (receipt minus `off`) stays
-    75 minutes clear of a DST change and still under the boundary's offset `off`. Ordinary documents never sit that close
+    """The latest minute of day `d`, at most m_hi, at which a document's UTC-wall-clock posting (document minus `off`:
+    the boundary receipt, or a standalone utc_wall_clock error) stays 75 minutes clear of a DST change and still under
+    the boundary's offset `off`. Ordinary documents never sit that close
     to a change, so a posting there would be a public tell, and after the change its wall clock would no longer be the
     receipt's UTC wall clock. No DST change near the boundary: m_hi itself, so the draw is unchanged."""
     m = m_hi
@@ -254,11 +255,14 @@ def create_wrong_period(b: HistoryBuilder, plan: Plan, variant: str, scenario: s
     else:
         off = offset_minutes(h.tz, h.p1)
         if off > 0:
-            issued = _minute_time(b, h.next_first_date, 5, off - 11)
+            d, lo, hi = h.next_first_date, 5, off - 11
         elif off < 0:
-            issued = _minute_time(b, h.p_last_date, 1440 + off + 11, 1434)
+            d, lo, hi = h.p_last_date, 1440 + off + 11, 1434
         else:
             raise ConfigError("utc_wall_clock needs a non-zero UTC offset at the period boundary")
+        # as for the boundary receipt: a posting near a DST change is a public tell (ordinary documents never sit
+        # there) and its wall clock would no longer be the document's UTC wall clock; no change near: same draw
+        issued = _minute_time(b, d, lo, _clear_of_dst(b, d, lo, hi, off))
         posting = issued - timedelta(minutes=off)
     inv = _new_invoice(b, kind, issued, foreign, 600)
     plan.items.append(Item("wrong_period", variant, scenario, {"invoice": inv.key}, {"posting_ts": posting}))

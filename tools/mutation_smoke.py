@@ -509,6 +509,10 @@ MUTANTS = [
       "if False:", CLI, "check --seeds-file without a secret and without --no-secret runs"),
     M("env-weak-seed-bound", "auditgym/env.py", "and abs(seed).bit_length() <= MIN_SEED_BITS):",
       "and abs(seed).bit_length() < MIN_SEED_BITS):", ENV, "eval mode accepts a seed of exactly 40 bits without a secret"),
+    # ---------------------------------------------------------------- round 8.1: DST clearance of standalone utc_wall_clock
+    M("inject-utc-wall-clock-dst", "auditgym/inject.py", "issued = _minute_time(b, d, lo, _clear_of_dst(b, d, lo, hi, off))",
+      "issued = _minute_time(b, d, lo, hi)", GEN,
+      "a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026)"),
 ]
 
 

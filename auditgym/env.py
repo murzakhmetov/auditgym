@@ -16,6 +16,7 @@ returned on the final step only. Exploration steps always return 0.0.
 from __future__ import annotations
 
 import copy
+import sys
 import time
 from pathlib import Path
 
@@ -60,8 +61,11 @@ def _err(code: str, message: str) -> dict:
 
 
 class AuditEnv:
-    """allow_weak_seed: in eval mode, generating from a seed of at most MIN_SEED_BITS bits without a secret raises
-    ValueError unless this is True (the seed is public by design, as in tests and demos). Train mode is unchanged."""
+    """Weak seeds: in eval mode, generating from a seed of at most MIN_SEED_BITS bits without a secret still returns
+    (observation, info), as the contract requires, but prints one WARNING line per env on stderr and sets
+    info["weak_seed"] to true, because such a seed can be recovered from the public episode_id. allow_weak_seed=True
+    silences that for seeds that are public by design (tests, demos). The CLI's seeds-file paths refuse instead
+    (--secret-env or --no-secret). Train mode is unchanged."""
 
     def __init__(self, mode: str = "train", max_steps: int = DEFAULT_MAX_STEPS,
                  time_limit_s: float = DEFAULT_TIME_LIMIT_S, clock=time.monotonic, secret: str | None = None,
@@ -76,6 +80,7 @@ class AuditEnv:
         self._clock = clock
         self._secret = secret
         self._allow_weak_seed = bool(allow_weak_seed)
+        self._weak_warned = False
         self._episode: Episode | None = None
         self._grader: Grader | None = None
         self._index: dict = {}
@@ -102,6 +107,7 @@ class AuditEnv:
         if config is None and isinstance(options, dict) and isinstance(options.get("config"), dict):
             config = options["config"]  # Gymnasium-style reset(options=...); any other option key is ignored
         config = dict(config or {})
+        weak = False
         if "episode_dir" in config:
             episode = load_episode(Path(config["episode_dir"]))
         elif "episode" in config:
@@ -117,11 +123,14 @@ class AuditEnv:
                 raise TypeError(f"seed must be an int, got {type(seed).__name__}")
             if (self.mode == "eval" and not self._secret and not self._allow_weak_seed
                     and abs(seed).bit_length() <= MIN_SEED_BITS):
-                raise ValueError(
-                    f"eval mode would generate an episode from a seed of {abs(seed).bit_length()} bits (at most "
-                    f"{MIN_SEED_BITS}) with no secret: such a seed can be recovered from the public episode_id and "
-                    f"the answer key computed. Give the env a secret (AuditEnv(secret=...)), use a seed of more than "
-                    f"{MIN_SEED_BITS} bits, or build it with allow_weak_seed=True when the seed is public by design")
+                weak = True  # generation stays deterministic; the host is told, the policy never sees this
+                if not self._weak_warned:
+                    print(f"WARNING: eval mode generates an episode from a seed of {abs(seed).bit_length()} bits (at "
+                          f"most {MIN_SEED_BITS}) with no secret: such a seed can be recovered from the public "
+                          f"episode_id and the answer key computed; for evaluation give the env a secret "
+                          f"(AuditEnv(secret=...)) or a seed of more than {MIN_SEED_BITS} bits (info['weak_seed'] is "
+                          f"true; allow_weak_seed=True silences this when the seed is public by design)", file=sys.stderr)
+                    self._weak_warned = True
             gen_cfg = _generator_config(config)
             episode = generate_episode(seed, gen_cfg, secret=self._secret).episode
         if config.get("transform"):
@@ -136,6 +145,8 @@ class AuditEnv:
             "remaining_steps": self.max_steps,
         }
         info = {"episode_id": episode.episode_id, "mode": self.mode, "max_steps": self.max_steps}
+        if weak:
+            info["weak_seed"] = True
         return obs, info
 
     def _load(self, episode: Episode) -> None:

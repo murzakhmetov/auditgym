@@ -586,6 +586,32 @@ class TransformTests(unittest.TestCase):
         self.assertFalse(old_ids & {x["row_id"] for x in r.ledger})
 
 
+class StandaloneUtcWallClockDstTests(unittest.TestCase):
+    """New York, October 2026: 1 November is a Sunday, so the boundary night holds the DST change. A standalone
+    utc_wall_clock error used to post inside that window in about half of the seeds, a time ordinary documents never
+    use; it now keeps the boundary receipt's 75-minute clearance and the boundary's offset."""
+
+    def test_the_posting_stays_clear_of_the_dst_change(self):
+        from auditgym.timeutil import in_ambiguous_hour, offset_minutes, parse_ts
+
+        cfg = {"size": "small", "timezone": "America/New_York", "period": "2026-10", "errors": {"wrong_period": 1},
+               "variants": {"wrong_period": ["utc_wall_clock"]}}
+        checked = 0
+        for s in range(24):
+            ep = generate_episode(10 ** 15 + s, cfg).episode
+            ids = {a for t in ep.truth["issues"] if t["type"] == "wrong_period" for a in t["affected_ids"]}
+            inv = next(d for d in ep.invoices if d["invoice_id"] in ids)
+            off = offset_minutes("America/New_York", parse_ts(inv["issued_at"]))
+            rows = [r for r in ep.ledger if r.get("invoice_id") in ids and not r.get("payment_id")]
+            self.assertTrue(rows)
+            for r in rows:
+                posting = parse_ts(r["timestamp"])
+                self.assertFalse(in_ambiguous_hour("America/New_York", posting), (s, r["timestamp"]))
+                self.assertEqual(offset_minutes("America/New_York", posting), off, (s, r["timestamp"]))
+            checked += 1
+        self.assertEqual(checked, 24)
+
+
 class BoundaryEveryMonthTests(unittest.TestCase):
     """boundary_fx_payment can be generated for a fixed period in every month, not only where both days around the
     period end are weekdays: where the utc_date error would have no amount the receipt carries another rate error."""
