@@ -65,7 +65,74 @@ class DirectoryModeTests(unittest.TestCase):
     def test_untouched_copy_passes(self):
         r = run_verify(self.dir)
         self.assertEqual(r.returncode, 0, r.stdout)
-        self.assertEqual(r.stdout.count("PASS  "), 9)
+        self.assertIn("PASS  regenerates_from_provenance", r.stdout)
+        self.assertEqual(r.stdout.count("PASS  "), 10)
+
+    def test_open_directory_must_reproduce_all_files_including_their_bytes(self):
+        for edit, name in (("seed", "grader/provenance.json"), ("distractors", "grader/provenance.json"),
+                           ("variant", "grader/truth.json"), ("whitespace", "public/policy.json")):
+            with self.subTest(edit=edit):
+                path = self.dir / name
+                original = path.read_bytes()
+                record = json.loads(original)
+                if edit == "seed":
+                    record["seed"] = str(int(record["seed"]) + 1)
+                elif edit == "distractors":
+                    record["distractors"].pop()
+                elif edit == "variant":
+                    issue = next(i for i in record["issues"] if i["type"] == "wrong_period")
+                    issue["variant"] = "booked_late" if issue["variant"] != "booked_late" else "booked_early"
+                data = (json.dumps(record, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+                path.write_bytes(original + b"\n" if edit == "whitespace" else data)
+                try:
+                    result = run_verify(self.dir)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn("FAIL  regenerates_from_provenance", result.stdout)
+                    self.assertIn(name, result.stdout)
+                finally:
+                    path.write_bytes(original)
+
+    def test_regeneration_skips_secret_or_unavailable_generator(self):
+        generate_episode(17, {"size": "small"}, secret="test-only").episode.write(self.dir)
+        secret = run_verify(self.dir)
+        self.assertEqual(secret.returncode, 0, secret.stdout)
+        self.assertIn("SKIP  regenerates_from_provenance", secret.stdout)
+        self.assertIn("secret", secret.stdout.lower())
+        self.assertEqual(secret.stdout.count("PASS  "), 9)
+        self.prov["generator_version"] = "0.0.1"
+        shutil.copytree(D08, self.dir, dirs_exist_ok=True)
+        self.save()
+        older = run_verify(self.dir)
+        self.assertIn("SKIP  regenerates_from_provenance", older.stdout)
+        self.assertIn("version", older.stdout.lower())
+
+    def test_directory_regeneration_replays_a_transformation_with_an_explicit_period(self):
+        source = generate_episode(39, {"size": "small", "period": "2026-06"}).episode
+        transformed = transform_episode(source, permute_seed=1, remap_seed=2, ts_repr="utc", rename_seed=3, shift_years=28)
+        transformed.write(self.dir)
+        result = run_verify(self.dir)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("PASS  regenerates_from_provenance", result.stdout)
+
+    def test_chained_transform_reports_missing_history_but_bogus_marker_fails(self):
+        first = transform_episode(load_episode(self.dir), remap_seed=3)
+        second = transform_episode(first, rename_seed=9)
+        second.write(self.dir)
+        result = run_verify(self.dir)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("SKIP  regenerates_from_provenance", result.stdout)
+        second.provenance["transformed_from"]["rename_seed"] = 10
+        second.write(self.dir)
+        result = run_verify(self.dir)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("FAIL  regenerates_from_provenance", result.stdout)
+
+    def test_malformed_secret_used_does_not_skip_regeneration(self):
+        self.prov["secret_used"] = "false"
+        self.save()
+        result = run_verify(self.dir)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("FAIL  regenerates_from_provenance", result.stdout)
 
     def test_an_fx_rate_with_a_huge_exponent_fails_at_once_without_a_traceback(self):
         # float() reads 1e99999999 as inf and 10 ** 99999999 would never finish: verify must report, not hang
@@ -323,7 +390,7 @@ class DirectoryModeTests(unittest.TestCase):
         r = run_verify(self.dir)
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertNotIn("Traceback", r.stderr)
-        self.assertEqual(r.stdout.count("PASS  ") + r.stdout.count("FAIL  "), 9, r.stdout)
+        self.assertEqual(r.stdout.count("PASS  ") + r.stdout.count("FAIL  "), 10, r.stdout)
         self.assertIn("FAIL  provenance_roundtrip", r.stdout)
 
     def test_provenance_that_is_a_list_fails_without_a_traceback(self):
@@ -728,7 +795,7 @@ class AnswerKeyCrossChecks(unittest.TestCase):
 
     def test_untouched_copy_exits_zero(self):
         r = run_verify(self.dir)
-        self.assertEqual((r.returncode, r.stdout.count("PASS  ")), (0, 9), r.stdout)
+        self.assertEqual((r.returncode, r.stdout.count("PASS  ")), (0, 10), r.stdout)
 
     def test_wrong_alias_fails(self):
         a = self.truth["id_aliases"]
@@ -764,7 +831,7 @@ class AnswerKeyCrossChecks(unittest.TestCase):
         self.assertNotIn("Traceback", r.stderr)
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertIn("FAIL  provenance_roundtrip", r.stdout)
-        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 10, r.stdout)
 
     def test_committed_and_hidden_like_episodes_and_transforms_keep_passing(self):
         for split in ("train", "dev"):
@@ -789,17 +856,6 @@ def _alloc_is_pinned(src: Path, inj: dict) -> bool:
     return pays[inj["targets"]["payment"]]["currency"] == pol["base_currency"]
 
 
-def _dir_with_pinned_partial() -> Path:
-    """The first committed episode (train, then dev) with a partial unallocated_payment whose payment is in the base currency."""
-    for split in ("train", "dev"):
-        for d in sorted((ROOT / "episodes" / split).iterdir()):
-            if d.is_dir():
-                for inj in json.loads((d / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]:
-                    if inj["type"] == "unallocated_payment" and inj["variant"] == "partial" and _alloc_is_pinned(d, inj):
-                        return d
-    raise AssertionError("no committed partial unallocated_payment in the base currency")
-
-
 def _shifted(key, value):
     """A plausible but wrong value for one change key."""
     if value is None:
@@ -815,6 +871,14 @@ def _shifted(key, value):
 
 class ChangeRecordTests(unittest.TestCase):
     """provenance.injections[].change is checked against fx.csv, the ledger and the ops (check provenance_roundtrip)."""
+
+    def base_partial_directory(self) -> Path:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        directory = Path(tmp.name) / "base_partial"
+        ep, _ = _plain_partial_base()
+        ep.write(directory)
+        return directory
 
     def copy(self, src: Path) -> Path:
         tmp = tempfile.TemporaryDirectory()
@@ -835,17 +899,18 @@ class ChangeRecordTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout)
         self.assertIn(f"FAIL  {check}", r.stdout)
         self.assertIn(needle, r.stdout)
-        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 10, r.stdout)
 
     def test_untouched_copies_exit_zero(self):
         for src in (D08, T08):
             r = run_verify(self.copy(src))
             self.assertEqual(r.returncode, 0, r.stdout)
-            self.assertEqual(r.stdout.count("PASS  "), 9)
+            self.assertEqual(r.stdout.count("PASS  "), 10)
 
     def test_every_tampered_change_key_fails(self):
         seen = set()
-        for src in dict.fromkeys((D08, T08, D05, T05, T04, _dir_with_pinned_partial(), *(_dir_with(v) for v in ("transposed", "stale_rate", "posting_date", "utc_date")))):
+        for src in dict.fromkeys((D08, T08, D05, T05, T04, self.base_partial_directory(),
+                                  *(_dir_with(v) for v in ("transposed", "stale_rate", "posting_date", "utc_date")))):
             injections = json.loads((src / "grader" / "provenance.json").read_text(encoding="utf-8"))["injections"]
             for n, inj in enumerate(injections):
                 for key in inj["change"]:
@@ -880,7 +945,7 @@ class ChangeRecordTests(unittest.TestCase):
 
     def test_rule_by_rule_tampers_fail(self):
         d04 = ROOT / "episodes" / "dev" / "d04_unallocated_missing_eur"
-        t04 = _dir_with_pinned_partial()
+        base_partial = self.base_partial_directory()
         d10 = _dir_with("transposed")  # a committed episode with a transposed rate (it has a second valid transposition)
         by_id = lambda p, i: next(x for x in p["injections"] if x["issue_id"] == i)
 
@@ -918,7 +983,7 @@ class ChangeRecordTests(unittest.TestCase):
             (d10, "signed rate", set_rate(lambda ch: "+" + ch["wrong_rate"])),
             (d04, "alloc is a bool", lambda p: by_id(p, "iss_01")["change"].__setitem__("alloc", False)),
             (d04, "variant swapped to partial", lambda p: by_id(p, "iss_01").__setitem__("variant", "partial")),
-            (t04, "alloc one unit lower (2900 rule)", lower_alloc),  # a base-currency receipt: one unit is visible in the ledger
+            (base_partial, "alloc one unit lower (2900 rule)", lower_alloc),  # one base-currency unit is visible in the ledger
         ]
         for src, label, edit in cases:
             with self.subTest(label):
@@ -953,12 +1018,12 @@ class SoleReceiptTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout)
         self.assertIn("FAIL  evidence_sufficient", r.stdout)
         self.assertIn(needle, r.stdout)
-        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 9, r.stdout)
+        self.assertEqual(sum(ln.startswith(("PASS  ", "FAIL  ")) for ln in r.stdout.splitlines()), 10, r.stdout)
 
     def test_untouched_copy_exits_zero(self):
         r = run_verify(self.dir)
         self.assertEqual(r.returncode, 0, r.stdout)
-        self.assertEqual(r.stdout.count("PASS  "), 9)
+        self.assertEqual(r.stdout.count("PASS  "), 10)
 
     def test_second_receipt_referencing_the_invoice_fails(self):
         other = copy.deepcopy(self.pay)
@@ -1007,21 +1072,16 @@ def _issue_parts(ep, issue):
 
 
 def _plain_partial_base():
-    """(episode, issue) of a committed unallocated_payment in the base currency with a relief row whose invoice has no other
-    payment: the plain story the balance tests below edit row by row (a part-paid invoice has a second relief on it)."""
-    for _s, _n, ep in load_split_episodes():
-        refs = {}
-        for p in ep.payments:
-            for r in p["invoice_refs"] or []:
-                refs.setdefault(r, []).append(p["payment_id"])
-        for t in ep.truth["issues"]:
-            if t["type"] != "unallocated_payment":
-                continue
-            pay, inv = _issue_parts(ep, t)
-            relieved = any(r["payment_id"] == pay["payment_id"] and r["account"] == "1100" for r in ep.ledger)
-            if inv["currency"] == ep.policy["base_currency"] and relieved and len(refs[inv["invoice_id"]]) == 1:
-                return ep, t
-    raise AssertionError("no plain base-currency unallocated_payment with a relief among the committed episodes")
+    """Generate a base-currency partial allocation on an invoice without a prior receipt."""
+    ep = generate_episode(2, {"size": "small", "base_currency": "USD", "foreign_currencies": [],
+                              "errors": {"unallocated_payment": 1},
+                              "variants": {"unallocated_payment": ["partial"]}}).episode
+    issue, = ep.truth["issues"]
+    pay, inv = _issue_parts(ep, issue)
+    refs = [p["payment_id"] for p in ep.payments if inv["invoice_id"] in (p["invoice_refs"] or [])]
+    if refs != [pay["payment_id"]]:
+        raise AssertionError("partial allocation fixture must have exactly one receipt for its invoice")
+    return ep, issue
 
 
 class UnallocatedEvidenceSetTests(unittest.TestCase):

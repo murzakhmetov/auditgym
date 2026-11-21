@@ -252,6 +252,12 @@ def _retime(rec: dict, fmt, key_field: str) -> dict:
     return out
 
 
+def transformed_id(episode_id, permute_seed=None, remap_seed=None, ts_repr=None, rename_seed=None, shift_years=None):
+    tag = f"{episode_id}|{permute_seed}|{remap_seed}|{ts_repr}" + ("" if rename_seed is None else f"|{rename_seed}")
+    tag += "" if shift_years is None else f"|shift{shift_years}"
+    return "ep_" + hashlib.sha256(tag.encode("utf-8")).hexdigest()[:16]
+
+
 def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=None, rename_seed=None,
                       shift_years=None) -> Episode:
     if ts_repr is not None and ts_repr not in ("utc", "local", "mixed"):
@@ -328,9 +334,7 @@ def transform_episode(ep: Episode, permute_seed=None, remap_seed=None, ts_repr=N
         for table in ("ledger", "invoices", "payments", "fx"):
             rows = new.table(table)
             rng.fork(table).shuffle(rows)
-    tag = f"{ep.episode_id}|{permute_seed}|{remap_seed}|{ts_repr}" + ("" if rename_seed is None else f"|{rename_seed}")
-    tag += "" if shift_years is None else f"|shift{shift_years}"
-    new_id = "ep_" + hashlib.sha256(tag.encode("utf-8")).hexdigest()[:16]
+    new_id = transformed_id(ep.episode_id, permute_seed, remap_seed, ts_repr, rename_seed, shift_years)
     new.manifest["episode_id"] = new_id
     if new.truth:
         new.truth["episode_id"] = new_id

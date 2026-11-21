@@ -120,6 +120,18 @@ class BadInput(unittest.TestCase):
                 with self.subTest(good):
                     self.assertEqual(cli("grade", "--episode", ep, "--findings", str(f), "--steps", good)[0], 0)
 
+    def test_grade_json_null_is_an_invalid_submission(self):
+        ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "f.json"
+            f.write_text("null", encoding="utf-8")
+            rc, out, err = cli("grade", "--episode", str(ep), "--findings", str(f))
+        self.assertEqual(rc, 0, err)
+        report = json.loads(out)
+        self.assertEqual(report["status"], "invalid_submission")
+        self.assertEqual(report["reward"], -1)
+        self.assertIn("submission must be a JSON object", report["errors"])
+
     def test_grade_with_a_huge_integer_is_an_invalid_submission(self):
         ep = ROOT / "episodes" / "dev" / "d01_clean_repeats_jpy"
         eid = load_episode(ep).episode_id

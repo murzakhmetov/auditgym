@@ -300,12 +300,17 @@ def cmd_verify(args) -> int:
 
     with _input(broad=True):
         ep = load_episode(Path(args.dir))
-    rep = verify_generated(ep)
+    rep = verify_generated(ep, directory=Path(args.dir))
     if args.json:
         print(json.dumps(rep, indent=2))
     else:
         for name, status in rep["checks"].items():
-            print(f"{'PASS' if status == 'pass' else 'FAIL'}  {name}" + ("" if status == "pass" else f": {status[:3]}"))
+            if status == "skip":
+                print(f"SKIP  {name}: {rep['skips'][name]}")
+            elif status == "pass":
+                print(f"PASS  {name}")
+            else:
+                print(f"FAIL  {name}: {status[:3]}")
         for t in ep.truth.get("issues", []):
             print(f"      declared {t['issue_id']} {t['type']} ids={t['affected_ids']} amount={t['expected_amount_minor']} {t['currency']}"
                   f" evidence_sets={len(t['evidence_sets'])}")
@@ -402,7 +407,7 @@ def cmd_run(args) -> int:
 def cmd_grade(args) -> int:
     from .episode import load_episode
     from .grader import Grader
-    from .schemas import validate_submission
+    from .schemas import coerce_submission, validate_submission
 
     if not 0 <= args.steps <= MAX_STEPS:
         raise InputError(f"--steps must be between 0 and {MAX_STEPS}")
@@ -417,14 +422,9 @@ def cmd_grade(args) -> int:
         except (ValueError, RecursionError) as exc:  # e.g. a 4300-digit integer or deep nesting: a bad submission
             sub = None
             errors = [f"{Path(args.findings).name} is not valid JSON: {' '.join(str(exc).split())[:120]}"]
-    if sub is None:
-        rep = Grader(ep.truth, ep.episode_id).grade(None, args.steps, "invalid_submission", invalid_errors=errors)
-        print(json.dumps(rep, indent=2))
-        return 0
-    from .schemas import coerce_submission
-
-    sub = coerce_submission(sub)  # same integral-float coercion as env.step, so both paths grade alike
-    errors = validate_submission(sub, ep.episode_id)
+        else:
+            sub = coerce_submission(sub)  # same integral-float coercion as env.step
+            errors = validate_submission(sub, ep.episode_id)
     g = Grader(ep.truth, ep.episode_id)
     if errors:
         rep = g.grade(None, args.steps, "invalid_submission", invalid_errors=errors)

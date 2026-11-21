@@ -1,35 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_12062a541c6b03ee",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_0e6b2bffb7722491",
   "company": {
-    "name": "Eloum Analytics Ltd",
+    "name": "Belana Textiles Ltd",
     "synthetic": true
   },
   "base_currency": "GBP",
   "currency_exponents": {
     "GBP": 2,
-    "USD": 2,
-    "CHF": 2,
     "EUR": 2
   },
-  "period_start": "2025-05-01T00:00:00+01:00",
-  "period_end": "2025-06-01T00:00:00+01:00",
-  "ledger_extract_end": "2025-06-08T00:00:00+01:00",
+  "period_start": "2025-04-01T00:00:00+01:00",
+  "period_end": "2025-05-01T00:00:00+01:00",
+  "ledger_extract_end": "2025-05-08T00:00:00+01:00",
   "timezone": "Europe/London",
   "record_counts": {
-    "ledger": 976,
+    "ledger": 669,
     "invoices": 112,
-    "payments": 86,
-    "fx": 197
+    "payments": 85,
+    "fx": 80
   },
   "document_counts": {
     "invoices": 112,
-    "payments": 86,
-    "total": 198
+    "payments": 85,
+    "total": 197
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

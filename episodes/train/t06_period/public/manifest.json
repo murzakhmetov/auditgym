@@ -1,33 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_8c464b63a08b4441",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_7327d87248af9ea3",
   "company": {
-    "name": "Valon Logistics KK",
+    "name": "Astix Textiles Ltda",
     "synthetic": true
   },
-  "base_currency": "JPY",
+  "base_currency": "USD",
   "currency_exponents": {
-    "JPY": 0,
-    "USD": 2
+    "USD": 2,
+    "GBP": 2
   },
-  "period_start": "2026-12-01T00:00:00+09:00",
-  "period_end": "2027-01-01T00:00:00+09:00",
-  "ledger_extract_end": "2027-01-08T00:00:00+09:00",
-  "timezone": "Asia/Tokyo",
+  "period_start": "2027-10-01T00:00:00-03:00",
+  "period_end": "2027-11-01T00:00:00-03:00",
+  "ledger_extract_end": "2027-11-08T00:00:00-03:00",
+  "timezone": "America/Sao_Paulo",
   "record_counts": {
-    "ledger": 365,
-    "invoices": 70,
-    "payments": 53,
-    "fx": 92
+    "ledger": 309,
+    "invoices": 59,
+    "payments": 55,
+    "fx": 90
   },
   "document_counts": {
-    "invoices": 70,
-    "payments": 53,
-    "total": 123
+    "invoices": 59,
+    "payments": 55,
+    "total": 114
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

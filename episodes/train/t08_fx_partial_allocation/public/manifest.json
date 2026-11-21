@@ -1,32 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_31d66797ac8b0f9b",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_57ffa28fc8317617",
   "company": {
-    "name": "Verix Trading LLP",
+    "name": "Selum Packaging Ltd",
     "synthetic": true
   },
-  "base_currency": "KZT",
+  "base_currency": "KWD",
   "currency_exponents": {
-    "KZT": 2,
-    "USD": 2,
-    "AED": 2,
-    "EUR": 2
+    "KWD": 3,
+    "BHD": 3
   },
-  "period_start": "2027-01-01T00:00:00+05:00",
-  "period_end": "2027-02-01T00:00:00+05:00",
-  "ledger_extract_end": "2027-02-08T00:00:00+05:00",
-  "timezone": "Asia/Almaty",
+  "period_start": "2025-04-01T00:00:00+03:00",
+  "period_end": "2025-05-01T00:00:00+03:00",
+  "ledger_extract_end": "2025-05-08T00:00:00+03:00",
+  "timezone": "Asia/Kuwait",
   "record_counts": {
-    "ledger": 849,
-    "invoices": 108,
-    "payments": 78,
-    "fx": 217
+    "ledger": 629,
+    "invoices": 103,
+    "payments": 84,
+    "fx": 93
   },
   "document_counts": {
-    "invoices": 108,
-    "payments": 78,
-    "total": 186
+    "invoices": 103,
+    "payments": 84,
+    "total": 187
   },
   "rounding": {
     "mode": "half_up",

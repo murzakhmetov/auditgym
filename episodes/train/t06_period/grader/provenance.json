@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
+  "generator_version": "0.5.0",
   "config_version": "1",
   "seed": "6403388190752104479",
   "secret_used": false,
@@ -13,15 +13,15 @@
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "JPY",
+    "base_currency": "USD",
     "foreign_currencies": [
-      "USD"
+      "GBP"
     ],
-    "timezone": "Asia/Tokyo",
-    "period": "2026-12",
-    "rounding": "half_up",
-    "id_style": "prefixed",
-    "ts_repr": "local",
+    "timezone": "America/Sao_Paulo",
+    "period": "2027-10",
+    "rounding": "half_even",
+    "id_style": "hex",
+    "ts_repr": "mixed",
     "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
@@ -58,23 +58,23 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 4,
-      "posting_lag": 20,
+      "boundary_doc": 2,
+      "posting_lag": 13,
       "overpayment_refund": 3,
-      "null_ref_receipt": 1,
-      "split_remainder": 1,
-      "credit_receipt": 4,
-      "prepaid_receipt": 2,
-      "legit_repeat": 4
+      "null_ref_receipt": 2,
+      "split_remainder": 3,
+      "credit_receipt": 3,
+      "prepaid_receipt": 3,
+      "legit_repeat": 2
     },
-    "repeat_pairs": 4,
+    "repeat_pairs": 2,
     "counts": {
-      "customers": 9,
-      "suppliers": 5,
-      "sales_invoices": 18,
-      "purchase_invoices": 11,
-      "prior_invoices": 5,
-      "target_rows": 365
+      "customers": 6,
+      "suppliers": 6,
+      "sales_invoices": 14,
+      "purchase_invoices": 9,
+      "prior_invoices": 4,
+      "target_rows": 308
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
@@ -93,27 +93,28 @@
   },
   "attempt": 0,
   "history": {
-    "company": "Valon Logistics KK",
-    "customers": 9,
-    "suppliers": 5,
-    "invoices": 70,
-    "payments": 53,
-    "misc_journals": 41,
+    "company": "Astix Textiles Ltda",
+    "customers": 6,
+    "suppliers": 6,
+    "invoices": 59,
+    "payments": 55,
+    "misc_journals": 24,
     "holidays": [
-      "2026-12-11"
+      "2027-10-06",
+      "2027-10-08"
     ]
   },
   "injections": [
     {
       "issue_id": "iss_01",
       "type": "wrong_period",
-      "variant": "booked_early",
+      "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "payment": "RCPT-828262"
+        "payment": "rc_c87f3832"
       },
       "change": {
-        "posting_ts": "2026-12-30T09:00:46+00:00"
+        "posting_ts": "2027-11-01T04:14:42+00:00"
       }
     }
   ],
@@ -121,359 +122,307 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "INV-198435",
-        "INV-264163"
+        "si_fd5ae957",
+        "si_bf3ee2cd"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "INV-518932",
-        "INV-705558",
-        "RCPT-173706"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "BILL-891389",
-        "BILL-829242",
-        "PAY-457664"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "BILL-917415",
-        "BILL-773274",
-        "PAY-731759"
+        "pi_8979f4ff",
+        "pi_8a5ecc6b",
+        "dp_22710d33"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-924756",
-        "BILL-137576"
+        "pi_15e7b805",
+        "pi_fcf3e305"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-420896",
-        "RCPT-558774",
-        "RCPT-192431"
+        "si_776962c5",
+        "rc_e0d823c2",
+        "rc_35e598a8"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-975275",
-        "RCPT-837826",
-        "RCPT-766210"
+        "si_2d7536da",
+        "rc_9210d65c",
+        "rc_8b72f7b6"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_dc69a6a8",
+        "rc_e7de7b92",
+        "rc_4d9b2f0a"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_574eb006",
+        "rc_90d0dd17",
+        "rc_e2cf68c3"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-523049",
-        "INV-902958",
-        "RCPT-975272"
+        "si_58ea2b3d",
+        "si_9cee7f96",
+        "rc_b1456257"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-848820",
-        "RCPT-287642"
+        "si_eeca1d90",
+        "rc_586a1595"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-578363",
-        "RCPT-482102",
-        "RFND-853007"
+        "si_7dc2e11e",
+        "rc_5a709e26",
+        "rf_b8744be9"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-491781",
-        "RCPT-423916",
-        "RFND-485508"
+        "si_cc10b700",
+        "rc_cf423797",
+        "rf_e3e7f86f"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-866256",
-        "RCPT-473056",
-        "RFND-580503"
+        "si_b3f912e0",
+        "rc_778e9cb7",
+        "rf_d759c165"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-128811"
+        "rc_7b311062"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "rc_2dd4f2a8"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-949420"
+        "si_0ad2ee36",
+        "rc_1a958df1"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-954311",
-        "RCPT-285265"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "INV-870057",
-        "RCPT-637191"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "BILL-205103"
+        "si_6e6c6127"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-267579",
-        "RCPT-745700"
+        "si_4dcea1c2",
+        "rc_21043d57",
+        "rc_4b194fc3"
       ],
-      "shape": "overpaid"
+      "shape": "topped_up"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-811368",
-        "RCPT-687190"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-478066",
-        "RCPT-156521"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-226864",
-        "RCPT-891401",
-        "RCPT-764677"
+        "si_fbaf7477",
+        "rc_1d4e1bb0",
+        "rc_eb904eef"
       ],
       "shape": "settled"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-681241",
-        "RCPT-345708"
+        "si_8e379d92",
+        "rc_5c7a83b0"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_8d1bd450",
+        "rc_80b0b689"
       ],
       "shape": "prepaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-725895",
-        "RCPT-493456"
+        "si_032f742d",
+        "rc_92eaa151"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_c425a14d",
+        "rc_16e19fff"
       ],
       "shape": "prepaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-186547"
+        "pi_d0d1e26a"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-163693",
-        "RCPT-852221"
+        "pi_19b73f41",
+        "dp_c76a73c6"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-716075"
+        "si_1887edb0"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "PAY-773806"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-473056"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-434835"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RFND-485508"
+        "rc_ea32258e"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-870057"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-498748"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-457664"
+        "rc_69e677bd"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-539019"
+        "rc_de785277"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_7dc2e11e"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-345708"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-811368"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-866256"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-150962"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RFND-853007"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-156521"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "BILL-205103"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RFND-580503"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-975272"
+        "si_f8b10604"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-902958"
+        "rc_35e598a8"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "pi_19b73f41"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_90d0dd17"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "dp_04c2b048"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_e363f5cb"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_8b72f7b6"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_9cee7f96"
       ],
       "shape": "earlier"
     }
   ],
-  "posting_lags": [
-    {
-      "id": "INV-705558",
-      "shape": "utc_wall_clock",
-      "role": "pair"
-    }
-  ],
+  "posting_lags": [],
   "ops": [
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-144436",
+      "id": "gl_799c9e71",
       "field": "timestamp",
-      "before": "2027-01-01T15:24:55+09:00",
-      "after": "2026-12-30T18:00:46+09:00"
+      "before": "2027-10-31T22:14:42-03:00",
+      "after": "2027-11-01T01:14:42-03:00"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-198252",
+      "id": "gl_7fa6952d",
       "field": "timestamp",
-      "before": "2027-01-01T15:24:55+09:00",
-      "after": "2026-12-30T18:00:46+09:00"
+      "before": "2027-10-31T22:14:42-03:00",
+      "after": "2027-11-01T01:14:42-03:00"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-528118",
+      "id": "gl_ee5f9c26",
       "field": "timestamp",
-      "before": "2027-01-01T15:24:55+09:00",
-      "after": "2026-12-30T18:00:46+09:00"
+      "before": "2027-10-31T22:14:42-03:00",
+      "after": "2027-11-01T01:14:42-03:00"
     }
   ],
-  "clean_digest": "72bf22436a66bc0e59656667ad61b89bf4e9744d2be7fe5152f35b2e3fe74c40",
-  "clean_records_digest": "c4d40dbd120267b511574e06667e7d7e7afc04423f7347d446628bd8da1221fc",
-  "final_digest": "c72684fc122591b253f13bb4e384f128a91a097c6abf448c08a1deb5bba3dfb8",
+  "clean_digest": "da684858a4cec58463681ac3e6598baf8568c19b9e08181acf6e965e3ae1bc35",
+  "clean_records_digest": "a39ac702d96c559c7c7b30ac3fd29846daaa4eddef3a7ab1e1f615a06006767d",
+  "final_digest": "1fa93a19cd89921355c2c3f203b10594f139faa034dea0e47e9a52a7abeec8d8",
   "rejected_attempts": []
 }

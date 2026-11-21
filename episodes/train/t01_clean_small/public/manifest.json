@@ -1,30 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_9e4f577f5b1c7fe6",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_0687d3504067ea06",
   "company": {
-    "name": "Rynova Trading Pty Ltd",
+    "name": "Marex Trading Holdings",
     "synthetic": true
   },
-  "base_currency": "GBP",
+  "base_currency": "EUR",
   "currency_exponents": {
-    "GBP": 2,
-    "USD": 2
+    "EUR": 2,
+    "CHF": 2
   },
-  "period_start": "2027-02-01T00:00:00+11:00",
-  "period_end": "2027-03-01T00:00:00+11:00",
-  "ledger_extract_end": "2027-03-08T00:00:00+11:00",
-  "timezone": "Australia/Sydney",
+  "period_start": "2026-12-01T00:00:00+00:00",
+  "period_end": "2027-01-01T00:00:00+00:00",
+  "ledger_extract_end": "2027-01-08T00:00:00+00:00",
+  "timezone": "UTC",
   "record_counts": {
-    "ledger": 268,
-    "invoices": 64,
-    "payments": 47,
-    "fx": 80
+    "ledger": 290,
+    "invoices": 73,
+    "payments": 60,
+    "fx": 92
   },
   "document_counts": {
-    "invoices": 64,
-    "payments": 47,
-    "total": 111
+    "invoices": 73,
+    "payments": 60,
+    "total": 133
   },
   "rounding": {
     "mode": "half_even",

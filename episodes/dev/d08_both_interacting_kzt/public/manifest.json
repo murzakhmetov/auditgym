@@ -1,35 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_e98b5614d96fce06",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_f188b321480f2e78",
   "company": {
-    "name": "Daron Foods LLP",
+    "name": "Torella Foods LLP",
     "synthetic": true
   },
   "base_currency": "KZT",
   "currency_exponents": {
     "KZT": 2,
+    "EUR": 2,
     "USD": 2,
-    "AED": 2,
-    "EUR": 2
+    "AED": 2
   },
-  "period_start": "2025-04-01T00:00:00+05:00",
-  "period_end": "2025-05-01T00:00:00+05:00",
-  "ledger_extract_end": "2025-05-08T00:00:00+05:00",
+  "period_start": "2026-06-01T00:00:00+05:00",
+  "period_end": "2026-07-01T00:00:00+05:00",
+  "ledger_extract_end": "2026-07-08T00:00:00+05:00",
   "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 867,
-    "invoices": 114,
-    "payments": 86,
-    "fx": 217
+    "ledger": 666,
+    "invoices": 98,
+    "payments": 71,
+    "fx": 214
   },
   "document_counts": {
-    "invoices": 114,
-    "payments": 86,
-    "total": 200
+    "invoices": 98,
+    "payments": 71,
+    "total": 169
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

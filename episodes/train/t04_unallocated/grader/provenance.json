@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
+  "generator_version": "0.5.0",
   "config_version": "1",
   "seed": "5681269573535271104",
   "secret_used": false,
@@ -13,16 +13,18 @@
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "KZT",
+    "base_currency": "EUR",
     "foreign_currencies": [
-      "EUR"
+      "CHF",
+      "USD",
+      "GBP"
     ],
-    "timezone": "Asia/Almaty",
-    "period": "2025-10",
-    "rounding": "half_even",
+    "timezone": "Europe/Berlin",
+    "period": "2025-11",
+    "rounding": "half_up",
     "id_style": "hex",
-    "ts_repr": "local",
-    "row_order": "shuffled",
+    "ts_repr": "utc",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 1,
@@ -58,23 +60,23 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 2,
-      "posting_lag": 16,
-      "overpayment_refund": 1,
+      "boundary_doc": 4,
+      "posting_lag": 15,
+      "overpayment_refund": 2,
       "null_ref_receipt": 2,
       "split_remainder": 1,
       "credit_receipt": 4,
-      "prepaid_receipt": 0,
-      "legit_repeat": 4
+      "prepaid_receipt": 4,
+      "legit_repeat": 2
     },
-    "repeat_pairs": 4,
+    "repeat_pairs": 2,
     "counts": {
-      "customers": 7,
-      "suppliers": 5,
-      "sales_invoices": 17,
-      "purchase_invoices": 8,
-      "prior_invoices": 5,
-      "target_rows": 298
+      "customers": 8,
+      "suppliers": 7,
+      "sales_invoices": 16,
+      "purchase_invoices": 11,
+      "prior_invoices": 4,
+      "target_rows": 336
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
@@ -91,14 +93,14 @@
   },
   "attempt": 0,
   "history": {
-    "company": "Verova Energy LLP",
-    "customers": 7,
-    "suppliers": 5,
-    "invoices": 59,
-    "payments": 38,
+    "company": "Maron Textiles GmbH",
+    "customers": 8,
+    "suppliers": 8,
+    "invoices": 63,
+    "payments": 48,
     "misc_journals": 43,
     "holidays": [
-      "2025-10-08"
+      "2025-11-10"
     ]
   },
   "injections": [
@@ -108,11 +110,11 @@
       "variant": "partial",
       "scenario": "single",
       "targets": {
-        "payment": "rc_7af9eee8",
-        "invoice": "si_487dbfff"
+        "payment": "rc_181c98a4",
+        "invoice": "si_d2986b41"
       },
       "change": {
-        "alloc": 25299716
+        "alloc": 81618
       }
     }
   ],
@@ -120,297 +122,336 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "si_ecaa7275",
-        "si_27e48cac",
-        "rc_746432b6"
+        "si_b41c3777",
+        "si_27a7225c"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "si_71c77866",
-        "si_132c0808",
-        "rc_e92f294a"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "si_b25ffaff",
-        "si_a8d3f2a7"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "si_2f30bb51",
-        "si_90e8ebaf"
+        "si_468b49e3",
+        "si_086a8681"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_e0582cb6",
-        "pi_a3b5a513"
+        "pi_f5a923a9",
+        "pi_24019f61"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_187cff2b",
-        "rc_ebe947a6",
-        "rc_30913faf"
+        "si_e8ab947a",
+        "rc_5cc315f0",
+        "rc_2ab809f7"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_2a851392",
-        "rc_ea2db8d3",
-        "rc_2c385721"
+        "si_ae5193dd",
+        "rc_4d10c97d",
+        "rc_52be0ba5"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_f2aec59f",
-        "si_6af54c54",
-        "rc_3d338710"
+        "si_e6e0eaa6",
+        "si_f37b4463",
+        "rc_f4320597"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_279a2ac2",
-        "rc_9164a51f"
+        "si_dccae393",
+        "rc_fce05068"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_ab392fb3",
-        "rc_c864583f",
-        "rf_9fe5b177"
+        "si_feca1c0f",
+        "rc_a413b807",
+        "rf_4a89f90a"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_1d7ad324",
+        "rc_41d36931",
+        "rf_e158b7b6"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_a56dd299"
+        "rc_0ecd3972"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_7e7d1bf4"
+        "rc_4e9e8479"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_9f322e7a",
-        "dp_56c62bc2"
+        "pi_19bc3b85",
+        "dp_98442140"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_9924f6ab"
+        "si_1313ac04"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_c0ce7ebe"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "pi_f15acd96",
+        "dp_38266bda"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_90aac940",
-        "rc_dc690f2f"
+        "si_b97e9f09",
+        "rc_eee48043"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_48d4a031",
-        "rc_bea6e2b0"
+        "si_a43e65cf",
+        "rc_cdd06a4e",
+        "rc_344a862a"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_8c0e25c0",
+        "rc_fbb6b79c"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_04feb0ce",
-        "rc_80ea5903"
+        "si_6c800655",
+        "rc_894e34a2"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_05fd6d7d",
-        "rc_67e2dff3"
+        "si_1f6bd2ab",
+        "rc_0fae4783"
       ],
-      "shape": "overpaid"
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_11eca830",
+        "rc_819fe5ba"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_6ddb5e6a",
+        "rc_2cf7b8ba"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_e822ff9a",
+        "rc_071f23bb"
+      ],
+      "shape": "prepaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_7499c49c"
+        "si_8be6ddb0"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_0a901ad7",
-        "rc_5b0cc782"
+        "pi_1235b228",
+        "dp_c8a4bd77"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_91e41b66"
+        "si_5941dd7f"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_f2aec59f"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "dp_a86cdc7a"
+        "si_45b707a4"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_1c04fc86"
+        "rf_e158b7b6"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "pi_f15acd96"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_6ddb5e6a"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rf_9fe5b177"
+        "rc_819fe5ba"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_2c385721"
+        "si_1f7cca1c"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_0ac09554"
+        "si_949bc901"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_5b0cc782"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_6857809e"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_3da3857f"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_16a8681a"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_563b1900"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_67e2dff3"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_49c3b35b"
+        "dp_7b8f8b51"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_24e709be"
+        "si_e3257f07"
       ],
-      "shape": "earlier"
+      "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "dp_b2a2e389"
+        "rc_52be0ba5"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_8be6ddb0"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_a1554254"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_a413b807"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_4bb9f043"
+      ],
+      "shape": "date_change"
     }
   ],
   "posting_lags": [
     {
-      "id": "si_ecaa7275",
-      "shape": "earlier",
+      "id": "si_468b49e3",
+      "shape": "date_change",
       "role": "pair"
     }
   ],
   "ops": [
     {
-      "op": "add",
+      "op": "set",
       "table": "ledger",
-      "id": "gl_4b5fc489",
-      "record": {
-        "row_id": "gl_4b5fc489",
-        "timestamp": "2025-10-08T19:57:44+05:00",
-        "account": "2900",
-        "debit_minor": 0,
-        "credit_minor": 30577919,
-        "currency": "KZT",
-        "entity_id": "cus_ad5bcdbc",
-        "invoice_id": null,
-        "payment_id": "rc_7af9eee8"
-      }
+      "id": "gl_2edd27b3",
+      "field": "credit_minor",
+      "before": 473,
+      "after": 268
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_fcc1a532",
+      "id": "gl_4d6348d0",
       "field": "credit_minor",
-      "before": 55877635,
-      "after": 25299716
+      "before": 144458,
+      "after": 81993
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "gl_62c46cbf",
+      "record": {
+        "row_id": "gl_62c46cbf",
+        "timestamp": "2025-11-25T12:53:17Z",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 62670,
+        "currency": "EUR",
+        "entity_id": "cus_803d9812",
+        "invoice_id": null,
+        "payment_id": "rc_181c98a4"
+      }
     }
   ],
-  "clean_digest": "d98ffb9114d8fc82dc33b43ae100f7b1125b3dc08160740c466f07cedd89b525",
-  "clean_records_digest": "f680a0b41cda21da90d0360cdd15f25adde6ad97d038709691d7c83ec9001247",
-  "final_digest": "20ccdd10cffcbeef75e171158f3d40d7f0007a264d2a3f9a2ea1628384023b85",
+  "clean_digest": "bd157a5e2bca2edf5543237e429e1fcbf61bf06c75e09714c0c5dcf8c6e19d7a",
+  "clean_records_digest": "196266a85da8614cc7bf7d6f915792aca26f725fccabcff5e771faa69c2199a0",
+  "final_digest": "fe024a642fba65d647bec56ce3720eb98db862b08982dbbfc6eafa89d5650238",
   "rejected_attempts": []
 }

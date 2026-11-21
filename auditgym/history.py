@@ -897,6 +897,13 @@ class HistoryBuilder:
         pair_set = {k for pair in self.pairs for k in (pair["first"], pair["second"]) if k in eligible}
         # postings that are errors already sit at another instant; they count toward the episode's total
         budget = n_lag - sum(1 for k, v in fixed.items() if k in docs and v != docs[k][1])
+        # Draw the direction mix before selecting documents. Postings moved by errors
+        # use slots of their own direction, including when they already fill a quota.
+        directions = rng.fork("directions")
+        target_later = sum(directions.random() < 0.45 for _ in range(n_lag))
+        fixed_later = sum(1 for k, v in fixed.items() if k in docs and v > docs[k][1])
+        later_slots = max(0, min(budget, target_later - fixed_later))
+        direction_slots = {True: later_slots, False: budget - later_slots}
         by_invoice = defaultdict(list)
         for p in h.payments.values():
             for ref in p.refs or []:
@@ -938,6 +945,10 @@ class HistoryBuilder:
                         r_doc, r_post = self.rate_on(ccy, d0), self.rate_on(ccy, day)
                         if day == d0 or r_doc is None or r_post is None or r_doc[0] == r_post[0]:
                             continue
+                    later = cand > ts
+                    if direction_slots[later] == 0:
+                        continue
+                    direction_slots[later] -= 1
                     doc.posted = cand
                     taken.add(cand)
                     self.lag_log.append({"key": key, "shape": shape, "role": role})

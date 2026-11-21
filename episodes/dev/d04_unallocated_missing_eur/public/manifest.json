@@ -1,32 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_456ca6665dacbd56",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_b390758c4398329c",
   "company": {
-    "name": "Toreta Retail GmbH",
+    "name": "Astora Pharma GmbH",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
     "GBP": 2,
-    "CHF": 2,
-    "JPY": 0
+    "JPY": 0,
+    "USD": 2
   },
-  "period_start": "2025-12-01T00:00:00+01:00",
-  "period_end": "2026-01-01T00:00:00+01:00",
-  "ledger_extract_end": "2026-01-08T00:00:00+01:00",
+  "period_start": "2026-02-01T00:00:00+01:00",
+  "period_end": "2026-03-01T00:00:00+01:00",
+  "ledger_extract_end": "2026-03-08T00:00:00+01:00",
   "timezone": "Europe/Berlin",
   "record_counts": {
-    "ledger": 637,
-    "invoices": 102,
-    "payments": 67,
-    "fx": 214
+    "ledger": 666,
+    "invoices": 101,
+    "payments": 78,
+    "fx": 203
   },
   "document_counts": {
-    "invoices": 102,
-    "payments": 67,
-    "total": 169
+    "invoices": 101,
+    "payments": 78,
+    "total": 179
   },
   "rounding": {
     "mode": "half_even",

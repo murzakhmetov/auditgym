@@ -1,6 +1,6 @@
 {
  "code": {
-  "code_sha256": "88d12bd70afbbf076418de18b1f91b9600d5ade06b4213ef721d5e8ff91494fa",
+  "code_sha256": "1196da171b668e0cacb80c786d67e501fd5961728e11a43607700d959da170c5",
   "code_files": 60,
   "python": "3.11.4",
   "platform": "Windows-10-10.0.19045-SP0"
@@ -23,11 +23,11 @@
   },
   {
    "name": "bnd_counts_purchase_invoices_max",
-   "reason": "counts too large for the 100-step budget: 2023 prior, sales and purchase invoices need at least 122 pages to read in full, plus the submit; lower those counts"
+   "reason": "counts too large for the 100-step budget: 2026 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts"
   },
   {
    "name": "bnd_counts_prior_invoices_max",
-   "reason": "counts too large for the 100-step budget: 2031 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts"
+   "reason": "counts too large for the 100-step budget: 2033 prior, sales and purchase invoices need at least 123 pages to read in full, plus the submit; lower those counts"
   }
  ],
  "generation_failures": [],
@@ -6999,43 +6999,43 @@
    "chunk": 0,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1564/1564 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2026 named checks of 68 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1561/1561 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2023 named checks of 68 kinds)"
   },
   {
    "chunk": 1,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1548/1548, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2011 named checks of 80 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1549/1549, D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2012 named checks of 80 kinds)"
   },
   {
    "chunk": 2,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1555/1555 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2017 named checks of 68 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1554/1554 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2016 named checks of 68 kinds)"
   },
   {
    "chunk": 3,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1563/1563 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2025 named checks of 68 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1557/1557 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2019 named checks of 68 kinds)"
   },
   {
    "chunk": 4,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1560/1560 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2022 named checks of 68 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1555/1555 (1 skipped), D_paired 371/371, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (2017 named checks of 68 kinds)"
   },
   {
    "chunk": 5,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1291/1291 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1756 named checks of 81 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1288/1288 (2 skipped), D_paired 373/373, E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1753 named checks of 81 kinds)"
   },
   {
    "chunk": 6,
    "episodes": 60,
    "exit_code": 0,
-   "summary": "summary: C_data 62/62, C_reward 1339/1339, D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1802 named checks of 81 kinds)"
+   "summary": "summary: C_data 62/62, C_reward 1340/1340, D_paired 369/369 (4 skipped), E_leaks 3/3, F_contract 20/20, B_replay 5/5 (1803 named checks of 81 kinds)"
   },
   {
    "chunk": 7,

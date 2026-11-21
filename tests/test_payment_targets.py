@@ -22,6 +22,7 @@ from auditgym.auditor import OffsetSchedule, audit_episode
 from auditgym.episode import load_episode
 from auditgym.evidence_check import convert_fraction, derive_from_evidence
 from auditgym.generator import generate_episode
+from auditgym.history import HistoryBuilder, LineItem
 from auditgym.rng import Rng
 from auditgym.timeutil import in_ambiguous_hour, offset_minutes, parse_ts
 from auditgym.verify import compare_with_truth
@@ -275,6 +276,34 @@ class PostingOrderTests(unittest.TestCase):
     def check(self, g, where):
         reasons = [r["reason"] for r in g.rejected]
         self.assertFalse([r for r in reasons if "payment target" in r or "exceeds open payables" in r], (where, reasons))
+
+    def test_invoice_lag_stays_before_the_clean_payment_moment(self):
+        cfg = cfgmod.resolve({"size": "small", "timezone": "Asia/Almaty", "period": "2026-06",
+                             "base_currency": "USD", "foreign_currencies": [],
+                             "distractors": {"posting_lag": 2}}, Rng(4))
+        builder = HistoryBuilder(Rng(5), cfg)
+        builder.build_entities()
+        customer = next(e.key for e in builder.h.entities.values() if e.role == "customer")
+        issued = builder.h.p0 + timedelta(days=2, hours=9)
+        item = LineItem("Consulting", 1, 10000, 10000, "consulting")
+        invoice = builder.add_invoice("sales", customer, issued, [item])
+        payment = builder.add_payment("receipt", customer, "USD", issued + timedelta(hours=1),
+                                      invoice.total, [invoice.key])
+        moved_posting = issued + timedelta(hours=3)
+        valid_lag = issued + timedelta(minutes=30)
+        # The first candidate is before the erroneous posting but after the clean receipt.
+        candidates = iter((issued + timedelta(hours=2), valid_lag))
+
+        def lag_candidate(shape, _timestamp):
+            return next(candidates, None) if shape == "later" else None
+
+        directions = mock.Mock()
+        directions.random.return_value = 0.0  # two later slots, one already used by the moved receipt
+        with mock.patch.object(builder.lag_rng, "fork", return_value=directions), \
+                mock.patch.object(builder, "_lag_candidate", side_effect=lag_candidate):
+            builder.apply_posting_lags([], {payment.key: moved_posting}, {payment.key}, {payment.key})
+
+        self.assertEqual(invoice.posted, valid_lag)
 
     def test_the_known_cases_lose_no_attempt_to_the_invoice_order(self):
         for etype, variant, kind, seed, extra in self.KNOWN:

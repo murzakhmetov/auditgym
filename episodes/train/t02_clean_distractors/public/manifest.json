@@ -1,31 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_253a763274c913ef",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_86040ae4fc19d449",
   "company": {
-    "name": "Kenaro Trading Ltda",
+    "name": "Coris Retail Ltd",
     "synthetic": true
   },
-  "base_currency": "USD",
+  "base_currency": "GBP",
   "currency_exponents": {
-    "USD": 2,
-    "JPY": 0,
-    "GBP": 2
+    "GBP": 2,
+    "EUR": 2,
+    "CHF": 2,
+    "USD": 2
   },
-  "period_start": "2027-12-01T00:00:00-03:00",
-  "period_end": "2028-01-01T00:00:00-03:00",
-  "ledger_extract_end": "2028-01-08T00:00:00-03:00",
-  "timezone": "America/Sao_Paulo",
+  "period_start": "2025-03-01T00:00:00+00:00",
+  "period_end": "2025-04-01T00:00:00+01:00",
+  "ledger_extract_end": "2025-04-08T00:00:00+01:00",
+  "timezone": "Europe/London",
   "record_counts": {
-    "ledger": 264,
-    "invoices": 71,
-    "payments": 50,
-    "fx": 143
+    "ledger": 322,
+    "invoices": 55,
+    "payments": 37,
+    "fx": 207
   },
   "document_counts": {
-    "invoices": 71,
-    "payments": 50,
-    "total": 121
+    "invoices": 55,
+    "payments": 37,
+    "total": 92
   },
   "rounding": {
     "mode": "half_even",

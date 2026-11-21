@@ -1,33 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_fc13f18595e0e25a",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_ea2eea271e59ec47",
   "company": {
-    "name": "Mirara Agro KK",
+    "name": "Lumix Trading KK",
     "synthetic": true
   },
   "base_currency": "JPY",
   "currency_exponents": {
     "JPY": 0,
-    "EUR": 2
+    "KRW": 0,
+    "EUR": 2,
+    "USD": 2
   },
-  "period_start": "2025-09-01T00:00:00+09:00",
-  "period_end": "2025-10-01T00:00:00+09:00",
-  "ledger_extract_end": "2025-10-08T00:00:00+09:00",
+  "period_start": "2027-01-01T00:00:00+09:00",
+  "period_end": "2027-02-01T00:00:00+09:00",
+  "ledger_extract_end": "2027-02-08T00:00:00+09:00",
   "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 367,
-    "invoices": 60,
-    "payments": 45,
-    "fx": 90
+    "ledger": 313,
+    "invoices": 63,
+    "payments": 48,
+    "fx": 210
   },
   "document_counts": {
-    "invoices": 60,
-    "payments": 45,
-    "total": 105
+    "invoices": 63,
+    "payments": 48,
+    "total": 111
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

@@ -1,7 +1,7 @@
 {
-  "listed": 196,
-  "counted": 196,
-  "killed": 196,
+  "listed": 200,
+  "counted": 200,
+  "killed": 200,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,11 +9,11 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 148,
+  "killed_by_existing": 152,
   "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
     "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
-    "tests.test_cli": "8fe82f20ab433c901b73818fbdb2e6357f6fb52f7fa78cf58571e899e8b23b12",
+    "tests.test_cli": "f1d1eee37900df849e18d7b492dc1d2717879eee697c568dd45d808392457a98",
     "tests.test_contract_battery": "1788930fb9c9d96984d38799d58cf6f640c298b3dfd9c693acbfddfa2882ec7d",
     "tests.test_contract_fuzz": "28a77c97ef354758696f34e9c8762d4b03ad3ad82c5b9555b40aa0166137c4c5",
     "tests.test_credit_receipts": "8533b59160d590f0a179cca15aab01c6ca293ee03187152e130da1fcd6bf32a4",
@@ -22,14 +22,14 @@
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
     "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
     "tests.test_mutation_survivors": "6da27d5be1444304ddbd235bbb1c9b3fd7789989f33e1a623ed4c1cde467711b",
-    "tests.test_payment_targets": "019f65f2fa8aaab1b9a217e3c3e65f3c9444a453e7b25e983d661c6e870feff8",
-    "tests.test_posting_lag": "de35444e191a7a44d27fc4d635c3154cde287e221502abaea0c644ac0c27f4f4",
+    "tests.test_payment_targets": "1b2acb50e0cc3851334c3939aa12b8ae9dde2acd685391b52b8ca026d2fbc1ce",
+    "tests.test_posting_lag": "6a5a1cc022fbf032f9bb013afac6e50b07906d802ce2059d830a903ca990e427",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
-    "tests.test_tells": "4b6cf101e96cc8a73b86dd712c7c3850590eb9857a97aa1d34ad1db489dfdbe7",
+    "tests.test_tells": "245544d3ad2d64e204f81cff32e6eb51e71b8b51cab45b84dd91b931dc4a2578",
     "tests.test_transform_shift": "857b9fa817a8fbaefbcfd4645a209ea0594bf8f6ef7bd2d69ff51ffbdf2d9a64",
-    "tests.test_verify": "9c57d37d644c478ab80e743d2ce641fa2483d7d284d05e0966e83af12e1e5d3a",
+    "tests.test_verify": "5fb076d8446ed516a0b9d460afb0e720e4678e0535f1bc58e000c876d1ef1f7b",
     "tests.test_windows_hardening": "29247373d21201b452658db381426f447f3670f460c72b58e5b608dfd0129038"
   },
   "mutants": [
@@ -2404,6 +2404,50 @@
         "tests.test_verify"
       ],
       "sha256": "8d9c194e83014224d721e7bb131735a87a4fb80cb62cedfd9db1ce0aa63f7f08"
+    },
+    {
+      "id": "verify-regenerate-public-only",
+      "file": "auditgym/verify.py",
+      "breaks": "directory regeneration overlooks edited provenance or answer-key bytes",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify"
+      ],
+      "sha256": "3724e34b6e4f831673feda3a4b1a3970be3c5dae14c100dcda616c1e70ea01d7"
+    },
+    {
+      "id": "verify-regenerate-grader-only",
+      "file": "auditgym/verify.py",
+      "breaks": "directory regeneration overlooks edited public record bytes",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify"
+      ],
+      "sha256": "3f3603f6015598fe2d1d784e4798b5b61f43d626276f22bc4d932c22b670377f"
+    },
+    {
+      "id": "verify-regenerate-secret-skip",
+      "file": "auditgym/verify.py",
+      "breaks": "directory regeneration claims a pass when the generation secret is unavailable",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify"
+      ],
+      "sha256": "20671155d201e0bd463806020026fc5d05886089734b5721971184f16629a4fa"
+    },
+    {
+      "id": "verify-regenerate-version-skip",
+      "file": "auditgym/verify.py",
+      "breaks": "directory regeneration claims a pass when the recorded generator version is unavailable",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_verify"
+      ],
+      "sha256": "73586b9a177781c6bc710323372de5801e6f47cd53e424ce970532a03e9fb569"
     }
   ]
 }

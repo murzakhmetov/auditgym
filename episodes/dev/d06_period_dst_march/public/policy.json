@@ -31,8 +31,7 @@
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
       "holidays_without_rates": [
-        "2026-03-19",
-        "2026-03-20"
+        "2026-03-17"
       ],
       "first_date": "2026-01-13",
       "last_date": "2026-04-09"
@@ -43,8 +42,7 @@
   },
   "currency_exponents": {
     "EUR": 2,
-    "CHF": 2,
-    "USD": 2
+    "CHF": 2
   },
   "rounding": {
     "mode": "half_up",

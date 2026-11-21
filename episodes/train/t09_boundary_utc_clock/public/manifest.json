@@ -1,32 +1,31 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_19f8fa59970dfaff",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_ad7cd6a82a40b9c8",
   "company": {
-    "name": "Valis Systems LLP",
+    "name": "Kaiella Machinery LLP",
     "synthetic": true
   },
-  "base_currency": "EUR",
+  "base_currency": "USD",
   "currency_exponents": {
-    "EUR": 2,
     "USD": 2,
-    "CHF": 2,
-    "GBP": 2
+    "KWD": 3,
+    "JPY": 0
   },
-  "period_start": "2026-07-01T00:00:00+05:00",
-  "period_end": "2026-08-01T00:00:00+05:00",
-  "ledger_extract_end": "2026-08-08T00:00:00+05:00",
+  "period_start": "2026-08-01T00:00:00+05:00",
+  "period_end": "2026-09-01T00:00:00+05:00",
+  "ledger_extract_end": "2026-09-08T00:00:00+05:00",
   "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 278,
-    "invoices": 55,
-    "payments": 48,
-    "fx": 210
+    "ledger": 355,
+    "invoices": 78,
+    "payments": 59,
+    "fx": 158
   },
   "document_counts": {
-    "invoices": 55,
-    "payments": 48,
-    "total": 103
+    "invoices": 78,
+    "payments": 59,
+    "total": 137
   },
   "rounding": {
     "mode": "half_up",

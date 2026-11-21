@@ -13,6 +13,7 @@ import unittest
 from collections import Counter
 from datetime import timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 from auditgym import config as cfgmod
 from auditgym import tells
@@ -20,6 +21,7 @@ from auditgym.auditor import OffsetSchedule, Rates, _convert_minor, audit_episod
 from auditgym.config import ConfigError
 from auditgym.episode import load_episode
 from auditgym.generator import generate_episode
+from auditgym.history import HistoryBuilder
 from auditgym.rng import Rng
 from auditgym.timeutil import format_utc, parse_ts
 from auditgym.transform import _shift_text, transform_episode
@@ -278,6 +280,26 @@ class LimitTests(unittest.TestCase):
             for errors in cases:
                 ep = generate_episode(seed, {"size": "medium", "errors": errors}).episode
                 self.assertEqual(len(lagged(ep)), ep.provenance["resolved_config"]["distractors"]["posting_lag"], (seed, errors))
+
+    def test_later_posting_count_includes_dates_moved_by_errors(self):
+        # Hold the lag draw fixed while generating different books. Read the directions
+        # from the final ledger, including the dates changed by the FX and period errors.
+        apply_lags = HistoryBuilder.apply_posting_lags
+
+        def same_lag_draw(builder, *args):
+            builder.lag_rng = Rng("shared directions")
+            apply_lags(builder, *args)
+
+        config = {"size": "small", "distractors": {"posting_lag": 16},
+                  "variants": {"wrong_fx_rate": ["posting_date"]}}
+        later_counts = []
+        with patch.object(HistoryBuilder, "apply_posting_lags", same_lag_draw):
+            for errors in ({}, {"wrong_period": 2}, {"wrong_period": 2, "wrong_fx_rate": 2}):
+                ep = generate_episode(3, {**config, "errors": errors}).episode
+                shifts = lagged(ep)
+                self.assertEqual(len(shifts), 16)
+                later_counts.append(sum(posted > issued for _, issued, posted, _ in shifts.values()))
+        self.assertEqual(len(set(later_counts)), 1, later_counts)
 
     def test_the_range_is_per_size_and_an_explicit_count_stays_exact(self):
         for size, (lo, hi) in {s: r["posting_lag"] for s, r in cfgmod.DEFAULT_DISTRACTOR_RANGES.items()}.items():

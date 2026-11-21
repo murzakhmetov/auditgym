@@ -255,7 +255,14 @@ def section_committed(rep: Report) -> list:
         rep.add("B_committed_episodes", f"{split}/{e['name']} regenerates byte-identically", same,
                 "missing or different; run `python -m auditgym build-splits`")
         ep = load_episode(d) if d.exists() else gen.episode
-        v = verify_generated(ep)
+        v = verify_generated(ep, directory=d)
+        replay_name = f"{split}/{e['name']} regenerates from directory provenance"
+        replay_status = v["checks"]["regenerates_from_provenance"]
+        if replay_status == "skip":
+            rep.skip("B_committed_episodes", replay_name, v["skips"]["regenerates_from_provenance"])
+        else:
+            rep.add("B_committed_episodes", replay_name, replay_status == "pass",
+                    "" if replay_status == "pass" else "; ".join(replay_status[:3]))
         rep.add("B_committed_episodes", f"{split}/{e['name']} verifies ({len(ep.truth['issues'])} issues)", v["ok"],
                 "; ".join(v["failures"][:3]))
         episodes.append((split, e["name"], ep))

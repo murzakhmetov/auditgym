@@ -559,6 +559,21 @@ MUTANTS = [
       "HOST_ONLY_INFO_KEYS = frozenset()", ENV, "the policy child is sent info['weak_seed'] about its own episode"),
     M("verify-key-tolerance", "auditgym/verify.py", 'if t.get("tolerance_minor") != TOLERANCE_MINOR:',
       "if False:", ("tests.test_verify",), "verify accepts a key whose tolerance_minor lets any amount match"),
+    # ---------------------------------------------------------------- directory regeneration
+    M("verify-regenerate-public-only", "auditgym/verify.py",
+      'for folder, texts in (("grader", generated.grader_texts()), ("public", generated.public_texts())):',
+      'for folder, texts in (("public", generated.public_texts()),):', ("tests.test_verify",),
+      "directory regeneration overlooks edited provenance or answer-key bytes"),
+    M("verify-regenerate-grader-only", "auditgym/verify.py",
+      'for folder, texts in (("grader", generated.grader_texts()), ("public", generated.public_texts())):',
+      'for folder, texts in (("grader", generated.grader_texts()),):', ("tests.test_verify",),
+      "directory regeneration overlooks edited public record bytes"),
+    M("verify-regenerate-secret-skip", "auditgym/verify.py",
+      'return [], "the generation secret is unavailable"', "return [], None", ("tests.test_verify",),
+      "directory regeneration claims a pass when the generation secret is unavailable"),
+    M("verify-regenerate-version-skip", "auditgym/verify.py",
+      'return [], f"generator version {version} is unavailable"', "return [], None", ("tests.test_verify",),
+      "directory regeneration claims a pass when the recorded generator version is unavailable"),
 ]
 
 

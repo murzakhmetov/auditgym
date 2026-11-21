@@ -115,7 +115,8 @@ class TellTests(unittest.TestCase):
 
 
 # ---- generated sample: the committed set is too small for kind-by-kind window and count rules
-GEN_EPISODES = 100
+# The smallest duplicate side-and-shape cells need enough observations to compare their rates.
+GEN_EPISODES = 200
 WINDOW_KINDS = ("sales", "purchase", "receipt", "disbursement")
 
 

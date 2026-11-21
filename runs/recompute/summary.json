@@ -9,28 +9,28 @@
       "recomputed": 82
     },
     "wrong_fx_rate / disbursement": {
-      "issues": 11,
-      "recomputed": 11
+      "issues": 16,
+      "recomputed": 16
     },
     "wrong_fx_rate / invoice": {
-      "issues": 32,
-      "recomputed": 32
+      "issues": 28,
+      "recomputed": 28
     },
     "wrong_fx_rate / receipt": {
-      "issues": 36,
-      "recomputed": 36
+      "issues": 35,
+      "recomputed": 35
     },
     "wrong_period / disbursement": {
-      "issues": 17,
-      "recomputed": 17
+      "issues": 13,
+      "recomputed": 13
     },
     "wrong_period / invoice": {
-      "issues": 21,
-      "recomputed": 21
+      "issues": 23,
+      "recomputed": 23
     },
     "wrong_period / receipt": {
-      "issues": 44,
-      "recomputed": 44
+      "issues": 46,
+      "recomputed": 46
     }
   },
   "differing": 0,

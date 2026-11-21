@@ -1,31 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_ad192c65ecda62b1",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_16d6467256a1b019",
   "company": {
-    "name": "Lumella Media GmbH",
+    "name": "Selum Pharma GmbH",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "CHF": 2,
-    "USD": 2
+    "CHF": 2
   },
   "period_start": "2026-03-01T00:00:00+01:00",
   "period_end": "2026-04-01T00:00:00+02:00",
   "ledger_extract_end": "2026-04-08T00:00:00+02:00",
   "timezone": "Europe/Berlin",
   "record_counts": {
-    "ledger": 950,
-    "invoices": 103,
-    "payments": 75,
-    "fx": 153
+    "ledger": 705,
+    "invoices": 98,
+    "payments": 76,
+    "fx": 83
   },
   "document_counts": {
-    "invoices": 103,
-    "payments": 75,
-    "total": 178
+    "invoices": 98,
+    "payments": 76,
+    "total": 174
   },
   "rounding": {
     "mode": "half_up",

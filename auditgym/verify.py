@@ -47,14 +47,12 @@ Named checks, each independent of the generator's internal state:
                          null pattern
   no_leaks               public files contain no answer-key markers
 
-verify DIR does not catch alone: a changed provenance.seed, a removed or shortened distractor list, a distractor
-kind swapped for another known one, a wrong_period injection variant, an injection's scenario (verify never reads it), or any truth.json variant (injection variants of
-wrong_fx_rate and unallocated_payment are checked through change; verify DIR does not compare truth.json's variant or
-manifest.episode_id, which for hidden episodes needs the generation secret, and nothing records the distractor list).
+verify DIR also compares each public and grader file byte for byte with its regenerated counterpart when the
+generation inputs are available. A secret, unavailable generator version or incomplete transformation history
+produces an explicit skip for this check. All accounting and evidence checks run independently of regeneration.
 change.alloc is checked only to the resolution of the base-currency 2900 and relief amounts: when the document currency
 is finer than the base, several alloc values fit the same ledger and the public records cannot pin it further. An
-injection retargeted to another record is caught by the targets-equal-affected_ids rule. "check" catches the seed, distractor and
-variant cases above by regenerating every committed episode from its seed and config and comparing the bytes.
+injection retargeted to another record is caught by the targets-equal-affected_ids rule.
 """
 
 from __future__ import annotations
@@ -64,6 +62,7 @@ from collections import defaultdict
 import re
 from datetime import date, timedelta
 from fractions import Fraction
+from pathlib import Path
 
 from .auditor import audit
 from .config import DISTRACTORS, VARIANTS
@@ -841,7 +840,63 @@ def _clean_book_errors(ep: Episode, clean: Episode | None) -> list[str]:
         f"clean books show {f['type']} on {f['affected_ids']}" for f in found["findings"][:10]]
 
 
-def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
+def _directory_regeneration(ep: Episode, directory: Path) -> tuple[list[str], str | None]:
+    """Return failures or a reason why the recorded inputs are insufficient for byte comparison."""
+    from .generator import GENERATOR_VERSION, GenerationError, episode_id_for, generate_episode
+    from .transform import SHIFT_CYCLE_YEARS, _shift_deep, transform_episode, transformed_id
+
+    prov = ep.provenance
+    if not isinstance(prov, dict) or not isinstance(prov.get("secret_used"), bool):
+        return ["provenance.secret_used must be a boolean"], None
+    version = prov.get("generator_version")
+    if not isinstance(version, str) or not version:
+        return ["provenance.generator_version must be a nonempty string"], None
+    if prov["secret_used"]:
+        return [], "the generation secret is unavailable"
+    if version != GENERATOR_VERSION:
+        return [], f"generator version {version} is unavailable"
+    seed, config = prov.get("seed"), prov.get("config")
+    if not isinstance(seed, str) or not isinstance(config, dict):
+        return ["provenance must have a string seed and an object config"], None
+
+    params = None
+    try:
+        if "transformed_from" in prov:
+            source = prov["transformed_from"]
+            keys = {"episode_id", "permute_seed", "remap_seed", "ts_repr", "rename_seed", "shift_years"}
+            if not isinstance(source, dict) or set(source) != keys:
+                return ["invalid transformed_from fields"], None
+            source_id = source["episode_id"]
+            if not isinstance(source_id, str) or re.fullmatch(r"ep_[0-9a-f]{16}", source_id) is None:
+                return ["invalid transformed_from episode_id"], None
+            params = {k: v for k, v in source.items() if k != "episode_id"}
+            if any(v is not None and not _is_int(v) for k, v in params.items() if k != "ts_repr"):
+                return ["invalid transformation seed or year shift"], None
+            if params["ts_repr"] not in (None, "utc", "local", "mixed"):
+                return ["invalid transformation timestamp representation"], None
+            shift = params["shift_years"]
+            if shift is not None:
+                if not shift or shift % SHIFT_CYCLE_YEARS:
+                    return ["invalid transformation year shift"], None
+                seed, config = _shift_deep(seed, -shift), _shift_deep(config, -shift)
+            if transformed_id(source_id, **params) != ep.episode_id:
+                return ["transformed_from does not produce the directory episode_id"], None
+            if episode_id_for(seed, config) != source_id:
+                return [], "the recorded transform source differs from the generated source; earlier history is unavailable"
+        generated = generate_episode(seed, config).episode
+        if params is not None:
+            generated = transform_episode(generated, **params)
+        changed = []
+        for folder, texts in (("grader", generated.grader_texts()), ("public", generated.public_texts())):
+            for name, expected in texts.items():
+                if (directory / folder / name).read_bytes() != expected.encode("utf-8"):
+                    changed.append(f"{folder}/{name}")
+        return (["regenerated bytes differ: " + ", ".join(changed)] if changed else []), None
+    except (*REPLAY_ERRORS, GenerationError, OSError, RecursionError) as exc:
+        return [f"cannot regenerate directory: {type(exc).__name__}: {str(exc)[:200]}"], None
+
+
+def verify_generated(ep: Episode, clean: Episode | None = None, *, directory: Path | None = None) -> dict:
     checks = {}
     checks["records_schema"] = check_records_schema(ep)
     # A record without its ID fields fails records_schema and ids_unique; the later checks index those IDs, so on such an episode a
@@ -871,10 +926,17 @@ def verify_generated(ep: Episode, clean: Episode | None = None) -> dict:
     checks["no_surface_tells"] = (["provenance is malformed, so the surface cannot be checked"]
                                   if provenance_shape_errors(ep) else run(check_surface, ep, clean is None))
     checks["no_leaks"] = run(check_leaks, ep)
+    skips = {}
+    if directory is not None:
+        name = "regenerates_from_provenance"
+        checks[name], reason = _directory_regeneration(ep, directory)
+        if reason is not None:
+            skips[name] = reason
     failures = [f"{name}: {msg}" for name, msgs in checks.items() for msg in msgs]
     return {
         "ok": not failures,
-        "checks": {name: ("pass" if not msgs else msgs) for name, msgs in checks.items()},
+        "checks": {name: ("skip" if name in skips else msgs or "pass") for name, msgs in checks.items()},
+        **({"skips": skips} if skips else {}),
         "failures": failures,
         "n_issues": len(ep.truth.get("issues", [])),
     }

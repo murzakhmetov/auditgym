@@ -4,7 +4,7 @@
   "timezone": "Europe/London",
   "utc_offset_schedule": [
     {
-      "from_utc": "2025-03-16T00:00:00Z",
+      "from_utc": "2025-02-12T00:00:00Z",
       "offset": "+00:00"
     },
     {
@@ -14,14 +14,14 @@
   ],
   "local_time_rule": "Company-local time of an instant = the instant plus the UTC offset in force at that instant, taken from utc_offset_schedule (each entry applies from its from_utc instant until the next entry). Local calendar dates are always taken in company time, whatever offset a timestamp happens to be written with.",
   "reporting_period": {
-    "start": "2025-05-01T00:00:00+01:00",
-    "end": "2025-06-01T00:00:00+01:00",
+    "start": "2025-04-01T00:00:00+01:00",
+    "end": "2025-05-01T00:00:00+01:00",
     "end_is_exclusive": true,
     "rule": "A document belongs to the reporting period when start <= its own timestamp < end, compared as instants (issued_at for invoices, timestamp for payments). A posting belongs to the period of its ledger timestamp. A posting must fall in the same period as its document."
   },
   "ledger_extract": {
-    "start": "2025-05-01T00:00:00+01:00",
-    "end": "2025-06-08T00:00:00+01:00",
+    "start": "2025-04-01T00:00:00+01:00",
+    "end": "2025-05-08T00:00:00+01:00",
     "rule": "ledger.csv covers the reporting period plus a 7-day cut-off window after it. Items open at period start are carried in by opening journals dated at period start against account 3900."
   },
   "fx": {
@@ -31,24 +31,22 @@
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
       "holidays_without_rates": [
-        "2025-05-02",
-        "2025-05-28"
+        "2025-04-18",
+        "2025-04-25"
       ],
-      "first_date": "2025-03-17",
-      "last_date": "2025-06-09"
+      "first_date": "2025-02-13",
+      "last_date": "2025-05-09"
     },
     "conversion": "base_minor = round(amount_minor * rate * 10^(exp_base - exp_document))",
-    "rounding": "half_up",
+    "rounding": "half_even",
     "other_pairs": "Rows for pairs other than document currency -> base currency are not used for postings."
   },
   "currency_exponents": {
     "GBP": 2,
-    "USD": 2,
-    "CHF": 2,
     "EUR": 2
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "modes": {
       "half_even": "round half to even",
       "half_up": "round half away from zero"

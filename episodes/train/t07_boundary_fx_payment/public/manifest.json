@@ -1,33 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.4.0",
-  "episode_id": "ep_faf09eaf600e9cd8",
+  "generator_version": "0.5.0",
+  "episode_id": "ep_b99829dcab387ce6",
   "company": {
-    "name": "Lumum Trading LLP",
+    "name": "Palix Analytics KK",
     "synthetic": true
   },
-  "base_currency": "KZT",
+  "base_currency": "JPY",
   "currency_exponents": {
-    "KZT": 2,
-    "EUR": 2
+    "JPY": 0,
+    "EUR": 2,
+    "USD": 2,
+    "KRW": 0
   },
-  "period_start": "2027-05-01T00:00:00+05:00",
-  "period_end": "2027-06-01T00:00:00+05:00",
-  "ledger_extract_end": "2027-06-08T00:00:00+05:00",
-  "timezone": "Asia/Almaty",
+  "period_start": "2026-12-01T00:00:00+09:00",
+  "period_end": "2027-01-01T00:00:00+09:00",
+  "ledger_extract_end": "2027-01-08T00:00:00+09:00",
+  "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 867,
-    "invoices": 101,
-    "payments": 71,
-    "fx": 93
+    "ledger": 859,
+    "invoices": 100,
+    "payments": 68,
+    "fx": 217
   },
   "document_counts": {
-    "invoices": 101,
-    "payments": 71,
-    "total": 172
+    "invoices": 100,
+    "payments": 68,
+    "total": 168
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

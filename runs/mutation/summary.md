@@ -1,10 +1,10 @@
 # Mutation smoke
 
-**196 of 196 listed mutants killed** (0 survived, 0 equivalent, not counted).
+**200 of 200 listed mutants killed** (0 survived, 0 equivalent, not counted).
 
 Recorded on Windows, Python 3.11. `policy-path-append` is killed only by a test that runs on Windows, so it runs only there.
 
-148 of 196 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
+152 of 200 are killed by the test modules listed for them. The other 48 pass those modules and are killed by `tests/test_mutation_survivors.py`, which was written for these mutants; the remaining test modules are not run against a mutant.
 
 Each mutant is one hand-written change to the core (`auditgym/__main__.py`, `auditgym/agent.py`, `auditgym/auditor.py`, `auditgym/books.py`, `auditgym/check.py`, `auditgym/check_battery.py`, `auditgym/config.py`, `auditgym/env.py`, `auditgym/evidence_check.py`, `auditgym/grader.py`, `auditgym/history.py`, `auditgym/inject.py`, `auditgym/matcher.py`, `auditgym/policy.py`, `auditgym/protocol.py`, `auditgym/reward.py`, `auditgym/schemas.py`, `auditgym/tells.py`, `auditgym/transform.py`, `auditgym/verify.py`), applied to a fresh copy of the repository, which then runs the unit-test modules named in the last column, and, if those pass, `tests/test_mutation_survivors.py`. A mutant is killed when those tests fail. The list is in `tools/mutation_smoke.py`; this file holds no timings.
 
@@ -208,3 +208,7 @@ Regenerate: `python tools/mutation_smoke.py OUT_DIR --record`.
 | 194 | `inject-utc-wall-clock-dst` | `auditgym/inject.py` | a standalone utc_wall_clock error can post inside the DST window of the boundary night (New York, October 2026) | killed | listed tests | test_generator |
 | 195 | `protocol-host-only-info` | `auditgym/protocol.py` | the policy child is sent info['weak_seed'] about its own episode | killed | listed tests | test_env, test_contract_battery |
 | 196 | `verify-key-tolerance` | `auditgym/verify.py` | verify accepts a key whose tolerance_minor lets any amount match | killed | listed tests | test_verify |
+| 197 | `verify-regenerate-public-only` | `auditgym/verify.py` | directory regeneration overlooks edited provenance or answer-key bytes | killed | listed tests | test_verify |
+| 198 | `verify-regenerate-grader-only` | `auditgym/verify.py` | directory regeneration overlooks edited public record bytes | killed | listed tests | test_verify |
+| 199 | `verify-regenerate-secret-skip` | `auditgym/verify.py` | directory regeneration claims a pass when the generation secret is unavailable | killed | listed tests | test_verify |
+| 200 | `verify-regenerate-version-skip` | `auditgym/verify.py` | directory regeneration claims a pass when the recorded generator version is unavailable | killed | listed tests | test_verify |

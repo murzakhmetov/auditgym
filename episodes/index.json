@@ -3,182 +3,182 @@
     {
       "split": "train",
       "name": "t01_clean_small",
-      "episode_id": "ep_9e4f577f5b1c7fe6",
+      "episode_id": "ep_0687d3504067ea06",
       "issues": 0,
-      "ledger_rows": 268,
-      "documents": 111,
+      "ledger_rows": 290,
+      "documents": 133,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t02_clean_distractors",
-      "episode_id": "ep_253a763274c913ef",
+      "episode_id": "ep_86040ae4fc19d449",
       "issues": 0,
-      "ledger_rows": 264,
-      "documents": 121,
+      "ledger_rows": 322,
+      "documents": 92,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t03_duplicate",
-      "episode_id": "ep_0dfddd533536e936",
+      "episode_id": "ep_1b60e334bec905d7",
       "issues": 1,
-      "ledger_rows": 306,
-      "documents": 109,
+      "ledger_rows": 329,
+      "documents": 113,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t04_unallocated",
-      "episode_id": "ep_fcd4814fa33f8c65",
+      "episode_id": "ep_d5d222ae9243e949",
       "issues": 1,
-      "ledger_rows": 300,
-      "documents": 97,
+      "ledger_rows": 337,
+      "documents": 111,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t05_fx_rate",
-      "episode_id": "ep_918f09fd455d654d",
+      "episode_id": "ep_3e5d2296f03d6e5c",
       "issues": 1,
-      "ledger_rows": 281,
-      "documents": 94,
-      "attempts": 1
-    },
-    {
-      "split": "train",
-      "name": "t06_period",
-      "episode_id": "ep_8c464b63a08b4441",
-      "issues": 1,
-      "ledger_rows": 365,
+      "ledger_rows": 298,
       "documents": 123,
       "attempts": 1
     },
     {
       "split": "train",
+      "name": "t06_period",
+      "episode_id": "ep_7327d87248af9ea3",
+      "issues": 1,
+      "ledger_rows": 309,
+      "documents": 114,
+      "attempts": 1
+    },
+    {
+      "split": "train",
       "name": "t07_boundary_fx_payment",
-      "episode_id": "ep_faf09eaf600e9cd8",
+      "episode_id": "ep_b99829dcab387ce6",
       "issues": 2,
-      "ledger_rows": 867,
-      "documents": 172,
+      "ledger_rows": 859,
+      "documents": 168,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t08_fx_partial_allocation",
-      "episode_id": "ep_31d66797ac8b0f9b",
+      "episode_id": "ep_57ffa28fc8317617",
       "issues": 2,
-      "ledger_rows": 849,
-      "documents": 186,
-      "attempts": 1
+      "ledger_rows": 629,
+      "documents": 187,
+      "attempts": 2
     },
     {
       "split": "train",
       "name": "t09_boundary_utc_clock",
-      "episode_id": "ep_19f8fa59970dfaff",
+      "episode_id": "ep_ad7cd6a82a40b9c8",
       "issues": 2,
-      "ledger_rows": 278,
-      "documents": 103,
+      "ledger_rows": 355,
+      "documents": 137,
       "attempts": 1
     },
     {
       "split": "train",
       "name": "t10_duplicate_twin_legit",
-      "episode_id": "ep_f4234e32e906bf14",
+      "episode_id": "ep_26816c1731b684ff",
       "issues": 0,
-      "ledger_rows": 306,
-      "documents": 109,
+      "ledger_rows": 329,
+      "documents": 113,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d01_clean_repeats_jpy",
-      "episode_id": "ep_fc13f18595e0e25a",
+      "episode_id": "ep_ea2eea271e59ec47",
       "issues": 0,
-      "ledger_rows": 367,
-      "documents": 105,
+      "ledger_rows": 313,
+      "documents": 111,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d02_clean_kwd_medium",
-      "episode_id": "ep_3ab06f710e7b4f2a",
+      "episode_id": "ep_8337ec3cded8989f",
       "issues": 0,
-      "ledger_rows": 967,
-      "documents": 179,
-      "attempts": 1
+      "ledger_rows": 654,
+      "documents": 166,
+      "attempts": 2
     },
     {
       "split": "dev",
       "name": "d03_duplicates_gbp",
-      "episode_id": "ep_12062a541c6b03ee",
+      "episode_id": "ep_0e6b2bffb7722491",
       "issues": 2,
-      "ledger_rows": 976,
-      "documents": 198,
+      "ledger_rows": 669,
+      "documents": 197,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d04_unallocated_missing_eur",
-      "episode_id": "ep_456ca6665dacbd56",
+      "episode_id": "ep_b390758c4398329c",
       "issues": 2,
-      "ledger_rows": 637,
-      "documents": 169,
+      "ledger_rows": 666,
+      "documents": 179,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d05_fx_utc_stale_mixed_ts",
-      "episode_id": "ep_a99d121522b984cd",
+      "episode_id": "ep_b34c2c16ec979bce",
       "issues": 2,
-      "ledger_rows": 808,
-      "documents": 170,
-      "attempts": 2
+      "ledger_rows": 820,
+      "documents": 183,
+      "attempts": 1
     },
     {
       "split": "dev",
       "name": "d06_period_dst_march",
-      "episode_id": "ep_ad192c65ecda62b1",
+      "episode_id": "ep_16d6467256a1b019",
       "issues": 2,
-      "ledger_rows": 950,
-      "documents": 178,
+      "ledger_rows": 705,
+      "documents": 174,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d07_boundary_negative_offset",
-      "episode_id": "ep_221c488400a2fe2e",
+      "episode_id": "ep_73e512218b34e3a1",
       "issues": 3,
-      "ledger_rows": 769,
-      "documents": 172,
-      "attempts": 1
+      "ledger_rows": 825,
+      "documents": 170,
+      "attempts": 2
     },
     {
       "split": "dev",
       "name": "d08_both_interacting_kzt",
-      "episode_id": "ep_e98b5614d96fce06",
+      "episode_id": "ep_f188b321480f2e78",
       "issues": 5,
-      "ledger_rows": 867,
-      "documents": 200,
+      "ledger_rows": 666,
+      "documents": 169,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d09_large_mixed",
-      "episode_id": "ep_de177c210c3fa8e0",
+      "episode_id": "ep_4f5478e34c30cc31",
       "issues": 4,
-      "ledger_rows": 1899,
-      "documents": 216,
+      "ledger_rows": 1521,
+      "documents": 252,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d10_large_dense_quarter_hour",
-      "episode_id": "ep_ec59ff038d6c1aa1",
+      "episode_id": "ep_9c3e175c4c12bc58",
       "issues": 10,
-      "ledger_rows": 2001,
-      "documents": 221,
-      "attempts": 1
+      "ledger_rows": 1542,
+      "documents": 210,
+      "attempts": 2
     }
   ]
 }
