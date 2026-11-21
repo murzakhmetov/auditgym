@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "seed": "4716629081574412983",
   "secret_used": false,
@@ -20,14 +20,14 @@
     "size": "medium",
     "base_currency": "USD",
     "foreign_currencies": [
-      "JPY"
+      "EUR"
     ],
     "timezone": "America/Sao_Paulo",
-    "period": "2026-12",
-    "rounding": "half_even",
-    "id_style": "numeric",
+    "period": "2026-04",
+    "rounding": "half_up",
+    "id_style": "hex",
     "ts_repr": "utc",
-    "row_order": "shuffled",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 1,
       "unallocated_payment": 0,
@@ -65,53 +65,59 @@
       "underpayment": 2,
       "midnight_fx": 3,
       "weekend_fx": 2,
-      "boundary_doc": 7,
-      "posting_lag": 32,
-      "overpayment_refund": 1,
+      "boundary_doc": 6,
+      "posting_lag": 36,
+      "overpayment_refund": 3,
       "null_ref_receipt": 4,
-      "split_remainder": 2,
-      "credit_receipt": 5,
-      "prepaid_receipt": 1,
-      "legit_repeat": 2
+      "split_remainder": 3,
+      "credit_receipt": 4,
+      "prepaid_receipt": 0,
+      "legit_repeat": 4
     },
-    "repeat_pairs": 3,
+    "repeat_pairs": 5,
     "counts": {
-      "customers": 13,
+      "customers": 15,
       "suppliers": 8,
-      "sales_invoices": 30,
-      "purchase_invoices": 18,
+      "sales_invoices": 31,
+      "purchase_invoices": 17,
       "prior_invoices": 6,
-      "target_rows": 903
+      "target_rows": 768
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 1,
       "purchase": 0,
-      "sales_paid": 1
+      "sales_paid": 1,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": []
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Zanaro Energy Ltda",
-    "customers": 13,
+    "company": "Kaiion Energy Ltda",
+    "customers": 15,
     "suppliers": 8,
-    "invoices": 93,
+    "invoices": 99,
     "payments": 72,
-    "misc_journals": 253,
+    "misc_journals": 176,
     "holidays": [
-      "2026-12-14"
+      "2026-04-16",
+      "2026-04-20"
     ]
   },
   "injections": [
     {
       "issue_id": "iss_01",
       "type": "duplicate_invoice",
-      "variant": "same_day_copy",
+      "variant": "rekeyed_copy",
       "scenario": "single",
       "targets": {
-        "original": "22181149",
-        "copy": "25493713"
+        "original": "pi_868baaad",
+        "copy": "pi_86952542"
       },
       "change": {}
     },
@@ -121,13 +127,13 @@
       "variant": "utc_date",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "31403985"
+        "payment": "rc_394cea1a"
       },
       "change": {
-        "wrong_rate_date": "2027-01-01",
-        "correct_rate": "0.00722020",
-        "correct_rate_date": "2026-12-31",
-        "wrong_rate": "0.00721095"
+        "wrong_rate_date": "2026-05-01",
+        "correct_rate": "1.06849",
+        "correct_rate_date": "2026-04-30",
+        "wrong_rate": "1.07035"
       }
     },
     {
@@ -136,10 +142,10 @@
       "variant": "utc_wall_clock",
       "scenario": "boundary_fx_payment",
       "targets": {
-        "payment": "31403985"
+        "payment": "rc_394cea1a"
       },
       "change": {
-        "posting_ts": "2027-01-01T05:35:01+00:00"
+        "posting_ts": "2026-05-01T03:45:59+00:00"
       }
     }
   ],
@@ -147,458 +153,502 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "18319770",
-        "14598544"
+        "si_49f167b3",
+        "si_11d01005"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "17037654",
-        "14978895"
+        "si_96d6d220",
+        "si_8971f9aa",
+        "rc_5fb7be4d"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "si_61271173",
+        "si_1ae6e18e",
+        "rc_179a20e1"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "pi_1d9218ba",
+        "pi_5163a84c",
+        "dp_1d2948d9"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "22134363",
-        "28447678"
+        "pi_b3fe917e",
+        "pi_76e60e80"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "29649533",
-        "26887341"
+        "pi_b5580e0c",
+        "pi_431b7ec5"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "18790517",
-        "36607343",
-        "37412735"
+        "si_b9733401",
+        "rc_118d31dc",
+        "rc_d10d660c"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "19358722",
-        "34042239",
-        "32122221"
+        "si_55b93f26",
+        "rc_27d78796",
+        "rc_5e152455"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "12664629",
-        "33434164",
-        "32917600"
+        "si_44a8332c",
+        "rc_f38fd15f",
+        "rc_c84cb179"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "12747433",
-        "39404532",
-        "39786934"
+        "si_6c9f44b1",
+        "rc_d73be437",
+        "rc_eb4f1ae0"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "si_e7ba5729",
+        "rc_9b1c988f",
+        "rc_a4dd824c"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "18018035",
-        "15459813",
-        "36234946"
+        "si_8dbdc34a",
+        "si_aedb3597",
+        "rc_a0f266b8"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "16586824",
-        "32690439"
+        "si_05cb5259",
+        "rc_98f6cc4c"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "11349764",
-        "33407806"
+        "si_db3c44b0",
+        "rc_fb154aaf"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "17653359",
-        "39686981",
-        "58482586"
+        "si_0fb24eb3",
+        "rc_8892f080",
+        "rf_eac2a685"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_014be5ac",
+        "rc_327e34c9",
+        "rf_9859474d"
+      ]
+    },
+    {
+      "kind": "overpayment_refund",
+      "ids": [
+        "si_b5230c03",
+        "rc_c1c59bff",
+        "rf_1b8e50ec"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "38053115"
+        "rc_a09766eb"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "37129855"
+        "rc_69d36fab"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "39820409"
+        "rc_a3884ba8"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "32125091"
+        "rc_95403ce3"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "18070816",
-        "39829241"
+        "si_357c8817",
+        "rc_765e3d38"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "15156525",
-        "39982579"
+        "pi_3d0b1427",
+        "dp_d1f87fab"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "27105794",
-        "44685596"
+        "pi_c412d47e"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "21827738"
+        "pi_e4bcb731"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "11703402"
+        "pi_62b82ac2"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "23815718"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "21719883",
-        "42614843"
+        "pi_eac4e805"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "15213670",
-        "38156821"
+        "si_b65cd28f",
+        "rc_70d699dd"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "13430662",
-        "36891041"
+        "si_d528403a",
+        "rc_860401b8"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "18771136",
-        "31376899"
+        "si_51c85caf",
+        "rc_a8306311",
+        "rc_8d15e3ba"
+      ],
+      "shape": "topped_up"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "si_eeff8b8b",
+        "rc_33d58c74"
       ],
       "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "15032422",
-        "33507827"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "16144177",
-        "36748111",
-        "32547787"
-      ],
-      "shape": "settled"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "16826168",
-        "38471043"
-      ],
-      "shape": "prepaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "25462264"
+        "pi_f18f99ef"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "12772800",
-        "36170803"
+        "si_4fb30f5c",
+        "rc_70ac6f64"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "11225540"
+        "si_8526491f"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "13472336"
+        "si_2e4487db"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "11037800"
+        "si_930c2f4d"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "13695279"
+        "rc_8d15e3ba"
       ],
-      "shape": "later"
+      "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "15213670"
+        "dp_5202aba0"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "23815718"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "11557262"
+        "rc_cfb4af2b"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "44482826"
+        "si_f229080a"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "22056039"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "24716977"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "16586824"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "33029329"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "32690439"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "12664629"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "18012870"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "27106922"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "11225540"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "18790517"
+        "si_b83f900e"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "24120164"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "34042239"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "31376899"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "11037800"
+        "si_930c2f4d"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "32917600"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "37412735"
+        "si_6010ddb5"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "47362717"
+        "pi_8a3260ca"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_75bd4715"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "39820409"
+        "pi_6e233c40"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "37952819"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "49798116"
+        "rc_179a20e1"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "43249216"
+        "dp_d1f87fab"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_a09766eb"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "13283061"
+        "si_80a8885f"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "38952725"
+        "pi_c412d47e"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "dp_8968907b"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_95403ce3"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "pi_34337dc6"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "21719883"
+        "pi_e95718bc"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_fb154aaf"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_b65cd28f"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_777b1ca0"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_4fb30f5c"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "dp_1d2948d9"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_bb083618"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_68323c0f"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_345c0554"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_863763d4"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_91506fe7"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "dp_1ca92575"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_041bb106"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_8f411fdd"
       ],
       "shape": "earlier"
     }
   ],
   "posting_lags": [
     {
-      "id": "22181149",
-      "shape": "later",
+      "id": "si_96d6d220",
+      "shape": "earlier",
       "role": "pair"
     },
     {
-      "id": "14598544",
-      "shape": "date_change",
+      "id": "si_11d01005",
+      "shape": "earlier",
+      "role": "pair"
+    },
+    {
+      "id": "si_8971f9aa",
+      "shape": "utc_wall_clock",
       "role": "pair"
     }
   ],
@@ -606,103 +656,103 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "91877281",
+      "id": "gl_43f1a20f",
       "field": "timestamp",
-      "before": "2027-01-01T02:35:01Z",
-      "after": "2027-01-01T05:35:01Z"
+      "before": "2026-05-01T00:45:59Z",
+      "after": "2026-05-01T03:45:59Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "91877281",
+      "id": "gl_43f1a20f",
       "field": "debit_minor",
-      "before": 654968,
-      "after": 654129
+      "before": 816043,
+      "after": 817464
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "92760480",
+      "id": "gl_83de4c4e",
       "record": {
-        "row_id": "92760480",
-        "timestamp": "2026-12-04T18:02:08Z",
+        "row_id": "gl_83de4c4e",
+        "timestamp": "2026-04-30T15:07:03Z",
         "account": "5000",
-        "debit_minor": 71420,
+        "debit_minor": 44125,
         "credit_minor": 0,
         "currency": "USD",
-        "entity_id": "76101805",
-        "invoice_id": "25493713",
+        "entity_id": "sup_a51efeb2",
+        "invoice_id": "pi_86952542",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "94539423",
+      "id": "gl_8bec8972",
       "record": {
-        "row_id": "94539423",
-        "timestamp": "2026-12-04T18:02:08Z",
+        "row_id": "gl_8bec8972",
+        "timestamp": "2026-04-30T15:07:03Z",
         "account": "2000",
         "debit_minor": 0,
-        "credit_minor": 71420,
+        "credit_minor": 44125,
         "currency": "USD",
-        "entity_id": "76101805",
-        "invoice_id": "25493713",
+        "entity_id": "sup_a51efeb2",
+        "invoice_id": "pi_86952542",
         "payment_id": null
       }
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "97061890",
+      "id": "gl_9dcfc20d",
       "field": "timestamp",
-      "before": "2027-01-01T02:35:01Z",
-      "after": "2027-01-01T05:35:01Z"
+      "before": "2026-05-01T00:45:59Z",
+      "after": "2026-05-01T03:45:59Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "98687205",
+      "id": "gl_b5571aaa",
       "field": "timestamp",
-      "before": "2027-01-01T02:35:01Z",
-      "after": "2027-01-01T05:35:01Z"
+      "before": "2026-05-01T00:45:59Z",
+      "after": "2026-05-01T03:45:59Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "98687205",
-      "field": "credit_minor",
-      "before": 15912,
-      "after": 15073
+      "id": "gl_b5571aaa",
+      "field": "debit_minor",
+      "before": 2490,
+      "after": 1069
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "84920205",
+      "id": "doc_8d4a9bbd",
       "record": {
-        "doc_id": "84920205",
-        "invoice_id": "25493713",
+        "doc_id": "doc_8d4a9bbd",
+        "invoice_id": "pi_86952542",
         "kind": "purchase",
-        "entity_id": "76101805",
-        "issued_at": "2026-12-04T18:02:08Z",
-        "due_at": "2026-12-19T02:59:59Z",
+        "entity_id": "sup_a51efeb2",
+        "issued_at": "2026-04-30T15:07:03Z",
+        "due_at": "2026-05-31T02:59:59Z",
         "currency": "USD",
-        "total_minor": 71420,
+        "total_minor": 44125,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Warehouse cleaning WO-1010",
+            "description": "Warehouse cleaning WO-5789",
             "quantity": 1,
-            "unit_price_minor": 71420,
-            "amount_minor": 71420,
-            "ref": "WO-1010"
+            "unit_price_minor": 44125,
+            "amount_minor": 44125,
+            "ref": "WO-5789"
           }
         ]
       }
     }
   ],
-  "clean_digest": "0ad948898390808d95a3b0171fcfbe3b009801acb35c6e841517a9b550ec566f",
-  "clean_records_digest": "c1c392c70ef03e7c70089c50685fac0a90569e480c62a163a61539cbc6954d2e",
-  "final_digest": "2b4628f04c086aaee1b5893a0c490f85767ff440f78ba2305a99671e502e690c",
+  "clean_digest": "a744d8c6cdfc9d1fe4c4311af8b175b30cab1b12a8007b05331fecab5d1f3eba",
+  "clean_records_digest": "b3023a913a39707396a561cd958ad6aabeba9741f44ce008d8feebfa4b3b9fad",
+  "final_digest": "9a0a862b94104adb2ed8b09ded1d0c2333d1b68f84f01bdb1170288300d91cbc",
   "rejected_attempts": []
 }

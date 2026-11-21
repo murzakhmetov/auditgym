@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "seed": "1263440917783250649",
   "secret_used": false,
@@ -14,15 +14,13 @@
     "size": "small",
     "base_currency": "JPY",
     "foreign_currencies": [
-      "EUR",
-      "KRW",
-      "USD"
+      "EUR"
     ],
     "timezone": "Asia/Tokyo",
-    "period": "2026-04",
+    "period": "2025-09",
     "rounding": "half_up",
     "id_style": "numeric",
-    "ts_repr": "local",
+    "ts_repr": "utc",
     "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
@@ -59,43 +57,48 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 2,
-      "posting_lag": 18,
+      "boundary_doc": 6,
+      "posting_lag": 15,
       "overpayment_refund": 1,
-      "null_ref_receipt": 2,
+      "null_ref_receipt": 3,
       "split_remainder": 3,
       "credit_receipt": 2,
-      "prepaid_receipt": 1,
-      "legit_repeat": 4
+      "prepaid_receipt": 0,
+      "legit_repeat": 2
     },
-    "repeat_pairs": 4,
+    "repeat_pairs": 2,
     "counts": {
-      "customers": 9,
+      "customers": 7,
       "suppliers": 7,
-      "sales_invoices": 14,
-      "purchase_invoices": 9,
+      "sales_invoices": 17,
+      "purchase_invoices": 12,
       "prior_invoices": 3,
-      "target_rows": 310
+      "target_rows": 365
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 0,
       "purchase": 0,
-      "sales_paid": 0
+      "sales_paid": 0,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": []
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Rynora Pharma KK",
-    "customers": 9,
-    "suppliers": 8,
-    "invoices": 54,
-    "payments": 39,
-    "misc_journals": 46,
+    "company": "Mirara Agro KK",
+    "customers": 7,
+    "suppliers": 7,
+    "invoices": 60,
+    "payments": 45,
+    "misc_journals": 66,
     "holidays": [
-      "2026-04-13",
-      "2026-04-27"
+      "2025-09-12",
+      "2025-09-15"
     ]
   },
   "injections": [],
@@ -103,296 +106,286 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "27897646",
-        "27690556"
+        "18900711",
+        "19430225",
+        "32026239"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "27243359",
-        "23243249"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "28965727",
-        "29794824"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "22166321",
-        "22381113",
-        "49257226"
+        "16021493",
+        "13755982"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "29709000",
-        "21009542"
+        "22252055",
+        "23381145"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "15642001",
-        "36001497",
-        "31513843"
+        "17312855",
+        "32958819",
+        "37419734"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "17330905",
-        "38914441",
-        "33040694"
+        "16601959",
+        "32137741",
+        "32158598"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "14824354",
-        "36435976",
-        "38639656"
+        "17272429",
+        "32026034",
+        "32881614"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "18923441",
-        "33308937",
-        "32703871"
+        "14368148",
+        "32661617",
+        "31714119"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "17177815",
-        "11006053",
-        "38884402"
+        "17682402",
+        "12306785",
+        "38859825"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "11418587",
-        "38914836"
+        "16325713",
+        "32766838"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "18796950",
-        "39498030",
-        "53470062"
+        "13075333",
+        "39938257",
+        "56608558"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "32575352"
+        "33845897"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "38433231"
+        "32464327"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "34263391"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "13176566"
+        "28758317",
+        "41887052"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "23321973"
+        "14865884"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "15255403",
+        "32287999"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "12679924"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "19169402"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "25653962"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "12262275",
-        "37843867",
-        "31500192"
+        "13153067",
+        "36119624",
+        "35640185"
       ],
       "shape": "settled"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "15723951",
-        "39665677",
-        "38925531"
+        "18894769",
+        "35162892",
+        "37512516"
       ],
       "shape": "settled"
     },
     {
-      "kind": "credit_receipt",
-      "ids": [
-        "19476823",
-        "32021674"
-      ],
-      "shape": "prepaid"
-    },
-    {
       "kind": "midnight_fx",
       "ids": [
-        "18066952"
+        "28449483"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "13661564",
-        "36609166"
+        "13696931",
+        "35840789"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "16426885"
+        "13777891"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "17300528"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "15285790"
+        "25951821"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "38433231"
+        "35640185"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "32661617"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "29571767"
+        "32026034"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "33946839"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "22185795"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "15642001"
+        "28449483"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "12153711"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "27151172"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "11324805"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "38114257"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "31681550"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "48623189"
+        "19401742"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "49484202"
+        "16811389"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "15272482"
+        "37419734"
       ],
       "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "23321973"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "22723274"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "37352305"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "33040694"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "13176566"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "22704787"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "11006053"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "32136341"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "33514793"
-      ],
-      "shape": "later"
     }
   ],
-  "posting_lags": [
-    {
-      "id": "28965727",
-      "shape": "utc_wall_clock",
-      "role": "pair"
-    }
-  ],
+  "posting_lags": [],
   "ops": [],
-  "clean_digest": "256f5273ab9cd57ddc433eae445204408723b93db2a730f4e0fb89481f74aedf",
-  "clean_records_digest": "b4c25afbae0e9de59f14906c2710aea31b381457a9b3e990730aeab551376ae9",
-  "final_digest": "256f5273ab9cd57ddc433eae445204408723b93db2a730f4e0fb89481f74aedf",
+  "clean_digest": "f0add240d981e24b0403fec0d792d8db80cbe7fee85f98685de5bde1ce160ee0",
+  "clean_records_digest": "388c46ab5c70431b4b0d41b07060e1656e30a43b643745345a355a7820d2d43b",
+  "final_digest": "f0add240d981e24b0403fec0d792d8db80cbe7fee85f98685de5bde1ce160ee0",
   "rejected_attempts": []
 }

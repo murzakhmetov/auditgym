@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "seed": "7730195562281004417",
   "secret_used": false,
@@ -14,14 +14,15 @@
     "size": "medium",
     "base_currency": "KWD",
     "foreign_currencies": [
+      "BHD",
       "EUR",
       "USD"
     ],
     "timezone": "Asia/Kuwait",
-    "period": "2026-06",
-    "rounding": "half_up",
-    "id_style": "hex",
-    "ts_repr": "utc",
+    "period": "2027-06",
+    "rounding": "half_even",
+    "id_style": "numeric",
+    "ts_repr": "local",
     "row_order": "time",
     "errors": {
       "duplicate_invoice": 0,
@@ -58,42 +59,48 @@
       "underpayment": 2,
       "midnight_fx": 3,
       "weekend_fx": 2,
-      "boundary_doc": 5,
+      "boundary_doc": 6,
       "posting_lag": 38,
       "overpayment_refund": 1,
-      "null_ref_receipt": 4,
-      "split_remainder": 3,
-      "credit_receipt": 5,
-      "prepaid_receipt": 1,
+      "null_ref_receipt": 3,
+      "split_remainder": 4,
+      "credit_receipt": 4,
+      "prepaid_receipt": 2,
       "legit_repeat": 3
     },
     "repeat_pairs": 3,
     "counts": {
-      "customers": 13,
-      "suppliers": 7,
-      "sales_invoices": 37,
-      "purchase_invoices": 22,
-      "prior_invoices": 5,
-      "target_rows": 701
+      "customers": 15,
+      "suppliers": 9,
+      "sales_invoices": 35,
+      "purchase_invoices": 17,
+      "prior_invoices": 7,
+      "target_rows": 967
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 0,
       "purchase": 0,
-      "sales_paid": 0
+      "sales_paid": 0,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": []
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Mirova Agro Ltd",
-    "customers": 13,
-    "suppliers": 7,
-    "invoices": 103,
-    "payments": 73,
-    "misc_journals": 151,
+    "company": "Toren Foods Ltd",
+    "customers": 15,
+    "suppliers": 10,
+    "invoices": 100,
+    "payments": 79,
+    "misc_journals": 265,
     "holidays": [
-      "2026-06-15"
+      "2027-06-08",
+      "2027-06-11"
     ]
   },
   "injections": [],
@@ -101,521 +108,531 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "si_e1a83e3c",
-        "si_12bba211"
+        "24822494",
+        "29397651"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_132155cd",
-        "pi_1da2e0b5"
+        "19877259",
+        "12746253"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_645558ca",
-        "pi_7c59a65a",
-        "dp_99b5f8ee"
+        "27907850",
+        "23911612",
+        "49961806"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_776ec82f",
-        "pi_5ec3bc83"
+        "27640172",
+        "29117261"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_f7356210",
-        "pi_94852ee5"
+        "21192801",
+        "29827184"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_ae446e06",
-        "rc_ece5219e",
-        "rc_dce83c3c"
+        "13466118",
+        "38924028",
+        "33800488"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_ac43e9c6",
-        "rc_0b68eea1",
-        "rc_c1ebc12e"
+        "16362497",
+        "38171884",
+        "36674786"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_8e789102",
-        "rc_6a37a255",
-        "rc_6f2510cd"
+        "17668323",
+        "36508171",
+        "35755639"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_65712243",
-        "rc_0da57868",
-        "rc_888d5462"
+        "19284706",
+        "31843194",
+        "37118021"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_83cfd941",
-        "rc_3bde99cb",
-        "rc_6da5f802"
+        "16183059",
+        "32840221",
+        "38225718"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "13249393",
+        "39840917",
+        "32962804"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_13ad7de5",
-        "si_4fafa276",
-        "rc_b9f6e4d7"
+        "14322004",
+        "18710940",
+        "36535671"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_e8fd4134",
-        "rc_28454396"
+        "15485380",
+        "34879735"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_8db5de69",
-        "rc_828e021a"
+        "18524830",
+        "33891539"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_1219bc9d",
-        "rc_d6f0e460",
-        "rf_f36e99e8"
+        "14781906",
+        "33657240",
+        "56716097"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_cbc69ba1"
+        "38857235"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_4ec46a58"
+        "35437344"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_ca9d90ee"
-      ]
-    },
-    {
-      "kind": "null_ref_receipt",
-      "ids": [
-        "rc_c047da48"
+        "37871178"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_2e543875"
+        "25086754"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_9c545390",
-        "rc_6402b27c"
+        "28668268",
+        "42011021"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_ec9d161f",
-        "dp_f6db49a2"
+        "17023609",
+        "31035853"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_55bac65a",
-        "rc_1e5de35e"
+        "14987098",
+        "33619620"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_d0a93ce0"
+        "27118504"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "11721613"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_d855ea25",
-        "rc_1f59388b"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "si_572bdc33",
-        "rc_d9866827",
-        "rc_4cf36c58"
+        "12719111",
+        "33846279",
+        "33213887"
       ],
       "shape": "topped_up"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_767af150",
-        "rc_9975a3de"
+        "16465231",
+        "31095940",
+        "35206319"
+      ],
+      "shape": "topped_up"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "12889238",
+        "35303902",
+        "33214313"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "13649054",
+        "31930189"
       ],
       "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_4ce2b9b0",
-        "rc_bc264d53",
-        "rc_43d892de"
+        "19719940",
+        "37194433"
       ],
-      "shape": "settled"
+      "shape": "prepaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_40f7734f",
-        "rc_96cf97bf",
-        "rc_e9ede33a"
-      ],
-      "shape": "settled"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "si_8f0c4892",
-        "rc_d5ee7839"
+        "12015991",
+        "39722747"
       ],
       "shape": "prepaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_2442c52b"
+        "23469229"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_2a0f3fc3",
-        "dp_4b41ed4f"
+        "14904776",
+        "35840950"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "pi_a5e7dc58"
+        "21241085"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_6dd71d2a"
+        "14158045"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_3b71b4e1"
+        "13363245"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_1d6d683e"
+        "23469229"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_65712243"
+        "13261506"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_cb88c71f"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "pi_f60d613c"
+        "13466118"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_6fde3bbf"
+        "41669927"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "36634873"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "18524830"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "31877643"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "19671481"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "15489025"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "24685704"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "37005108"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_9d5a602e"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_e9ede33a"
+        "13443400"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_9ab45c54"
+        "39722747"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_e8fd4134"
+        "11052017"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "19100369"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_d26395d9"
+        "19719940"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_8f0c4892"
+        "29117261"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_55bac65a"
+        "35206319"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "13095371"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "dp_9a217160"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_4ce2b9b0"
+        "24047325"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_3c6b60d9"
+        "38225718"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "36835132"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "27769675"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_0be40b21"
+        "39840917"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "13024634"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "35840950"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "31274480"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "11849144"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_9c545390"
+        "45781046"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "48008725"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_f198b258"
+        "25494209"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_9f557d7f"
+        "38857235"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_d5ee7839"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_dc712962"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_19e90a9b"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_406fef9c"
+        "15701131"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_3facc74f"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_888d5462"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_dd19c0cc"
+        "32840221"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_e9cd57c1"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_2442c52b"
+        "18311883"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_94852ee5"
+        "16362497"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_4fafa276"
+        "35910839"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "dp_48f0efe8"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_e9343246"
+        "37275209"
       ],
       "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_aa97c00e"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_e6f24aee"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "dp_341fdbf9"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_1219bc9d"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_fd8b34c6"
-      ],
-      "shape": "later"
     }
   ],
-  "posting_lags": [
-    {
-      "id": "pi_132155cd",
-      "shape": "utc_wall_clock",
-      "role": "pair"
-    }
-  ],
+  "posting_lags": [],
   "ops": [],
-  "clean_digest": "fb610b5f3f3920f4a7f9c411f01b6d773c2dba66d72d6e418fbf29e1e6b011b4",
-  "clean_records_digest": "c23a484acd7570bf85416c2d9c3b917e942b658aaa05f3833da8efc693155c25",
-  "final_digest": "fb610b5f3f3920f4a7f9c411f01b6d773c2dba66d72d6e418fbf29e1e6b011b4",
+  "clean_digest": "aa4e9bf081f58402bb44e2682a0c73b599c3fbfd45f84cc47131c9a9d5fd3364",
+  "clean_records_digest": "ee451ef53492b5d6c1d998c762e195d44f3d28596d935348466d84a4c5d9f7f2",
+  "final_digest": "aa4e9bf081f58402bb44e2682a0c73b599c3fbfd45f84cc47131c9a9d5fd3364",
   "rejected_attempts": []
 }

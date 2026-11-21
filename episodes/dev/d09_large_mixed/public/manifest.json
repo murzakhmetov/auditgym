@@ -1,33 +1,34 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_d64355952aeed786",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_de177c210c3fa8e0",
   "company": {
-    "name": "Darana Energy Ltda",
+    "name": "Astix Pharma Pty Ltd",
     "synthetic": true
   },
-  "base_currency": "USD",
+  "base_currency": "GBP",
   "currency_exponents": {
+    "GBP": 2,
     "USD": 2,
-    "KWD": 3
+    "CHF": 2
   },
-  "period_start": "2025-02-01T00:00:00-03:00",
-  "period_end": "2025-03-01T00:00:00-03:00",
-  "ledger_extract_end": "2025-03-08T00:00:00-03:00",
-  "timezone": "America/Sao_Paulo",
+  "period_start": "2025-06-01T00:00:00+10:00",
+  "period_end": "2025-07-01T00:00:00+10:00",
+  "ledger_extract_end": "2025-07-08T00:00:00+10:00",
+  "timezone": "Australia/Sydney",
   "record_counts": {
-    "ledger": 1691,
-    "invoices": 128,
-    "payments": 97,
-    "fx": 78
+    "ledger": 1899,
+    "invoices": 124,
+    "payments": 92,
+    "fx": 145
   },
   "document_counts": {
-    "invoices": 128,
-    "payments": 97,
-    "total": 225
+    "invoices": 124,
+    "payments": 92,
+    "total": 216
   },
   "rounding": {
-    "mode": "half_even",
+    "mode": "half_up",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

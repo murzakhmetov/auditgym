@@ -1,34 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_71853a4d283ac4ca",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_a99d121522b984cd",
   "company": {
-    "name": "Rynion Energy Inc",
+    "name": "Kenex Agro Inc",
     "synthetic": true
   },
   "base_currency": "USD",
   "currency_exponents": {
     "USD": 2,
     "EUR": 2,
-    "GBP": 2
+    "KWD": 3,
+    "JPY": 0
   },
-  "period_start": "2027-05-01T00:00:00-04:00",
-  "period_end": "2027-06-01T00:00:00-04:00",
-  "ledger_extract_end": "2027-06-08T00:00:00-04:00",
+  "period_start": "2027-04-01T00:00:00-04:00",
+  "period_end": "2027-05-01T00:00:00-04:00",
+  "ledger_extract_end": "2027-05-08T00:00:00-04:00",
   "timezone": "America/New_York",
   "record_counts": {
-    "ledger": 766,
-    "invoices": 104,
-    "payments": 80,
-    "fx": 143
+    "ledger": 808,
+    "invoices": 95,
+    "payments": 75,
+    "fx": 200
   },
   "document_counts": {
-    "invoices": 104,
-    "payments": 80,
-    "total": 184
+    "invoices": 95,
+    "payments": 75,
+    "total": 170
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

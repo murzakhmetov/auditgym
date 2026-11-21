@@ -31,23 +31,23 @@
     "publication_calendar": {
       "published_weekdays": "Monday to Friday",
       "holidays_without_rates": [
-        "2026-03-03"
+        "2026-03-19",
+        "2026-03-20"
       ],
       "first_date": "2026-01-13",
       "last_date": "2026-04-09"
     },
     "conversion": "base_minor = round(amount_minor * rate * 10^(exp_base - exp_document))",
-    "rounding": "half_even",
+    "rounding": "half_up",
     "other_pairs": "Rows for pairs other than document currency -> base currency are not used for postings."
   },
   "currency_exponents": {
     "EUR": 2,
-    "USD": 2,
-    "JPY": 0,
-    "GBP": 2
+    "CHF": 2,
+    "USD": 2
   },
   "rounding": {
-    "mode": "half_even",
+    "mode": "half_up",
     "modes": {
       "half_even": "round half to even",
       "half_up": "round half away from zero"

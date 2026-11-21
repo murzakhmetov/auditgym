@@ -249,7 +249,7 @@ class CreditReceiptTests(unittest.TestCase):
         self.assertEqual(cfg["error_invoice_load"]["sales"] + cfg["error_invoice_load"]["purchase"], 3)
         cfg = cfgmod.resolve({"size": "small", "errors": {"wrong_fx_rate": 2}, "counts": {"sales_invoices": 9, "purchase_invoices": 5,
                                                                                          "prior_invoices": 3}}, Rng("l"))
-        self.assertEqual(cfg["error_invoice_load"], {"sales": 0, "purchase": 0, "sales_paid": 0})
+        self.assertEqual(cfg["error_invoice_load"], {"sales": 0, "purchase": 0, "sales_paid": 0, "purchase_paid": 0})
         cfg = cfgmod.resolve({"size": "small", "errors": {"unallocated_payment": 4}, "counts": {"prior_invoices": 3}}, Rng("l"))
         self.assertEqual(cfg["counts"]["prior_invoices"], 3)
 
@@ -397,7 +397,10 @@ class InvoiceCountTests(unittest.TestCase):
         self.assertEqual((cfg["counts"]["sales_invoices"], cfg["counts"]["purchase_invoices"]), (5, 3))
         hi = cfgmod.SIZES["small"]["sales_invoices"][1]
         drawn = cfgmod.resolve({"size": "small", "errors": {"wrong_fx_rate": 4, "wrong_period": 2}}, Rng("e"))
-        self.assertLessEqual(drawn["counts"]["sales_invoices"], hi - 3)
+        load = drawn["error_invoice_load"]  # the side of each of the six invoices follows the drawn target kind (0.4.0)
+        self.assertEqual(load["sales"] + load["purchase"], 6)
+        self.assertLessEqual(drawn["counts"]["sales_invoices"], hi - load["sales"])
+        self.assertLessEqual(drawn["counts"]["purchase_invoices"], cfgmod.SIZES["small"]["purchase_invoices"][1] - load["purchase"])
 
     def test_the_load_of_each_error_type(self):
         self.assertEqual(cfgmod.error_invoice_load({}), (0, 0))

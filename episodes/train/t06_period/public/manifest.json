@@ -1,34 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_2b3e7ba11b2fd9fe",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_8c464b63a08b4441",
   "company": {
-    "name": "Corium Foods Pvt Ltd",
+    "name": "Valon Logistics KK",
     "synthetic": true
   },
-  "base_currency": "KWD",
+  "base_currency": "JPY",
   "currency_exponents": {
-    "KWD": 3,
-    "EUR": 2,
+    "JPY": 0,
     "USD": 2
   },
-  "period_start": "2025-07-01T00:00:00+05:45",
-  "period_end": "2025-08-01T00:00:00+05:45",
-  "ledger_extract_end": "2025-08-08T00:00:00+05:45",
-  "timezone": "Asia/Kathmandu",
+  "period_start": "2026-12-01T00:00:00+09:00",
+  "period_end": "2027-01-01T00:00:00+09:00",
+  "ledger_extract_end": "2027-01-08T00:00:00+09:00",
+  "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 236,
-    "invoices": 60,
-    "payments": 41,
-    "fx": 140
+    "ledger": 365,
+    "invoices": 70,
+    "payments": 53,
+    "fx": 92
   },
   "document_counts": {
-    "invoices": 60,
-    "payments": 41,
-    "total": 101
+    "invoices": 70,
+    "payments": 53,
+    "total": 123
   },
   "rounding": {
-    "mode": "half_even",
+    "mode": "half_up",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "seed": "4482910736655019231",
   "secret_used": false,
@@ -20,15 +20,16 @@
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "USD",
+    "base_currency": "EUR",
     "foreign_currencies": [
-      "EUR",
-      "KWD"
+      "USD",
+      "CHF",
+      "GBP"
     ],
     "timezone": "Asia/Almaty",
-    "period": "2026-02",
+    "period": "2026-07",
     "rounding": "half_up",
-    "id_style": "hex",
+    "id_style": "prefixed",
     "ts_repr": "utc",
     "row_order": "shuffled",
     "errors": {
@@ -64,41 +65,51 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 6,
-      "posting_lag": 13,
-      "overpayment_refund": 2,
-      "null_ref_receipt": 1,
-      "split_remainder": 1,
-      "credit_receipt": 4,
-      "prepaid_receipt": 1,
-      "legit_repeat": 3
+      "boundary_doc": 2,
+      "posting_lag": 17,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 3,
+      "split_remainder": 4,
+      "credit_receipt": 2,
+      "prepaid_receipt": 0,
+      "legit_repeat": 2
     },
-    "repeat_pairs": 3,
+    "repeat_pairs": 2,
     "counts": {
-      "customers": 8,
-      "suppliers": 6,
-      "sales_invoices": 20,
-      "purchase_invoices": 11,
-      "prior_invoices": 3,
-      "target_rows": 270
+      "customers": 7,
+      "suppliers": 5,
+      "sales_invoices": 16,
+      "purchase_invoices": 7,
+      "prior_invoices": 4,
+      "target_rows": 278
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 1,
       "purchase": 1,
-      "sales_paid": 0
+      "sales_paid": 0,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": [
+        "invoice",
+        "invoice"
+      ]
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Rynum Logistics LLP",
-    "customers": 8,
-    "suppliers": 7,
-    "invoices": 69,
-    "payments": 53,
-    "misc_journals": 0,
-    "holidays": []
+    "company": "Valis Systems LLP",
+    "customers": 7,
+    "suppliers": 5,
+    "invoices": 55,
+    "payments": 48,
+    "misc_journals": 19,
+    "holidays": [
+      "2026-07-02"
+    ]
   },
   "injections": [
     {
@@ -107,10 +118,10 @@
       "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "invoice": "pi_e653b893"
+        "invoice": "INV-873492"
       },
       "change": {
-        "posting_ts": "2026-02-28T14:30:58+00:00"
+        "posting_ts": "2026-07-31T15:12:17+00:00"
       }
     },
     {
@@ -119,10 +130,10 @@
       "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "invoice": "pi_17d6fd1b"
+        "invoice": "INV-989206"
       },
       "change": {
-        "posting_ts": "2026-02-28T16:50:39+00:00"
+        "posting_ts": "2026-07-31T16:36:54+00:00"
       }
     }
   ],
@@ -130,265 +141,265 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_f6501b3c",
-        "pi_c89ec81e",
-        "dp_b9ce06be"
+        "INV-588911",
+        "INV-404887",
+        "RCPT-812830"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "pi_56c63028",
-        "pi_46c6cfe7",
-        "dp_73d96a29"
-      ]
-    },
-    {
-      "kind": "legit_repeat",
-      "ids": [
-        "pi_81587daa",
-        "pi_d7afc2c2",
-        "dp_8a39b456"
+        "BILL-136653",
+        "BILL-831547",
+        "PAY-280046"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "pi_696af9e4",
-        "pi_d9354661"
+        "BILL-302811",
+        "BILL-381539"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_938d988a",
-        "rc_78f8406c",
-        "rc_74825679"
+        "INV-333051",
+        "RCPT-167655",
+        "RCPT-179569"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "si_5472ec94",
-        "rc_47af2304",
-        "rc_025d306b"
+        "INV-519358",
+        "RCPT-817538",
+        "RCPT-858293"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-583548",
+        "RCPT-152505",
+        "RCPT-676974"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-687425",
+        "RCPT-412325",
+        "RCPT-135637"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-906740",
+        "RCPT-919077",
+        "RCPT-701778"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "si_9e5c48e4",
-        "si_f0fda6d3",
-        "rc_eb7adfa8"
+        "INV-498550",
+        "INV-906608",
+        "RCPT-731881"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "si_4dc02ea5",
-        "rc_00f5b8f3"
+        "INV-972293",
+        "RCPT-674441"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "si_492e2ed0",
-        "rc_06c52d06",
-        "rf_abcb3572"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "si_2c7eb6b2",
-        "rc_9a95eec9",
-        "rf_4626c747"
+        "INV-236789",
+        "RCPT-808866",
+        "RFND-822106"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "rc_0d5c94ca"
+        "RCPT-116115"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-827979"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-202588"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "si_c7d8d6c8",
-        "rc_62aeaa57"
+        "BILL-158086",
+        "PAY-249551"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "pi_77cd1cfe",
-        "dp_5070cd1d"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "pi_b7e361e1",
-        "dp_2d46c275"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "pi_93041e25",
-        "dp_511d1c9d"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "pi_5d56e429"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "pi_8fee02b0",
-        "dp_bb141859"
+        "INV-560894",
+        "RCPT-402950"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_52536c80",
-        "rc_d3c2b0f6",
-        "rc_1cb0938f"
+        "INV-764233",
+        "RCPT-444242",
+        "RCPT-359056"
       ],
       "shape": "settled"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "si_c6b08b0b",
-        "rc_d3a7e93b"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "si_4034074f",
-        "rc_8fb2afd5",
-        "rc_1b70d76d"
+        "INV-472796",
+        "RCPT-738932",
+        "RCPT-183333"
       ],
       "shape": "topped_up"
     },
     {
-      "kind": "credit_receipt",
-      "ids": [
-        "si_597c936b",
-        "rc_318305fe"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "si_804403c5",
-        "rc_13b52f65"
-      ],
-      "shape": "prepaid"
-    },
-    {
       "kind": "midnight_fx",
       "ids": [
-        "pi_c6e56e59"
+        "BILL-198497"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "si_9f31109e",
-        "rc_c89cf98f"
+        "BILL-203267",
+        "PAY-428714"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "si_01ec48f4"
+        "INV-341407"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_a3c00f82"
+        "BILL-678234"
       ],
-      "shape": "later"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_968ec44e"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "rc_78f8406c"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "pi_e55d5367"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "si_4034074f"
+        "RCPT-116115"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_06c52d06"
+        "RCPT-812830"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-596300"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RCPT-674441"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-448973"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-187137"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-475110"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RCPT-135637"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PAY-428714"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "si_1cef9020"
+        "RCPT-167655"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RCPT-919077"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "pi_a630d0d9"
+        "BILL-549160"
       ],
-      "shape": "later"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "rc_47af2304"
+        "INV-628119"
       ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "pi_59bafa34"
-      ],
-      "shape": "later"
+      "shape": "date_change"
     }
   ],
   "posting_lags": [
     {
-      "id": "pi_c89ec81e",
-      "shape": "earlier",
+      "id": "BILL-136653",
+      "shape": "later",
       "role": "pair"
     }
   ],
@@ -396,38 +407,38 @@
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_091d0607",
+      "id": "GL-388814",
       "field": "timestamp",
-      "before": "2026-02-28T21:50:39Z",
-      "after": "2026-02-28T16:50:39Z"
+      "before": "2026-07-31T21:36:54Z",
+      "after": "2026-07-31T16:36:54Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_144827fc",
+      "id": "GL-403658",
       "field": "timestamp",
-      "before": "2026-02-28T19:30:58Z",
-      "after": "2026-02-28T14:30:58Z"
+      "before": "2026-07-31T20:12:17Z",
+      "after": "2026-07-31T15:12:17Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_3001eaf1",
+      "id": "GL-571084",
       "field": "timestamp",
-      "before": "2026-02-28T21:50:39Z",
-      "after": "2026-02-28T16:50:39Z"
+      "before": "2026-07-31T20:12:17Z",
+      "after": "2026-07-31T15:12:17Z"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "gl_8cd6ec32",
+      "id": "GL-691815",
       "field": "timestamp",
-      "before": "2026-02-28T19:30:58Z",
-      "after": "2026-02-28T14:30:58Z"
+      "before": "2026-07-31T21:36:54Z",
+      "after": "2026-07-31T16:36:54Z"
     }
   ],
-  "clean_digest": "506fd178c44ff6ecbcb0be34034fd136eea6684c6751a0780506138acfca0688",
-  "clean_records_digest": "79e8577496a2f4a17a93ed030da5112e1686d89139d0c580cdbb0a5bfb1e197c",
-  "final_digest": "e1befc1046914336bc3de4ded4dd3e14c51dca6d9fe0360b05b45560854f0cde",
+  "clean_digest": "8f46bb7e81421c89ff5d231f6a26f878a04e91aa8f1bd69662df440593336540",
+  "clean_records_digest": "27f1e38acfb04de55f6008f7dcd33fac432b3db8924391eb3b8583e5fe504057",
+  "final_digest": "18c70804d17f441882f867cc581b810ee682d92da041b4d159786da6306ba5b4",
   "rejected_attempts": []
 }

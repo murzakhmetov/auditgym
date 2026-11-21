@@ -74,7 +74,7 @@ def build_once(seed, config: dict, cfg: dict, rng: Rng, attempt: int, secret: st
         clean_books = post(b.h)
     overrides = make_overrides(b, plan)
     books = post(b.h, overrides)
-    issues = derive_issues(b, plan, books)
+    issues = derive_issues(b, plan, books, clean_books)
 
     idents = [ln.ident for ln in clean_books.lines] + [ln.ident for ln in books.lines]
     renderer = Renderer(b.h, cfg, rng.fork("render"), books.invoices, idents)

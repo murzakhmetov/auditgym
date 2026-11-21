@@ -1,31 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_a2380877b0d5b8a3",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_19f8fa59970dfaff",
   "company": {
-    "name": "Rynum Logistics LLP",
+    "name": "Valis Systems LLP",
     "synthetic": true
   },
-  "base_currency": "USD",
+  "base_currency": "EUR",
   "currency_exponents": {
-    "USD": 2,
     "EUR": 2,
-    "KWD": 3
+    "USD": 2,
+    "CHF": 2,
+    "GBP": 2
   },
-  "period_start": "2026-02-01T00:00:00+05:00",
-  "period_end": "2026-03-01T00:00:00+05:00",
-  "ledger_extract_end": "2026-03-08T00:00:00+05:00",
+  "period_start": "2026-07-01T00:00:00+05:00",
+  "period_end": "2026-08-01T00:00:00+05:00",
+  "ledger_extract_end": "2026-08-08T00:00:00+05:00",
   "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 275,
-    "invoices": 69,
-    "payments": 53,
-    "fx": 140
+    "ledger": 278,
+    "invoices": 55,
+    "payments": 48,
+    "fx": 210
   },
   "document_counts": {
-    "invoices": 69,
-    "payments": 53,
-    "total": 122
+    "invoices": 55,
+    "payments": 48,
+    "total": 103
   },
   "rounding": {
     "mode": "half_up",

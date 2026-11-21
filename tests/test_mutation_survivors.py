@@ -465,9 +465,9 @@ class EvidenceSurvivors(unittest.TestCase):
     def test_a_posting_at_the_period_end_instant_is_outside_the_period(self):  # evidence-period-boundary
         ep, type_, es = evidence_case("t06_period")
         period = ep.policy["reporting_period"]
-        doc = next(d for d in ep.invoices if d["doc_id"] in es)
+        doc = next(d for d in ep.invoices + ep.payments if d["doc_id"] in es)  # an invoice or a payment target
         row = next(r for r in ep.ledger if r["row_id"] in es)
-        doc["issued_at"], row["timestamp"] = period["start"], period["end"]
+        doc["issued_at" if "invoice_id" in doc else "timestamp"], row["timestamp"] = period["start"], period["end"]
         self.assertEqual(derive(ep, type_, es)[0], "wrong_period")
         row["timestamp"] = period["start"]  # same period on both sides: nothing wrong
         self.assertIsNone(derive(ep, type_, es))

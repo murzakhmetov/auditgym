@@ -1,35 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_9abbc9a0a473b639",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_918f09fd455d654d",
   "company": {
-    "name": "Norion Retail Pvt Ltd",
+    "name": "Kenon Agro Holdings",
     "synthetic": true
   },
-  "base_currency": "USD",
+  "base_currency": "EUR",
   "currency_exponents": {
-    "USD": 2,
-    "KWD": 3,
-    "JPY": 0,
-    "GBP": 2
+    "EUR": 2,
+    "JPY": 0
   },
-  "period_start": "2025-01-01T00:00:00+05:30",
-  "period_end": "2025-02-01T00:00:00+05:30",
-  "ledger_extract_end": "2025-02-08T00:00:00+05:30",
-  "timezone": "Asia/Kolkata",
+  "period_start": "2026-12-01T00:00:00+00:00",
+  "period_end": "2027-01-01T00:00:00+00:00",
+  "ledger_extract_end": "2027-01-08T00:00:00+00:00",
+  "timezone": "UTC",
   "record_counts": {
-    "ledger": 317,
-    "invoices": 59,
-    "payments": 43,
-    "fx": 207
+    "ledger": 281,
+    "invoices": 56,
+    "payments": 38,
+    "fx": 90
   },
   "document_counts": {
-    "invoices": 59,
-    "payments": 43,
-    "total": 102
+    "invoices": 56,
+    "payments": 38,
+    "total": 94
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

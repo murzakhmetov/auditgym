@@ -1,33 +1,35 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_8241ea614239fd9d",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_f4234e32e906bf14",
   "company": {
-    "name": "Zanion Agro LLP",
+    "name": "Eloaro Components Ltd",
     "synthetic": true
   },
   "base_currency": "KZT",
   "currency_exponents": {
     "KZT": 2,
-    "AED": 2
+    "USD": 2,
+    "AED": 2,
+    "EUR": 2
   },
-  "period_start": "2027-06-01T00:00:00+05:00",
-  "period_end": "2027-07-01T00:00:00+05:00",
-  "ledger_extract_end": "2027-07-08T00:00:00+05:00",
-  "timezone": "Asia/Almaty",
+  "period_start": "2027-02-01T00:00:00+03:00",
+  "period_end": "2027-03-01T00:00:00+03:00",
+  "ledger_extract_end": "2027-03-08T00:00:00+03:00",
+  "timezone": "Asia/Kuwait",
   "record_counts": {
-    "ledger": 320,
-    "invoices": 70,
-    "payments": 56,
-    "fx": 83
+    "ledger": 306,
+    "invoices": 62,
+    "payments": 47,
+    "fx": 207
   },
   "document_counts": {
-    "invoices": 70,
-    "payments": 56,
-    "total": 126
+    "invoices": 62,
+    "payments": 47,
+    "total": 109
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

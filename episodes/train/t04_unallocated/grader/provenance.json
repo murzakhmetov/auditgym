@@ -1,8 +1,8 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
-  "seed": "8840212650077123541",
+  "seed": "5681269573535271104",
   "secret_used": false,
   "config": {
     "errors": {
@@ -13,16 +13,16 @@
   "resolved_config": {
     "config_version": "1",
     "size": "small",
-    "base_currency": "KWD",
+    "base_currency": "KZT",
     "foreign_currencies": [
-      "USD"
+      "EUR"
     ],
-    "timezone": "Asia/Kuwait",
-    "period": "2026-11",
+    "timezone": "Asia/Almaty",
+    "period": "2025-10",
     "rounding": "half_even",
-    "id_style": "numeric",
-    "ts_repr": "utc",
-    "row_order": "time",
+    "id_style": "hex",
+    "ts_repr": "local",
+    "row_order": "shuffled",
     "errors": {
       "duplicate_invoice": 0,
       "unallocated_payment": 1,
@@ -58,10 +58,10 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 6,
-      "posting_lag": 22,
-      "overpayment_refund": 3,
-      "null_ref_receipt": 3,
+      "boundary_doc": 2,
+      "posting_lag": 16,
+      "overpayment_refund": 1,
+      "null_ref_receipt": 2,
       "split_remainder": 1,
       "credit_receipt": 4,
       "prepaid_receipt": 0,
@@ -69,30 +69,37 @@
     },
     "repeat_pairs": 4,
     "counts": {
-      "customers": 8,
-      "suppliers": 6,
+      "customers": 7,
+      "suppliers": 5,
       "sales_invoices": 17,
-      "purchase_invoices": 9,
-      "prior_invoices": 3,
-      "target_rows": 332
+      "purchase_invoices": 8,
+      "prior_invoices": 5,
+      "target_rows": 298
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 0,
       "purchase": 0,
-      "sales_paid": 0
+      "sales_paid": 0,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": []
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Darion Machinery Ltd",
-    "customers": 8,
-    "suppliers": 6,
-    "invoices": 63,
-    "payments": 52,
-    "misc_journals": 36,
-    "holidays": []
+    "company": "Verova Energy LLP",
+    "customers": 7,
+    "suppliers": 5,
+    "invoices": 59,
+    "payments": 38,
+    "misc_journals": 43,
+    "holidays": [
+      "2025-10-08"
+    ]
   },
   "injections": [
     {
@@ -101,11 +108,11 @@
       "variant": "partial",
       "scenario": "single",
       "targets": {
-        "payment": "35975846",
-        "invoice": "12576347"
+        "payment": "rc_7af9eee8",
+        "invoice": "si_487dbfff"
       },
       "change": {
-        "alloc": 296359
+        "alloc": 25299716
       }
     }
   ],
@@ -113,393 +120,297 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "23259009",
-        "27871557",
-        "43625661"
+        "si_ecaa7275",
+        "si_27e48cac",
+        "rc_746432b6"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "23398079",
-        "24461521"
+        "si_71c77866",
+        "si_132c0808",
+        "rc_e92f294a"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "17658796",
-        "14003762",
-        "33524155"
+        "si_b25ffaff",
+        "si_a8d3f2a7"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "19770277",
-        "19909403",
-        "34684129"
+        "si_2f30bb51",
+        "si_90e8ebaf"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "26162282",
-        "23187247"
+        "pi_e0582cb6",
+        "pi_a3b5a513"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "13698810",
-        "37376023",
-        "33053639"
+        "si_187cff2b",
+        "rc_ebe947a6",
+        "rc_30913faf"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "11006356",
-        "35260100",
-        "38643647"
+        "si_2a851392",
+        "rc_ea2db8d3",
+        "rc_2c385721"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "17668239",
-        "11455591",
-        "36869938"
+        "si_f2aec59f",
+        "si_6af54c54",
+        "rc_3d338710"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "13178576",
-        "36102202"
+        "si_279a2ac2",
+        "rc_9164a51f"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "18169672",
-        "36746843",
-        "52081781"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "17476363",
-        "38470909",
-        "54358165"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "14192444",
-        "38968664",
-        "56165267"
+        "si_ab392fb3",
+        "rc_c864583f",
+        "rf_9fe5b177"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "36715115"
+        "rc_a56dd299"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "37251990"
-      ]
-    },
-    {
-      "kind": "null_ref_receipt",
-      "ids": [
-        "34702839"
+        "rc_7e7d1bf4"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "22530932",
-        "47942554"
+        "pi_9f322e7a",
+        "dp_56c62bc2"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "12469062"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "18036269",
-        "31261938"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "26287095",
-        "42713011"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "26259635",
-        "42707186"
-      ]
-    },
-    {
-      "kind": "boundary_doc",
-      "ids": [
-        "18928614"
+        "si_9924f6ab"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "15941686",
-        "39692703",
-        "31579660"
+        "si_90aac940",
+        "rc_dc690f2f"
       ],
-      "shape": "topped_up"
+      "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "12183399",
-        "39325721",
-        "31988105"
+        "si_48d4a031",
+        "rc_bea6e2b0"
       ],
-      "shape": "settled"
+      "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "14850021",
-        "38432599",
-        "39214552"
+        "si_04feb0ce",
+        "rc_80ea5903"
       ],
-      "shape": "settled"
+      "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "14293395",
-        "34696283",
-        "38688368"
+        "si_05fd6d7d",
+        "rc_67e2dff3"
       ],
-      "shape": "settled"
+      "shape": "overpaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "15811005"
+        "pi_7499c49c"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "13796323",
-        "38866200"
+        "si_0a901ad7",
+        "rc_5b0cc782"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "14327757"
+        "si_91e41b66"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "42707186"
+        "si_f2aec59f"
       ],
-      "shape": "earlier"
+      "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "12495480"
+        "dp_a86cdc7a"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "12449043"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "29397643"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "42713011"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "23187247"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "37309186"
+        "rc_1c04fc86"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "47643616"
+        "rf_9fe5b177"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_2c385721"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_0ac09554"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "52081781"
+        "rc_5b0cc782"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "26072720"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "32482520"
+        "rc_6857809e"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "39325721"
+        "si_3da3857f"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_16a8681a"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "si_563b1900"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_67e2dff3"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "rc_49c3b35b"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "15941686"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "14691653"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "33524155"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "39214552"
+        "pi_24e709be"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "13796323"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "13562700"
+        "dp_b2a2e389"
       ],
       "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "33053639"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "18693844"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "37251990"
-      ],
-      "shape": "date_change"
     }
   ],
   "posting_lags": [
     {
-      "id": "19909403",
+      "id": "si_ecaa7275",
       "shape": "earlier",
       "role": "pair"
     }
   ],
   "ops": [
     {
-      "op": "set",
-      "table": "ledger",
-      "id": "94403702",
-      "field": "credit_minor",
-      "before": 935240,
-      "after": 296359
-    },
-    {
       "op": "add",
       "table": "ledger",
-      "id": "98619864",
+      "id": "gl_4b5fc489",
       "record": {
-        "row_id": "98619864",
-        "timestamp": "2026-11-10T06:36:12Z",
+        "row_id": "gl_4b5fc489",
+        "timestamp": "2025-10-08T19:57:44+05:00",
         "account": "2900",
         "debit_minor": 0,
-        "credit_minor": 638881,
-        "currency": "KWD",
-        "entity_id": "65414135",
+        "credit_minor": 30577919,
+        "currency": "KZT",
+        "entity_id": "cus_ad5bcdbc",
         "invoice_id": null,
-        "payment_id": "35975846"
+        "payment_id": "rc_7af9eee8"
       }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "gl_fcc1a532",
+      "field": "credit_minor",
+      "before": 55877635,
+      "after": 25299716
     }
   ],
-  "clean_digest": "8db7d3dd3a41d3cd61c440ea2e7315028e221ab2cf9f83fb5f23f22ea6ec8283",
-  "clean_records_digest": "4156379f81811f07456729d9f65c155a73782102327ff893fefb3ee0ccce5b7e",
-  "final_digest": "202edd0769c4121c7ede43c00041c0c6e002586ffa334b2630e9c6ea14b88984",
+  "clean_digest": "d98ffb9114d8fc82dc33b43ae100f7b1125b3dc08160740c466f07cedd89b525",
+  "clean_records_digest": "f680a0b41cda21da90d0360cdd15f25adde6ad97d038709691d7c83ec9001247",
+  "final_digest": "20ccdd10cffcbeef75e171158f3d40d7f0007a264d2a3f9a2ea1628384023b85",
   "rejected_attempts": []
 }

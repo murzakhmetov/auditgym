@@ -1,6 +1,6 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
+  "generator_version": "0.4.0",
   "config_version": "1",
   "seed": "5520017338842210093",
   "secret_used": false,
@@ -15,14 +15,16 @@
     "size": "small",
     "base_currency": "KZT",
     "foreign_currencies": [
-      "AED"
+      "USD",
+      "AED",
+      "EUR"
     ],
-    "timezone": "Asia/Almaty",
-    "period": "2027-06",
-    "rounding": "half_up",
+    "timezone": "Asia/Kuwait",
+    "period": "2027-02",
+    "rounding": "half_even",
     "id_style": "prefixed",
-    "ts_repr": "local",
-    "row_order": "shuffled",
+    "ts_repr": "utc",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 1,
       "unallocated_payment": 0,
@@ -58,51 +60,58 @@
       "underpayment": 1,
       "midnight_fx": 2,
       "weekend_fx": 1,
-      "boundary_doc": 4,
+      "boundary_doc": 6,
       "posting_lag": 19,
       "overpayment_refund": 2,
-      "null_ref_receipt": 1,
-      "split_remainder": 2,
-      "credit_receipt": 4,
-      "prepaid_receipt": 5,
+      "null_ref_receipt": 3,
+      "split_remainder": 4,
+      "credit_receipt": 2,
+      "prepaid_receipt": 0,
       "legit_repeat": 3
     },
     "repeat_pairs": 4,
     "counts": {
-      "customers": 8,
-      "suppliers": 7,
-      "sales_invoices": 21,
+      "customers": 6,
+      "suppliers": 5,
+      "sales_invoices": 16,
       "purchase_invoices": 10,
       "prior_invoices": 3,
-      "target_rows": 320
+      "target_rows": 305
     },
     "unallocated_prior": 0,
     "error_invoice_load": {
       "sales": 0,
       "purchase": 0,
-      "sales_paid": 0
+      "sales_paid": 0,
+      "purchase_paid": 0
+    },
+    "target_kinds": {
+      "wrong_fx_rate": [],
+      "wrong_period": []
     },
     "twin": false
   },
   "attempt": 0,
   "history": {
-    "company": "Zanion Agro LLP",
-    "customers": 8,
+    "company": "Eloaro Components Ltd",
+    "customers": 7,
     "suppliers": 7,
-    "invoices": 69,
-    "payments": 56,
-    "misc_journals": 19,
-    "holidays": []
+    "invoices": 61,
+    "payments": 47,
+    "misc_journals": 27,
+    "holidays": [
+      "2027-02-05"
+    ]
   },
   "injections": [
     {
       "issue_id": "iss_01",
       "type": "duplicate_invoice",
-      "variant": "rekeyed_copy",
+      "variant": "same_day_copy",
       "scenario": "single",
       "targets": {
-        "original": "BILL-474475",
-        "copy": "BILL-744669"
+        "original": "BILL-886933",
+        "copy": "BILL-882059"
       },
       "change": {}
     }
@@ -111,346 +120,332 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "INV-477642",
-        "INV-399136",
-        "RCPT-442066"
+        "BILL-183001",
+        "BILL-404463",
+        "PAY-757772"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "BILL-617318",
-        "BILL-687400"
+        "INV-156846",
+        "INV-571903",
+        "RCPT-256060"
       ]
     },
     {
       "kind": "legit_repeat",
       "ids": [
-        "INV-316464",
-        "INV-860678",
-        "RCPT-926520"
+        "BILL-849226",
+        "BILL-681268",
+        "PAY-151657"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-734906",
-        "BILL-847657"
+        "BILL-306161",
+        "BILL-580664"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-395573",
-        "RCPT-814202",
-        "RCPT-576138"
+        "INV-357809",
+        "RCPT-481466",
+        "RCPT-465450"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-201839",
-        "RCPT-687140",
-        "RCPT-420207"
+        "INV-219460",
+        "RCPT-978938",
+        "RCPT-832143"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-839777",
-        "RCPT-721532",
-        "RCPT-160481"
+        "INV-696753",
+        "RCPT-269189",
+        "RCPT-265470"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-964142",
+        "RCPT-872968",
+        "RCPT-644951"
+      ],
+      "shape": "remainder"
+    },
+    {
+      "kind": "split_payment",
+      "ids": [
+        "INV-264800",
+        "RCPT-717023",
+        "RCPT-991229"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-805549",
-        "INV-339716",
-        "RCPT-674426"
+        "INV-675493",
+        "INV-423271",
+        "RCPT-700531"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-319102",
-        "RCPT-178574"
+        "INV-359155",
+        "RCPT-669332"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-557282",
-        "RCPT-536670",
-        "RFND-689827"
+        "INV-618216",
+        "RCPT-133298",
+        "RFND-285505"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-528312",
-        "RCPT-878293",
-        "RFND-298248"
+        "INV-870251",
+        "RCPT-502261",
+        "RFND-451514"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-595925"
+        "RCPT-280853"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-307632"
+      ]
+    },
+    {
+      "kind": "null_ref_receipt",
+      "ids": [
+        "RCPT-765905"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-294389",
-        "PAY-257461"
+        "INV-108840"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-332245",
-        "RCPT-944804"
+        "INV-387688",
+        "RCPT-666953"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-133192",
-        "RCPT-140197"
+        "BILL-639820",
+        "PAY-647939"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-566543"
+        "BILL-837267"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-544745"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "BILL-628387",
+        "PAY-529151"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-330344",
-        "RCPT-724766",
-        "RCPT-333539"
+        "INV-582800",
+        "RCPT-394254"
       ],
-      "shape": "topped_up"
+      "shape": "overpaid"
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-790874",
-        "RCPT-937661",
-        "RCPT-830123"
+        "INV-685745",
+        "RCPT-899953",
+        "RCPT-176160"
       ],
       "shape": "settled"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-926457",
-        "RCPT-296225",
-        "RCPT-282585"
-      ],
-      "shape": "settled"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-527021",
-        "RCPT-991576",
-        "RCPT-906989"
-      ],
-      "shape": "settled"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-530870",
-        "RCPT-210619"
-      ],
-      "shape": "prepaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-483487",
-        "RCPT-242650"
-      ],
-      "shape": "prepaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-346831",
-        "RCPT-807669"
-      ],
-      "shape": "prepaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-388995",
-        "RCPT-858624"
-      ],
-      "shape": "prepaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-548174",
-        "RCPT-308301"
-      ],
-      "shape": "prepaid"
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-751148"
+        "INV-757093"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-881221",
-        "RCPT-241692"
+        "INV-711764",
+        "RCPT-197579"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-519272"
+        "INV-435340"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-527021"
+        "RCPT-307632"
       ],
-      "shape": "earlier"
+      "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-393461"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-915182"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "BILL-981480"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-807669"
+        "INV-219460"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "BILL-527393"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-464133"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "BILL-133934"
+        "RCPT-218126"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-748494"
+        "PAY-647939"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-199760"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-906989"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-190131"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "BILL-433515"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-365613"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-492118"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-528312"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-805549"
+        "INV-359155"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-948675"
+        "INV-108840"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-129384"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BILL-653728"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PAY-151657"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PAY-274975"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RCPT-851373"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-700489"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-792815"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RCPT-280853"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BILL-456639"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "INV-278472"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "RFND-285505"
       ],
       "shape": "utc_wall_clock"
     }
   ],
   "posting_lags": [
     {
-      "id": "INV-316464",
-      "shape": "later",
-      "role": "pair"
-    },
-    {
-      "id": "BILL-617318",
+      "id": "INV-571903",
       "shape": "later",
       "role": "pair"
     }
@@ -459,63 +454,63 @@
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-483905",
+      "id": "GL-525099",
       "record": {
-        "row_id": "GL-483905",
-        "timestamp": "2027-06-13T09:03:02+05:00",
-        "account": "5000",
-        "debit_minor": 32093200,
-        "credit_minor": 0,
+        "row_id": "GL-525099",
+        "timestamp": "2027-02-11T09:34:40Z",
+        "account": "2000",
+        "debit_minor": 0,
+        "credit_minor": 13659705,
         "currency": "KZT",
-        "entity_id": "S-819072",
-        "invoice_id": "BILL-744669",
+        "entity_id": "S-602651",
+        "invoice_id": "BILL-882059",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-946899",
+      "id": "GL-921602",
       "record": {
-        "row_id": "GL-946899",
-        "timestamp": "2027-06-13T09:03:02+05:00",
-        "account": "2000",
-        "debit_minor": 0,
-        "credit_minor": 32093200,
+        "row_id": "GL-921602",
+        "timestamp": "2027-02-11T09:34:40Z",
+        "account": "5000",
+        "debit_minor": 13659705,
+        "credit_minor": 0,
         "currency": "KZT",
-        "entity_id": "S-819072",
-        "invoice_id": "BILL-744669",
+        "entity_id": "S-602651",
+        "invoice_id": "BILL-882059",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "DOC-181487",
+      "id": "DOC-982759",
       "record": {
-        "doc_id": "DOC-181487",
-        "invoice_id": "BILL-744669",
+        "doc_id": "DOC-982759",
+        "invoice_id": "BILL-882059",
         "kind": "purchase",
-        "entity_id": "S-819072",
-        "issued_at": "2027-06-13T09:03:02+05:00",
-        "due_at": "2027-06-27T23:59:59+05:00",
+        "entity_id": "S-602651",
+        "issued_at": "2027-02-11T09:34:40Z",
+        "due_at": "2027-02-25T20:59:59Z",
         "currency": "KZT",
-        "total_minor": 32093200,
+        "total_minor": 13659705,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Warehouse cleaning WO-5478",
+            "description": "Office supplies order PO-6908",
             "quantity": 1,
-            "unit_price_minor": 32093200,
-            "amount_minor": 32093200,
-            "ref": "WO-5478"
+            "unit_price_minor": 13659705,
+            "amount_minor": 13659705,
+            "ref": "PO-6908"
           }
         ]
       }
     }
   ],
-  "clean_digest": "454179f72b7966353a5504ff07ba21961af76d53134c4e17c2bdef672394813b",
-  "clean_records_digest": "23181671f81c2826be4aad222613beb5b2e6866ac097a650ad969513a14666d7",
-  "final_digest": "68ff0e47408c0d6c0fa2ca3786138604524b010a27f1098ed96b14c9047c48ad",
+  "clean_digest": "edda288d9e7338a15fb56d805b0e1f19daea0f0f99bf9157847d30a85d543153",
+  "clean_records_digest": "3175e297f9714c0c2848c7d39e3fd3c2c36e8aa19a1d8d9d2bb87a94da13aed6",
+  "final_digest": "1c287e489db711d193d8f87fcef7af024c9e6193252ca22447211f08a191e083",
   "rejected_attempts": []
 }

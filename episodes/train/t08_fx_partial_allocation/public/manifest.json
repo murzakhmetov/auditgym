@@ -1,31 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_525d5e16d2ee4078",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_31d66797ac8b0f9b",
   "company": {
-    "name": "Verium Agro KK",
+    "name": "Verix Trading LLP",
     "synthetic": true
   },
-  "base_currency": "JPY",
+  "base_currency": "KZT",
   "currency_exponents": {
-    "JPY": 0,
+    "KZT": 2,
     "USD": 2,
-    "KRW": 0
+    "AED": 2,
+    "EUR": 2
   },
-  "period_start": "2026-06-01T00:00:00+09:00",
-  "period_end": "2026-07-01T00:00:00+09:00",
-  "ledger_extract_end": "2026-07-08T00:00:00+09:00",
-  "timezone": "Asia/Tokyo",
+  "period_start": "2027-01-01T00:00:00+05:00",
+  "period_end": "2027-02-01T00:00:00+05:00",
+  "ledger_extract_end": "2027-02-08T00:00:00+05:00",
+  "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 785,
-    "invoices": 106,
-    "payments": 76,
-    "fx": 153
+    "ledger": 849,
+    "invoices": 108,
+    "payments": 78,
+    "fx": 217
   },
   "document_counts": {
-    "invoices": 106,
-    "payments": 76,
-    "total": 182
+    "invoices": 108,
+    "payments": 78,
+    "total": 186
   },
   "rounding": {
     "mode": "half_up",

@@ -16,6 +16,14 @@ invoices carry one instant, or the second is keyed 2 to 9 days later), currency,
 The rules on pairs (a twin by side, a later line-identical repeat by side, the later member, a foreign-currency pair, a
 pair under 300 USD, a subscription item, an earlier member that was paid, a member posted off its issued_at) measure
 that; the old generator failed them (a subscription item and a 300 USD floor only on duplicates, a purchase-only pool).
+Payments (version 0.4.0). A standalone wrong_fx_rate or wrong_period error sits on an invoice, a receipt or a disbursement
+(before, always on an invoice, so a policy could skip the payments for these two types). The rules "a receipt", "a
+disbursement", "a payment in a foreign currency" and the public readings of "a payment posted in another period" (its rows
+are outside the reporting period; its timestamp is) measure whether the kind, currency or period of a payment says
+anything. The literal reading of the last one, a posting in another period than the payment's own
+timestamp, is the wrong_period finding itself (the task, like a rate that differs from the policy rate), so it is not a
+shortcut rule. The statement "an error episode has a payment error" reads the answer key, so it is reported as a
+statistic of its own (payment_errors), not as an episode rule on public features.
 The CLI adds two kinds of rules that need many episodes (PAIR_COUNT_RULES: the number of pairs of an episode against its
 size and the number of pairs against the duplicate count) and the table of pairs and duplicates by side and shape.
 """
@@ -141,8 +149,11 @@ class Ctx:
             elif r["invoice_id"]:
                 inv_rows[r["invoice_id"]].append(r)
         self.lag = {}
+        self.posted_at = {}  # document id -> instant of its own posting rows (an opening item: the period start)
         for i, (kind, _rec, inst) in self.docs.items():
             rows = inv_rows[i] if kind == "invoice" else pay_rows[i]
+            if rows:
+                self.posted_at[i] = parse_ts(rows[0]["timestamp"])
             if rows and not any(r["account"] == "3900" for r in rows):
                 self.lag[i] = parse_ts(rows[0]["timestamp"]) - inst
         self.odd_terms_pair = {i for ids in by_key.values() if len(ids) > 1 and any(self.terms(by_id[x]) != 30 for x in ids) for i in ids}
@@ -310,6 +321,28 @@ def _over_received_sales(c) -> int:
     return sum(1 for i, (k, rec, _t) in c.docs.items() if k == "invoice" and rec["kind"] == "sales" and c.received[i] > rec["total_minor"])
 
 
+def _payment_kind(c, i, kind) -> bool:
+    return c.docs[i][0] == "payment" and c.docs[i][1]["kind"] == kind
+
+
+def _foreign_payment(c, i) -> bool:
+    return c.docs[i][0] == "payment" and c.docs[i][1]["currency"] != c.base
+
+
+def _in_period(c, inst) -> bool:
+    return c.p0 <= inst < c.p1
+
+
+def _payment_posted_outside_period(c, i) -> bool:
+    """A payment whose ledger rows are outside the reporting period (in the cut-off days after it)."""
+    return c.docs[i][0] == "payment" and i in c.posted_at and not _in_period(c, c.posted_at[i])
+
+
+def _payment_dated_outside_period(c, i) -> bool:
+    """A payment whose own timestamp is outside the reporting period (the cut-off days after it)."""
+    return c.docs[i][0] == "payment" and not _in_period(c, c.docs[i][2])
+
+
 def _round_amount(c, i):
     kind, rec, _ = c.docs[i]
     amount = rec["total_minor"] if kind == "invoice" else rec["amount_minor"]
@@ -370,6 +403,13 @@ RULES = {
     "receipt with a 2900 row dated after its invoice, the invoice not issued on days 0 to 10 of the period": _credit_after_invoice_off_days,
     "sales invoice with two or more receipts that sum to less than its total": _part_paid_invoice,
     "round amount": _round_amount,
+    # payments as targets (0.4.0): a standalone rate or period error sits on an invoice, a receipt or a disbursement
+    "a receipt": lambda c, i: _payment_kind(c, i, "receipt"),
+    "a disbursement": lambda c, i: _payment_kind(c, i, "disbursement"),
+    "an invoice": _inv,
+    "a payment in a foreign currency": _foreign_payment,
+    "a payment posted in another period (its rows are outside the reporting period)": _payment_posted_outside_period,
+    "a payment dated in another period (its timestamp is outside the reporting period)": _payment_dated_outside_period,
     # posting lag: a posting is booked at its own moment inside the document's period (policy posting_rules.posting_timestamp),
     # so another instant is ordinary; only a crossing of the period boundary is an error
     "posting row at a different instant than its document": lambda c, i: _lag(c, i) != timedelta(0),
@@ -449,6 +489,7 @@ PAIR_COUNT_EPISODE_RULES = {
     "small ledger (< 500 rows) with >= 3 line-identical pairs -> error": ("error", lambda c: len(c.ep.ledger) < 500 and len(c.pairs) >= 3),
 }
 DUP_CELLS = ("sales/same", "sales/later", "purchase/same", "purchase/later")
+PAYMENT_ISSUE_TYPES = ("unallocated_payment", "wrong_fx_rate", "wrong_period")  # the issue types that can name a payment
 
 
 def duplicate_pairs(c) -> set:
@@ -495,6 +536,8 @@ class Tally:
         self.episodes = self.documents = self.affected = self.error_episodes = 0
         self.fx_eligible = self.fx_hits = 0
         self.fx_chance = 0.0
+        self.pay_error_episodes = self.pay_rate_period_episodes = 0
+        self.pay_issues = dict.fromkeys(PAYMENT_ISSUE_TYPES, 0)
 
     def add(self, ep) -> None:
         c = Ctx(ep)
@@ -504,6 +547,7 @@ class Tally:
         self.affected += len(truth)
         self.error_episodes += bool(ep.truth["issues"])
         self.add_fx(c)
+        self.add_payment_errors(c)
         for name, rule in self.rules.items():
             fired = {i for i in c.docs if rule(c, i)}
             self.fired[name] += len(fired)
@@ -518,6 +562,16 @@ class Tally:
             cell = self.dup_cells[c.docs[ids[0]][1]["kind"] + "/" + c.pair_shape[frozenset(ids)]]
             cell["pairs"] += 1
             cell["duplicates"] += frozenset(ids) in dups
+
+    def add_payment_errors(self, c) -> None:
+        """Count one episode for "an error episode has a payment error": the answer key names a payment at all, and it
+        names one in a wrong_fx_rate or wrong_period issue (the two types that were invoice-only as standalone errors)."""
+        on_payment = [iss["type"] for iss in c.ep.truth["issues"]
+                      if any(i in c.docs and c.docs[i][0] == "payment" for i in iss["affected_ids"])]
+        self.pay_error_episodes += bool(on_payment)
+        self.pay_rate_period_episodes += any(t in ("wrong_fx_rate", "wrong_period") for t in on_payment)
+        for t in on_payment:
+            self.pay_issues[t] += 1
 
     def add_fx(self, c) -> None:
         """Count one episode for the FX-target tell: eligible when a wrong_fx_rate target is a foreign purchase;
@@ -551,7 +605,14 @@ class Tally:
         fx = {"eligible_episodes": self.fx_eligible, "largest_is_target": self.fx_hits,
               "rate": self.fx_hits / self.fx_eligible if self.fx_eligible else 0.0,
               "chance": self.fx_chance / self.fx_eligible if self.fx_eligible else 0.0}
+        n_err = self.error_episodes
+        payment_errors = {"error_episodes": n_err, "with_payment_error": self.pay_error_episodes,
+                          "share": self.pay_error_episodes / n_err if n_err else 0.0,
+                          "with_rate_or_period_error_on_payment": self.pay_rate_period_episodes,
+                          "share_rate_or_period": self.pay_rate_period_episodes / n_err if n_err else 0.0,
+                          "issues_on_payment": dict(self.pay_issues)}
         out = {"rules": rules, "episode_rules": episode_rules, "fx_target": fx, "affected": self.affected,
+               "payment_errors": payment_errors,
                "episodes": self.episodes, "documents": self.documents, "error_episodes": self.error_episodes,
                "duplicates_by_side": cells}
         if self.pair_counts:
@@ -623,6 +684,8 @@ def rounded(m: dict) -> dict:
     out = json.loads(json.dumps(m))
     for key in ("rate", "chance"):
         out["fx_target"][key] = round(out["fx_target"][key], 4)
+    for key in ("share", "share_rate_or_period"):
+        out["payment_errors"][key] = round(out["payment_errors"][key], 4)
     for r in out["duplicates_by_side"].values():
         r["precision"] = round(r["precision"], 4)
     for group in ("rules", "episode_rules", "pair_count_rules", "pair_count_episode_rules"):
@@ -680,6 +743,14 @@ def to_markdown(m: dict) -> str:
               "| side/shape | pairs | duplicates | precision |", "|---|---:|---:|---:|"]
     for name, r in m["duplicates_by_side"].items():
         lines.append(f"| {name} | {r['pairs']} | {r['duplicates']} | {r['precision']:.4f} |")
+    pe = m["payment_errors"]
+    lines += ["", "## An error episode has a payment error", "",
+              f"Of the {pe['error_episodes']} episodes with errors, {pe['with_payment_error']} name a payment in the answer key "
+              f"(share {pe['share']:.4f}) and {pe['with_rate_or_period_error_on_payment']} name one in a wrong_fx_rate or "
+              f"wrong_period issue (share {pe['share_rate_or_period']:.4f}); a policy that skips the payments loses those. "
+              "Issues that name a payment, by type: "
+              + ", ".join(f"{t} {pe['issues_on_payment'][t]}" for t in PAYMENT_ISSUE_TYPES) + ". "
+              "This reads the answer key, so it is a statistic, not a shortcut rule on public features."]
     fx = m["fx_target"]
     lines += ["", "## FX target and the largest foreign purchase", "",
               f"Among the {fx['eligible_episodes']} episodes whose answer key has a wrong_fx_rate target that is a foreign "

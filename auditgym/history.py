@@ -173,6 +173,9 @@ class HistoryBuilder:
         n_fresh = int((cfg.get("errors") or {}).get("unallocated_payment", 0))
         self.unallocated_prior = [True] * int(cfg.get("unallocated_prior", 0)) + [False] * (n_fresh - int(cfg.get("unallocated_prior", 0)))
         rng.fork("unallocated_prior_order").shuffle(self.unallocated_prior)
+        # the target kind (invoice, receipt, disbursement) of each standalone wrong_fx_rate and wrong_period error, resolved
+        # in the config so that the paid slots of build_regular know them; a hand-built config without them targets invoices
+        self.target_kinds = {t: list(ks) for t, ks in (cfg.get("target_kinds") or {}).items()}
         self.lag_log: list[dict] = []  # {"key", "shape", "role"} of every lagged document; role distractor, pair or error
         self.rng = rng
         self.cfg = cfg
@@ -885,6 +888,11 @@ class HistoryBuilder:
             doc, ts, _c = docs[k]
             return fixed[k] if k in fixed else (doc.posted or ts)
 
+        def moments(k):
+            """Every moment at which document k is booked: its own, and for a posting that an error moved also the moment
+            of the clean books (the document's), so a lag keeps its place in the posting order in both sets of books."""
+            return {eff(k), docs[k][1]} if k in fixed else {eff(k)}
+
         eligible = {k for k, (_d, ts, _c) in docs.items() if k not in protected and window(ts)}
         pair_set = {k for pair in self.pairs for k in (pair["first"], pair["second"]) if k in eligible}
         # postings that are errors already sit at another instant; they count toward the episode's total
@@ -906,8 +914,8 @@ class HistoryBuilder:
             doc, ts, ccy = docs[key]
             lo_w, hi_w = window(ts)
             cur = eff(key)
-            before = [eff(x) for x in related[key] if x in docs and eff(x) <= cur]
-            after = [eff(x) for x in related[key] if x in docs and eff(x) > cur]
+            before = [m for x in related[key] if x in docs for m in moments(x) if m <= cur]
+            after = [m for x in related[key] if x in docs for m in moments(x) if m > cur]
             lo = max([lo_w] + before)
             hi = min([hi_w] + after)
             d0 = h.local_date(ts)

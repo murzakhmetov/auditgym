@@ -2,7 +2,10 @@
 
 1. plan_errors() creates target documents inside the (still error-free)
    history with the properties each error needs, using the same builders as
-   ordinary documents, and records the planned change.
+   ordinary documents, and records the planned change. A standalone
+   wrong_fx_rate or wrong_period error sits on an invoice, a receipt or a
+   disbursement (config.TARGET_KIND_SHARES, resolved in the config); a payment
+   target comes with the invoice it settles in full or in part.
 2. make_overrides() turns the plan into booking overrides once FX rates exist.
 3. derive_issues() reads the erroneous books and writes the answer key:
    affected IDs, the real discrepancy amount, and acceptable evidence sets.
@@ -26,6 +29,10 @@ from .timeutil import in_ambiguous_hour, local_datetime, offset_minutes
 MATERIALITY_MIN = 100
 TOLERANCE_MINOR = 2
 PART_PAID_SHARE = 0.5  # share of unallocated receipts whose invoice was already part paid by an earlier receipt
+# A payment target (a standalone wrong_fx_rate or wrong_period error on a receipt or a disbursement) settles an invoice of
+# its own, dated like the invoice of an ordinary payment: so many days before it (the ranges of HistoryBuilder.build_regular)
+PAY_LAG_DAYS = {"sales": (2, 25), "purchase": (3, 20)}
+PAYMENT_SIDE = {"receipt": "sales", "disbursement": "purchase"}
 TYPE_ORDER = {"duplicate_invoice": 0, "unallocated_payment": 1, "wrong_fx_rate": 2, "wrong_period": 3}
 SCENARIO_ORDER = {"single": 0, "boundary_fx_payment": 1, "fx_invoice_partial_allocation": 2}
 
@@ -88,6 +95,21 @@ def _new_invoice(b: HistoryBuilder, kind: str, issued: datetime, foreign: bool |
     else:
         lines = b.purchase_lines(ccy, issued, entity=ent, min_usd=min_usd)
     return b.add_invoice(kind, ent, issued, lines, tags)
+
+
+def _paid_invoice(b: HistoryBuilder, side: str, d_pay: date, foreign: bool | None, min_usd: float,
+                  latest: date | None = None) -> Invoice:
+    """The invoice that a payment target of local date `d_pay` settles, drawn like an ordinary paid invoice of the period:
+    a loose date PAY_LAG_DAYS before the payment (never before the period, never after `latest`), an ordinary document
+    hour, lines inside the catalogue ranges."""
+    h = b.h
+    lo_d, hi_d = PAY_LAG_DAYS[side]
+    first = max(h.p_first_date, d_pay - timedelta(days=hi_d))
+    last = min(d_pay - timedelta(days=lo_d), latest or h.p_last_date, h.p_last_date)
+    if last < first:
+        raise RetryAttempt("no room for the invoice of a payment target")
+    make = b.random_sales_invoice if side == "sales" else b.random_purchase_invoice
+    return make(b.loose_date(first, last), foreign=foreign, min_usd=min_usd)
 
 
 def _near_midnight(b: HistoryBuilder, d: date) -> datetime:
@@ -208,7 +230,54 @@ def create_unallocated(b: HistoryBuilder, plan: Plan, variant: str, scenario: st
     plan.items.append(Item("unallocated_payment", variant, scenario, {"payment": p.key, "invoice": invoice.key}, {"alloc": alloc}))
 
 
-def create_wrong_fx(b: HistoryBuilder, plan: Plan, variant: str, scenario: str = "single", kind: str | None = None) -> Invoice:
+def create_wrong_fx_payment(b: HistoryBuilder, plan: Plan, variant: str, pkind: str) -> None:
+    """A standalone wrong_fx_rate error on a foreign-currency receipt or disbursement of the period: the payment and the
+    invoice it settles are new documents, the payment relieves the invoice and leaves nothing in 2900, and its bank row
+    (and with it the FX difference of the settlement) is converted at the wrong rate. utc_date: a payment near local
+    midnight, drawn like the midnight_fx decoy payments (HistoryBuilder.near_midnight_documents); posting_date: posted one
+    to six days later and converted at the rate of that day; stale_rate and transposed: an ordinary payment day."""
+    h, rng = b.h, b.rng
+    side = PAYMENT_SIDE[pkind]
+    make = b.random_sales_invoice if side == "sales" else b.random_purchase_invoice
+    floor = LARGE_SALES_USD if side == "sales" else LARGE_PURCHASE_USD
+    data: dict = {}
+    if variant == "utc_date":
+        cands = [d for d in utc_date_candidates(b, 2) if d >= h.p_first_date + timedelta(days=3)]
+        if not cands:
+            raise RetryAttempt("no date for a UTC-date FX error on a payment")
+        d = rng.choice(cands)
+        ts = _near_midnight(b, d)
+        inv = make(b.business_date(h.p_first_date, d - timedelta(days=2)), foreign=True, min_usd=floor)
+        amount = inv.total if rng.random() < 0.5 else max(1, int(inv.total * rng.uniform(0.4, 0.9)))
+    else:
+        lo = h.p_first_date + timedelta(days=max(PAY_LAG_DAYS[side][0], 5 if variant == "stale_rate" else 1))
+        hi = h.p_last_date - timedelta(days=9 if variant == "posting_date" else 2)
+        if hi < lo:
+            hi = lo
+        d = _fx_target_date(b, lo, hi)
+        ts = b.local_time(d, b.payment_hours())
+        if variant == "posting_date":
+            steps = [k for k in range(1, 7) if (d + timedelta(days=k)).weekday() < 5 and d + timedelta(days=k) <= h.p_last_date
+                     and d + timedelta(days=k) not in h.holidays]
+            if not steps:
+                raise RetryAttempt("no business day to post the payment on")
+            post_d = d + timedelta(days=rng.choice(steps))
+            data["posting_ts"] = b.local_time(post_d)
+            plan.protected_dates.add(post_d)
+        inv = _paid_invoice(b, side, d, True, floor)
+        amount = inv.total
+    p = b.add_payment(pkind, inv.entity, inv.currency, ts, amount, [inv.key])
+    plan.protected_dates.add(d)
+    plan.items.append(Item("wrong_fx_rate", variant, "single", {"payment": p.key}, data))
+
+
+def create_wrong_fx(b: HistoryBuilder, plan: Plan, variant: str, scenario: str = "single", kind: str | None = None,
+                    target: str = "invoice") -> Invoice | None:
+    """One wrong_fx_rate error. `target` (standalone errors only; a scenario needs the invoice) is the kind of the document
+    that carries it: an invoice, or a receipt or disbursement (create_wrong_fx_payment)."""
+    if scenario == "single" and target in PAYMENT_SIDE:
+        create_wrong_fx_payment(b, plan, variant, target)
+        return None
     h, rng = b.h, b.rng
     kind = kind or ("sales" if rng.random() < 0.6 else "purchase")
     data: dict = {}
@@ -240,7 +309,57 @@ def create_wrong_fx(b: HistoryBuilder, plan: Plan, variant: str, scenario: str =
     return inv
 
 
-def create_wrong_period(b: HistoryBuilder, plan: Plan, variant: str, scenario: str = "single") -> None:
+def create_wrong_period_payment(b: HistoryBuilder, plan: Plan, variant: str, pkind: str) -> None:
+    """A standalone wrong_period error on a receipt or a disbursement: the payment and the invoice it settles are new
+    documents, the invoice is booked before the payment in the clean and in the erroneous books (so the allocation is the
+    same in both and nothing goes to 2900), and the payment is posted in another period than its timestamp. booked_early: a
+    payment of the first days after the period posted on one of the period's last two days; booked_late: a payment of the
+    period's last three days posted after it; utc_wall_clock: a payment in the boundary window posted at the UTC wall clock
+    of its local time, drawn like the error-side boundary decoy payments (HistoryBuilder.boundary_document: foreign when
+    the company has a foreign currency, partial, on a large invoice)."""
+    h, rng = b.h, b.rng
+    side = PAYMENT_SIDE[pkind]
+    make = b.random_sales_invoice if side == "sales" else b.random_purchase_invoice
+    foreign = (rng.random() < 0.4) if h.foreign else False
+    if variant == "booked_early":
+        d = b.loose_date(h.next_first_date, h.next_first_date + timedelta(days=2))
+        ts = b.local_time(d, b.payment_hours())
+        post_d = b.business_date(h.p_last_date - timedelta(days=1), h.p_last_date)
+        posting = b.local_time(post_d)
+        inv = _paid_invoice(b, side, d, foreign, b.floor_usd(side, 600.0), latest=post_d - timedelta(days=1))
+        amount = inv.total
+    elif variant == "booked_late":
+        d = b.loose_date(h.p_last_date - timedelta(days=2), h.p_last_date)
+        ts = b.local_time(d, b.payment_hours())
+        posting = b.local_time(b.business_date(h.next_first_date, h.next_first_date + timedelta(days=3)))
+        inv = _paid_invoice(b, side, d, foreign, b.floor_usd(side, 600.0))
+        amount = inv.total
+    else:
+        off = offset_minutes(h.tz, h.p1)
+        if off > 0:
+            d, lo, hi = h.next_first_date, 5, off - 11
+        elif off < 0:
+            d, lo, hi = h.p_last_date, 1440 + off + 11, 1434
+        else:
+            raise ConfigError("utc_wall_clock needs a non-zero UTC offset at the period boundary")
+        ts = _minute_time(b, d, lo, _clear_of_dst(b, d, lo, hi, off))
+        posting = ts - timedelta(minutes=off)
+        d_inv = b.business_date(h.p_first_date + timedelta(days=2), h.p_last_date - timedelta(days=6))
+        if h.foreign:
+            inv = make(d_inv, foreign=True, min_usd=5000.0)
+            amount = int(inv.total * rng.uniform(0.4, 0.9))
+        else:
+            inv = make(d_inv, foreign=False)
+            amount = inv.total if rng.random() < 0.5 else int(inv.total * rng.uniform(0.4, 0.9))
+    p = b.add_payment(pkind, inv.entity, inv.currency, ts, max(1, amount), [inv.key])
+    plan.items.append(Item("wrong_period", variant, "single", {"payment": p.key}, {"posting_ts": posting}))
+
+
+def create_wrong_period(b: HistoryBuilder, plan: Plan, variant: str, scenario: str = "single", target: str = "invoice") -> None:
+    """One wrong_period error on an invoice, or on a receipt or disbursement (create_wrong_period_payment)."""
+    if target in PAYMENT_SIDE:
+        create_wrong_period_payment(b, plan, variant, target)
+        return
     h, rng = b.h, b.rng
     kind = rng.choice(["sales", "purchase"])
     foreign = (rng.random() < 0.4) if h.foreign else False
@@ -325,7 +444,9 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
         variants = feasible_variants(b, etype, cfg["variants"][etype])
         if not variants:
             raise ConfigError(f"no feasible variant of {etype} for this configuration")
-        for _ in range(n):
+        kinds = b.target_kinds.get(etype) or []
+        for n_err in range(n):
+            target = kinds[n_err] if n_err < len(kinds) else "invoice"
             if etype == "duplicate_invoice":
                 convert_pair(b, plan, variants)  # no main-stream draw: the choice is on the pairs' own stream
                 continue
@@ -333,9 +454,9 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
             if etype == "unallocated_payment":
                 create_unallocated(b, plan, v)
             elif etype == "wrong_fx_rate":
-                create_wrong_fx(b, plan, v)
+                create_wrong_fx(b, plan, v, target=target)
             else:
-                create_wrong_period(b, plan, v)
+                create_wrong_period(b, plan, v, target=target)
     for scen in cfg["interacting"]:
         if scen == "boundary_fx_payment":
             create_boundary_fx_payment(b, plan, cfg["variants"]["wrong_fx_rate"])
@@ -347,14 +468,15 @@ def plan_errors(b: HistoryBuilder, cfg: dict) -> Plan:
 def plan_posting_lags(b: HistoryBuilder, plan: Plan) -> None:
     """Posting lags (HistoryBuilder.apply_posting_lags) around the planned errors. A target whose posting moment is the error
     (wrong_period, the posting_date variant, the boundary receipt) never takes one and its moment orders the documents around
-    it; the documents of the other issues (the receipt and invoice of an unallocated payment, an invoice with a wrong rate)
-    take lags like any clean document, and the issue stays what it is: amounts and rates follow the document."""
+    it; the documents of the other issues (the receipt and invoice of an unallocated payment, an invoice or a payment with a
+    wrong rate) take lags like any clean document, and the issue stays what it is: amounts and rates follow the document."""
     protected, fixed, error_keys = set(), {}, set()
     for it in plan.items:
         for role, key in it.targets.items():
             if it.type == "duplicate_invoice":
                 continue  # the pair's own lags (drawn by pair, converted or not)
-            own = it.type == "wrong_period" or (it.type == "wrong_fx_rate" and (it.variant == "posting_date" or role == "payment"))
+            # (the boundary receipt carries a wrong_period item, which protects it for its wrong_fx_rate item as well)
+            own = it.type == "wrong_period" or (it.type == "wrong_fx_rate" and it.variant == "posting_date")
             if own:
                 protected.add(key)
                 if "posting_ts" in it.data:
@@ -384,7 +506,7 @@ def make_overrides(b: HistoryBuilder, plan: Plan) -> Overrides:
                 wrong, wdate = policy_rate(h, doc.currency, inst.date())
             elif it.variant == "posting_date":
                 pts = it.data["posting_ts"]
-                ov.inv_ts[doc.key] = pts
+                (ov.inv_ts if "invoice" in it.targets else ov.pay_ts)[doc.key] = pts
                 wrong, wdate = policy_rate(h, doc.currency, h.local_date(pts))
             elif it.variant == "stale_rate":
                 wrong, wdate = policy_rate(h, doc.currency, h.p_first_date - timedelta(days=1))
@@ -412,7 +534,7 @@ def _line_amount(line) -> int:
     return line.debit or line.credit
 
 
-def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
+def derive_issues(b: HistoryBuilder, plan: Plan, books: Books, clean: Books | None = None) -> list[dict]:
     h = b.h
     by_ident = {ln.ident: ln for ln in books.lines}
 
@@ -430,6 +552,17 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
 
     def in_period(inst: datetime) -> bool:
         return h.p0 <= inst < h.p1
+
+    def settled_alike(key) -> None:
+        """A payment that carries a rate or period error settles its invoice exactly as in the clean books and leaves
+        nothing unallocated, so the error neither creates nor hides an unallocated_payment (or a customer credit)."""
+        info = books.pay_info.get(key)
+        if info is None or info["unalloc_doc"] or sum(a for _ref, a, _relief in info["allocs"]) != h.payments[key].amount:
+            raise RetryAttempt("a payment target is not allocated in full")
+        if clean is not None:
+            ref = clean.pay_info.get(key)
+            if ref is None or [(r, a) for r, a, _x in ref["allocs"]] != [(r, a) for r, a, _x in info["allocs"]]:
+                raise RetryAttempt("a payment target is allocated differently in the clean books")
 
     issues = []
     for it in plan.items:
@@ -494,6 +627,7 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
             else:
                 k = t["payment"]
                 p = h.payments[k]
+                settled_alike(k)
                 bank = pay_row(k, "bank")
                 correct = convert_minor(p.amount, it.data["correct_rate"], h.exponents[p.currency], h.exponents[h.base], h.rounding)
                 delta = abs(_line_amount(bank) - correct)
@@ -520,6 +654,7 @@ def derive_issues(b: HistoryBuilder, plan: Plan, books: Books) -> list[dict]:
             else:
                 k = t["payment"]
                 p = h.payments[k]
+                settled_alike(k)
                 bank = pay_row(k, "bank")
                 doc_ts, post_ts = p.ts, bank.ts
                 evidence = [[("doc", k), ("row", bank.ident)]]

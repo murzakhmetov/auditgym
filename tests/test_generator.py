@@ -600,9 +600,14 @@ class StandaloneUtcWallClockDstTests(unittest.TestCase):
         for s in range(24):
             ep = generate_episode(10 ** 15 + s, cfg).episode
             ids = {a for t in ep.truth["issues"] if t["type"] == "wrong_period" for a in t["affected_ids"]}
-            inv = next(d for d in ep.invoices if d["invoice_id"] in ids)
-            off = offset_minutes("America/New_York", parse_ts(inv["issued_at"]))
-            rows = [r for r in ep.ledger if r.get("invoice_id") in ids and not r.get("payment_id")]
+            inv = next((d for d in ep.invoices if d["invoice_id"] in ids), None)
+            if inv is not None:
+                off = offset_minutes("America/New_York", parse_ts(inv["issued_at"]))
+                rows = [r for r in ep.ledger if r.get("invoice_id") in ids and not r.get("payment_id")]
+            else:  # the target is a payment (0.4.0; tests/test_payment_targets.py runs both payment kinds on this month)
+                pay = next(d for d in ep.payments if d["payment_id"] in ids)
+                off = offset_minutes("America/New_York", parse_ts(pay["timestamp"]))
+                rows = [r for r in ep.ledger if r.get("payment_id") in ids]
             self.assertTrue(rows)
             for r in rows:
                 posting = parse_ts(r["timestamp"])

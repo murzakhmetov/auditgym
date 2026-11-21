@@ -85,6 +85,13 @@ PREPAID_ZERO_SHARE = 0.5  # half of the episodes draw no prepaid receipt at all,
 # share of the fresh unallocated receipts (and of the over-received credit receipts) whose invoice was issued before the
 # period (an opening item); the prior invoices an error brings are taken out of counts.prior_invoices
 UNALLOCATED_PRIOR_SHARE = 0.35
+# The document a standalone wrong_fx_rate or wrong_period error sits on: an invoice, a customer receipt or a supplier
+# disbursement (a payment target comes with the invoice it settles). The shares are tuned by measurement (auditgym.tells,
+# rules "a receipt" and "a disbursement") so that a receipt, a disbursement and an invoice are in the answer key at about
+# the same rate; before 0.4.0 these two errors were always on an invoice, so a policy could skip payments for them.
+TARGET_KINDS = ("invoice", "receipt", "disbursement")
+TARGET_KIND_SHARES = (0.34, 0.36, 0.30)
+TARGETED_TYPES = ("wrong_fx_rate", "wrong_period")
 # split_remainder (ranges in DEFAULT_DISTRACTOR_RANGES): a part payment followed by a second receipt that leaves a rest of the invoice open (both relieve 1100 in
 # full, nothing goes to 2900); per episode, on a fork, so that an invoice with two receipts below its total is no tell
 # posting_lag: the number of documents of the extract whose posting is booked at another instant than the document's (invoices
@@ -199,16 +206,39 @@ def min_read_pages(counts: dict) -> int:
     return -(-n // PAGE_ROWS) + -(-2 * n // PAGE_ROWS)
 
 
-def error_invoice_load(config: dict) -> tuple[int, int]:
+def draw_target_kinds(rng: Rng, errors: dict) -> dict:
+    """{"wrong_fx_rate": [...], "wrong_period": [...]}: the target kind of every standalone error of the two types, in the
+    order the errors are planned, drawn with TARGET_KIND_SHARES (on a stream of its own, see resolve)."""
+    out = {}
+    for etype in TARGETED_TYPES:
+        kinds = []
+        for _ in range(int(errors.get(etype, 0))):
+            r, acc, kind = rng.random(), 0.0, TARGET_KINDS[-1]
+            for cand, share in zip(TARGET_KINDS, TARGET_KIND_SHARES):
+                acc += share
+                if r < acc:
+                    kind = cand
+                    break
+            kinds.append(kind)
+        out[etype] = kinds
+    return out
+
+
+def error_invoice_load(config: dict, target_kinds: dict | None = None) -> tuple[int, int]:
     """(sales, purchase) invoices that the requested errors add on top of the ordinary ones: the boundary receipt's invoice (a
-    sales invoice) and one invoice of either side (split evenly, the side is drawn) for every wrong rate and wrong period. An
+    sales invoice) and one invoice for every wrong rate and wrong period: a sales invoice under a receipt target, a purchase
+    invoice under a disbursement target and an invoice of either side (split evenly, the side is drawn) for an invoice target
+    (without `target_kinds` every target counts as an invoice). An
     unallocated receipt adds an invoice as well, but it takes the place of a credit receipt, whose count (and invoice) shrinks
     by one for it (CREDIT_TOTAL_RANGES), so it needs no deduction here; the fx_invoice_partial_allocation scenario shares the
     invoice of its wrong rate with the receipt and nets out the same way."""
     errors = config.get("errors") or {}
     inter = config.get("interacting") or []
     either = int(errors.get("wrong_fx_rate", 0)) + int(errors.get("wrong_period", 0))
-    return ("boundary_fx_payment" in inter) + (either + 1) // 2, either // 2
+    kinds = [k for ks in (target_kinds or {}).values() for k in ks]
+    receipts, disbursements = kinds.count("receipt"), kinds.count("disbursement")
+    either -= receipts + disbursements
+    return ("boundary_fx_payment" in inter) + receipts + (either + 1) // 2, disbursements + either // 2
 
 
 def resolve(config: dict, rng: Rng) -> dict:
@@ -273,16 +303,23 @@ def resolve(config: dict, rng: Rng) -> dict:
     # Every wrong_fx_rate and wrong_period error (and the boundary scenario) adds an invoice of its own on top of the ordinary
     # ones; those are taken out of the drawn counts, so the number of invoices of an episode never depends on how many errors
     # it holds (an explicit count stays exact).
-    sales_red, purchase_red = error_invoice_load(config)
-    load = {"sales": 0, "purchase": 0, "sales_paid": 0}
+    errors = {t: int((config.get("errors") or {}).get(t, 0)) for t in FINDING_TYPES}
+    # on a fork: the kinds are known before the history is drawn (a payment target's invoice is a paid one) and no other
+    # resolved field moves with them
+    target_kinds = draw_target_kinds(rng.fork("target_kinds"), errors)
+    sales_red, purchase_red = error_invoice_load(config, target_kinds)
+    load = {"sales": 0, "purchase": 0, "sales_paid": 0, "purchase_paid": 0}
     for k, red in (("sales_invoices", sales_red), ("purchase_invoices", purchase_red)):
         if k not in (config.get("counts") or {}):
             before = counts[k]
             counts[k] = max(1, before - red)
             load[k.split("_")[0]] = before - counts[k]
-    # the boundary scenario's invoice is paid by its receipt; the others that an error adds are never paid
-    load["sales_paid"] = min(1, load["sales"]) if "boundary_fx_payment" in inter else 0
-    errors = {t: int((config.get("errors") or {}).get(t, 0)) for t in FINDING_TYPES}
+    # the boundary scenario's invoice is paid by its receipt and the invoice of a payment target by that payment; the
+    # invoices that are themselves the target of an error are never paid
+    n_receipts = sum(ks.count("receipt") for ks in target_kinds.values())
+    n_disbursements = sum(ks.count("disbursement") for ks in target_kinds.values())
+    load["sales_paid"] = min(load["sales"], ("boundary_fx_payment" in inter) + n_receipts)
+    load["purchase_paid"] = min(load["purchase"], n_disbursements)
     # A fresh unallocated receipt sits on an opening item with the share UNALLOCATED_PRIOR_SHARE (drawn here, so the prior
     # invoices it brings can be taken out of counts.prior_invoices: the number of opening items never depends on the errors)
     prior_rng = rng.fork("unallocated_prior")
@@ -334,6 +371,7 @@ def resolve(config: dict, rng: Rng) -> dict:
         "counts": counts,
         "unallocated_prior": prior_hits,
         "error_invoice_load": load,
+        "target_kinds": target_kinds,
         "twin": bool(config.get("twin", False)),
     }
 

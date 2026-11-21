@@ -1,32 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_9c938b77942dc7a9",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_ec59ff038d6c1aa1",
   "company": {
-    "name": "Torix Trading Pvt Ltd",
+    "name": "Norion Pharma Pvt Ltd",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "CHF": 2,
-    "JPY": 0,
     "USD": 2
   },
-  "period_start": "2027-06-01T00:00:00+05:45",
-  "period_end": "2027-07-01T00:00:00+05:45",
-  "ledger_extract_end": "2027-07-08T00:00:00+05:45",
+  "period_start": "2025-03-01T00:00:00+05:45",
+  "period_end": "2025-04-01T00:00:00+05:45",
+  "ledger_extract_end": "2025-04-08T00:00:00+05:45",
   "timezone": "Asia/Kathmandu",
   "record_counts": {
-    "ledger": 1823,
-    "invoices": 131,
-    "payments": 100,
-    "fx": 217
+    "ledger": 2001,
+    "invoices": 129,
+    "payments": 92,
+    "fx": 83
   },
   "document_counts": {
-    "invoices": 131,
-    "payments": 100,
-    "total": 231
+    "invoices": 129,
+    "payments": 92,
+    "total": 221
   },
   "rounding": {
     "mode": "half_even",

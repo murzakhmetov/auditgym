@@ -22,7 +22,7 @@ from auditgym.episode import load_episode
 from auditgym.generator import generate_episode
 from auditgym.rng import Rng
 from auditgym.timeutil import format_utc, parse_ts
-from auditgym.transform import transform_episode
+from auditgym.transform import _shift_text, transform_episode
 from auditgym.verify import derive_from_evidence
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -378,7 +378,9 @@ class GuardTests(unittest.TestCase):
                 ep = gen(200 + seed, cfg)
                 own = set()
                 for inj in ep.provenance["injections"]:
-                    if inj["type"] == "wrong_period" or (inj["type"] == "wrong_fx_rate" and (inj["variant"] == "posting_date" or "payment" in inj["targets"])):
+                    # (the boundary receipt is covered by its wrong_period injection; a standalone rate error on a payment
+                    # that is not posting_date takes lags like any clean document, as an invoice with a wrong rate does)
+                    if inj["type"] == "wrong_period" or (inj["type"] == "wrong_fx_rate" and inj["variant"] == "posting_date"):
                         own.update(inj["targets"].values())
                 lagged_ids = {d["ids"][0] for d in ep.provenance["distractors"] if d["kind"] == "posting_lag"}
                 lagged_ids |= {e["id"] for e in ep.provenance["posting_lags"]}
@@ -552,7 +554,9 @@ class ReaderTests(unittest.TestCase):
         for kwargs in ({"ts_repr": "utc"}, {"ts_repr": "mixed"}, {"permute_seed": 3}, {"rename_seed": 4}, {"shift_years": 28}):
             with self.subTest(kwargs=kwargs):
                 new = transform_episode(ep, **kwargs)
-                self.assertEqual({i: v[2] - v[1] for i, v in lagged(new).items()}, want)
+                # a year shift also moves the year inside a dated ID (id_style "dated": SI/2027/... becomes SI/2055/...)
+                moved = {_shift_text(i, 28): v for i, v in want.items()} if "shift_years" in kwargs else want
+                self.assertEqual({i: v[2] - v[1] for i, v in lagged(new).items()}, moved)
         remapped = transform_episode(ep, remap_seed=9)
         self.assertEqual(sorted(v[2] - v[1] for v in lagged(remapped).values()), sorted(want.values()))
         public = {d["invoice_id"] for d in remapped.invoices} | {d["payment_id"] for d in remapped.payments}

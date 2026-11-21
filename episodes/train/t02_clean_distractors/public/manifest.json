@@ -1,34 +1,34 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_14be23c5f5463707",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_253a763274c913ef",
   "company": {
-    "name": "Coreta Retail KK",
+    "name": "Kenaro Trading Ltda",
     "synthetic": true
   },
-  "base_currency": "JPY",
+  "base_currency": "USD",
   "currency_exponents": {
-    "JPY": 0,
     "USD": 2,
-    "EUR": 2
+    "JPY": 0,
+    "GBP": 2
   },
-  "period_start": "2025-11-01T00:00:00+09:00",
-  "period_end": "2025-12-01T00:00:00+09:00",
-  "ledger_extract_end": "2025-12-08T00:00:00+09:00",
-  "timezone": "Asia/Tokyo",
+  "period_start": "2027-12-01T00:00:00-03:00",
+  "period_end": "2028-01-01T00:00:00-03:00",
+  "ledger_extract_end": "2028-01-08T00:00:00-03:00",
+  "timezone": "America/Sao_Paulo",
   "record_counts": {
-    "ledger": 234,
-    "invoices": 58,
-    "payments": 47,
-    "fx": 150
+    "ledger": 264,
+    "invoices": 71,
+    "payments": 50,
+    "fx": 143
   },
   "document_counts": {
-    "invoices": 58,
-    "payments": 47,
-    "total": 105
+    "invoices": 71,
+    "payments": 50,
+    "total": 121
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

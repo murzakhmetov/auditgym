@@ -1,31 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_7aec4c9f58d0d600",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_faf09eaf600e9cd8",
   "company": {
-    "name": "Miron Agro Ltd",
+    "name": "Lumum Trading LLP",
     "synthetic": true
   },
-  "base_currency": "KWD",
+  "base_currency": "KZT",
   "currency_exponents": {
-    "KWD": 3,
-    "EUR": 2,
-    "BHD": 3
+    "KZT": 2,
+    "EUR": 2
   },
-  "period_start": "2026-04-01T00:00:00+03:00",
-  "period_end": "2026-05-01T00:00:00+03:00",
-  "ledger_extract_end": "2026-05-08T00:00:00+03:00",
-  "timezone": "Asia/Kuwait",
+  "period_start": "2027-05-01T00:00:00+05:00",
+  "period_end": "2027-06-01T00:00:00+05:00",
+  "ledger_extract_end": "2027-06-08T00:00:00+05:00",
+  "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 660,
+    "ledger": 867,
     "invoices": 101,
-    "payments": 70,
-    "fx": 143
+    "payments": 71,
+    "fx": 93
   },
   "document_counts": {
     "invoices": 101,
-    "payments": 70,
-    "total": 171
+    "payments": 71,
+    "total": 172
   },
   "rounding": {
     "mode": "half_up",

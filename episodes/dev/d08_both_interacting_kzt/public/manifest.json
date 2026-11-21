@@ -1,30 +1,32 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_4d3a8d611652a99a",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_e98b5614d96fce06",
   "company": {
-    "name": "Kaiara Systems LLP",
+    "name": "Daron Foods LLP",
     "synthetic": true
   },
   "base_currency": "KZT",
   "currency_exponents": {
     "KZT": 2,
-    "USD": 2
+    "USD": 2,
+    "AED": 2,
+    "EUR": 2
   },
-  "period_start": "2025-03-01T00:00:00+05:00",
-  "period_end": "2025-04-01T00:00:00+05:00",
-  "ledger_extract_end": "2025-04-08T00:00:00+05:00",
+  "period_start": "2025-04-01T00:00:00+05:00",
+  "period_end": "2025-05-01T00:00:00+05:00",
+  "ledger_extract_end": "2025-05-08T00:00:00+05:00",
   "timezone": "Asia/Almaty",
   "record_counts": {
-    "ledger": 764,
-    "invoices": 97,
-    "payments": 82,
-    "fx": 83
+    "ledger": 867,
+    "invoices": 114,
+    "payments": 86,
+    "fx": 217
   },
   "document_counts": {
-    "invoices": 97,
-    "payments": 82,
-    "total": 179
+    "invoices": 114,
+    "payments": 86,
+    "total": 200
   },
   "rounding": {
     "mode": "half_up",

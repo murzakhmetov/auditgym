@@ -1,32 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_dbbc26fd82282871",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_fc13f18595e0e25a",
   "company": {
-    "name": "Rynora Pharma KK",
+    "name": "Mirara Agro KK",
     "synthetic": true
   },
   "base_currency": "JPY",
   "currency_exponents": {
     "JPY": 0,
-    "EUR": 2,
-    "KRW": 0,
-    "USD": 2
+    "EUR": 2
   },
-  "period_start": "2026-04-01T00:00:00+09:00",
-  "period_end": "2026-05-01T00:00:00+09:00",
-  "ledger_extract_end": "2026-05-08T00:00:00+09:00",
+  "period_start": "2025-09-01T00:00:00+09:00",
+  "period_end": "2025-10-01T00:00:00+09:00",
+  "ledger_extract_end": "2025-10-08T00:00:00+09:00",
   "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 312,
-    "invoices": 54,
-    "payments": 39,
-    "fx": 207
+    "ledger": 367,
+    "invoices": 60,
+    "payments": 45,
+    "fx": 90
   },
   "document_counts": {
-    "invoices": 54,
-    "payments": 39,
-    "total": 93
+    "invoices": 60,
+    "payments": 45,
+    "total": 105
   },
   "rounding": {
     "mode": "half_up",

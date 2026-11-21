@@ -1,9 +1,9 @@
 {
   "schema_version": "auditgym/1.0",
-  "generator_version": "0.3.0",
-  "episode_id": "ep_5c6358fb98392c53",
+  "generator_version": "0.4.0",
+  "episode_id": "ep_12062a541c6b03ee",
   "company": {
-    "name": "Zanova Machinery Ltd",
+    "name": "Eloum Analytics Ltd",
     "synthetic": true
   },
   "base_currency": "GBP",
@@ -13,23 +13,23 @@
     "CHF": 2,
     "EUR": 2
   },
-  "period_start": "2027-11-01T00:00:00+00:00",
-  "period_end": "2027-12-01T00:00:00+00:00",
-  "ledger_extract_end": "2027-12-08T00:00:00+00:00",
+  "period_start": "2025-05-01T00:00:00+01:00",
+  "period_end": "2025-06-01T00:00:00+01:00",
+  "ledger_extract_end": "2025-06-08T00:00:00+01:00",
   "timezone": "Europe/London",
   "record_counts": {
-    "ledger": 835,
-    "invoices": 108,
-    "payments": 80,
-    "fx": 217
+    "ledger": 976,
+    "invoices": 112,
+    "payments": 86,
+    "fx": 197
   },
   "document_counts": {
-    "invoices": 108,
-    "payments": 80,
-    "total": 188
+    "invoices": 112,
+    "payments": 86,
+    "total": 198
   },
   "rounding": {
-    "mode": "half_even",
+    "mode": "half_up",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [
