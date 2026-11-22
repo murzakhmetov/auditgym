@@ -289,8 +289,7 @@ out-of-range results and empty or malformed expressions; a non-string or longer-
 
 Submission limits (published in the task as `limits`): at most 30 findings, 10 evidence IDs, and 1,000 explanation
 characters per finding, and a currency of at most `max_currency_chars` (8) characters. Every ID must be a non-blank string of at most `max_id_chars` (64) characters. An ID that
-breaks this rule makes the whole submission invalid (reward −1), including an extra evidence ID; well-formed unknown
-extra IDs are ignored. `claimed_amount_minor` must be an integer; an integral float such as `106965.0` is coerced to an
+breaks this rule makes the whole submission invalid (reward −1), including an extra evidence ID; a well-formed evidence ID that is not in the episode makes its finding unmatched (round 10), and extra IDs that exist are allowed. `claimed_amount_minor` must be an integer; an integral float such as `106965.0` is coerced to an
 integer by the environment and by the `grade` command alike. Text that is not valid UTF-8 (a lone surrogate) in an
 ID, in `episode_id` or in an explanation makes the submission invalid (reward −1).
 
