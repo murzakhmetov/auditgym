@@ -88,8 +88,13 @@ jobs:
         shell: bash
       - name: Fallback with --user 10001 (policy runs as the same user, check still PASSES)
         run: |
-          docker run --rm --network none --user 10001 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee user10001.log
-          test "${PIPESTATUS[0]}" -eq 0
+          set +e
+          docker run --name user10001 --network none --user 10001 --cpus 2 --memory 4g --pids-limit 512 auditgym 2>&1 | tee user10001.log
+          rc=${PIPESTATUS[0]}
+          docker cp user10001:/app/runs/check/unittest.log user10001_unittest.log
+          docker rm user10001 > /dev/null
+          if [ "$rc" -ne 0 ]; then grep -E -A 40 "^(FAIL|ERROR): " user10001_unittest.log | head -200; exit "$rc"; fi
+          set -e
           grep -q "^PASS in" user10001.log
           docker run --rm --network none --user 10001 auditgym python -m unittest tests.test_container -v
       - name: Fallback with --cap-drop ALL (root without setuid, check still PASSES)
@@ -185,6 +190,7 @@ jobs:
             official_report.md
             container_tests.log
             user10001.log
+            user10001_unittest.log
             capdrop.log
             redteam_default.log
             redteam_user10001.log
