@@ -454,6 +454,7 @@ def cmd_grade(args) -> int:
     with _input(broad=True):
         ep = load_episode(Path(args.episode))
         text = Path(args.findings).read_text(encoding="utf-8-sig")  # tolerate a UTF-8 BOM
+        errors = None  # set only when the file is not parseable; a JSON null parses and is judged by validate_submission
         try:
             sub = json.loads(text)
         except json.JSONDecodeError as exc:
@@ -462,7 +463,7 @@ def cmd_grade(args) -> int:
         except (ValueError, RecursionError) as exc:  # e.g. a 4300-digit integer or deep nesting: a bad submission
             sub = None
             errors = [f"{Path(args.findings).name} is not valid JSON: {' '.join(str(exc).split())[:120]}"]
-    if sub is None:
+    if sub is None and errors is not None:
         rep = Grader(ep.truth, ep.episode_id).grade(None, args.steps, "invalid_submission", invalid_errors=errors)
         print(json.dumps(rep, indent=2))
         return 0

@@ -1,12 +1,12 @@
 # auditgym check report
 
-Result: **PASS** in 420 s, version 0.4.0.
+Result: **PASS** in 381 s, version 0.4.0.
 
 Episodes: public master string auditgym-check-v1.
 
 Policy isolation: the host's user (no uid switch on this machine).
 
-Code: code 2b6130fb32cc6c3f3a4d4e09e0917283f517e71095253af45f7cfc18ce551007 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
+Code: code 3e12e2adae32a08ef3dba69d46a8b538ecf7e943a2579d8a54a8f44b7e7c4c64 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
 
 Coverage: 697 named checks of 83 kinds (a kind is one property; most run on every episode they apply to).
 
@@ -47,7 +47,7 @@ Run time: F_contract 0.0 s, E_leaks 0.4 s
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 4.2 s, C_data 4.7 s
+Run time: B_committed_episodes 3.8 s, C_data 4.4 s
 
 #### B_committed_episodes (40/40)
 
@@ -119,7 +119,7 @@ Run time: B_committed_episodes 4.2 s, C_data 4.7 s
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 25.6 s
+Run time: C_reward 23.5 s
 
 #### C_reward (468/468)
 
@@ -594,7 +594,7 @@ Run time: C_reward 25.6 s
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.4 s, D_paired 32.9 s
+Run time: B_replay 1.2 s, D_paired 31.1 s
 
 #### B_replay (10/10)
 
@@ -747,21 +747,21 @@ Run time: B_replay 1.4 s, D_paired 32.9 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 350.4 s
+Run time: A_unit_tests 316.2 s
 
 #### A_unit_tests (1/1)
 
-- PASS: unittest: 619 run, 608 passed, 11 skipped
+- PASS: unittest: 622 run, 611 passed, 11 skipped
 
 ## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9349 | 0.9349 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.55 | 0.0158 | 1.0 | 0.9512 | 0.9295 | 0 | 0.0 |
-| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0025 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
+| hidden_like | auditor | 20 | 0.9349 | 0.9349 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.55 | 0.0155 | 1.0 | 0.9512 | 0.9295 | 0 | 0.0 |
+| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0021 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.715 | -0.715 | 0.0 | 0.0 | 0.0 | 0.0 | 0.15 | 0.15 | 26.55 | 0.0038 | 0.15 | 0.14 | -1.0 | 3 | 0.0 |
-| hidden_like | recon | 20 | -0.6835 | -0.6835 | 0.1174 | 0.4983 | 0.1008 | 0.7143 | 0.1835 | 0.1835 | 32.55 | 0.0103 | 0.0 | -1.0 | -0.578 | 87 | 0.0 |
+| hidden_like | random | 20 | -0.715 | -0.715 | 0.0 | 0.0 | 0.0 | 0.0 | 0.15 | 0.15 | 26.55 | 0.0042 | 0.15 | 0.14 | -1.0 | 3 | 0.0 |
+| hidden_like | recon | 20 | -0.6835 | -0.6835 | 0.1174 | 0.4983 | 0.1008 | 0.7143 | 0.1835 | 0.1835 | 32.55 | 0.0094 | 0.0 | -1.0 | -0.578 | 87 | 0.0 |
 | hidden_like | silent | 20 | -0.5 | -0.5 | 0.0 | 0.0 | n/a | 0.0 | 0.25 | 0.25 | 0.0 | 0.0002 | 0.25 | 1.0 | -1.0 | 0 | n/a |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
