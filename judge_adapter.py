@@ -49,6 +49,8 @@ def _read_truth(path: Path, manifest: dict) -> dict:
     expected_amount_minor, currency and the acceptable evidence sets under `evidence_sets` or `acceptable_evidence_sets`);
     `tolerance_minor` per issue (0 when absent) and `id_aliases` are optional, and extra keys are ignored."""
     raw = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(raw, dict) or not isinstance(raw.get("issues", []), list):
+        raise ValueError("truth.json must be an object with a list of issues")
     issues = []
     for n, issue in enumerate(raw.get("issues", []), 1):
         sets = issue.get("evidence_sets", issue.get("acceptable_evidence_sets"))

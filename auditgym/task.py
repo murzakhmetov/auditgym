@@ -58,13 +58,14 @@ def build_task(episode, max_steps: int, mode: str, time_limit_s: float = 60) -> 
         "finding_types": {t: FINDING_TYPE_RULES[t] for t in FINDING_TYPES},
         "conventions": {
             "amounts": "claimed_amount_minor is a non-negative integer in minor units of the base currency; "
-                       "currency is the base currency code",
+                       "currency is the base currency code, compared exactly (no case change, no spaces)",
             "tolerance_minor": TOLERANCE_MINOR,
-            "ids": "affected_ids and evidence_ids are compared as sets after trimming spaces (case-sensitive). A "
-                   "document may be cited by doc_id or by its invoice_id/payment_id. FX records are cited as "
-                   "'YYYY-MM-DD:SRC:TGT'. A finding needs at least one complete evidence set; extra well-formed IDs "
-                   "are ignored. Every ID must be a non-blank string of at most max_id_chars characters; a submission "
-                   "with a malformed ID is rejected as invalid.",
+            "ids": "affected_ids and evidence_ids are compared as sets of exact strings (case and spaces count; an ID "
+                   "repeated in a list is one ID). A document may be cited by doc_id or by its invoice_id/payment_id. "
+                   "FX records are cited as 'YYYY-MM-DD:SRC:TGT'. A finding needs at least one complete evidence set; "
+                   "extra IDs that exist in the episode are allowed, but an ID that does not exist in the episode makes "
+                   "the finding a false positive. Every ID must be a non-blank string of at most max_id_chars "
+                   "characters; a submission with a malformed ID is rejected as invalid.",
             "matching": "one-to-one with the answer key; repeated or unmatched findings are false positives",
         },
         "reward": {
