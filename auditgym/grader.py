@@ -13,7 +13,8 @@ GRADE_VERSION = "1"
 
 
 class Grader:
-    def __init__(self, truth: dict | None, episode_id: str):
+    def __init__(self, truth: dict | None, episode_id: str, known_ids=None):
+        self.known_ids = None if known_ids is None else frozenset(known_ids)  # every record, document and row ID of the episode
         self.truth = truth or {}
         self.issues = list(self.truth.get("issues", []))
         self.aliases = dict(self.truth.get("id_aliases", {}))
@@ -48,7 +49,7 @@ class Grader:
                 "missed_issues": [t["issue_id"] for t in self.issues],
             }
         findings = list(submission["findings"]) if submission else []
-        result = match(findings, self.issues, self.aliases)
+        result = match(findings, self.issues, self.aliases, self.known_ids)
         reward = terminal_reward_from_f1(result.f1_exact, inspection_steps)
         exp = experimental_reward(findings, self.issues, inspection_steps, self.aliases)
         return {

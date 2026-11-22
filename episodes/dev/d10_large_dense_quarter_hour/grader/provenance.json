@@ -2,15 +2,10 @@
   "schema_version": "auditgym/1.0",
   "generator_version": "0.4.0",
   "config_version": "1",
-  "seed": "7014604041272720841",
+  "seed": "4092808652641781967",
   "secret_used": false,
   "config": {
     "base_currency": "EUR",
-    "counts": {
-      "prior_invoices": 5,
-      "purchase_invoices": 14,
-      "sales_invoices": 26
-    },
     "errors": {
       "duplicate_invoice": 2,
       "unallocated_payment": 2,
@@ -30,14 +25,14 @@
     "foreign_currencies": [
       "CHF",
       "JPY",
-      "GBP"
+      "USD"
     ],
     "timezone": "Asia/Kathmandu",
-    "period": "2025-06",
-    "rounding": "half_even",
-    "id_style": "prefixed",
+    "period": "2026-05",
+    "rounding": "half_up",
+    "id_style": "slashed",
     "ts_repr": "local",
-    "row_order": "shuffled",
+    "row_order": "time",
     "errors": {
       "duplicate_invoice": 2,
       "unallocated_payment": 2,
@@ -75,53 +70,53 @@
       "underpayment": 3,
       "midnight_fx": 4,
       "weekend_fx": 3,
-      "boundary_doc": 4,
-      "posting_lag": 46,
-      "overpayment_refund": 4,
-      "null_ref_receipt": 3,
+      "boundary_doc": 8,
+      "posting_lag": 47,
+      "overpayment_refund": 2,
+      "null_ref_receipt": 2,
       "split_remainder": 4,
-      "credit_receipt": 5,
-      "prepaid_receipt": 0,
-      "legit_repeat": 1
+      "credit_receipt": 4,
+      "prepaid_receipt": 4,
+      "legit_repeat": 4
     },
-    "repeat_pairs": 3,
+    "repeat_pairs": 6,
     "counts": {
       "customers": 16,
-      "suppliers": 9,
+      "suppliers": 11,
       "sales_invoices": 26,
-      "purchase_invoices": 14,
+      "purchase_invoices": 13,
       "prior_invoices": 5,
-      "target_rows": 1756
+      "target_rows": 1858
     },
-    "unallocated_prior": 1,
+    "unallocated_prior": 0,
     "error_invoice_load": {
-      "sales": 0,
-      "purchase": 0,
-      "sales_paid": 0,
-      "purchase_paid": 0
+      "sales": 2,
+      "purchase": 2,
+      "sales_paid": 1,
+      "purchase_paid": 1
     },
     "target_kinds": {
       "wrong_fx_rate": [
-        "receipt",
-        "invoice"
+        "invoice",
+        "receipt"
       ],
       "wrong_period": [
-        "receipt",
+        "disbursement",
         "invoice"
       ]
     },
     "twin": false
   },
-  "attempt": 0,
+  "attempt": 1,
   "history": {
-    "company": "Palion Packaging Pvt Ltd",
-    "customers": 17,
-    "suppliers": 9,
-    "invoices": 100,
-    "payments": 79,
-    "misc_journals": 632,
+    "company": "Mirova Media Pvt Ltd",
+    "customers": 18,
+    "suppliers": 12,
+    "invoices": 110,
+    "payments": 77,
+    "misc_journals": 675,
     "holidays": [
-      "2025-06-03"
+      "2026-05-29"
     ]
   },
   "injections": [
@@ -131,8 +126,8 @@
       "variant": "rekeyed_copy",
       "scenario": "single",
       "targets": {
-        "original": "INV-570175",
-        "copy": "INV-520753"
+        "original": "SI/2026/264100",
+        "copy": "SI/2026/647723"
       },
       "change": {}
     },
@@ -142,90 +137,89 @@
       "variant": "rekeyed_copy",
       "scenario": "single",
       "targets": {
-        "original": "BILL-358377",
-        "copy": "BILL-473100"
+        "original": "PI/2026/379137",
+        "copy": "PI/2026/533800"
       },
       "change": {}
     },
     {
       "issue_id": "iss_03",
       "type": "unallocated_payment",
-      "variant": "partial",
-      "scenario": "single",
-      "targets": {
-        "payment": "RCPT-968731",
-        "invoice": "INV-961031"
-      },
-      "change": {
-        "alloc": 153383
-      }
-    },
-    {
-      "issue_id": "iss_04",
-      "type": "unallocated_payment",
       "variant": "missing",
       "scenario": "single",
       "targets": {
-        "payment": "RCPT-177094",
-        "invoice": "INV-927065"
+        "payment": "BR/2026/696391",
+        "invoice": "SI/2026/258937"
       },
       "change": {
         "alloc": 0
       }
     },
     {
-      "issue_id": "iss_05",
-      "type": "wrong_fx_rate",
-      "variant": "posting_date",
+      "issue_id": "iss_04",
+      "type": "unallocated_payment",
+      "variant": "partial",
       "scenario": "single",
       "targets": {
-        "payment": "RCPT-780051"
+        "payment": "BR/2026/649176",
+        "invoice": "SI/2026/125666"
       },
       "change": {
-        "posting_ts": "2025-06-13T09:07:12+00:00",
-        "correct_rate": "1.05373",
-        "correct_rate_date": "2025-06-12",
-        "wrong_rate": "1.05486",
-        "wrong_rate_date": "2025-06-13"
+        "alloc": 38564
+      }
+    },
+    {
+      "issue_id": "iss_05",
+      "type": "wrong_fx_rate",
+      "variant": "transposed",
+      "scenario": "single",
+      "targets": {
+        "invoice": "PI/2026/844462"
+      },
+      "change": {
+        "correct_rate": "1.04103",
+        "correct_rate_date": "2026-05-18",
+        "wrong_rate": "1.40103",
+        "wrong_rate_date": null
       }
     },
     {
       "issue_id": "iss_06",
       "type": "wrong_fx_rate",
-      "variant": "transposed",
+      "variant": "utc_date",
       "scenario": "single",
       "targets": {
-        "invoice": "BILL-427909"
+        "payment": "BR/2026/278717"
       },
       "change": {
-        "correct_rate": "0.00588645",
-        "correct_rate_date": "2025-06-24",
-        "wrong_rate": "0.00586845",
-        "wrong_rate_date": null
+        "correct_rate": "0.857817",
+        "correct_rate_date": "2026-05-21",
+        "wrong_rate": "0.857244",
+        "wrong_rate_date": "2026-05-20"
       }
     },
     {
       "issue_id": "iss_07",
       "type": "wrong_period",
-      "variant": "booked_late",
+      "variant": "utc_wall_clock",
       "scenario": "single",
       "targets": {
-        "payment": "RCPT-389797"
+        "payment": "BP/2026/368676"
       },
       "change": {
-        "posting_ts": "2025-07-03T09:33:50+00:00"
+        "posting_ts": "2026-05-31T15:27:09+00:00"
       }
     },
     {
       "issue_id": "iss_08",
       "type": "wrong_period",
-      "variant": "utc_wall_clock",
+      "variant": "booked_early",
       "scenario": "single",
       "targets": {
-        "invoice": "INV-625952"
+        "invoice": "PI/2026/947354"
       },
       "change": {
-        "posting_ts": "2025-06-30T13:04:27+00:00"
+        "posting_ts": "2026-05-30T07:55:55+00:00"
       }
     },
     {
@@ -234,27 +228,26 @@
       "variant": "partial",
       "scenario": "fx_invoice_partial_allocation",
       "targets": {
-        "payment": "RCPT-388284",
-        "invoice": "INV-527036"
+        "payment": "BR/2026/146475",
+        "invoice": "SI/2026/675868"
       },
       "change": {
-        "alloc": 264482
+        "alloc": 103568
       }
     },
     {
       "issue_id": "iss_10",
       "type": "wrong_fx_rate",
-      "variant": "posting_date",
+      "variant": "transposed",
       "scenario": "fx_invoice_partial_allocation",
       "targets": {
-        "invoice": "INV-527036"
+        "invoice": "SI/2026/675868"
       },
       "change": {
-        "posting_ts": "2025-06-06T09:15:07+00:00",
-        "correct_rate": "1.05498",
-        "correct_rate_date": "2025-06-02",
-        "wrong_rate": "1.05545",
-        "wrong_rate_date": "2025-06-06"
+        "correct_rate": "0.865592",
+        "correct_rate_date": "2026-05-13",
+        "wrong_rate": "0.685592",
+        "wrong_rate_date": null
       }
     }
   ],
@@ -262,918 +255,973 @@
     {
       "kind": "legit_repeat",
       "ids": [
-        "INV-510964",
-        "INV-752047"
+        "SI/2026/493974",
+        "SI/2026/580814",
+        "BR/2026/353951"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "SI/2026/123723",
+        "SI/2026/476102"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "SI/2026/316086",
+        "SI/2026/272720"
+      ]
+    },
+    {
+      "kind": "legit_repeat",
+      "ids": [
+        "PI/2026/240856",
+        "PI/2026/692130",
+        "BP/2026/397989"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-414302",
-        "BILL-344194"
+        "PI/2026/701061",
+        "PI/2026/154667"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-713753",
-        "BILL-315604"
+        "PI/2026/997467",
+        "PI/2026/485500"
       ]
     },
     {
       "kind": "recurring",
       "ids": [
-        "BILL-854476",
-        "BILL-164684"
+        "PI/2026/555264",
+        "PI/2026/767731"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-788672",
-        "RCPT-947874",
-        "RCPT-866475"
+        "SI/2026/675930",
+        "BR/2026/285643",
+        "BR/2026/265552"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-548325",
-        "RCPT-707185",
-        "RCPT-669798"
+        "SI/2026/721482",
+        "BR/2026/217806",
+        "BR/2026/555510"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-682379",
-        "RCPT-977176",
-        "RCPT-254829"
+        "SI/2026/369219",
+        "BR/2026/764202",
+        "BR/2026/889357"
       ]
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-341699",
-        "RCPT-653561",
-        "RCPT-828734"
+        "SI/2026/982797",
+        "BR/2026/255166",
+        "BR/2026/955356"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-905369",
-        "RCPT-675526",
-        "RCPT-662997"
+        "SI/2026/712932",
+        "BR/2026/599223",
+        "BR/2026/766709"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-909382",
-        "RCPT-232287",
-        "RCPT-652355"
+        "SI/2026/152767",
+        "BR/2026/911391",
+        "BR/2026/906633"
       ],
       "shape": "remainder"
     },
     {
       "kind": "split_payment",
       "ids": [
-        "INV-414561",
-        "RCPT-855304",
-        "RCPT-869440"
+        "SI/2026/242298",
+        "BR/2026/412380",
+        "BR/2026/732543"
       ],
       "shape": "remainder"
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-493866",
-        "INV-639600",
-        "RCPT-704810"
+        "SI/2026/753835",
+        "SI/2026/535785",
+        "BR/2026/975091"
       ]
     },
     {
       "kind": "multi_invoice_payment",
       "ids": [
-        "INV-718555",
-        "INV-269055",
-        "RCPT-727928"
+        "SI/2026/152346",
+        "SI/2026/978311",
+        "BR/2026/361997"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-746661",
-        "RCPT-504269"
+        "SI/2026/969259",
+        "BR/2026/690619"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-390373",
-        "RCPT-198791"
+        "SI/2026/728039",
+        "BR/2026/131952"
       ]
     },
     {
       "kind": "underpayment",
       "ids": [
-        "INV-950605",
-        "RCPT-568383"
+        "SI/2026/496068",
+        "BR/2026/725617"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-230027",
-        "RCPT-752100",
-        "RFND-629503"
+        "SI/2026/472983",
+        "BR/2026/284127",
+        "RF/2026/947350"
       ]
     },
     {
       "kind": "overpayment_refund",
       "ids": [
-        "INV-255906",
-        "RCPT-168908",
-        "RFND-197852"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "INV-588665",
-        "RCPT-929071",
-        "RFND-344850"
-      ]
-    },
-    {
-      "kind": "overpayment_refund",
-      "ids": [
-        "INV-960086",
-        "RCPT-400579",
-        "RFND-365178"
+        "SI/2026/133264",
+        "BR/2026/709041",
+        "RF/2026/637034"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-767779"
+        "BR/2026/923207"
       ]
     },
     {
       "kind": "null_ref_receipt",
       "ids": [
-        "RCPT-944265"
-      ]
-    },
-    {
-      "kind": "null_ref_receipt",
-      "ids": [
-        "RCPT-409168"
+        "BR/2026/266013"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-702718",
-        "RCPT-913097"
+        "SI/2026/791984"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "BILL-959265"
+        "SI/2026/770841"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-161653"
+        "SI/2026/251092",
+        "BR/2026/491520"
       ]
     },
     {
       "kind": "boundary_doc",
       "ids": [
-        "INV-164707"
+        "SI/2026/454030"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/823555",
+        "BR/2026/409306"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/867153"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "PI/2026/456310",
+        "BP/2026/718635"
+      ]
+    },
+    {
+      "kind": "boundary_doc",
+      "ids": [
+        "SI/2026/990078"
       ]
     },
     {
       "kind": "credit_receipt",
       "ids": [
-        "INV-623356",
-        "RCPT-177719"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-506717",
-        "RCPT-709980"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-529722",
-        "RCPT-422653"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-137966",
-        "RCPT-249998"
-      ],
-      "shape": "overpaid"
-    },
-    {
-      "kind": "credit_receipt",
-      "ids": [
-        "INV-221313",
-        "RCPT-981872",
-        "RCPT-115013"
+        "SI/2026/521598",
+        "BR/2026/716642",
+        "BR/2026/115211"
       ],
       "shape": "settled"
     },
     {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/225347",
+        "BR/2026/373018"
+      ],
+      "shape": "overpaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/454401",
+        "BR/2026/961234",
+        "BR/2026/768048"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/787170",
+        "BR/2026/722328",
+        "BR/2026/844913"
+      ],
+      "shape": "settled"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/525834",
+        "BR/2026/551212"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/775478",
+        "BR/2026/628727"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/834332",
+        "BR/2026/132869"
+      ],
+      "shape": "prepaid"
+    },
+    {
+      "kind": "credit_receipt",
+      "ids": [
+        "SI/2026/135842",
+        "BR/2026/166619"
+      ],
+      "shape": "prepaid"
+    },
+    {
       "kind": "midnight_fx",
       "ids": [
-        "INV-637342"
+        "SI/2026/939332"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "BILL-390468",
-        "PAY-211465"
+        "PI/2026/600008",
+        "BP/2026/450334"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-579661"
+        "SI/2026/686216"
       ]
     },
     {
       "kind": "midnight_fx",
       "ids": [
-        "INV-807829",
-        "RCPT-493201"
+        "SI/2026/741334",
+        "BR/2026/235508"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-947638"
+        "SI/2026/679947"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-417198"
+        "SI/2026/617981"
       ]
     },
     {
       "kind": "weekend_fx",
       "ids": [
-        "INV-436018"
+        "SI/2026/946416"
       ]
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-707185"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-249998"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-277908"
+        "SI/2026/364994"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-960086"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-198791"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-695406"
+        "SI/2026/844554"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-637342"
+        "SI/2026/715948"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/599223"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BP/2026/612573"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-424729"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-807829"
+        "BR/2026/255166"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-947638"
+        "BR/2026/732543"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-907464"
+        "SI/2026/522111"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-727120"
+        "BR/2026/166619"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/875742"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-662997"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-203306"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-788672"
+        "SI/2026/178155"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-199796"
+        "SI/2026/932870"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-924839"
+        "BP/2026/326304"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-850110"
+        "BR/2026/841200"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/235508"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/448741"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/285643"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/115211"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "PAY-728025"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-268826"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-436018"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-548325"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-409597"
+        "BR/2026/264673"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-832600"
-      ],
-      "shape": "date_change"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-474004"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-253171"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-675526"
+        "SI/2026/950120"
       ],
       "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-944265"
+        "BR/2026/709041"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-588665"
+        "BR/2026/628727"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-746661"
+        "BR/2026/106311"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "BILL-345839"
+        "BR/2026/518590"
       ],
-      "shape": "utc_wall_clock"
+      "shape": "earlier"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RFND-344850"
-      ],
-      "shape": "utc_wall_clock"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-682379"
+        "BP/2026/718635"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "INV-667139"
-      ],
-      "shape": "later"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "PAY-540647"
+        "BR/2026/131952"
       ],
       "shape": "date_change"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-828734"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "RCPT-547715"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-452877"
+        "PI/2026/807770"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-123698"
-      ],
-      "shape": "earlier"
-    },
-    {
-      "kind": "posting_lag",
-      "ids": [
-        "INV-125792"
+        "PI/2026/434290"
       ],
       "shape": "utc_wall_clock"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "RCPT-929071"
+        "PI/2026/767731"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/135842"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/555510"
       ],
       "shape": "later"
     },
     {
       "kind": "posting_lag",
       "ids": [
-        "BILL-275957"
+        "BP/2026/994886"
       ],
       "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/132869"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/284127"
+      ],
+      "shape": "later"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/374115"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/496068"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "PI/2026/456310"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/243763"
+      ],
+      "shape": "earlier"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/617981"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/875460"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/545244"
+      ],
+      "shape": "date_change"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "SI/2026/454401"
+      ],
+      "shape": "utc_wall_clock"
+    },
+    {
+      "kind": "posting_lag",
+      "ids": [
+        "BR/2026/546050"
+      ],
+      "shape": "utc_wall_clock"
     }
   ],
-  "posting_lags": [],
+  "posting_lags": [
+    {
+      "id": "SI/2026/264100",
+      "shape": "date_change",
+      "role": "pair"
+    },
+    {
+      "id": "BR/2026/146475",
+      "shape": "later",
+      "role": "error"
+    }
+  ],
   "ops": [
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-106015",
+      "id": "J/2026/135073",
       "record": {
-        "row_id": "GL-106015",
-        "timestamp": "2025-06-26T17:09:49+05:45",
+        "row_id": "J/2026/135073",
+        "timestamp": "2026-05-28T20:53:12+05:45",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 15154,
+        "currency": "EUR",
+        "entity_id": "CU/689107",
+        "invoice_id": null,
+        "payment_id": "BR/2026/649176"
+      }
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "J/2026/142584",
+      "record": {
+        "row_id": "J/2026/142584",
+        "timestamp": "2026-05-16T17:19:03+05:45",
         "account": "5000",
-        "debit_minor": 125525,
+        "debit_minor": 192112,
         "credit_minor": 0,
         "currency": "EUR",
-        "entity_id": "S-324401",
-        "invoice_id": "BILL-473100",
+        "entity_id": "SU/361692",
+        "invoice_id": "PI/2026/533800",
         "payment_id": null
       }
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-119537",
+      "id": "J/2026/204574",
+      "field": "timestamp",
+      "before": "2026-06-01T02:57:09+05:45",
+      "after": "2026-05-31T21:12:09+05:45"
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/210561",
       "field": "debit_minor",
-      "before": 2245,
-      "after": 1489
+      "before": 4277,
+      "after": 4617
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-124734",
+      "id": "J/2026/256902",
       "field": "timestamp",
-      "before": "2025-06-12T17:10:49+05:45",
-      "after": "2025-06-13T14:52:12+05:45"
+      "before": "2026-06-01T02:57:09+05:45",
+      "after": "2026-05-31T21:12:09+05:45"
     },
     {
-      "op": "remove",
+      "op": "add",
       "table": "ledger",
-      "id": "GL-128082",
+      "id": "J/2026/266740",
       "record": {
-        "row_id": "GL-128082",
-        "timestamp": "2025-06-20T18:57:45+05:45",
-        "account": "7900",
-        "debit_minor": 3018,
-        "credit_minor": 0,
+        "row_id": "J/2026/266740",
+        "timestamp": "2026-05-28T08:20:40+05:45",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 222428,
         "currency": "EUR",
-        "entity_id": "C-939724",
+        "entity_id": "CU/507128",
         "invoice_id": null,
-        "payment_id": "RCPT-177094"
+        "payment_id": "BR/2026/696391"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/268333",
+      "field": "credit_minor",
+      "before": 48106,
+      "after": 33081
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "J/2026/300527",
+      "record": {
+        "row_id": "J/2026/300527",
+        "timestamp": "2026-05-21T06:24:00+05:45",
+        "account": "2900",
+        "debit_minor": 0,
+        "credit_minor": 263291,
+        "currency": "EUR",
+        "entity_id": "CU/689107",
+        "invoice_id": null,
+        "payment_id": "BR/2026/146475"
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-164791",
+      "id": "J/2026/365462",
       "record": {
-        "row_id": "GL-164791",
-        "timestamp": "2025-06-10T13:44:00+05:45",
+        "row_id": "J/2026/365462",
+        "timestamp": "2026-05-10T13:31:26+05:45",
         "account": "1100",
-        "debit_minor": 523282,
+        "debit_minor": 408097,
         "credit_minor": 0,
         "currency": "EUR",
-        "entity_id": "C-939724",
-        "invoice_id": "INV-520753",
+        "entity_id": "CU/151704",
+        "invoice_id": "SI/2026/647723",
         "payment_id": null
       }
     },
     {
       "op": "add",
       "table": "ledger",
-      "id": "GL-190203",
+      "id": "J/2026/387046",
       "record": {
-        "row_id": "GL-190203",
-        "timestamp": "2025-06-20T18:57:45+05:45",
-        "account": "2900",
-        "debit_minor": 0,
-        "credit_minor": 669439,
-        "currency": "EUR",
-        "entity_id": "C-939724",
-        "invoice_id": null,
-        "payment_id": "RCPT-177094"
-      }
-    },
-    {
-      "op": "add",
-      "table": "ledger",
-      "id": "GL-279601",
-      "record": {
-        "row_id": "GL-279601",
-        "timestamp": "2025-06-19T02:51:12+05:45",
-        "account": "2900",
-        "debit_minor": 0,
-        "credit_minor": 179014,
-        "currency": "EUR",
-        "entity_id": "C-927045",
-        "invoice_id": null,
-        "payment_id": "RCPT-388284"
-      }
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-306909",
-      "field": "credit_minor",
-      "before": 458918,
-      "after": 279148
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-309560",
-      "field": "timestamp",
-      "before": "2025-06-30T23:33:26+05:45",
-      "after": "2025-07-03T15:18:50+05:45"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-318099",
-      "field": "timestamp",
-      "before": "2025-07-01T00:34:27+05:45",
-      "after": "2025-06-30T18:49:27+05:45"
-    },
-    {
-      "op": "add",
-      "table": "ledger",
-      "id": "GL-343866",
-      "record": {
-        "row_id": "GL-343866",
-        "timestamp": "2025-06-10T13:44:00+05:45",
-        "account": "4000",
-        "debit_minor": 0,
-        "credit_minor": 523282,
-        "currency": "EUR",
-        "entity_id": "C-939724",
-        "invoice_id": "INV-520753",
-        "payment_id": null
-      }
-    },
-    {
-      "op": "add",
-      "table": "ledger",
-      "id": "GL-352890",
-      "record": {
-        "row_id": "GL-352890",
-        "timestamp": "2025-06-13T10:24:03+05:45",
-        "account": "2900",
-        "debit_minor": 0,
-        "credit_minor": 189967,
-        "currency": "EUR",
-        "entity_id": "C-504588",
-        "invoice_id": null,
-        "payment_id": "RCPT-968731"
-      }
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-353482",
-      "field": "timestamp",
-      "before": "2025-06-12T17:10:49+05:45",
-      "after": "2025-06-13T14:52:12+05:45"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-353482",
-      "field": "credit_minor",
-      "before": 2111,
-      "after": 3215
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-441027",
-      "field": "credit_minor",
-      "before": 280990,
-      "after": 280130
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-554584",
-      "field": "credit_minor",
-      "before": 354605,
-      "after": 163104
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-579477",
-      "field": "timestamp",
-      "before": "2025-06-30T23:33:26+05:45",
-      "after": "2025-07-03T15:18:50+05:45"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-641722",
-      "field": "debit_minor",
-      "before": 2841,
-      "after": 1307
-    },
-    {
-      "op": "remove",
-      "table": "ledger",
-      "id": "GL-682159",
-      "record": {
-        "row_id": "GL-682159",
-        "timestamp": "2025-06-20T18:57:45+05:45",
-        "account": "1100",
-        "debit_minor": 0,
-        "credit_minor": 672457,
-        "currency": "EUR",
-        "entity_id": "C-939724",
-        "invoice_id": "INV-927065",
-        "payment_id": "RCPT-177094"
-      }
-    },
-    {
-      "op": "add",
-      "table": "ledger",
-      "id": "GL-689986",
-      "record": {
-        "row_id": "GL-689986",
-        "timestamp": "2025-06-26T17:09:49+05:45",
+        "row_id": "J/2026/387046",
+        "timestamp": "2026-05-16T17:19:03+05:45",
         "account": "2000",
         "debit_minor": 0,
-        "credit_minor": 125525,
+        "credit_minor": 192112,
         "currency": "EUR",
-        "entity_id": "S-324401",
-        "invoice_id": "BILL-473100",
+        "entity_id": "SU/361692",
+        "invoice_id": "PI/2026/533800",
         "payment_id": null
       }
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-739929",
+      "id": "J/2026/408697",
       "field": "timestamp",
-      "before": "2025-07-01T00:34:27+05:45",
-      "after": "2025-06-30T18:49:27+05:45"
+      "before": "2026-06-03T18:34:32+05:45",
+      "after": "2026-05-30T13:40:55+05:45"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-746426",
-      "field": "timestamp",
-      "before": "2025-06-12T17:10:49+05:45",
-      "after": "2025-06-13T14:52:12+05:45"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-746426",
-      "field": "debit_minor",
-      "before": 1029689,
-      "after": 1030793
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-882309",
-      "field": "timestamp",
-      "before": "2025-06-03T21:38:31+05:45",
-      "after": "2025-06-06T15:00:07+05:45"
-    },
-    {
-      "op": "set",
-      "table": "ledger",
-      "id": "GL-882309",
+      "id": "J/2026/516627",
       "field": "credit_minor",
-      "before": 573266,
-      "after": 573521
+      "before": 237495,
+      "after": 319624
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-887511",
+      "id": "J/2026/537704",
+      "field": "debit_minor",
+      "before": 3429,
+      "after": 0
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/537704",
+      "field": "credit_minor",
+      "before": 0,
+      "after": 17778
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/558905",
+      "field": "credit_minor",
+      "before": 355503,
+      "after": 71005
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/561779",
       "field": "timestamp",
-      "before": "2025-06-03T21:38:31+05:45",
-      "after": "2025-06-06T15:00:07+05:45"
+      "before": "2026-06-03T18:34:32+05:45",
+      "after": "2026-05-30T13:40:55+05:45"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-887511",
-      "field": "debit_minor",
-      "before": 573266,
-      "after": 573521
+      "id": "J/2026/676855",
+      "field": "timestamp",
+      "before": "2026-06-01T02:57:09+05:45",
+      "after": "2026-05-31T21:12:09+05:45"
     },
     {
       "op": "set",
       "table": "ledger",
-      "id": "GL-902268",
+      "id": "J/2026/687160",
+      "field": "credit_minor",
+      "before": 413,
+      "after": 284
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "J/2026/699740",
+      "record": {
+        "row_id": "J/2026/699740",
+        "timestamp": "2026-05-28T08:20:40+05:45",
+        "account": "1100",
+        "debit_minor": 0,
+        "credit_minor": 222754,
+        "currency": "EUR",
+        "entity_id": "CU/507128",
+        "invoice_id": "SI/2026/258937",
+        "payment_id": "BR/2026/696391"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/835196",
       "field": "debit_minor",
-      "before": 280990,
-      "after": 280130
+      "before": 237495,
+      "after": 319624
+    },
+    {
+      "op": "add",
+      "table": "ledger",
+      "id": "J/2026/900297",
+      "record": {
+        "row_id": "J/2026/900297",
+        "timestamp": "2026-05-10T13:31:26+05:45",
+        "account": "4000",
+        "debit_minor": 0,
+        "credit_minor": 408097,
+        "currency": "EUR",
+        "entity_id": "CU/151704",
+        "invoice_id": "SI/2026/647723",
+        "payment_id": null
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/921388",
+      "field": "debit_minor",
+      "before": 355503,
+      "after": 281576
+    },
+    {
+      "op": "remove",
+      "table": "ledger",
+      "id": "J/2026/935788",
+      "record": {
+        "row_id": "J/2026/935788",
+        "timestamp": "2026-05-28T08:20:40+05:45",
+        "account": "7900",
+        "debit_minor": 326,
+        "credit_minor": 0,
+        "currency": "EUR",
+        "entity_id": "CU/507128",
+        "invoice_id": null,
+        "payment_id": "BR/2026/696391"
+      }
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/984423",
+      "field": "debit_minor",
+      "before": 508514,
+      "after": 508174
+    },
+    {
+      "op": "set",
+      "table": "ledger",
+      "id": "J/2026/994290",
+      "field": "credit_minor",
+      "before": 355503,
+      "after": 281576
     },
     {
       "op": "add",
       "table": "invoices",
-      "id": "DOC-787642",
+      "id": "D/2026/318025",
       "record": {
-        "doc_id": "DOC-787642",
-        "invoice_id": "INV-520753",
+        "doc_id": "D/2026/318025",
+        "invoice_id": "SI/2026/647723",
         "kind": "sales",
-        "entity_id": "C-939724",
-        "issued_at": "2025-06-10T13:44:00+05:45",
-        "due_at": "2025-07-10T23:59:59+05:45",
-        "currency": "GBP",
-        "total_minor": 438535,
+        "entity_id": "CU/151704",
+        "issued_at": "2026-05-10T13:31:26+05:45",
+        "due_at": "2026-06-09T23:59:59+05:45",
+        "currency": "CHF",
+        "total_minor": 393350,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Route planning licence, monthly",
-            "quantity": 2,
-            "unit_price_minor": 29830,
-            "amount_minor": 59660,
-            "ref": "SO-99270-1"
+            "description": "Training workshop seat",
+            "quantity": 8,
+            "unit_price_minor": 11220,
+            "amount_minor": 89760,
+            "ref": "SO-86577-1"
           },
           {
             "line_no": 2,
-            "description": "Data feed subscription",
-            "quantity": 3,
-            "unit_price_minor": 4825,
-            "amount_minor": 14475,
-            "ref": "SO-99270-2"
+            "description": "Pallet storage, per pallet-week",
+            "quantity": 117,
+            "unit_price_minor": 1205,
+            "amount_minor": 140985,
+            "ref": "SO-86577-2"
           },
           {
             "line_no": 3,
             "description": "Cold-chain transport, per trip",
-            "quantity": 5,
-            "unit_price_minor": 72880,
-            "amount_minor": 364400,
-            "ref": "SO-99270-3"
+            "quantity": 1,
+            "unit_price_minor": 80390,
+            "amount_minor": 80390,
+            "ref": "SO-86577-3"
+          },
+          {
+            "line_no": 4,
+            "description": "Packaging film 500 m roll",
+            "quantity": 27,
+            "unit_price_minor": 3045,
+            "amount_minor": 82215,
+            "ref": "SO-86577-4"
           }
         ]
       }
@@ -1181,31 +1229,36 @@
     {
       "op": "add",
       "table": "invoices",
-      "id": "DOC-951744",
+      "id": "D/2026/418187",
       "record": {
-        "doc_id": "DOC-951744",
-        "invoice_id": "BILL-473100",
+        "doc_id": "D/2026/418187",
+        "invoice_id": "PI/2026/533800",
         "kind": "purchase",
-        "entity_id": "S-324401",
-        "issued_at": "2025-06-26T17:09:49+05:45",
-        "due_at": "2025-08-10T23:59:59+05:45",
-        "currency": "EUR",
-        "total_minor": 125525,
+        "entity_id": "SU/361692",
+        "issued_at": "2026-05-16T17:19:03+05:45",
+        "due_at": "2026-05-30T23:59:59+05:45",
+        "currency": "CHF",
+        "total_minor": 185020,
         "line_items": [
           {
             "line_no": 1,
-            "description": "Consulting hours TS-7951",
+            "description": "Fuel card statement FC-53287",
             "quantity": 1,
-            "unit_price_minor": 125525,
-            "amount_minor": 125525,
-            "ref": "TS-7951"
+            "unit_price_minor": 185020,
+            "amount_minor": 185020,
+            "ref": "FC-53287"
           }
         ]
       }
     }
   ],
-  "clean_digest": "aa3e5c79709532c237d54bf9868420d4f1aa78017711e99887086d2a41f2bf44",
-  "clean_records_digest": "36b0f10b495a381e13a436ae121a9a8f38ebb6c8b211dacbbaa0c14daf1489e7",
-  "final_digest": "299fc8f2eb24e66aebf0c3039ddfe4b4e665411512d3ef3887b3c0eff06bc177",
-  "rejected_attempts": []
+  "clean_digest": "9c4fa906051bb7a4512a8490aa10be9e3b1cada123742e858e03313d2248c7e3",
+  "clean_records_digest": "c66f388b152b4e12038f98aad069cf0daf9656f1628267bf01ab5b5038909b35",
+  "final_digest": "226b3ba124e861646b7034723f9bcd2305bc90097e8e79d35e56b6172022dfa9",
+  "rejected_attempts": [
+    {
+      "attempt": 0,
+      "reason": "FX difference below materiality"
+    }
+  ]
 }

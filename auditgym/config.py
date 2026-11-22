@@ -50,9 +50,11 @@ SIZES = {
               "prior_invoices": (3, 5), "target_rows": (220, 420)},
     "medium": {"customers": (10, 15), "suppliers": (7, 10), "sales_invoices": (30, 42), "purchase_invoices": (15, 22),
                "prior_invoices": (5, 8), "target_rows": (600, 1000)},
-    "large": {"customers": (14, 20), "suppliers": (9, 13), "sales_invoices": (40, 50), "purchase_invoices": (18, 24),
+    "large": {"customers": (14, 20), "suppliers": (9, 13), "sales_invoices": (26, 30), "purchase_invoices": (12, 15),
               "prior_invoices": (5, 8), "target_rows": (1500, 2000)},
 }
+# The case suggests 20 to 200 documents and 200 to 2,000 ledger rows per episode. The `large` ranges above give 161 to 198 documents
+# in 40 default-config seeds (before round 10: 198 to 251). The suggestion is not enforced: more errors and distractors add documents.
 DEFAULT_DISTRACTORS = {
     "small": {"recurring": 1, "split_payment": 1, "multi_invoice_payment": 1, "underpayment": 1,
               "midnight_fx": 2, "weekend_fx": 1},

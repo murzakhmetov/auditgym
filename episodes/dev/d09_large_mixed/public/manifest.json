@@ -1,33 +1,33 @@
 {
   "schema_version": "auditgym/1.0",
   "generator_version": "0.4.0",
-  "episode_id": "ep_a7b08a3b29e70704",
+  "episode_id": "ep_97565b5b0bf7ea81",
   "company": {
-    "name": "Marum Agro KK",
+    "name": "Zanon Components Pty Ltd",
     "synthetic": true
   },
   "base_currency": "EUR",
   "currency_exponents": {
     "EUR": 2,
-    "GBP": 2
+    "CHF": 2
   },
-  "period_start": "2025-05-01T00:00:00+09:00",
-  "period_end": "2025-06-01T00:00:00+09:00",
-  "ledger_extract_end": "2025-06-08T00:00:00+09:00",
-  "timezone": "Asia/Tokyo",
+  "period_start": "2025-05-01T00:00:00+10:00",
+  "period_end": "2025-06-01T00:00:00+10:00",
+  "ledger_extract_end": "2025-06-08T00:00:00+10:00",
+  "timezone": "Australia/Sydney",
   "record_counts": {
-    "ledger": 1913,
-    "invoices": 99,
-    "payments": 67,
+    "ledger": 1912,
+    "invoices": 102,
+    "payments": 82,
     "fx": 79
   },
   "document_counts": {
-    "invoices": 99,
-    "payments": 67,
-    "total": 166
+    "invoices": 102,
+    "payments": 82,
+    "total": 184
   },
   "rounding": {
-    "mode": "half_up",
+    "mode": "half_even",
     "fx_conversion": "round(amount_minor * rate * 10^(exp_base - exp_document))"
   },
   "files": [

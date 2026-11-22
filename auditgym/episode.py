@@ -42,6 +42,12 @@ class Episode:
             return aio.fx_id(record)
         return record[TABLE_KEYS[table]]
 
+    def known_ids(self) -> frozenset:
+        """Every ID an agent can read through the tools: ledger row IDs, invoice and payment IDs, document IDs, FX record IDs."""
+        ids = {self.record_key(t, r) for t in ("ledger", "invoices", "payments", "fx") for r in self.table(t)}
+        ids.update(r["doc_id"] for t in ("invoices", "payments") for r in self.table(t))
+        return frozenset(ids)
+
     def public_texts(self) -> dict:
         """Exact file contents of the public part (deterministic)."""
         return {

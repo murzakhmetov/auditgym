@@ -2,13 +2,15 @@
 
 Normalization (applied to findings and to answer-key issues alike):
   * type: exact string from FINDING_TYPES;
-  * affected_ids: each ID stripped of surrounding whitespace, duplicates removed,
-    compared as a set (IDs are case-sensitive);
-  * currency: stripped and upper-cased;
-  * amount: |claimed_amount_minor - expected_amount_minor| <= tolerance_minor;
-  * evidence: IDs stripped; a finding is supported when at least one acceptable
-    evidence set of the issue is a subset of its evidence_ids. Extra or unknown
-    evidence IDs are ignored (they neither help nor invalidate);
+  * affected_ids: exact strings (case and surrounding whitespace count), duplicates
+    removed, compared as a set;
+  * currency: exact string, no case folding and no trimming;
+  * amount: |claimed_amount_minor - expected_amount_minor| <= tolerance_minor
+    (the issue's own `tolerance_minor`, 0 when absent);
+  * evidence: exact strings; a finding is supported when at least one acceptable
+    evidence set of the issue is a subset of its evidence_ids. Extra evidence IDs
+    that exist in the episode are allowed. An evidence ID that does not exist in the
+    episode (when the episode's IDs are known) makes the whole finding unmatchable;
   * aliases: a document may be cited by doc_id or by its invoice_id/payment_id.
     In affected_ids a doc_id is mapped to its invoice_id/payment_id; in
     evidence_ids an invoice_id/payment_id is mapped to its doc_id.
@@ -31,7 +33,7 @@ CRITERIA = ("type", "affected_ids", "currency", "amount", "evidence")
 
 
 def normalize_ids(ids) -> tuple[str, ...]:
-    return tuple(sorted({s.strip() for s in ids if isinstance(s, str) and s.strip()}))
+    return tuple(sorted({s for s in ids if isinstance(s, str) and s.strip()}))
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,7 @@ class NormFinding:
     amount: int
     currency: str
     evidence: frozenset
+    unknown_evidence: bool = False
 
 
 @dataclass(frozen=True)
@@ -55,18 +58,20 @@ class NormIssue:
     evidence_sets: tuple
 
 
-def normalize_finding(index: int, f: dict, aliases: dict | None = None) -> NormFinding:
+def normalize_finding(index: int, f: dict, aliases: dict | None = None, known_ids=None) -> NormFinding:
     doc_to_key = aliases or {}
     key_to_doc = {v: k for k, v in doc_to_key.items()}
-    ids = normalize_ids(doc_to_key.get(s.strip(), s) for s in f["affected_ids"] if isinstance(s, str))
-    evidence = normalize_ids(key_to_doc.get(s.strip(), s) for s in f["evidence_ids"] if isinstance(s, str))
+    ids = normalize_ids(doc_to_key.get(s, s) for s in f["affected_ids"] if isinstance(s, str))
+    evidence = normalize_ids(key_to_doc.get(s, s) for s in f["evidence_ids"] if isinstance(s, str))
+    unknown = known_ids is not None and any(e not in known_ids and doc_to_key.get(e, e) not in known_ids for e in evidence)
     return NormFinding(
         index=index,
         type=f["type"],
         ids=ids,
         amount=int(f["claimed_amount_minor"]),
-        currency=str(f["currency"]).strip().upper(),
+        currency=str(f["currency"]),
         evidence=frozenset(evidence),
+        unknown_evidence=unknown,
     )
 
 
@@ -76,7 +81,7 @@ def normalize_issue(t: dict) -> NormIssue:
         type=t["type"],
         ids=normalize_ids(t["affected_ids"]),
         amount=int(t["expected_amount_minor"]),
-        currency=str(t["currency"]).strip().upper(),
+        currency=str(t["currency"]),
         tolerance=int(t.get("tolerance_minor", 0)),
         evidence_sets=tuple(frozenset(normalize_ids(es)) for es in t["evidence_sets"]),
     )
@@ -92,7 +97,7 @@ def failed_criteria(nf: NormFinding, ni: NormIssue) -> list[str]:
         failed.append("currency")
     if abs(nf.amount - ni.amount) > ni.tolerance:
         failed.append("amount")
-    if not any(es <= nf.evidence for es in ni.evidence_sets):
+    if nf.unknown_evidence or not any(es <= nf.evidence for es in ni.evidence_sets):
         failed.append("evidence")
     return failed
 
@@ -136,8 +141,8 @@ class MatchResult:
         }
 
 
-def match(findings: list[dict], issues: list[dict], aliases: dict | None = None) -> MatchResult:
-    nfs = [normalize_finding(i, f, aliases) for i, f in enumerate(findings)]
+def match(findings: list[dict], issues: list[dict], aliases: dict | None = None, known_ids=None) -> MatchResult:
+    nfs = [normalize_finding(i, f, aliases, known_ids) for i, f in enumerate(findings)]
     nis = sorted((normalize_issue(t) for t in issues), key=lambda t: t.issue_id)
     failures = [[failed_criteria(nf, ni) for ni in nis] for nf in nfs]
     adj = [[j for j in range(len(nis)) if not failures[fi][j]] for fi in range(len(nfs))]

@@ -22,7 +22,7 @@
     {"name": "d06_period_dst_march", "seed": 8579023346120983559, "config": {"size": "medium", "base_currency": "EUR", "timezone": "Europe/Berlin", "period": "2026-03", "errors": {"wrong_period": 2}}},
     {"name": "d07_boundary_negative_offset", "seed": 4716629081574412983, "config": {"size": "medium", "base_currency": "USD", "timezone": "America/Sao_Paulo", "interacting": ["boundary_fx_payment"], "errors": {"duplicate_invoice": 1}}},
     {"name": "d08_both_interacting_kzt", "seed": 1094475830662917303, "config": {"size": "medium", "base_currency": "KZT", "timezone": "Asia/Almaty", "interacting": ["fx_invoice_partial_allocation", "boundary_fx_payment"], "errors": {"wrong_period": 1}}},
-    {"name": "d09_large_mixed", "seed": 995490176340344085, "config": {"size": "large", "counts": {"sales_invoices": 26, "purchase_invoices": 14, "prior_invoices": 5}, "errors": {"duplicate_invoice": 1, "unallocated_payment": 1, "wrong_fx_rate": 1, "wrong_period": 1}}},
-    {"name": "d10_large_dense_quarter_hour", "seed": 7014604041272720841, "config": {"size": "large", "counts": {"sales_invoices": 26, "purchase_invoices": 14, "prior_invoices": 5}, "base_currency": "EUR", "timezone": "Asia/Kathmandu", "errors": {"duplicate_invoice": 2, "unallocated_payment": 2, "wrong_fx_rate": 2, "wrong_period": 2}, "interacting": ["fx_invoice_partial_allocation"]}}
+    {"name": "d09_large_mixed", "seed": 1751537126674979378, "config": {"size": "large", "errors": {"duplicate_invoice": 1, "unallocated_payment": 1, "wrong_fx_rate": 1, "wrong_period": 1}}},
+    {"name": "d10_large_dense_quarter_hour", "seed": 4092808652641781967, "config": {"size": "large", "base_currency": "EUR", "timezone": "Asia/Kathmandu", "errors": {"duplicate_invoice": 2, "unallocated_payment": 2, "wrong_fx_rate": 2, "wrong_period": 2}, "interacting": ["fx_invoice_partial_allocation"]}}
   ]
 }

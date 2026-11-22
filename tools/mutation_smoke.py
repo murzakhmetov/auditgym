@@ -70,6 +70,10 @@ CRED = ("tests.test_credit_receipts",)
 CLI = ("tests.test_cli",)
 PAYTGT = ("tests.test_payment_targets",)
 REGEN = ("tests.test_verify_regenerate",)
+SIZECAP = ("tests.test_preset_size_cap",)
+OUTPATHS = ("tests.test_output_paths",)
+GRADENULL = ("tests.test_grade_null",)
+ADAPTER = ("tests.test_judge_adapter",)
 
 
 def M(id, file, old, new, modules, breaks, equivalent="", only_on=""):
@@ -90,22 +94,25 @@ MUTANTS = [
       "if nf.amount - ni.amount > ni.tolerance:", MATCH, "criterion amount: an under-claim of any size matches"),
     M("matcher-amount-no-tolerance", "auditgym/matcher.py", "if abs(nf.amount - ni.amount) > ni.tolerance:",
       "if abs(nf.amount - ni.amount) > 0:", MATCH, "criterion amount: the per-issue tolerance is ignored"),
-    M("matcher-evidence-overlap", "auditgym/matcher.py", "if not any(es <= nf.evidence for es in ni.evidence_sets):",
-      "if not any(es & nf.evidence for es in ni.evidence_sets):", MATCH,
+    M("matcher-evidence-overlap", "auditgym/matcher.py", "if nf.unknown_evidence or not any(es <= nf.evidence for es in ni.evidence_sets):",
+      "if nf.unknown_evidence or not any(es & nf.evidence for es in ni.evidence_sets):", MATCH,
       "criterion evidence: a partial overlap with an evidence set is enough"),
-    M("matcher-evidence-all-sets", "auditgym/matcher.py", "if not any(es <= nf.evidence for es in ni.evidence_sets):",
-      "if not all(es <= nf.evidence for es in ni.evidence_sets):", MATCH,
+    M("matcher-evidence-all-sets", "auditgym/matcher.py", "if nf.unknown_evidence or not any(es <= nf.evidence for es in ni.evidence_sets):",
+      "if nf.unknown_evidence or not all(es <= nf.evidence for es in ni.evidence_sets):", MATCH,
       "criterion evidence: every acceptable set must be cited, not one"),
-    M("matcher-currency-case", "auditgym/matcher.py", 'currency=str(f["currency"]).strip().upper(),',
-      'currency=str(f["currency"]).strip(),', MATCH, "normalization: the finding's currency is no longer upper-cased"),
-    M("matcher-id-strip", "auditgym/matcher.py", "{s.strip() for s in ids if isinstance(s, str) and s.strip()}",
-      "{s for s in ids if isinstance(s, str) and s.strip()}", MATCH, "normalization: IDs keep surrounding whitespace"),
+    M("matcher-currency-folded", "auditgym/matcher.py", 'currency=str(f["currency"]),',
+      'currency=str(f["currency"]).strip().upper(),', MATCH, "normalization: the finding's currency is trimmed and upper-cased again (exact comparison lost)"),
+    M("matcher-id-trimmed", "auditgym/matcher.py", "{s for s in ids if isinstance(s, str) and s.strip()}",
+      "{s.strip() for s in ids if isinstance(s, str) and s.strip()}", MATCH, "normalization: IDs are trimmed again (exact comparison lost)"),
+    M("matcher-unknown-evidence-ignored", "auditgym/matcher.py", "if nf.unknown_evidence or not any(es <= nf.evidence for es in ni.evidence_sets):",
+      "if not any(es <= nf.evidence for es in ni.evidence_sets):", MATCH,
+      "criterion evidence: an evidence ID that does not exist in the episode no longer makes the finding unmatched"),
     M("matcher-alias-affected", "auditgym/matcher.py",
-      'ids = normalize_ids(doc_to_key.get(s.strip(), s) for s in f["affected_ids"] if isinstance(s, str))',
+      'ids = normalize_ids(doc_to_key.get(s, s) for s in f["affected_ids"] if isinstance(s, str))',
       'ids = normalize_ids(s for s in f["affected_ids"] if isinstance(s, str))', MATCH,
       "alias: a doc_id in affected_ids is no longer mapped to its invoice_id/payment_id"),
     M("matcher-alias-evidence", "auditgym/matcher.py",
-      'evidence = normalize_ids(key_to_doc.get(s.strip(), s) for s in f["evidence_ids"] if isinstance(s, str))',
+      'evidence = normalize_ids(key_to_doc.get(s, s) for s in f["evidence_ids"] if isinstance(s, str))',
       'evidence = normalize_ids(s for s in f["evidence_ids"] if isinstance(s, str))', MATCH,
       "alias: an invoice_id/payment_id in evidence_ids is no longer mapped to its doc_id"),
     # ------------------------------------------------------- matcher: one-to-one matching, tie-break, F1
@@ -571,6 +578,25 @@ MUTANTS = [
       "    if False:", REGEN, "verify --regenerate of an episode written by another generator version fails instead of skipping"),
     M("cli-regenerate-failure-not-fatal", "auditgym/__main__.py", '            rep["ok"] = False\n    if args.json:',
       '            pass\n    if args.json:', REGEN, "a failed regeneration is printed but verify DIR still exits 0"),
+    M("config-large-preset-not-lowered", "auditgym/config.py", '"sales_invoices": (26, 30), "purchase_invoices": (12, 15)',
+      '"sales_invoices": (40, 50), "purchase_invoices": (18, 24)', SIZECAP, "the large preset gives more than 200 documents again"),
+    M("cli-transform-write-not-guarded", "auditgym/__main__.py", "    with _input(broad=True):\n        t.write(Path(args.out))",
+      "    if True:\n        t.write(Path(args.out))", OUTPATHS, "transform to an unwritable output path ends in a traceback"),
+    M("cli-schemas-write-not-guarded", "auditgym/__main__.py", "    with _input(broad=True):\n        paths = write_schemas(Path(args.out))",
+      "    if True:\n        paths = write_schemas(Path(args.out))", OUTPATHS, "schemas into an unwritable folder ends in a traceback"),
+    M("judge-name-envelope-not-translated", "judge_adapter.py",
+      'if isinstance(action, dict) and "name" in action and "action" not in action and set(action) <= {"name", "args"}:',
+      "if False:", ADAPTER, "the {name, args} action envelope of the check definitions is no longer translated"),
+    M("judge-list-records-key", "judge_adapter.py", 'result = {"records": result["rows"], "next_cursor": result["next_cursor"]}',
+      'result = {"rows": result["rows"], "next_cursor": result["next_cursor"]}', ADAPTER, "list_records results carry rows, not records"),
+    M("judge-invalid-score-not-null", "judge_adapter.py", 'return {"tp": None, "fp": None, "fn": None, "precision": None,',
+      'return {"tp": 0, "fp": 0, "fn": 0, "precision": None,', ADAPTER, "an invalid submit reports counts instead of nulls"),
+    M("judge-score-ignores-unknown-evidence", "judge_adapter.py",
+      "    grader = Grader(episode.truth, episode.episode_id, episode.known_ids())\n    if errors:",
+      "    grader = Grader(episode.truth, episode.episode_id)\n    if errors:", ADAPTER,
+      "score_episode no longer treats an evidence ID that is not in the episode as unmatched"),
+    M("cli-grade-null-crashes", "auditgym/__main__.py", "    if sub is None and errors is not None:", "    if sub is None:", GRADENULL,
+      "a findings file holding JSON null ends in an UnboundLocalError"),
 ]
 
 

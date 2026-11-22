@@ -1,12 +1,12 @@
 # auditgym check report
 
-Result: **PASS** in 381 s, version 0.4.0.
+Result: **PASS** in 464 s, version 0.4.0.
 
 Episodes: public master string auditgym-check-v1.
 
 Policy isolation: the host's user (no uid switch on this machine).
 
-Code: code 3e12e2adae32a08ef3dba69d46a8b538ecf7e943a2579d8a54a8f44b7e7c4c64 (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
+Code: code 088761e7a860673fd91718f7a2be562dad052be26de40bf5c6390369e80d363d (60 files), Python 3.11.4, Windows-10-10.0.19045-SP0.
 
 Coverage: 697 named checks of 83 kinds (a kind is one property; most run on every episode they apply to).
 
@@ -41,13 +41,13 @@ Run time: F_contract 0.0 s, E_leaks 0.4 s
 
 #### E_leaks (3/3)
 
-- PASS: 2093 observations contain only the allowed fields
+- PASS: 2089 observations contain only the allowed fields
 - PASS: no answer-key markers in any observation
 - PASS: oracle trajectories are never published
 
 ### 2. Data and answer key (25)
 
-Run time: B_committed_episodes 3.8 s, C_data 4.4 s
+Run time: B_committed_episodes 4.3 s, C_data 4.8 s
 
 #### B_committed_episodes (40/40)
 
@@ -104,7 +104,7 @@ Run time: B_committed_episodes 3.8 s, C_data 4.4 s
 - PASS: h08_interacting verifies (4 issues, 1 attempt(s))
 - PASS: h09_interacting verifies (4 issues, 1 attempt(s))
 - PASS: h10_interacting verifies (4 issues, 1 attempt(s))
-- PASS: h11_mixed verifies (4 issues, 2 attempt(s))
+- PASS: h11_mixed verifies (4 issues, 1 attempt(s))
 - PASS: h12_mixed verifies (4 issues, 2 attempt(s))
 - PASS: h13_mixed verifies (6 issues, 1 attempt(s))
 - PASS: h14_mixed verifies (3 issues, 1 attempt(s))
@@ -114,12 +114,12 @@ Run time: B_committed_episodes 3.8 s, C_data 4.4 s
 - PASS: h18_mixed verifies (3 issues, 1 attempt(s))
 - PASS: h19_mixed verifies (4 issues, 2 attempt(s))
 - PASS: h20_mixed verifies (5 issues, 1 attempt(s))
-- PASS: sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (4 over 20 episodes)
-- PASS: no candidate episode was rejected by a correctness check (4 resampled, all for sampling reasons)
+- PASS: sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (3 over 20 episodes)
+- PASS: no candidate episode was rejected by a correctness check (3 resampled, all for sampling reasons)
 
 ### 3. Reward reliability (25)
 
-Run time: C_reward 23.5 s
+Run time: C_reward 25.9 s
 
 #### C_reward (468/468)
 
@@ -172,7 +172,7 @@ Run time: C_reward 23.5 s
 - PASS: ep_a440890457b68488: 12 credit_receipt accusation(s) each score -1, below silence, and satisfy no key but their own
 - PASS: ep_a440890457b68488: 4 midnight_fx accusation(s) each score -1, below silence, and satisfy no key but their own
 - PASS: ep_a440890457b68488: 3 weekend_fx accusation(s) each score -1, below silence, and satisfy no key but their own
-- PASS: ep_a440890457b68488: 30 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
+- PASS: ep_a440890457b68488: 29 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own
 - PASS: ep_a440890457b68488: saving steps separates equal answers only slightly
 - PASS: ep_f27513fc59411601: silence beats a false accusation on a clean ledger
 - PASS: ep_f27513fc59411601: 2 legit_repeat accusation(s) each score -1, below silence, and satisfy no key but their own
@@ -252,7 +252,7 @@ Run time: C_reward 23.5 s
 - PASS: ep_7bdf200f1642db5a: 7 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_7bdf200f1642db5a: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_7bdf200f1642db5a: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_7bdf200f1642db5a: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_7bdf200f1642db5a: 44 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_7bdf200f1642db5a: saving steps separates equal answers only slightly
 - PASS: ep_3121f32838090bda: correct answer with evidence beats silence
 - PASS: ep_3121f32838090bda: repeating findings gains nothing
@@ -356,7 +356,7 @@ Run time: C_reward 23.5 s
 - PASS: ep_932585a5673f7be6: 3 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_932585a5673f7be6: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_932585a5673f7be6: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_932585a5673f7be6: 35 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_932585a5673f7be6: 33 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_932585a5673f7be6: saving steps separates equal answers only slightly
 - PASS: ep_32d76d1530a9f2e6: correct answer with evidence beats silence
 - PASS: ep_32d76d1530a9f2e6: repeating findings gains nothing
@@ -460,7 +460,7 @@ Run time: C_reward 23.5 s
 - PASS: ep_8a75ee87b2b417f0: 13 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_8a75ee87b2b417f0: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_8a75ee87b2b417f0: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_8a75ee87b2b417f0: 39 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_8a75ee87b2b417f0: 37 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_8a75ee87b2b417f0: saving steps separates equal answers only slightly
 - PASS: ep_a661f328eb0b8e1f: correct answer with evidence beats silence
 - PASS: ep_a661f328eb0b8e1f: repeating findings gains nothing
@@ -486,7 +486,7 @@ Run time: C_reward 23.5 s
 - PASS: ep_a661f328eb0b8e1f: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_a661f328eb0b8e1f: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_a661f328eb0b8e1f: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_a661f328eb0b8e1f: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_a661f328eb0b8e1f: 43 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_a661f328eb0b8e1f: saving steps separates equal answers only slightly
 - PASS: ep_2a1ad532de9525dc: correct answer with evidence beats silence
 - PASS: ep_2a1ad532de9525dc: repeating findings gains nothing
@@ -589,12 +589,12 @@ Run time: C_reward 23.5 s
 - PASS: ep_81239a83867a382e: 9 credit_receipt accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_81239a83867a382e: 4 midnight_fx accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_81239a83867a382e: 3 weekend_fx accusation(s) each cost exactly one false positive and match no answer-key issue
-- PASS: ep_81239a83867a382e: 40 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
+- PASS: ep_81239a83867a382e: 36 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue
 - PASS: ep_81239a83867a382e: saving steps separates equal answers only slightly
 
 ### 4. Reproducibility (15)
 
-Run time: B_replay 1.2 s, D_paired 31.1 s
+Run time: B_replay 1.5 s, D_paired 33.6 s
 
 #### B_replay (10/10)
 
@@ -747,21 +747,21 @@ Run time: B_replay 1.2 s, D_paired 31.1 s
 
 ### 5. Engineering and explanation (10)
 
-Run time: A_unit_tests 316.2 s
+Run time: A_unit_tests 393.1 s
 
 #### A_unit_tests (1/1)
 
-- PASS: unittest: 622 run, 611 passed, 11 skipped
+- PASS: unittest: 670 run, 659 passed, 11 skipped
 
 ## Baselines on the 20 hidden-like episodes (eval mode, isolated agent process)
 
 | split | policy | n | return | soft return | P | R | micro P | micro R | F1 | soft F1 | steps | agent s | closed | return clean | return errors | FP on clean | unobserved citations |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hidden_like | auditor | 20 | 0.9349 | 0.9349 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.55 | 0.0155 | 1.0 | 0.9512 | 0.9295 | 0 | 0.0 |
-| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.0021 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
+| hidden_like | auditor | 20 | 0.9351 | 0.9351 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 32.45 | 0.0158 | 1.0 | 0.9508 | 0.9299 | 0 | 0.0 |
+| hidden_like | flag_all | 20 | -1.0 | -0.9974 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0015 | 3.0 | 0.002 | 0.0 | -1.0 | -1.0 | 150 | 0.0 |
 | hidden_like | oracle | 20 | 1.0 | 1.0 | 0.75 | 0.75 | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 | 0.0 | 1.0 | 1.0 | 1.0 | 0 | 1.0 |
-| hidden_like | random | 20 | -0.715 | -0.715 | 0.0 | 0.0 | 0.0 | 0.0 | 0.15 | 0.15 | 26.55 | 0.0042 | 0.15 | 0.14 | -1.0 | 3 | 0.0 |
-| hidden_like | recon | 20 | -0.6835 | -0.6835 | 0.1174 | 0.4983 | 0.1008 | 0.7143 | 0.1835 | 0.1835 | 32.55 | 0.0094 | 0.0 | -1.0 | -0.578 | 87 | 0.0 |
+| hidden_like | random | 20 | -0.715 | -0.715 | 0.0 | 0.0 | 0.0 | 0.0 | 0.15 | 0.15 | 26.55 | 0.0044 | 0.15 | 0.14 | -1.0 | 3 | 0.0 |
+| hidden_like | recon | 20 | -0.6766 | -0.6766 | 0.1177 | 0.5258 | 0.1049 | 0.7321 | 0.1868 | 0.1868 | 32.45 | 0.0098 | 0.0 | -1.0 | -0.5688 | 83 | 0.0 |
 | hidden_like | silent | 20 | -0.5 | -0.5 | 0.0 | 0.0 | n/a | 0.0 | 0.25 | 0.25 | 0.0 | 0.0002 | 0.25 | 1.0 | -1.0 | 0 | n/a |
 
 P and R are macro means over episodes. A clean episode has no TP, so even a correct empty answer scores P = R = 0 there; this is why macro P/R can be below 1 (the oracle's is, on sets with clean episodes). micro P = sum TP / sum (TP+FP) and micro R = sum TP / sum (TP+FN) pool all episodes and do not have this artefact. soft return is the experimental reward (see the reward table).
@@ -774,28 +774,28 @@ P and R are macro means over episodes. A clean episode has no TP, so even a corr
 | hidden_like | flag_all | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | amount=1, search=55 |
 | hidden_like | oracle | duplicate_invoice=1.0, unallocated_payment=1.0, wrong_fx_rate=1.0, wrong_period=1.0 | - |
 | hidden_like | random | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
-| hidden_like | recon | duplicate_invoice=0.3333, unallocated_payment=1.0, wrong_fx_rate=0.65, wrong_period=0.8125 | not_flagged=16 |
+| hidden_like | recon | duplicate_invoice=0.3333, unallocated_payment=1.0, wrong_fx_rate=0.7, wrong_period=0.8125 | not_flagged=15 |
 | hidden_like | silent | duplicate_invoice=0.0, unallocated_payment=0.0, wrong_fx_rate=0.0, wrong_period=0.0 | search=56 |
 
 **Common vs experimental reward**
 
 | split | policy | common return | experimental (soft) return | difference | F1 | soft F1 |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0.9349 | 0.9349 | 0.0 | 1.0 | 1.0 |
+| hidden_like | auditor | 0.9351 | 0.9351 | 0.0 | 1.0 | 1.0 |
 | hidden_like | flag_all | -1.0 | -0.9974 | 0.0026 | 0.0 | 0.0015 |
 | hidden_like | oracle | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
 | hidden_like | random | -0.715 | -0.715 | 0.0 | 0.15 | 0.15 |
-| hidden_like | recon | -0.6835 | -0.6835 | 0.0 | 0.1835 | 0.1835 |
+| hidden_like | recon | -0.6766 | -0.6766 | 0.0 | 0.1868 | 0.1868 |
 | hidden_like | silent | -0.5 | -0.5 | 0.0 | 0.25 | 0.25 |
 
 **False positives, evidence timing, unobserved citations**
 
 | split | policy | FP | FP causes | mean first full evidence step | issues seen, not flagged | unobserved citations (n / cited) |
 |---|---|---|---|---|---|---|
-| hidden_like | auditor | 0 | - | 24.3929 | 0 / 56 (0.0) | 0 / 249 |
-| hidden_like | flag_all | 600 | boundary_doc=36, credit_receipt=58, legit_repeat=29, midnight_fx=18, multi_invoice_payment=10, near_issue=3, overpayment_refund=12, posting_lag=63, recurring=66, split_payment=44, underpayment=3, unrelated=257, weekend_fx=1 | - | 0 / 56 (0.0) | 0 / 380 |
+| hidden_like | auditor | 0 | - | 23.125 | 0 / 56 (0.0) | 0 / 249 |
+| hidden_like | flag_all | 600 | boundary_doc=49, credit_receipt=51, legit_repeat=34, midnight_fx=22, multi_invoice_payment=7, near_issue=5, overpayment_refund=26, posting_lag=53, recurring=58, split_payment=38, unrelated=252, weekend_fx=5 | - | 0 / 56 (0.0) | 0 / 380 |
 | hidden_like | oracle | 0 | - | - | - | 249 / 249 |
-| hidden_like | random | 28 | boundary_doc=1, credit_receipt=2, null_ref_receipt=1, recurring=1, unrelated=23 | - | 0 / 56 (0.0) | 0 / 89 |
-| hidden_like | recon | 357 | boundary_doc=48, credit_receipt=136, legit_repeat=21, midnight_fx=28, multi_invoice_payment=1, near_issue=3, overpayment_refund=50, posting_lag=8, recurring=7, split_payment=9, unrelated=45, weekend_fx=1 | 24.3929 | 16 / 56 (0.2857) | 0 / 2052 |
+| hidden_like | random | 28 | boundary_doc=1, credit_receipt=1, legit_repeat=1, multi_invoice_payment=1, underpayment=1, unrelated=23 | - | 0 / 56 (0.0) | 0 / 90 |
+| hidden_like | recon | 350 | boundary_doc=48, credit_receipt=135, legit_repeat=24, midnight_fx=28, multi_invoice_payment=1, near_issue=2, null_ref_receipt=1, overpayment_refund=48, posting_lag=10, recurring=7, split_payment=7, unrelated=39 | 23.125 | 15 / 56 (0.2679) | 0 / 2053 |
 | hidden_like | silent | 0 | - | - | 0 / 56 (0.0) | 0 / 0 |
 

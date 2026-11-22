@@ -151,7 +151,7 @@ class AuditEnv:
 
     def _load(self, episode: Episode) -> None:
         self._episode = episode
-        self._grader = Grader(episode.truth, episode.episode_id)
+        self._grader = Grader(episode.truth, episode.episode_id, episode.known_ids())
         self._index = {t: {Episode.record_key(t, r): r for r in episode.table(t)} for t in schemas.TABLES}
         self._docs = {r["doc_id"]: r for t in ("invoices", "payments") for r in episode.table(t)}
         self._steps = 0

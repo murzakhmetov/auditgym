@@ -165,20 +165,20 @@
     {
       "split": "dev",
       "name": "d09_large_mixed",
-      "episode_id": "ep_a7b08a3b29e70704",
+      "episode_id": "ep_97565b5b0bf7ea81",
       "issues": 4,
-      "ledger_rows": 1913,
-      "documents": 166,
+      "ledger_rows": 1912,
+      "documents": 184,
       "attempts": 1
     },
     {
       "split": "dev",
       "name": "d10_large_dense_quarter_hour",
-      "episode_id": "ep_18ea20264e1051f9",
+      "episode_id": "ep_d57841b0f2ae3a02",
       "issues": 10,
-      "ledger_rows": 1759,
-      "documents": 181,
-      "attempts": 1
+      "ledger_rows": 1860,
+      "documents": 189,
+      "attempts": 2
     }
   ]
 }

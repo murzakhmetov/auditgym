@@ -275,7 +275,8 @@ def cmd_check(args) -> int:
 def cmd_build_splits(args) -> int:
     from .splits import write_splits
 
-    index = write_splits()
+    with _input(broad=True):  # an unwritable episodes folder is an error line, not a traceback
+        index = write_splits()
     for e in index:
         print(f"{e['split']}/{e['name']}: {e['episode_id']} issues={e['issues']} rows={e['ledger_rows']} docs={e['documents']}")
     return 0
@@ -288,7 +289,8 @@ def cmd_generate(args) -> int:
     cfg = _load_config(args.config)
     with _input():
         gen = generate_episode(args.seed, cfg, secret=secret)
-    gen.episode.write(Path(args.out))
+    with _input(broad=True):
+        gen.episode.write(Path(args.out))
     print(json.dumps({"episode_id": gen.episode.episode_id, "issues": len(gen.episode.truth["issues"]),
                       "attempts": gen.attempts, "out": str(args.out)}))
     return 0
@@ -471,7 +473,7 @@ def cmd_grade(args) -> int:
 
     sub = coerce_submission(sub)  # same integral-float coercion as env.step, so both paths grade alike
     errors = validate_submission(sub, ep.episode_id)
-    g = Grader(ep.truth, ep.episode_id)
+    g = Grader(ep.truth, ep.episode_id, ep.known_ids())
     if errors:
         rep = g.grade(None, args.steps, "invalid_submission", invalid_errors=errors)
     else:
@@ -494,7 +496,8 @@ def cmd_transform(args) -> int:
         ep = load_episode(Path(args.inp))
         t = transform_episode(ep, permute_seed=args.permute_seed, remap_seed=args.remap_seed, ts_repr=args.ts_repr,
                               rename_seed=args.rename_seed, shift_years=shift)
-    t.write(Path(args.out))
+    with _input(broad=True):
+        t.write(Path(args.out))
     print(json.dumps({"from": ep.episode_id, "to": t.episode_id, "out": str(args.out)}))
     return 0
 
@@ -539,7 +542,8 @@ def cmd_viewer(args) -> int:
     from .viewer.build import build
 
     _require_agent_user()
-    out = build(Path(args.out))
+    with _input(broad=True):
+        out = build(Path(args.out))
     print(f"wrote {out}")
     return 0
 
@@ -547,7 +551,9 @@ def cmd_viewer(args) -> int:
 def cmd_schemas(args) -> int:
     from .schema_files import write_schemas
 
-    for p in write_schemas(Path(args.out)):
+    with _input(broad=True):
+        paths = write_schemas(Path(args.out))
+    for p in paths:
         print(p)
     return 0
 

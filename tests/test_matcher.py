@@ -54,10 +54,27 @@ class MatcherTests(unittest.TestCase):
         self.assertEqual((r.tp, r.fp, r.fn), (2, 1, 0))
         self.assertEqual(r.unmatched[0]["reason"], "duplicate")
 
-    def test_id_normalization_is_set_based_and_strips(self):
-        f = finding("duplicate_invoice", [" INV-2", "INV-1", "INV-1 "], 50000, "eur", ["D1", "D2", "L1", "L2"])
-        r = match([f], ISSUES)
-        self.assertEqual(r.tp, 1)
+    def test_id_normalization_is_set_based(self):
+        f = finding("duplicate_invoice", ["INV-2", "INV-1", "INV-1"], 50000, "EUR", ["D1", "D2", "L1", "L2"])
+        self.assertEqual(match([f], ISSUES).tp, 1)
+
+    def test_ids_and_currency_are_compared_exactly(self):
+        # the check definitions: no trimming, no case folding of IDs or of the currency code
+        for ids, currency in ((["INV-1", "INV-2 "], "EUR"), ([" INV-1", "INV-2"], "EUR"), (["INV-1", "INV-2"], "eur"),
+                              (["INV-1", "INV-2"], "EUR "), (["INV-1", "INV-2"], " EUR")):
+            with self.subTest(ids=ids, currency=currency):
+                r = match([finding("duplicate_invoice", ids, 50000, currency, ["D1", "D2", "L1", "L2"])], ISSUES)
+                self.assertEqual(r.tp, 0)
+
+    def test_an_evidence_id_that_is_not_in_the_episode_makes_the_finding_unmatched(self):
+        f = finding("duplicate_invoice", ["INV-1", "INV-2"], 50000, "EUR", ["D1", "D2", "L1", "L2", "NOPE"])
+        known = {"INV-1", "INV-2", "D1", "D2", "L1", "L2"}
+        self.assertEqual(match([f], ISSUES).tp, 1)  # IDs of the episode unknown: unchanged behaviour
+        r = match([f], ISSUES, None, known)
+        self.assertEqual((r.tp, r.fp), (0, 1))
+        self.assertEqual(r.unmatched[0]["reason"], "evidence")
+        ok = finding("duplicate_invoice", ["INV-1", "INV-2"], 50000, "EUR", ["D1", "D2", "L1", "L2"])
+        self.assertEqual(match([ok], ISSUES, None, known).tp, 1)
 
     def test_ids_are_case_sensitive(self):
         f = finding("duplicate_invoice", ["inv-1", "INV-2"], 50000, "EUR", ["D1", "D2", "L1", "L2"])

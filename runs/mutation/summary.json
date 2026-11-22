@@ -1,7 +1,7 @@
 {
-  "listed": 200,
-  "counted": 200,
-  "killed": 200,
+  "listed": 209,
+  "counted": 209,
+  "killed": 209,
   "survived": 0,
   "equivalent": 0,
   "not_run_here": 0,
@@ -9,7 +9,7 @@
   "platform_only": {
     "policy-path-append": "Windows"
   },
-  "killed_by_existing": 152,
+  "killed_by_existing": 161,
   "killed_by_survivor_tests": 48,
   "test_modules_sha256": {
     "tests.test_check_battery": "c8921028634a4e73ea9a2eb68871594b7d256f8bfc8ca958161de877fd916d70",
@@ -19,11 +19,15 @@
     "tests.test_credit_receipts": "8533b59160d590f0a179cca15aab01c6ca293ee03187152e130da1fcd6bf32a4",
     "tests.test_env": "972531a313ee41de84a411a72c1f8c661f890c74fe6e7787361c832f35187d59",
     "tests.test_generator": "685fbefebe1a606673b64218d769de73f8f6e5c23194a9cbae1e7edf18e8b668",
+    "tests.test_grade_null": "c9f9bbdf7869d7ca030b4608ec725d77aa02a710ba921d95f294cdf917928f25",
     "tests.test_isolation": "02c7e43df0c7d40372dc9ce68633f9978e81dd977ca5cc9d341361df86a27de2",
-    "tests.test_matcher": "de10f3d5c02cc8c8d5ed1cf2c9e30ca503bb9cd1657b1ad120ec84ed6e409b27",
+    "tests.test_judge_adapter": "93b6152cdf1295ba9e83705559b26ff60400d096e3999a83307c86ecc7e4b159",
+    "tests.test_matcher": "63e923e1edb71b82ac4f7f5ce981979ec008d7a45da7a8c572c37a4a3cbe289d",
     "tests.test_mutation_survivors": "6da27d5be1444304ddbd235bbb1c9b3fd7789989f33e1a623ed4c1cde467711b",
+    "tests.test_output_paths": "a52b7957cfb22844715a6da3d5da522980de809fc6b9940d317f19b8cd0ad350",
     "tests.test_payment_targets": "019f65f2fa8aaab1b9a217e3c3e65f3c9444a453e7b25e983d661c6e870feff8",
     "tests.test_posting_lag": "de35444e191a7a44d27fc4d635c3154cde287e221502abaea0c644ac0c27f4f4",
+    "tests.test_preset_size_cap": "d0fe7c9c43c9eb9b6a50ad4e1100a299f05a26a82f0f7289fd9913561a490a5e",
     "tests.test_redteam": "cac1e618be46a9efb6653733b81016289baa52359452974ada0c35ca1fe2c686",
     "tests.test_reward": "4674974d5b02356768b3685fce0807bdefb7393c286c489d3e4ca0e4b61fbc01",
     "tests.test_schemas": "771dd90a1130db2d17eeed6508d8c9fe17e52d92d521618d09d80b1859d1ff3c",
@@ -123,7 +127,7 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "6180bad332f6177084b8b11c6d01f7f5e951f92ab976109a8d0ec924930ef4b5"
+      "sha256": "ad14f9847ebf3ea2a30d5f30e50fec04b9cc453c7f3b6cdfb986ca8aa5793273"
     },
     {
       "id": "matcher-evidence-all-sets",
@@ -136,12 +140,12 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "5432d0a9e3286b0adf3b776292517312de18e8da0a97a5c19c0f421d03d351d0"
+      "sha256": "cb4d69cf853240ad71901bae9cb242dbe450434339c119e11da5a3cd74396eaf"
     },
     {
-      "id": "matcher-currency-case",
+      "id": "matcher-currency-folded",
       "file": "auditgym/matcher.py",
-      "breaks": "normalization: the finding's currency is no longer upper-cased",
+      "breaks": "normalization: the finding's currency is trimmed and upper-cased again (exact comparison lost)",
       "status": "killed",
       "killed_by": "listed tests",
       "tests": [
@@ -149,12 +153,12 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "db9eeb4bd0ed6b0ae04014ffe97166ef91ea311b9084b62e3054fbcda6467905"
+      "sha256": "225a639652c81da5c0bc318185e3335086567cfdbd8121688aa6e6d550c04a68"
     },
     {
-      "id": "matcher-id-strip",
+      "id": "matcher-id-trimmed",
       "file": "auditgym/matcher.py",
-      "breaks": "normalization: IDs keep surrounding whitespace",
+      "breaks": "normalization: IDs are trimmed again (exact comparison lost)",
       "status": "killed",
       "killed_by": "listed tests",
       "tests": [
@@ -162,7 +166,20 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "bdca9acf4a80b09c824119ce50418705cbef4c7f1a7909919477ba5fc9b3270c"
+      "sha256": "9835f3712fdbfaea1ec7250f4a6a7aeb84c316581d4a566a67f32860ea027d22"
+    },
+    {
+      "id": "matcher-unknown-evidence-ignored",
+      "file": "auditgym/matcher.py",
+      "breaks": "criterion evidence: an evidence ID that does not exist in the episode no longer makes the finding unmatched",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_matcher",
+        "tests.test_reward",
+        "tests.test_env"
+      ],
+      "sha256": "b227e91e6dd5d5911814c2af089159cbb54560e3e1629de1f4c002dcc593a5a8"
     },
     {
       "id": "matcher-alias-affected",
@@ -175,7 +192,7 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "7c32785fdbe6417dcd93cc690589933303e02b2aacc64ed97d9e11fe64744c07"
+      "sha256": "d8b6419c486b892d0b7ca1a07dd86b03ee8563cbedd3eb7daf044a017f82a2ea"
     },
     {
       "id": "matcher-alias-evidence",
@@ -188,7 +205,7 @@
         "tests.test_reward",
         "tests.test_env"
       ],
-      "sha256": "66385faabdf22ad2e80cd1b936944f5c5a9023e1acc290d01710ebffd574f64a"
+      "sha256": "9896f6a1238a91e0bad59879812e4fa19d3f8ed157f9b5fb80622222acb24411"
     },
     {
       "id": "matcher-one-to-one",
@@ -2449,6 +2466,94 @@
         "tests.test_verify_regenerate"
       ],
       "sha256": "d0f3f6e8b5c5652d1572e1868f075c24b9ffc9965f27db8701840a5f1346c55d"
+    },
+    {
+      "id": "config-large-preset-not-lowered",
+      "file": "auditgym/config.py",
+      "breaks": "the large preset gives more than 200 documents again",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_preset_size_cap"
+      ],
+      "sha256": "2e0dae1d44356a7dec2a95a0c8b73d977c5dafbcc5a1b5655ae14714c2996145"
+    },
+    {
+      "id": "cli-transform-write-not-guarded",
+      "file": "auditgym/__main__.py",
+      "breaks": "transform to an unwritable output path ends in a traceback",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_output_paths"
+      ],
+      "sha256": "0c27e5b67c08bfbab5f3ba32f28a84f88d80dd03c8b56a6424e4e4475c7f8692"
+    },
+    {
+      "id": "cli-schemas-write-not-guarded",
+      "file": "auditgym/__main__.py",
+      "breaks": "schemas into an unwritable folder ends in a traceback",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_output_paths"
+      ],
+      "sha256": "16eea6df39ed3e50ec5ce2d99a82b81c2137e9585a663bd56575f21c8edaf6e7"
+    },
+    {
+      "id": "judge-name-envelope-not-translated",
+      "file": "judge_adapter.py",
+      "breaks": "the {name, args} action envelope of the check definitions is no longer translated",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_judge_adapter"
+      ],
+      "sha256": "bff2a22de656782bfb69554a17f2ad16130d47983aafd000c34c0a5067746cb4"
+    },
+    {
+      "id": "judge-list-records-key",
+      "file": "judge_adapter.py",
+      "breaks": "list_records results carry rows, not records",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_judge_adapter"
+      ],
+      "sha256": "088f10a57f5a6c3624318c1ec373a040dfb69b8033110f325f72d763e8fdbf1b"
+    },
+    {
+      "id": "judge-invalid-score-not-null",
+      "file": "judge_adapter.py",
+      "breaks": "an invalid submit reports counts instead of nulls",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_judge_adapter"
+      ],
+      "sha256": "aea56e58faf83862a9d1e9b9dae3c609295b8617ab1a78718ab1e525eb506d83"
+    },
+    {
+      "id": "judge-score-ignores-unknown-evidence",
+      "file": "judge_adapter.py",
+      "breaks": "score_episode no longer treats an evidence ID that is not in the episode as unmatched",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_judge_adapter"
+      ],
+      "sha256": "5e1a762e43422226f20c1756562a130d66f0f0f8272aa46a2203bf23cc6285bc"
+    },
+    {
+      "id": "cli-grade-null-crashes",
+      "file": "auditgym/__main__.py",
+      "breaks": "a findings file holding JSON null ends in an UnboundLocalError",
+      "status": "killed",
+      "killed_by": "listed tests",
+      "tests": [
+        "tests.test_grade_null"
+      ],
+      "sha256": "9b5413ec513afa04a10e379aea0ca328ef456e50425a56293a331bace58d9831"
     }
   ]
 }

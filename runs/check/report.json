@@ -1,7 +1,7 @@
 {
   "version": "0.4.0",
   "ok": true,
-  "elapsed_s": 380.6,
+  "elapsed_s": 463.6,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -62,25 +62,25 @@
     }
   },
   "code": {
-    "code_sha256": "3e12e2adae32a08ef3dba69d46a8b538ecf7e943a2579d8a54a8f44b7e7c4c64",
+    "code_sha256": "088761e7a860673fd91718f7a2be562dad052be26de40bf5c6390369e80d363d",
     "code_files": 60,
     "python": "3.11.4",
     "platform": "Windows-10-10.0.19045-SP0"
   },
   "section_seconds": {
-    "A_unit_tests": 316.2,
-    "B_committed_episodes": 3.8,
-    "B_replay": 1.2,
-    "C_data": 4.4,
-    "C_reward": 23.5,
-    "D_paired": 31.1,
+    "A_unit_tests": 393.1,
+    "B_committed_episodes": 4.3,
+    "B_replay": 1.5,
+    "C_data": 4.8,
+    "C_reward": 25.9,
+    "D_paired": 33.6,
     "E_leaks": 0.4,
     "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
       {
-        "check": "unittest: 622 run, 611 passed, 11 skipped",
+        "check": "unittest: 670 run, 659 passed, 11 skipped",
         "ok": true,
         "detail": "failures=0 errors=0 (see runs/check/unittest.log)"
       }
@@ -391,7 +391,7 @@
         "detail": ""
       },
       {
-        "check": "h11_mixed verifies (4 issues, 2 attempt(s))",
+        "check": "h11_mixed verifies (4 issues, 1 attempt(s))",
         "ok": true,
         "detail": ""
       },
@@ -441,14 +441,14 @@
         "detail": ""
       },
       {
-        "check": "sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (4 over 20 episodes)",
+        "check": "sampling resamples (SampleRetry, BooksError or a sampling check) stay rare (3 over 20 episodes)",
         "ok": true,
         "detail": ""
       },
       {
-        "check": "no candidate episode was rejected by a correctness check (4 resampled, all for sampling reasons)",
+        "check": "no candidate episode was rejected by a correctness check (3 resampled, all for sampling reasons)",
         "ok": true,
-        "detail": "4 sampling (SampleRetry or BooksError 4, budget_feasible or no_surface_tells 0), 0 correctness"
+        "detail": "3 sampling (SampleRetry or BooksError 3, budget_feasible or no_surface_tells 0), 0 correctness"
       }
     ],
     "C_reward": [
@@ -470,12 +470,12 @@
       {
         "check": "ordering: oracle > auditor > recon > flag_all",
         "ok": true,
-        "detail": "{\"auditor\": 0.9349, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.715, \"recon\": -0.6835, \"silent\": -0.5}"
+        "detail": "{\"auditor\": 0.9351, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.715, \"recon\": -0.6766, \"silent\": -0.5}"
       },
       {
         "check": "ordering on error episodes only: auditor > recon >= flag_all",
         "ok": true,
-        "detail": "{\"random\": -1.0, \"recon\": -0.5780063696230681, \"flag_all\": -1.0, \"silent\": -1.0, \"oracle\": 1.0, \"auditor\": 0.9294666666666668}"
+        "detail": "{\"random\": -1.0, \"recon\": -0.5687598549800018, \"flag_all\": -1.0, \"silent\": -1.0, \"oracle\": 1.0, \"auditor\": 0.9298666666666666}"
       },
       {
         "check": "random explorer stays far below the auditor",
@@ -485,7 +485,7 @@
       {
         "check": "ordering: auditor > silent",
         "ok": true,
-        "detail": "{\"auditor\": 0.9349, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.715, \"recon\": -0.6835, \"silent\": -0.5}"
+        "detail": "{\"auditor\": 0.9351, \"flag_all\": -1.0, \"oracle\": 1.0, \"random\": -0.715, \"recon\": -0.6766, \"silent\": -0.5}"
       },
       {
         "check": "every run finishes inside 100 steps and 60 s",
@@ -698,7 +698,7 @@
         "detail": "silence 1.0"
       },
       {
-        "check": "ep_a440890457b68488: 30 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own",
+        "check": "ep_a440890457b68488: 29 posting_lag accusation(s) each score -1, below silence, and satisfy no key but their own",
         "ok": true,
         "detail": "silence 1.0"
       },
@@ -1098,9 +1098,9 @@
         "detail": "3 checked, answer alone 1.0"
       },
       {
-        "check": "ep_7bdf200f1642db5a: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "check": "ep_7bdf200f1642db5a: 44 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
         "ok": true,
-        "detail": "42 checked, answer alone 1.0"
+        "detail": "44 checked, answer alone 1.0"
       },
       {
         "check": "ep_7bdf200f1642db5a: saving steps separates equal answers only slightly",
@@ -1618,9 +1618,9 @@
         "detail": "3 checked, answer alone 1.0"
       },
       {
-        "check": "ep_932585a5673f7be6: 35 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "check": "ep_932585a5673f7be6: 33 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
         "ok": true,
-        "detail": "35 checked, answer alone 1.0"
+        "detail": "33 checked, answer alone 1.0"
       },
       {
         "check": "ep_932585a5673f7be6: saving steps separates equal answers only slightly",
@@ -2138,9 +2138,9 @@
         "detail": "3 checked, answer alone 1.0"
       },
       {
-        "check": "ep_8a75ee87b2b417f0: 39 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "check": "ep_8a75ee87b2b417f0: 37 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
         "ok": true,
-        "detail": "39 checked, answer alone 1.0"
+        "detail": "37 checked, answer alone 1.0"
       },
       {
         "check": "ep_8a75ee87b2b417f0: saving steps separates equal answers only slightly",
@@ -2268,9 +2268,9 @@
         "detail": "3 checked, answer alone 1.0"
       },
       {
-        "check": "ep_a661f328eb0b8e1f: 42 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "check": "ep_a661f328eb0b8e1f: 43 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
         "ok": true,
-        "detail": "42 checked, answer alone 1.0"
+        "detail": "43 checked, answer alone 1.0"
       },
       {
         "check": "ep_a661f328eb0b8e1f: saving steps separates equal answers only slightly",
@@ -2783,9 +2783,9 @@
         "detail": "3 checked, answer alone 1.0"
       },
       {
-        "check": "ep_81239a83867a382e: 40 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
+        "check": "ep_81239a83867a382e: 36 posting_lag accusation(s) each cost exactly one false positive and match no answer-key issue",
         "ok": true,
-        "detail": "40 checked, answer alone 1.0"
+        "detail": "36 checked, answer alone 1.0"
       },
       {
         "check": "ep_81239a83867a382e: saving steps separates equal answers only slightly",
@@ -2982,27 +2982,27 @@
       {
         "check": "h03_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h03_clean {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h03_clean {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h03_clean {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h03_clean {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.916->0.916 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h04_clean {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
@@ -3082,27 +3082,27 @@
       {
         "check": "h07_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.904->0.904 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h07_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.904->0.904 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h07_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.904->0.904 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h07_interacting {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.904->0.904 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h07_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.904->0.904 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h08_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
@@ -3157,27 +3157,27 @@
       {
         "check": "h10_interacting {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h10_interacting {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h10_interacting {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h10_interacting {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h10_interacting {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h11_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
@@ -3332,27 +3332,27 @@
       {
         "check": "h17_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h17_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h17_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h17_mixed {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h17_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.912->0.912 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.914->0.914 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h18_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
@@ -3382,52 +3382,52 @@
       {
         "check": "h19_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h19_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h19_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h19_mixed {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h19_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.906->0.906 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h20_mixed {'permute_seed': 11, 'remap_seed': 5}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h20_mixed {'permute_seed': 7, 'remap_seed': 9, 'ts_repr': 'mixed', 'rename_seed': 21}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h20_mixed {'remap_seed': 3, 'ts_repr': 'utc'}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h20_mixed {'shift_years': 28}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h20_mixed {'shift_years': 28, 'permute_seed': 4, 'remap_seed': 6, 'ts_repr': 'local', 'rename_seed': 8}: oracle answer and reward preserved",
         "ok": true,
-        "detail": "oracle 1.0->1.0 auditor 0.91->0.91 same matched issues+amounts=True verify=[]"
+        "detail": "oracle 1.0->1.0 auditor 0.908->0.908 same matched issues+amounts=True verify=[]"
       },
       {
         "check": "h06_interacting {'permute_seed': 13}: oracle answer and reward preserved",
@@ -3462,7 +3462,7 @@
     ],
     "E_leaks": [
       {
-        "check": "2093 observations contain only the allowed fields",
+        "check": "2089 observations contain only the allowed fields",
         "ok": true,
         "detail": "0 bad"
       },
@@ -3585,19 +3585,19 @@
       "split": "hidden_like",
       "policy": "auditor",
       "episodes": 20,
-      "return": 0.9349,
-      "return_experimental": 0.9349,
+      "return": 0.9351,
+      "return_experimental": 0.9351,
       "precision": 0.75,
       "recall": 0.75,
       "f1": 1.0,
-      "steps": 32.55,
-      "agent_time_s": 0.0155,
+      "steps": 32.45,
+      "agent_time_s": 0.0158,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
-      "return_clean": 0.9512,
-      "return_with_errors": 0.9295,
-      "return_interacting": 0.9356,
+      "return_clean": 0.9508,
+      "return_with_errors": 0.9299,
+      "return_interacting": 0.9364,
       "false_positives_on_clean": 0,
       "soft_f1": 1.0,
       "tp": 56,
@@ -3609,7 +3609,7 @@
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {},
-      "mean_first_full_evidence_step": 24.3929,
+      "mean_first_full_evidence_step": 23.125,
       "issues_total": 56,
       "issues_seen_not_flagged": 0,
       "seen_not_flagged_share": 0.0,
@@ -3631,7 +3631,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0021,
+      "agent_time_s": 0.002,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3649,19 +3649,18 @@
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {
-        "boundary_doc": 36,
-        "credit_receipt": 58,
-        "legit_repeat": 29,
-        "midnight_fx": 18,
-        "multi_invoice_payment": 10,
-        "near_issue": 3,
-        "overpayment_refund": 12,
-        "posting_lag": 63,
-        "recurring": 66,
-        "split_payment": 44,
-        "underpayment": 3,
-        "unrelated": 257,
-        "weekend_fx": 1
+        "boundary_doc": 49,
+        "credit_receipt": 51,
+        "legit_repeat": 34,
+        "midnight_fx": 22,
+        "multi_invoice_payment": 7,
+        "near_issue": 5,
+        "overpayment_refund": 26,
+        "posting_lag": 53,
+        "recurring": 58,
+        "split_payment": 38,
+        "unrelated": 252,
+        "weekend_fx": 5
       },
       "mean_first_full_evidence_step": null,
       "issues_total": 56,
@@ -3728,7 +3727,7 @@
       "recall": 0.0,
       "f1": 0.15,
       "steps": 26.55,
-      "agent_time_s": 0.0042,
+      "agent_time_s": 0.0044,
       "closed_share": 0.15,
       "invalid": 0,
       "truncated": 0,
@@ -3742,14 +3741,15 @@
       "fn": 56,
       "micro_precision": 0.0,
       "micro_recall": 0.0,
-      "n_cited": 89,
+      "n_cited": 90,
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {
         "boundary_doc": 1,
-        "credit_receipt": 2,
-        "null_ref_receipt": 1,
-        "recurring": 1,
+        "credit_receipt": 1,
+        "legit_repeat": 1,
+        "multi_invoice_payment": 1,
+        "underpayment": 1,
         "unrelated": 23
       },
       "mean_first_full_evidence_step": null,
@@ -3770,55 +3770,55 @@
       "split": "hidden_like",
       "policy": "recon",
       "episodes": 20,
-      "return": -0.6835,
-      "return_experimental": -0.6835,
-      "precision": 0.1174,
-      "recall": 0.4983,
-      "f1": 0.1835,
-      "steps": 32.55,
-      "agent_time_s": 0.0094,
+      "return": -0.6766,
+      "return_experimental": -0.6766,
+      "precision": 0.1177,
+      "recall": 0.5258,
+      "f1": 0.1868,
+      "steps": 32.45,
+      "agent_time_s": 0.0098,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
       "return_clean": -1.0,
-      "return_with_errors": -0.578,
-      "return_interacting": -0.6614,
-      "false_positives_on_clean": 87,
-      "soft_f1": 0.1835,
-      "tp": 40,
-      "fp": 357,
-      "fn": 16,
-      "micro_precision": 0.1008,
-      "micro_recall": 0.7143,
-      "n_cited": 2052,
+      "return_with_errors": -0.5688,
+      "return_interacting": -0.6434,
+      "false_positives_on_clean": 83,
+      "soft_f1": 0.1868,
+      "tp": 41,
+      "fp": 350,
+      "fn": 15,
+      "micro_precision": 0.1049,
+      "micro_recall": 0.7321,
+      "n_cited": 2053,
       "n_cited_unobserved": 0,
       "unobserved_citation_share": 0.0,
       "fp_causes": {
         "boundary_doc": 48,
-        "credit_receipt": 136,
-        "legit_repeat": 21,
+        "credit_receipt": 135,
+        "legit_repeat": 24,
         "midnight_fx": 28,
         "multi_invoice_payment": 1,
-        "near_issue": 3,
-        "overpayment_refund": 50,
-        "posting_lag": 8,
+        "near_issue": 2,
+        "null_ref_receipt": 1,
+        "overpayment_refund": 48,
+        "posting_lag": 10,
         "recurring": 7,
-        "split_payment": 9,
-        "unrelated": 45,
-        "weekend_fx": 1
+        "split_payment": 7,
+        "unrelated": 39
       },
-      "mean_first_full_evidence_step": 24.3929,
+      "mean_first_full_evidence_step": 23.125,
       "issues_total": 56,
-      "issues_seen_not_flagged": 16,
-      "seen_not_flagged_share": 0.2857,
+      "issues_seen_not_flagged": 15,
+      "seen_not_flagged_share": 0.2679,
       "recall_by_type": {
         "duplicate_invoice": 0.3333,
         "unallocated_payment": 1.0,
-        "wrong_fx_rate": 0.65,
+        "wrong_fx_rate": 0.7,
         "wrong_period": 0.8125
       },
       "miss_reasons": {
-        "not_flagged": 16
+        "not_flagged": 15
       }
     },
     "hidden_like/silent": {

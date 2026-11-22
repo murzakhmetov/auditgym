@@ -21,12 +21,12 @@
       "recomputed": 36
     },
     "wrong_period / disbursement": {
-      "issues": 16,
-      "recomputed": 16
+      "issues": 17,
+      "recomputed": 17
     },
     "wrong_period / invoice": {
-      "issues": 21,
-      "recomputed": 21
+      "issues": 20,
+      "recomputed": 20
     },
     "wrong_period / receipt": {
       "issues": 45,
