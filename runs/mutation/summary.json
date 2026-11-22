@@ -24,7 +24,7 @@
     "tests.test_judge_adapter": "93b6152cdf1295ba9e83705559b26ff60400d096e3999a83307c86ecc7e4b159",
     "tests.test_matcher": "63e923e1edb71b82ac4f7f5ce981979ec008d7a45da7a8c572c37a4a3cbe289d",
     "tests.test_mutation_survivors": "6da27d5be1444304ddbd235bbb1c9b3fd7789989f33e1a623ed4c1cde467711b",
-    "tests.test_output_paths": "a52b7957cfb22844715a6da3d5da522980de809fc6b9940d317f19b8cd0ad350",
+    "tests.test_output_paths": "26d93124e4fe39781dd11dad258188133d97df41288cb31a3eca0b00b9596e78",
     "tests.test_payment_targets": "019f65f2fa8aaab1b9a217e3c3e65f3c9444a453e7b25e983d661c6e870feff8",
     "tests.test_posting_lag": "de35444e191a7a44d27fc4d635c3154cde287e221502abaea0c644ac0c27f4f4",
     "tests.test_preset_size_cap": "d0fe7c9c43c9eb9b6a50ad4e1100a299f05a26a82f0f7289fd9913561a490a5e",
