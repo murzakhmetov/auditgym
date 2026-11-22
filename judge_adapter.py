@@ -88,9 +88,33 @@ def _load(episode_dir, with_grader: bool = True) -> Episode:
     return episode
 
 
+def _generator_config(config) -> dict:
+    """The generator config from what a caller passes: the config itself, or a reset-style envelope with `team_config`
+    (the keys `mode` and `episode_dir` of that envelope are not generator keys and are dropped)."""
+    cfg = dict(config or {})
+    team = cfg.pop("team_config", None)
+    cfg.pop("mode", None)
+    cfg.pop("episode_dir", None)
+    if isinstance(team, dict):
+        cfg.update(team)
+    return cfg
+
+
+def _with_known_types(submission):
+    """A copy of the submission whose unknown finding type strings are replaced by a known one, for the structure check only:
+    the check definitions treat a well-formed finding of an unknown type as unmatched (one FP), not as a structural error."""
+    probe = copy.deepcopy(submission)
+    findings = probe.get("findings") if isinstance(probe, dict) else None
+    if isinstance(findings, list):
+        for f in findings:
+            if isinstance(f, dict) and isinstance(f.get("type"), str) and f["type"] not in schemas.FINDING_TYPES:
+                f["type"] = schemas.FINDING_TYPES[0]
+    return probe
+
+
 def generate_episode(seed: int, config: dict, output_dir: str) -> None:
     """Generate one episode with the team's generator and write it, flat, into output_dir."""
-    gen = _generate(seed, dict(config or {}))
+    gen = _generate(seed, _generator_config(config))
     out = Path(output_dir)
     with tempfile.TemporaryDirectory() as tmp:
         gen.episode.write(Path(tmp) / "ep")
@@ -180,7 +204,7 @@ def score_episode(episode_dir: str, findings: dict, inspection_steps: int) -> di
     an invalid one returns return = -1 with every other field null (the reason is in the grader's own report)."""
     episode = _load(episode_dir)
     submission = schemas.coerce_submission(copy.deepcopy(findings))
-    errors = schemas.validate_submission(submission, episode.episode_id)
+    errors = schemas.validate_submission(_with_known_types(submission), episode.episode_id)
     grader = Grader(episode.truth, episode.episode_id, episode.known_ids())
     if errors:
         grader.grade(None, int(inspection_steps), "invalid_submission", invalid_errors=errors)
