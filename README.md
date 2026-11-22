@@ -78,24 +78,24 @@ PASS in 422 s; report: runs/check/report.md
 
 Version 0.4.0 changes every episode: `GENERATOR_VERSION` follows the package version and enters `episode_id`, so a seed and config that gave one episode under 0.3.0 give another. The 20 committed episodes, their IDs and every record under `runs/` except the CI excerpts in `runs/ci` were regenerated for it.
 
-At commit `3da276e` it runs **697 named checks of 83 kinds** (a kind is one property; most run on every episode they apply to). One of them runs the **670 unit tests**. The report header carries a code stamp ([DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks)). Measured runs (the local row is at `3da276e`; the CI rows are CI run 45042327148 on `c493dbe`, 670 tests, cited in [runs/ci/45042327148.txt](runs/ci/45042327148.txt)):
+At commit `3da276e` it runs **697 named checks of 83 kinds** (a kind is one property; most run on every episode they apply to). One of them runs the **670 unit tests**. The report header carries a code stamp ([DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks)). Measured runs (the local row is at `3da276e`; the CI rows are CI run 45052869120 on `6481f0b`, 673 tests, cited in [runs/ci/45052869120.txt](runs/ci/45052869120.txt)):
 
 | Where | Unit tests passed / skipped | `check` result |
 |---|---|---|
 | Windows 10, Python 3.11.4 (local, the committed report) | 659 / 11 | `PASS in 422 s` |
-| CI windows-latest, Python 3.11 | 659 / 11 | `PASS in 232 s` |
-| CI ubuntu, Python 3.11 / 3.12 / 3.13 | 647 / 23 | `PASS in` 235 / 160 / 251 s |
-| CI macOS, Python 3.11 | 644 / 26 | `PASS in 241 s` |
-| CI container (`--network none`, 2 CPU, 4 GB); the same in strict mode | 652 / 18 | `PASS in 239 s`; strict mode `PASS in 242 s` |
-| CI container, `--user 10001` | 646 / 24 | `PASS in 233 s` |
-| CI container, `--cap-drop ALL` | 644 / 26 | `PASS in 233 s` |
+| CI windows-latest, Python 3.11 | 662 / 11 | `PASS in 273 s` |
+| CI ubuntu, Python 3.11 / 3.12 / 3.13 | 650 / 23 | `PASS in` 223 / 171 / 246 s |
+| CI macOS, Python 3.11 | 647 / 26 | `PASS in 195 s` |
+| CI container (`--network none`, 2 CPU, 4 GB); the same in strict mode | 655 / 18 | `PASS in 247 s`; strict mode `PASS in 247 s` |
+| CI container, `--user 10001` | 649 / 24 | `PASS in 240 s` |
+| CI container, `--cap-drop ALL` | 647 / 26 | `PASS in 241 s` |
 | CI container, closed path (mounted seeds file, strict mode) | not run | `PASS in 3 s` |
 | CI container, strict mode with `--cap-drop ALL` | not run | exit 2 with one `error:` line |
 | CI container, a custom policy next to an answer key under `--cap-drop ALL` | not run | exit 2 with one `error: custom policy` line |
 
-Skips depend on the platform and the container mode; the list is in [DESIGN §13](docs/DESIGN.md#13-continuous-integration). CI run 45042327148 on `c493dbe` (670 tests) is the latest and is green on all six jobs. The container steps of the official check, strict mode and the closed path print the report line `Policy isolation: separate user (uid 10002).`, so the report written in the image shows that the policy ran as a separate user. That report, written by the official check in the image in CI run 45042327148 ([excerpt](runs/ci/45042327148.txt)), is committed as [runs/check_container/report.md](runs/check_container/report.md) (Linux, Python 3.11.10, code stamp `088761e7…`, the code of `8f4c17a`; the final code differs from it only in the agent-facing task text of `auditgym/task.py`).
+Skips depend on the platform and the container mode; the list is in [DESIGN §13](docs/DESIGN.md#13-continuous-integration). CI run 45052869120 on `6481f0b` (673 tests) is the latest and is green on all six jobs. The container steps of the official check, strict mode and the closed path print the report line `Policy isolation: separate user (uid 10002).`, so the report written in the image shows that the policy ran as a separate user. That report, written by the official check in the image in CI run 45042327148 ([excerpt](runs/ci/45042327148.txt)), is committed as [runs/check_container/report.md](runs/check_container/report.md) (Linux, Python 3.11.10, code stamp `088761e7…`, the code of `8f4c17a`; the final code differs from it only in the agent-facing task text of `auditgym/task.py`).
 
-The cited lines are in [runs/ci/45042327148.txt](runs/ci/45042327148.txt), made with [tools/ci_excerpt.py](tools/ci_excerpt.py); the conclusion of every job and step is in [runs/ci/45042327148.jobs.json](runs/ci/45042327148.jobs.json). The `PASS in` times are the check's own, and whole jobs take longer. The container job also runs `python -m auditgym.redteam --parent` in three modes (default image, `--user 10001`, `--cap-drop ALL`). The full log is not committed.
+The cited lines are in [runs/ci/45052869120.txt](runs/ci/45052869120.txt), made with [tools/ci_excerpt.py](tools/ci_excerpt.py); the conclusion of every job and step is in [runs/ci/45052869120.jobs.json](runs/ci/45052869120.jobs.json). The `PASS in` times are the check's own, and whole jobs take longer. The container job also runs `python -m auditgym.redteam --parent` in three modes (default image, `--user 10001`, `--cap-drop ALL`). The full log is not committed.
 
 ```bash
 python -m auditgym demo
