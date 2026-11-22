@@ -11,9 +11,9 @@
 |---|---|---|
 | duplicate_invoice / pair | 64 | 64 |
 | unallocated_payment / receipt | 82 | 82 |
-| wrong_fx_rate / disbursement | 11 | 11 |
-| wrong_fx_rate / invoice | 32 | 32 |
+| wrong_fx_rate / disbursement | 10 | 10 |
+| wrong_fx_rate / invoice | 33 | 33 |
 | wrong_fx_rate / receipt | 36 | 36 |
-| wrong_period / disbursement | 17 | 17 |
+| wrong_period / disbursement | 16 | 16 |
 | wrong_period / invoice | 21 | 21 |
-| wrong_period / receipt | 44 | 44 |
+| wrong_period / receipt | 45 | 45 |

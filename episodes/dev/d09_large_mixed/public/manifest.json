@@ -1,31 +1,30 @@
 {
   "schema_version": "auditgym/1.0",
   "generator_version": "0.4.0",
-  "episode_id": "ep_de177c210c3fa8e0",
+  "episode_id": "ep_a7b08a3b29e70704",
   "company": {
-    "name": "Astix Pharma Pty Ltd",
+    "name": "Marum Agro KK",
     "synthetic": true
   },
-  "base_currency": "GBP",
+  "base_currency": "EUR",
   "currency_exponents": {
-    "GBP": 2,
-    "USD": 2,
-    "CHF": 2
+    "EUR": 2,
+    "GBP": 2
   },
-  "period_start": "2025-06-01T00:00:00+10:00",
-  "period_end": "2025-07-01T00:00:00+10:00",
-  "ledger_extract_end": "2025-07-08T00:00:00+10:00",
-  "timezone": "Australia/Sydney",
+  "period_start": "2025-05-01T00:00:00+09:00",
+  "period_end": "2025-06-01T00:00:00+09:00",
+  "ledger_extract_end": "2025-06-08T00:00:00+09:00",
+  "timezone": "Asia/Tokyo",
   "record_counts": {
-    "ledger": 1899,
-    "invoices": 124,
-    "payments": 92,
-    "fx": 145
+    "ledger": 1913,
+    "invoices": 99,
+    "payments": 67,
+    "fx": 79
   },
   "document_counts": {
-    "invoices": 124,
-    "payments": 92,
-    "total": 216
+    "invoices": 99,
+    "payments": 67,
+    "total": 166
   },
   "rounding": {
     "mode": "half_up",

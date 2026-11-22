@@ -1,7 +1,7 @@
 {
   "version": "0.4.0",
   "ok": true,
-  "elapsed_s": 401.9,
+  "elapsed_s": 419.7,
   "source": "public master string auditgym-check-v1",
   "counts": {
     "A_unit_tests": {
@@ -62,20 +62,20 @@
     }
   },
   "code": {
-    "code_sha256": "532171e7cf3cf3cc23a5a97dc46fced6787fab48b49e1cd3821685f045d63b1a",
+    "code_sha256": "2b6130fb32cc6c3f3a4d4e09e0917283f517e71095253af45f7cfc18ce551007",
     "code_files": 60,
     "python": "3.11.4",
     "platform": "Windows-10-10.0.19045-SP0"
   },
   "section_seconds": {
-    "A_unit_tests": 338.1,
-    "B_committed_episodes": 3.7,
-    "B_replay": 1.3,
-    "C_data": 4.5,
-    "C_reward": 22.9,
-    "D_paired": 31.1,
+    "A_unit_tests": 350.4,
+    "B_committed_episodes": 4.2,
+    "B_replay": 1.4,
+    "C_data": 4.7,
+    "C_reward": 25.6,
+    "D_paired": 32.9,
     "E_leaks": 0.4,
-    "F_contract": 0.1
+    "F_contract": 0.0
   },
   "sections": {
     "A_unit_tests": [
@@ -3591,7 +3591,7 @@
       "recall": 0.75,
       "f1": 1.0,
       "steps": 32.55,
-      "agent_time_s": 0.0156,
+      "agent_time_s": 0.0158,
       "closed_share": 1.0,
       "invalid": 0,
       "truncated": 0,
@@ -3631,7 +3631,7 @@
       "recall": 0.0,
       "f1": 0.0,
       "steps": 3.0,
-      "agent_time_s": 0.0021,
+      "agent_time_s": 0.0025,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
@@ -3728,7 +3728,7 @@
       "recall": 0.0,
       "f1": 0.15,
       "steps": 26.55,
-      "agent_time_s": 0.0037,
+      "agent_time_s": 0.0038,
       "closed_share": 0.15,
       "invalid": 0,
       "truncated": 0,
@@ -3776,7 +3776,7 @@
       "recall": 0.4983,
       "f1": 0.1835,
       "steps": 32.55,
-      "agent_time_s": 0.0097,
+      "agent_time_s": 0.0103,
       "closed_share": 0.0,
       "invalid": 0,
       "truncated": 0,
