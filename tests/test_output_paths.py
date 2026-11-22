@@ -30,8 +30,9 @@ class OutputPathTests(unittest.TestCase):
     def assert_error_line(self, r):
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertNotIn("Traceback", r.stderr)
-        self.assertTrue(r.stderr.startswith("error:"), r.stderr)
-        self.assertEqual(len(r.stderr.strip().splitlines()), 1, r.stderr)
+        # a host that is not root may print a "policy runs as the host user" warning first: exactly one error line is the contract
+        errors = [ln for ln in r.stderr.splitlines() if ln.startswith("error:")]
+        self.assertEqual(len(errors), 1, r.stderr)
 
     def test_transform_out_is_an_existing_file(self):
         self.assert_error_line(run("transform", "--in", str(T03), "--out", str(self.blocker), "--remap-seed", "7"))
