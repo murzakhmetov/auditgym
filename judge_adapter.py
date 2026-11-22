@@ -28,6 +28,8 @@ from __future__ import annotations
 import copy
 import json
 import shutil
+import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -194,6 +196,28 @@ class JudgeEnv:
         return {k: v for k, v in info.items() if k in ("episode_id", "final")}
 
 
+def verify_episode(episode_dir: str, regenerate: bool = False) -> tuple:
+    """Run the repository's `verify` on an episode directory in either layout; the flat layout that generate_episode writes is
+    staged into public/ + grader/ first. Returns (exit code, stdout); with regenerate=True the episode is also regenerated from
+    provenance.json and compared file by file."""
+    root = Path(episode_dir)
+    with tempfile.TemporaryDirectory() as tmp:
+        target = root
+        if not (root / "public" / "manifest.json").is_file():
+            target = Path(tmp) / "ep"
+            (target / "public").mkdir(parents=True)
+            (target / "grader").mkdir()
+            for name in OPEN_FILES:
+                shutil.copyfile(root / name, target / "public" / name)
+            for name in CLOSED_FILES:
+                if (root / name).is_file():
+                    shutil.copyfile(root / name, target / "grader" / name)
+        cmd = [sys.executable, "-m", "auditgym", "verify", str(target)] + (["--regenerate"] if regenerate else [])
+        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parent), capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=300)
+        return res.returncode, res.stdout
+
+
 def make_env() -> JudgeEnv:
     return JudgeEnv()
 
@@ -214,10 +238,14 @@ def score_episode(episode_dir: str, findings: dict, inspection_steps: int) -> di
             "recall": report["recall"], "f1": report["f1"], "return": report["reward"]}
 
 
-__all__ = ["generate_episode", "make_env", "score_episode", "JudgeEnv"]
+__all__ = ["generate_episode", "make_env", "score_episode", "verify_episode", "JudgeEnv"]
+
+if __name__ == "__main__" and len(sys.argv) >= 3 and sys.argv[1] == "--verify":  # python judge_adapter.py --verify DIR [--regenerate]
+    code, out = verify_episode(sys.argv[2], regenerate="--regenerate" in sys.argv[3:])
+    print(out, end="")
+    sys.exit(code)
 
 if __name__ == "__main__":  # a one-screen self-check: generate, reset in closed mode, explore, submit an empty answer
-    import sys
 
     with tempfile.TemporaryDirectory() as tmp:
         generate_episode(7, {"size": "small"}, tmp)
