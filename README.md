@@ -4,7 +4,7 @@ A reproducible RL environment for training and evaluating financial-audit agents
 
 [Русская версия](README.ru.md) · [Design note](docs/DESIGN.md) · [Check report](runs/check/report.md) · [Case](docs/CASE.md) · [Demo viewer](viewer/index.html) (open the file in a browser, works offline)
 
-Excerpt of the output at commit `32d4695` (Windows 10, Python 3.11.4; later commits change only documents, CI excerpts and tools, `git diff 32d4695 HEAD -- auditgym` is empty):
+Excerpt of the output at commit `5663020` (Windows 10, Python 3.11.4; later commits change only documents, CI excerpts and tools, `git diff 5663020 HEAD -- auditgym` is empty):
 
 ```text
 $ python -m auditgym check
@@ -16,7 +16,7 @@ B. committed train/dev episodes
   [PASS] train/t01_clean_small regenerates byte-identically
   ...
 summary: A_unit_tests 1/1, B_committed_episodes 40/40, B_replay 10/10, C_data 22/22, C_reward 468/468, D_paired 133/133, E_leaks 3/3, F_contract 20/20 (697 named checks of 83 kinds)
-PASS in 402 s; report: runs/check/report.md
+PASS in 420 s; report: runs/check/report.md
 ```
 
 > **Кратко по-русски.** Среда для обучения ИИ-аудитора: генератор синтетических компаний, четыре типа ошибок с записанной причиной, два сценария взаимодействующих ошибок, чистые компании и отвлекающие случаи. Агент работает через пять инструментов в отдельном процессе; награда `clip(2·F1 − 1 − 0.002·шаги)`. Ключ ответов проверяют независимый аудитор и отдельная проверка доказательств. Проверка одной командой: `python -m auditgym check`. Подробности и ограничения: [README.ru.md](README.ru.md).
@@ -52,24 +52,24 @@ python -m auditgym check
 
 Version 0.4.0 changes every episode: `GENERATOR_VERSION` follows the package version and enters `episode_id`, so a seed and config that gave one episode under 0.3.0 give another. The 20 committed episodes, their IDs and every record under `runs/` except the CI excerpts in `runs/ci` were regenerated for it.
 
-At commit `32d4695` it runs **697 named checks of 83 kinds** (a kind is one property; most run on every episode they apply to). One of them runs the **619 unit tests**. The report header carries a code stamp ([DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks)). Measured runs (the local row is at `32d4695`; the CI rows are CI run 44960672667 on `32d4695`, 619 tests, cited in [runs/ci/44960672667.txt](runs/ci/44960672667.txt)):
+At commit `5663020` it runs **697 named checks of 83 kinds** (a kind is one property; most run on every episode they apply to). One of them runs the **619 unit tests**. The report header carries a code stamp ([DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks)). Measured runs (the local row is at `5663020`; the CI rows are CI run 45015789093 on `5663020`, 619 tests, cited in [runs/ci/45015789093.txt](runs/ci/45015789093.txt)):
 
 | Where | Unit tests passed / skipped | `check` result |
 |---|---|---|
-| Windows 10, Python 3.11.4 (local, the committed report) | 608 / 11 | `PASS in 402 s` |
-| CI windows-latest, Python 3.11 | 608 / 11 | `PASS in 278 s` |
-| CI ubuntu, Python 3.11 / 3.12 / 3.13 | 596 / 23 | `PASS in` 154 / 190 / 144 s |
-| CI macOS, Python 3.11 | 593 / 26 | `PASS in 192 s` |
-| CI container (`--network none`, 2 CPU, 4 GB); the same in strict mode | 601 / 18 | `PASS in 282 s`; strict mode `PASS in 283 s` |
-| CI container, `--user 10001` | 595 / 24 | `PASS in 275 s` |
-| CI container, `--cap-drop ALL` | 593 / 26 | `PASS in 273 s` |
+| Windows 10, Python 3.11.4 (local, the committed report) | 608 / 11 | `PASS in 420 s` |
+| CI windows-latest, Python 3.11 | 608 / 11 | `PASS in 209 s` |
+| CI ubuntu, Python 3.11 / 3.12 / 3.13 | 596 / 23 | `PASS in` 167 / 205 / 150 s |
+| CI macOS, Python 3.11 | 593 / 26 | `PASS in 253 s` |
+| CI container (`--network none`, 2 CPU, 4 GB); the same in strict mode | 601 / 18 | `PASS in 278 s`; strict mode `PASS in 282 s` |
+| CI container, `--user 10001` | 595 / 24 | `PASS in 271 s` |
+| CI container, `--cap-drop ALL` | 593 / 26 | `PASS in 271 s` |
 | CI container, closed path (mounted seeds file, strict mode) | not run | `PASS in 4 s` |
 | CI container, strict mode with `--cap-drop ALL` | not run | exit 2 with one `error:` line |
 | CI container, a custom policy next to an answer key under `--cap-drop ALL` | not run | exit 2 with one `error: custom policy` line |
 
-Skips depend on the platform and the container mode; the list is in [DESIGN §13](docs/DESIGN.md#13-continuous-integration). CI run 44960672667 on `32d4695` (619 tests) is the latest and is green on all six jobs. The container steps of the official check, strict mode and the closed path print the report line `Policy isolation: separate user (uid 10002).`, so the report written in the image shows that the policy ran as a separate user. That report, written by the official check in the image in CI run 44944549237 ([excerpt](runs/ci/44944549237.txt)), is committed as [runs/check_container/report.md](runs/check_container/report.md) (Linux, Python 3.11.10, recorded on the previous code, stamp `88d12bd7…`; the container jobs of the latest CI run cover the current code).
+Skips depend on the platform and the container mode; the list is in [DESIGN §13](docs/DESIGN.md#13-continuous-integration). CI run 45015789093 on `5663020` (619 tests) is the latest and is green on all six jobs. The container steps of the official check, strict mode and the closed path print the report line `Policy isolation: separate user (uid 10002).`, so the report written in the image shows that the policy ran as a separate user. That report, written by the official check in the image in CI run 44944549237 ([excerpt](runs/ci/44944549237.txt)), is committed as [runs/check_container/report.md](runs/check_container/report.md) (Linux, Python 3.11.10, recorded on the previous code, stamp `88d12bd7…`; the container jobs of the latest CI run cover the current code).
 
-The cited lines are in [runs/ci/44960672667.txt](runs/ci/44960672667.txt), made with [tools/ci_excerpt.py](tools/ci_excerpt.py); the conclusion of every job and step is in [runs/ci/44960672667.jobs.json](runs/ci/44960672667.jobs.json). The `PASS in` times are the check's own, and whole jobs take longer. The container job also runs `python -m auditgym.redteam --parent` in three modes (default image, `--user 10001`, `--cap-drop ALL`). The full log is not committed.
+The cited lines are in [runs/ci/45015789093.txt](runs/ci/45015789093.txt), made with [tools/ci_excerpt.py](tools/ci_excerpt.py); the conclusion of every job and step is in [runs/ci/45015789093.jobs.json](runs/ci/45015789093.jobs.json). The `PASS in` times are the check's own, and whole jobs take longer. The container job also runs `python -m auditgym.redteam --parent` in three modes (default image, `--user 10001`, `--cap-drop ALL`). The full log is not committed.
 
 ```bash
 python -m auditgym demo
@@ -131,7 +131,7 @@ python -m auditgym check --seeds-file FILE --secret-env AUDITGYM_SECRET --out DI
 - Use 63-bit seeds and a secret. Without `--secret-env`, `run --seeds-file` and `check --seeds-file` exit 2 with one `error:` line, because a small seed can be recovered from the public `episode_id`. `--no-secret` accepts that for seeds that are public by design and is recorded (`meta.json`, report header); the committed example runs with `python -m auditgym check --seeds-file examples/closed_seeds_example.json --no-secret` ([DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks)).
 - Strict isolation (opt-in): `AUDITGYM_REQUIRE_AGENT_USER=1` makes `check`, `run`, `demo`, `viewer` and `budget` exit 2 with one `error:` line when the policy cannot run as the separate user ([DESIGN §5](docs/DESIGN.md#5-isolation-and-leaks)).
 - CI runs the closed path in the container the way an organizer would: strict mode, mounted seeds file, the secret in an environment variable ([DESIGN §13](docs/DESIGN.md#13-continuous-integration)).
-- `python tools/organizer_sweep.py DIR [CHUNK] [--record]` runs this closed check over the stress mix plus one boundary configuration per edge value that `config.py` accepts (428 configurations: 423 feasible, 5 infeasible, each with a ConfigError that names the reason), and the contract battery on every feasible episode. On the code of `32d4695` all 8 chunks passed (seven of 60 episodes, one of 3). [runs/sweep/summary.md](runs/sweep/summary.md) carries the check report's code stamp (`532171e7…`); see [DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks).
+- `python tools/organizer_sweep.py DIR [CHUNK] [--record]` runs this closed check over the stress mix plus one boundary configuration per edge value that `config.py` accepts (428 configurations: 423 feasible, 5 infeasible, each with a ConfigError that names the reason), and the contract battery on every feasible episode. On the code of `5663020` all 8 chunks passed (seven of 60 episodes, one of 3). [runs/sweep/summary.md](runs/sweep/summary.md) carries the check report's code stamp (`2b6130fb…`); see [DESIGN §8](docs/DESIGN.md#8-reproducibility-and-paired-checks).
 - Your own policy, a class with `act(observation, reward, info)`, runs in the isolated child: `python -m auditgym run --episodes DIR_OR_FOLDER --policies yourpkg.module:YourPolicy --out runs/yours` (`--policy-path DIR` for code outside this repository; built-in policies never get it). Outside the committed open episodes it needs the official image or `--allow-same-user`. The oracle is refused there, a missing class exits 3, and on Windows the policy runs at Low integrity ([DESIGN §5](docs/DESIGN.md#5-isolation-and-leaks)).
 - **Custom policies on closed data.** With a seeds file or `--secret-env`, `run` refuses (exit 2, one `error: custom policy ...` line) a `module:Class` policy that would run as the host's user: no separate policy user, or `--in-process`. Switching users needs an agent account, `/proc` and CAP_CHOWN, CAP_SETGID and CAP_SETUID, so root under `docker --cap-drop ALL` cannot switch. The same refusal applies at the moment a predicted switch fails (the account already has processes, or `chown` or `setuid` is refused, and the child would start as the host's user). `--allow-same-user` accepts a same-user run, prints one `WARNING` line and is recorded in `meta.json`; `allow_same_user` is true also when the child fell back after a predicted switch. The official image needs no flag; `check --seeds-file` runs only built-in policies.
 - **Answer keys on disk.** The same refusal covers an `--episodes` directory with `grader/` that is not a committed open episode from `episodes/index.json` (a new folder under `episodes/train` is not one): exit 2, one `error: custom policy ... next to answer keys` line, nothing written, unless `--allow-same-user` is given. The committed open splits publish their answer keys, so a same-user policy on them is not refused: `examples/custom_policy.py` on `episodes/dev` needs no flag, exits 0, prints one `WARNING` line (the policy runs as the host's user next to the public answer keys of the open splits; fine for training, never for evaluation) and `meta.json` records `"open_answer_keys_readable": true`. A predicted switch to the separate policy user prints nothing ([DESIGN §5](docs/DESIGN.md#5-isolation-and-leaks)).
@@ -196,9 +196,9 @@ From [runs/train_dev/summary.md](runs/train_dev/summary.md) (`python -m auditgym
 | train | flag everything | −1.000 | −1.000 | 0.00 | 0.00 | 0.00 | 0.00 | 0.000 | 3.0 | 0.0 | 90 |
 | train | oracle | 1.000 | 1.000 | 0.70 | 0.70 | 1.00 | 1.00 | 1.000 | 0.0 | 1.0 | 0 |
 | train | silent | −0.400 | −0.400 | 0.00 | 0.00 | n/a | 0.00 | 0.300 | 0.0 | 0.3 | 0 |
-| dev | scripted auditor | 0.942 | 0.942 | 0.80 | 0.80 | 1.00 | 1.00 | 1.000 | 29.0 | 1.0 | 0 |
-| dev | recon | −0.7393 | −0.7393 | 0.09 | 0.54 | 0.11 | 0.73 | 0.153 | 29.0 | 0.0 | 14 |
-| dev | random | −1.000 | −1.000 | 0.00 | 0.00 | 0.00 | 0.00 | 0.000 | 24.4 | 0.0 | 5 |
+| dev | scripted auditor | 0.943 | 0.943 | 0.80 | 0.80 | 1.00 | 1.00 | 1.000 | 28.7 | 1.0 | 0 |
+| dev | recon | −0.7328 | −0.7328 | 0.10 | 0.51 | 0.10 | 0.63 | 0.156 | 28.7 | 0.0 | 14 |
+| dev | random | −1.000 | −1.000 | 0.00 | 0.00 | 0.00 | 0.00 | 0.000 | 29.3 | 0.0 | 5 |
 | dev | flag everything | −1.000 | −1.000 | 0.00 | 0.00 | 0.00 | 0.00 | 0.000 | 3.0 | 0.0 | 60 |
 | dev | oracle | 1.000 | 1.000 | 0.80 | 0.80 | 1.00 | 1.00 | 1.000 | 0.0 | 1.0 | 0 |
 | dev | silent | −0.600 | −0.600 | 0.00 | 0.00 | n/a | 0.00 | 0.200 | 0.0 | 0.2 | 0 |
@@ -211,9 +211,9 @@ From [runs/budget/summary.md](runs/budget/summary.md) (dev split, scripted audit
 
 | Budget (steps) | Auditor return | Auditor F1 | Auditor closed | Recon return | Recon F1 |
 |---|---|---|---|---|---|
-| 20 | −0.1719 | 0.425 | 0.3 | −0.8874 | 0.066 |
-| 50 | 0.942 | 1.000 | 1.0 | −0.7393 | 0.153 |
-| 100 | 0.942 | 1.000 | 1.0 | −0.7393 | 0.153 |
+| 20 | −0.2807 | 0.367 | 0.3 | −0.9142 | 0.051 |
+| 50 | 0.943 | 1.000 | 1.0 | −0.7328 | 0.156 |
+| 100 | 0.943 | 1.000 | 1.0 | −0.7328 | 0.156 |
 
 At 20 steps the scripted auditor closes 3 of the 10 dev episodes; at 50 and 100 steps it closes all 10, and the rows for 50 and 100 steps are equal.
 
